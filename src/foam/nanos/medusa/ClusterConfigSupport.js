@@ -936,7 +936,7 @@ configuration for contacting the primary node.`,
       javaCode: `
       // getLogger().debug("mdao", serviceName);
       Object obj = getMdaos().get(serviceName);
-      DAO dao;
+      DAO dao = null;
       if ( obj != null &&
            obj instanceof DAO ) {
         dao = (DAO) obj;
