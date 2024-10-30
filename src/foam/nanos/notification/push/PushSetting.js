@@ -18,7 +18,8 @@ foam.CLASS({
     'foam.core.XLocator',
     'foam.nanos.logger.Logger',
     'foam.nanos.logger.Loggers',
-    'foam.nanos.notification.push.PushService'
+    'foam.nanos.notification.push.PushService',
+    'foam.util.SafetyUtil'
   ],
 
   properties: [
