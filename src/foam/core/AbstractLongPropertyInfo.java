@@ -60,7 +60,11 @@ public abstract class AbstractLongPropertyInfo
   }
 
   public long cast(Object o) {
-    long l = ( o instanceof String ) ? Long.valueOf((String) o) : (long) o;
+    long l = 0;
+    if ( o instanceof String ) {
+      if ( foam.util.SafetyUtil.isEmpty((String) o) ) return 0;
+      l = Long.valueOf((String) o);
+    }
     return ( o instanceof Number ) ? ((Number) o).longValue() : l;
   }
 

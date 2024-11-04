@@ -60,8 +60,12 @@ public abstract class AbstractIntPropertyInfo
   }
 
   public int cast(Object o) {
-    if ( o instanceof String ) return Integer.valueOf((String) o);
-    return ((Number) o).intValue();
+    int i = 0;
+    if ( o instanceof String ) {
+      if ( foam.util.SafetyUtil.isEmpty((String) o) ) return 0;
+      i = Integer.valueOf((String) o);
+    }
+    return ( o instanceof Number ) ? ((Number) o).intValue() : i;
   }
 
   public Object get(Object o) {
