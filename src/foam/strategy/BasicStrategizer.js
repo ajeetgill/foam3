@@ -19,14 +19,17 @@ foam.CLASS({
   ],
 
   javaImports: [
+    'foam.core.Detachable',
     'foam.dao.ArraySink',
     'foam.dao.DAO',
-    'foam.mlang.predicate.Predicate',
-    'foam.util.SafetyUtil',
-    'java.util.List',
+    'foam.dao.ProxySink',
     'static foam.mlang.MLang.AND',
     'static foam.mlang.MLang.EQ',
-    'static foam.mlang.MLang.OR'
+    'static foam.mlang.MLang.OR',
+    'foam.mlang.predicate.Predicate',
+    'foam.nanos.auth.AuthService',
+    'foam.util.SafetyUtil',
+    'java.util.List'
   ],
 
   methods: [
@@ -54,11 +57,23 @@ foam.CLASS({
           predicate = (Predicate) strategyPredicate;
         }
 
-        DAO strategyDAO = ((DAO) getStrategyDAO()).inX(x);
-        List refs = ((ArraySink) strategyDAO
+        AuthService auth = (AuthService) x.get("auth");
+        ArraySink delegate = new ArraySink();
+        ((DAO) getStrategyDAO()).inX(x)
           .where(predicate)
-          .select(new ArraySink())).getArray();
-
+          .select(
+            new ProxySink(x, delegate) {
+              public void put(Object obj, Detachable sub) {
+                if ( auth.check(x, "strategyreference.read."+((StrategyReference) obj).getId()) ) {
+                  getDelegate().put(obj, sub);
+                }
+              }
+              public void remove(Object obj, Detachable sub) {}
+              public void eof() {}
+              public void reset(Detachable sub) {}
+            }
+          );
+        List refs = delegate.getArray();
         return (StrategyReference[]) refs.toArray(new StrategyReference[refs.size()]);
       `
     }
