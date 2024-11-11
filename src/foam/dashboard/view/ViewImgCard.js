@@ -9,9 +9,9 @@ foam.CLASS({
   package: 'foam.dashboard.view',
   name: 'ViewImgCard',
   extends: 'foam.dashboard.view.Card',
-  
+
   documentation: 'A dashboard card the takes a view, background color and an img',
-  
+
   css: `
   ^ {
     position: relative;
@@ -19,6 +19,7 @@ foam.CLASS({
     container-name: main-container;
     padding: 3.2rem;
     overflow: hidden;
+    height: fit-content;
   }
   ^view-container {
     position: relative;
