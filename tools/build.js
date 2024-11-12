@@ -258,7 +258,6 @@ Implementation-Vendor: ${PROJECT.name}
   return m;
 };
 
-
 function pom() {
   var pom    = {};
   var addPom = fn => {
@@ -486,7 +485,7 @@ task('Package files into a TAR archive', [], function buildTar() {
   // Notice that the argument to the second -C is relative to the directory from the first -C, since -C
   // switches the current directory.
   ensureDir(BUILD_DIR + '/package');
-  execSync(`tar -a -cf ${BUILD_DIR}/package/${PROJECT.name}-deploy-${VERSION}.tar.gz -C ./deploy bin etc -C ../ -C${BUILD_DIR} lib`);
+  execSync(`tar -a -cf ${BUILD_DIR}/package/${PROJECT.name}-deploy-${VERSION}.tar.gz -C ./foam3/tools/deploy bin etc -C ../../../ -C${BUILD_DIR} lib`);
 });
 
 
@@ -504,6 +503,7 @@ task('Delete runtime logs.', [], function deleteRuntimeLogs() {
 
 task('Copy required files to APP_HOME deployment directory.', [], function deployToHome() {
   copyDir('./foam3/tools/deploy/bin', join(APP_HOME, 'bin'));
+  copyDir('./foam3/tools/deploy/etc', join(APP_HOME, 'etc'));
   copyDir(BUILD_DIR + '/lib', join(APP_HOME, 'lib'));
 });
 
@@ -611,7 +611,6 @@ task('Extract FOAM git hash.', [], function getFOAMGitHash() {
   FOAM_REVISION = execSync('git -C foam3 rev-parse --short HEAD').toString().trim();
 });
 
-
 task('Show version information.', [ 'getProjectGitHash', 'getFOAMGitHash'], function versions() {
   getProjectGitHash();
   getFOAMGitHash();
@@ -619,6 +618,10 @@ task('Show version information.', [ 'getProjectGitHash', 'getFOAMGitHash'], func
   console.log(`Application Version: ${VERSION}`);
   console.log(`${PROJECT.name} revision:    ${PROJECT_REVISION}`);
   console.log(`FOAM revision:       ${FOAM_REVISION}`);
+});
+
+task('Show application information.', [], function appName() {
+  console.log(`Application Name: ${PROJECT.name}`);
 });
 
 
@@ -802,7 +805,9 @@ const ARGS = {
   u: [ 'Run from jar. Intented for Production deployments. Connect to https://localhost:8443/',
     () => {
       RUN_JAR = true;
-      JOURNAL_CONFIG = comma(JOURNAL_CONFIG, 'u');
+      JOURNAL_CONFIG = comma(JOURNAL_CONFIG, '../foam3/deployment/u');
+      if ( fs.existsSync('deployment/u') )
+        JOURNAL_CONFIG = comma(JOURNAL_CONFIG, 'u');
     } ],
   U: [ 'User to run as',
     args => RUN_USER = args ],

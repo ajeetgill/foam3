@@ -1,0 +1,18 @@
+[Unit]
+Description=FOAM Platform
+After=network.target
+Requires=network.target
+StartLimitIntervalSec=30
+StartLimitBurst=3
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+ExecStart=/opt/foam/bin/run.sh -Z0
+User=foam
+Group=foam
+
+[Install]
+WantedBy=multi-user.target
+Alias=foam.service
