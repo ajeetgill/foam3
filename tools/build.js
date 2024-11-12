@@ -594,13 +594,9 @@ task('Extract project git hash.', [], function getProjectGitHash() {
   var out = 'Unversioned';
 
   try {
-    out = execSync('git describe --exact-match HEAD');
+    out = execSync('git rev-parse --short HEAD');
   } catch (x) {
-    try {
-      out = execSync('git rev-parse --short HEAD');
-    } catch (_) {
-      warning('Cannot determine project revision, no commit yet');
-    }
+    warning('Cannot determine project revision, no commit yet');
   }
 
   PROJECT_REVISION = out.toString().trim();
@@ -670,7 +666,7 @@ buildEnv({
   LOG_HOME:          () => `${APP_HOME}/logs`,
 
   JAR_LIB_DIR:       () => ( PACKAGE ? `${PROJECT_HOME}/${BUILD_DIR}` : `${APP_HOME}` ) + `/lib/`,
-  JAR_OUT:           () => `${JAR_LIB_DIR}/${PROJECT.name}-${TIMESTAMP_VERSION}.jar`,
+  JAR_OUT:           () => `${JAR_LIB_DIR}/${PROJECT.name}-${VERSION}.jar`,
 
   // Project resources path
   PROJECT_HOME:      PWD,

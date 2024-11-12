@@ -1,21 +1,16 @@
 #!/bin/bash
 
-FOAM_HOME=
-FOAM_ROOT=/opt/foam
+SYSTEM_NAME='foam'
+VERSION=
+USER='foam'
+USER_ID=3626
+GROUP='foam'
+GROUP_ID=3626
+
 FOAM_TARBALL=
 FOAM_REMOTE_OUTPUT=/tmp/tar_extract
-FOAM_SERVICE_FILE=/lib/systemd/system/foam.service
 BACKUP=true
-MNT_HOME=/mnt/foam
-SHARED_HOME=${MNT_HOME}
-UNIQUE_HOME=${MNT_HOME}/$HOSTNAME
-FILES_HOME=${MNT_HOME}/files
-LOG_HOME=${UNIQUE_HOME}/logs
-SAF_HOME=${UNIQUE_HOME}/saf
-JOURNAL_HOME=${UNIQUE_HOME}/journals
-CONF_HOME=${UNIQUE_HOME}/conf
-BACKUP_HOME=${UNIQUE_HOME}/backups
-VAR_HOME=${UNIQUE_HOME}/var
+CLUSTER=false
 
 MACOS='darwin*'
 LINUXOS='linux-gnu'
@@ -39,32 +34,47 @@ function usage {
     echo "Options are:"
     echo "  -B <true | false> : disable Backup "
     echo "  -C <true | false> : Enable clustering"
-    echo "  -h                  : Print usage information."
-    echo "  -I <path>           : Remote location of tarball"
-    echo "  -N <foam_home>   : Remote Foam home directory, can't be /opt/foam"
-    echo "  -O <path>           : Remote directory tarball is extracted to, default to ~/tar_extract"
+    echo "  -D <path>         : Remote location of tarball"
+    echo "  -G name           : Group name"
+    echo "  -O <path>         : Remote directory tarball is extracted to, default to ~/tar_extract"
+    echo "  -S name           : systemd service name"
+    echo "  -U name           : User name"
+    echo "  -V version        : application version"
     echo ""
 }
 
-while getopts "B:C:hI:N:O:" opt ; do
+while getopts "B:C:D:G:O:S:U:V:" opt ; do
     case $opt in
         B) BACKUP=${OPTARG};;
         C) CLUSTER=${OPTARG};;
-        h) usage; exit 0;;
-        I) FOAM_TARBALL=$OPTARG;;
-        N) FOAM_HOME=$OPTARG;;
+        D) FOAM_TARBALL=${OPTARG};;
+        G) GROUP=${OPTARG};;
         O) FOAM_REMOTE_OUTPUT=$OPTARG;;
+        S) SYSTEM_NAME=${OPTARG};;
+        U) USER=${OPTARG};;
+        V) VERSION=${OPTARG};;
         ?) usage; exit 0;;
    esac
 done
 
-if [ -z $FOAM_HOME ]; then
-    echo "ERROR :: [$HOSTNAME] FOAM_HOME is undefined"
-    quit
-fi
+FOAM_ROOT=/opt/${SYSTEM_NAME}
+FOAM_HOME=/opt/${SYSTEM_NAME}-${VERSION}
+MNT_HOME=/mnt/${SYSTEM_NAME}
+SHARED_HOME=${MNT_HOME}
+UNIQUE_HOME=${MNT_HOME}/$HOSTNAME
+FILES_HOME=${MNT_HOME}/files
+LOG_HOME=${UNIQUE_HOME}/logs
+SAF_HOME=${UNIQUE_HOME}/saf
+JOURNAL_HOME=${UNIQUE_HOME}/journals
+CONF_HOME=${UNIQUE_HOME}/conf
+BACKUP_HOME=${UNIQUE_HOME}/backups
+VAR_HOME=${UNIQUE_HOME}/var
+SYSTEM_SERVICE_FILE=/lib/systemd/system/$SYSTEM_NAME.service
 
-FOAM_CURRENT_VERSION=$(readlink -f ${FOAM_ROOT} | awk -F- '{print $NF}')
-FOAM_NEW_VERSION=$(echo ${FOAM_HOME} | awk -F- '{print $NF}')
+# if [ -z $FOAM_HOME ]; then
+#     echo "ERROR :: [$HOSTNAME] FOAM_HOME is undefined"
+#     quit
+# fi
 
 function backupFiles {
     echo "INFO :: [$HOSTNAME] Running Files backup"
@@ -75,13 +85,13 @@ function backupFiles {
 
     if [ ! -d ${BACKUP_HOME}/journals ]; then
         mkdir -p ${BACKUP_HOME}/journals 
-        chgrp foam ${BACKUP_HOME}/journals
+        chgrp $GROUP ${BACKUP_HOME}/journals
         chmod 750 ${BACKUP_HOME}/journals
     fi
 
     if [ ! -d ${BACKUP_HOME}/logs ]; then
         mkdir -p ${BACKUP_HOME}/logs 
-        chgrp foam ${BACKUP_HOME}/logs
+        chgrp $GROUP ${BACKUP_HOME}/logs
         chmod 750 ${BACKUP_HOME}/logs
     fi
 
@@ -109,7 +119,7 @@ function backupFiles {
             quit
         fi
         if [ -d ${FOAM_BACKUP} ]; then
-            chgrp foam ${FOAM_BACKUP}
+            chgrp $GROUP ${FOAM_BACKUP}
             chmod 750 ${FOAM_BACKUP}
         fi
     fi
@@ -122,17 +132,17 @@ function cleanupFiles {
 }
 
 function installFiles {
-    echo "INFO :: [$HOSTNAME] Installing foam to ${FOAM_HOME}"
+    echo "INFO :: [$HOSTNAME] Installing ${SYSTEM_NAME} to ${FOAM_HOME}"
 
     if [ ! -d $FOAM_HOME ]; then
         mkdir -p ${FOAM_HOME}
     fi
-    chown foam:foam $FOAM_HOME
+    chown $USER:$GROUP $FOAM_HOME
 
     if [ ! -d ${FOAM_HOME}/lib ]; then
         mkdir -p ${FOAM_HOME}/lib
     fi
-    chown foam:foam ${FOAM_HOME}/lib
+    chown $USER:$GROUP ${FOAM_HOME}/lib
     chmod 750 ${FOAM_HOME}/lib
 
     cp -r ${FOAM_REMOTE_OUTPUT}/lib/* ${FOAM_HOME}/lib
@@ -140,7 +150,7 @@ function installFiles {
     if [ ! -d ${FOAM_HOME}/bin ]; then
         mkdir -p ${FOAM_HOME}/bin
     fi
-    chown foam:foam ${FOAM_HOME}/bin
+    chown $USER:$GROUP ${FOAM_HOME}/bin
     chmod 750 ${FOAM_HOME}/bin
 
     cp -r ${FOAM_REMOTE_OUTPUT}/bin/* ${FOAM_HOME}/bin
@@ -149,23 +159,23 @@ function installFiles {
         mkdir -p ${FOAM_HOME}/etc
     fi
     cp -r ${FOAM_REMOTE_OUTPUT}/etc/* ${FOAM_HOME}/etc
-    chown foam:foam ${FOAM_HOME}/etc
+    chown $USER:$GROUP ${FOAM_HOME}/etc
     chmod -R 750 ${FOAM_HOME}/etc
 
     if [ -f ${FOAM_HOME}/etc/shrc.local ]; then
-        chown foam:foam ${FOAM_HOME}/etc/shrc.local
+        chown $USER:$GROUP ${FOAM_HOME}/etc/shrc.local
     fi
 
     if [ ! -d ${MNT_HOME} ]; then
         mkdir -p ${MNT_HOME}
     fi
-    chown foam:foam ${MNT_HOME}
+    chown $USER:$GROUP ${MNT_HOME}
     chmod 750 ${MNT_HOME}
 
     if [ ! -d ${CONF_HOME} ]; then
         mkdir -p ${CONF_HOME}
     fi
-    
+
     if [ ! -f "${CONF_HOME}/shrc.custom" ]; then
         echo '#!/bin/bash' > ${CONF_HOME}/shrc.custom
         echo '  JAVA_OPTS="${JAVA_OPTS} -Xmx4096m"' >> ${CONF_HOME}/shrc.custom
@@ -174,51 +184,51 @@ function installFiles {
         fi
         echo '#DEBUG_DEV=1"' >> ${CONF_HOME}/shrc.custom
     fi
-    chown -R foam:foam ${CONF_HOME}
+    chown -R $USER:$GROUP ${CONF_HOME}
     chmod -R 750 ${CONF_HOME}
 
     if [ ! -d ${LOG_HOME} ]; then
         mkdir -p ${LOG_HOME}
     fi
-    chown foam:foam ${LOG_HOME}
+    chown $USER:$GROUP ${LOG_HOME}
     chmod 750 ${LOG_HOME}
 
     if [ ! -d ${VAR_HOME} ]; then
         mkdir -p ${VAR_HOME}
     fi
-    chown -R foam:foam ${VAR_HOME}
+    chown -R $USER:$GROUP ${VAR_HOME}
     chmod 750 ${VAR_HOME}
 
     if [ ! -d ${JOURNAL_HOME} ]; then
         mkdir ${JOURNAL_HOME}
     fi
 
-    chown -R foam:foam ${JOURNAL_HOME}
+    chown -R $USER:$GROUP ${JOURNAL_HOME}
     chmod 750 ${JOURNAL_HOME}
  #   chmod -R 640 ${JOURNAL_HOME}/*
 
     if [ ! -d ${FILES_HOME} ]; then
         mkdir -p ${FILES_HOME}
     fi
-    chown -R foam:foam ${FILES_HOME}
+    chown -R $USER:$GROUP ${FILES_HOME}
     chmod 750 ${FILES_HOME}
 
     if [ ! -d ${SAF_HOME} ]; then
         mkdir -p ${SAF_HOME}
     fi
-    chown -R foam:foam ${SAF_HOME}
+    chown -R $USER:$GROUP ${SAF_HOME}
     chmod 750 ${SAF_HOME}
 }
 
 function setupUser {
-    echo "INFO :: [$HOSTNAME] Verify user"
+    echo "INFO :: [$HOSTNAME] Verify user and group"
     if [[ $IS_LINUX -eq 1 ]]; then
         id -u foam > /dev/null
         if [ $? -eq 1 ]; then
             echo "INFO :: [$HOSTNAME] User foam not found, creating user foam"
-            groupadd --force --gid 3626 foam
-            useradd -g foam --uid 3626 -m -s /bin/false foam
-            usermod -L foam
+            groupadd --force --gid $GROUP_ID $GROUP
+            useradd -g $USER --uid $USER_ID -m -s /bin/false $USER
+            usermod -L $USER
         fi
 
         # test and set umask
@@ -234,8 +244,8 @@ function setupUser {
         fi
 
         # Setup ubuntu user
-        if id "ubuntu" > /dev/null 2>&1 && ! id -nG "ubuntu" | grep -qw "foam"; then
-            sudo usermod -a -G foam ubuntu
+        if id "ubuntu" > /dev/null 2>&1 && ! id -nG "ubuntu" | grep -qw "$USER"; then
+            sudo usermod -a -G $USER ubuntu
         fi
     fi
     #TODO: add MacOS support.
@@ -246,8 +256,8 @@ function setupUser {
     #fi
 }
 
-function setupFoamSymLink {
-    echo "INFO :: [$HOSTNAME] Running foam SymLink setup"
+function setupSymLink {
+    echo "INFO :: [$HOSTNAME] Running SymLink setup"
     if [ -h ${FOAM_ROOT} ]; then
         unlink ${FOAM_ROOT}
     elif [ -d ${FOAM_ROOT} ]; then
@@ -293,7 +303,7 @@ function setupFoamSymLink {
     if [ -h ${JOURNAL_HOME}/largefiles ]; then
         unlink ${JOURNAL_HOME}/largefiles
     fi
-    
+
     if [ -d ${JOURNAL_HOME} ]; then
         ln -s ${FILES_HOME} ${JOURNAL_HOME}/largefiles
     fi
@@ -305,26 +315,34 @@ function setupFoamSymLink {
 
 function setupSystemd {
     echo "INFO :: [$HOSTNAME] Running Systemd setup"
-    systemctl list-units | grep foam.service &> /dev/null
+    systemctl list-units | grep ${SYSTEM_NAME}.service &> /dev/null
     if [ $? -eq 0 ]; then
-        sudo systemctl stop foam
-        sudo systemctl disable foam
+        sudo systemctl stop $SYSTEM_NAME
+        sudo systemctl disable $SYSTEM_NAME
     fi
 
-    if [ -h ${FOAM_SERVICE_FILE} ]; then
-        sudo rm "${FOAM_SERVICE_FILE}"
+    if [ -h ${SYSTEM_SERVICE_FILE} ]; then
+        sudo rm "${SYSTEM_SERVICE_FILE}"
     fi
-    sudo ln -s ${FOAM_ROOT}/etc/foam.service ${FOAM_SERVICE_FILE}
+
+    SERVICE_FILE=${FOAM_HOME}/etc/${SYSTEM_NAME}.service
+    sudo cp ${FOAM_HOME}/etc/system.service ${SERVICE_FILE}
+    sudo sed -i -e "s/SYSTEM_NAME/${SYSTEM_NAME}/g" ${SERVICE_FILE}
+    sudo sed -i -e "s/VERSION/${VERSION}/g" ${SERVICE_FILE}
+    sudo sed -i -e "s/USER/${USER}/g" ${SERVICE_FILE}
+    sudo sed -i -e "s/GROUP/${GROUP}/g" ${SERVICE_FILE}
+#    sudo chown $USER:$GROUP ${SERVICE_FILE}
+    sudo ln -s ${SERVICE_FILE} ${SYSTEM_SERVICE_FILE}
 
     sudo systemctl daemon-reload
-    sudo systemctl enable foam
+    sudo systemctl enable ${SYSTEM_NAME}
 }
 
 function restart {
-    sudo systemctl restart foam
+    sudo systemctl restart ${SYSTEM_NAME}
 }
 
-echo "INFO :: [$HOSTNAME] Installing foam on remote server"
+echo "INFO :: [$HOSTNAME] Installing ${SYSTEM_NAME} on remote server"
 
 if [ ! -f ${FOAM_TARBALL} ]; then
     echo "ERROR :: [$HOSTNAME] Tarball ${FOAM_TARBALL} doesn't exist on remote server"
@@ -357,7 +375,7 @@ cleanupFiles
 
 installFiles
 
-setupFoamSymLink
+setupSymLink
 
 restart
 

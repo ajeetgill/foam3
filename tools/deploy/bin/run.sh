@@ -2,8 +2,7 @@
 # Super simple launcher.
 
 HOST_NAME=`hostname -s`
-APP_NAME=foam
-APP_HOME=/opt/foam
+SYSTEM_NAME=foam
 WEB_PORT=
 DEBUG_PORT=*:5005
 DEBUG_SUSPEND=n
@@ -37,35 +36,33 @@ function usage {
     echo "  -D 0 or 1           : Debug mode."
     echo "  -F <rw | ro>        : File System mode"
     echo "  -H <hostname>       : hostname "
-    echo "  -h                  : Display help."
     echo "  -j 0 or 1           : JProfiler enabled"
     echo "  -J PORT             : JProfiler PORT"
-    echo "  -n <app_name>       : App name."
     echo "  -N <app_home>       : App home directory."
     echo "  -P <debug port>     : Port to run debugger on."
-    echo "  -S <y/n>            : Suspend on debug launch."
+    echo "  -S <system_name>    : System name."
     echo "  -U <user>           : User to run script as"
     echo "  -V <version>        : Version."
     echo "  -W <web_port>       : HTTP Port."
+    echo "  -Y <y/n>            : Suspend on debug launch."
     echo "  -Z <0/1>            : Daemonize."
 }
 
-while getopts "C:D:F:H:hj:J:n:N:P:S:U:V:W:Z:" opt ; do
+while getopts "C:D:F:H:j:J:N:P:S:U:V:W:Y:Z:" opt ; do
     case $opt in
         C) CLUSTER=$OPTARG;;
         D) DEBUG_DEV=$OPTARG;;
         F) FS=$OPTARG;;
         H) HOST_NAME=$OPTARG;;
-        h) usage; exit 0;;
         j) PROFILER=$OPTARG;;
         J) PROFILER_PORT=$OPTARG;;
-        n) APP_NAME=$OPTARG;;
         N) APP_HOME=$OPTARG;;
         P) DEBUG_PORT=$OPTARG;;
-        S) DEBUG_SUSPEND=$OPTARG;;
+        S) SYSTEM_NAME=$OPTARG;;
         U) RUN_USER=$OPTARG;;
         V) VERSION=$OPTARG;;
         W) WEB_PORT=$OPTARG;;
+        Y) DEBUG_SUSPEND=$OPTARG;;
         Z) DAEMONIZE=$OPTARG;;
         ?) usage ; exit 0 ;;
    esac
@@ -73,10 +70,12 @@ done
 
 echo "run.sh HOST_NAME=$HOST_NAME"
 
+
 if [ ! -z ${RUN_USER} ] && [ "$(uname -s)" == "Linux" ] && [ "$(whoami)" != "${RUN_USER}" ]; then
     exec sudo -u "${RUN_USER}" -- "$0" "$@"
 fi
 
+APP_HOME=/opt/${SYSTEM_NAME}
 JAVA_OPTS=""
 export JOURNAL_HOME="${APP_HOME}/journals"
 export DOCUMENT_HOME="${APP_HOME}/documents"
@@ -111,9 +110,9 @@ if [ "$PROFILER" -eq 1 ]; then
 fi
 
 if [ ! -z $VERSION ]; then
-    JAR="${APP_HOME}/lib/${APP_NAME}-${VERSION}.jar"
+    JAR="${APP_HOME}/lib/${SYSTEM_NAME}-${VERSION}.jar"
 else
-    JAR=$(ls ${APP_HOME}/lib/${APP_NAME}-*.jar | awk '{print $1}')
+    JAR=$(ls ${APP_HOME}/lib/${SYSTEM_NAME}-*.jar | awk '{print $1}')
 fi
 
 export RES_JAR_HOME="${JAR}"

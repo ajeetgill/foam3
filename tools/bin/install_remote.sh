@@ -1,5 +1,10 @@
 #!/bin/bash
 
+USER='foam'
+USER_ID=3626
+GROUP='foam'
+GROUP_ID=3626
+
 FOAM_TARBALL=
 FOAM_REMOTE_OUTPUT=/tmp
 INSTALL_ONLY=0
@@ -11,6 +16,8 @@ REMOTE_URL=
 SSH_KEY=
 BACKUP=true
 CLUSTER=false
+VERSION=$(grep version pom.js | cut -d\' -f 2);
+SYSTEM_NAME=$(grep name pom.js | cut -d\' -f 2);
 
 function quit {
     echo "ERROR :: [${REMOTE_URL}] Install Failed"
@@ -24,30 +31,36 @@ function usage {
     echo "  -B <true | false>  : backup"
     echo "  -c                   : enable clustering, CLUSTER=true"
     echo "  -C <true | false>  : clustering"
-    echo "  -h                   : Print usage information."
-    echo "  -i                    : Install only"
-    echo "  -I <ssh-key>        : SSH Key to use to connect to remote server"
-    echo "  -O <path>           : Remote Location to put tarball, default to /tmp"
-    echo "  -R <filepath>       : remoterc file to load, default to ./config/foam/remoterc"
-    echo "  -T <tarball>        : Name of tarball, looks in target/package"
-    echo "  -U <user>           : Remote user to connect to"
-    echo "  -W <web-address>    : Remote url to connect to"
+    echo "  -G name            : Group name"
+    echo "  -i                 : Install only"
+    echo "  -I <ssh-key>       : SSH Key to use to connect to remote server"
+    echo "  -O <path>          : Remote Location to put tarball, default to /tmp"
+    echo "  -R <filepath>      : remoterc file to load, default to ./config/foam/remoterc"
+    echo "  -S name            : systemd service name"
+    echo "  -T <tarball>       : Name of tarball, looks in target/package"
+    echo "  -U name            : User name"
+    echo "  -V version         : application version"
+    echo "  -W <web-address>   : Remote url to connect to"
+    echo "  -X name            : Remote user to connect to"
     echo ""
 }
 
-while getopts "B:cC:hiI:O:R:T:U:W:" opt ; do
+while getopts "B:cC:G:iI:O:R:S:T:U:V:W:X:" opt ; do
     case $opt in
         B) BACKUP=${OPTARG};;
         c) CLUSTER=true;;
         C) CLUSTER=${OPTARG};;
-        h) usage; exit 0;;
+        G) GROUP==${OPTARG};;
         i) INSTALL_ONLY=1;;
         I) SSH_KEY=${OPTARG};;
         O) FOAM_REMOTE_OUTPUT=${OPTARG};;
         R) RC_FILE=$OPTARG;;
+        S) SYSTEM_NAME=${OPTARG};;
         T) FOAM_TARBALL_PATH=${OPTARG};;
-        U) REMOTE_USER=${OPTARG};;
+        U) USER=${OPTARG};;
+        V) VERSION=${OPTARG};;
         W) REMOTE_URL=${OPTARG};;
+        X) REMOTE_USER=${OPTARG};;
         ?) usage; exit 0;;
    esac
 done
@@ -57,15 +70,13 @@ if [ -f $RC_FILE ]; then
     . $RC_FILE
 fi
 
-VERSION=$(grep version pom.js | cut -d\' -f 2);
-echo "INFO :: [${REMOTE_URL}] APP VERSION: $VERSION"
+echo "INFO :: [${REMOTE_URL}] $SYSTEM_NAME $VERSION"
 
 if [ -z $FOAM_TARBALL_PATH ]; then
-    FOAM_TARBALL_PATH=target/package/foam-deploy-${VERSION}.tar.gz
+    FOAM_TARBALL_PATH=target/package/${SYSTEM_NAME}-deploy-${VERSION}.tar.gz
 fi
 
 FOAM_TARBALL=$(basename $FOAM_TARBALL_PATH)
-FOAM_HOME=/opt/foam-${VERSION}
 
 if [ ! -f $FOAM_TARBALL_PATH ]; then
     echo "ERROR :: [${REMOTE_URL}] Tarball ${FOAM_TARBALL_PATH} doesn't exist"
@@ -107,7 +118,11 @@ if [ $INSTALL_ONLY -eq 0 ]; then
     fi
 fi
 
-ssh ${SSH_KEY_OPT} ${REMOTE} "sudo bash -s -- -I${FOAM_REMOTE_OUTPUT}/${FOAM_TARBALL} -N${FOAM_HOME} -C${CLUSTER} -B${BACKUP}" < ./foam3/tools/deploy/bin/install.sh
+echo SYSTEM_NAME=$SYSTEM_NAME
+echo VERSION=$VERSION
+echo USER=$USER
+
+ssh ${SSH_KEY_OPT} ${REMOTE} "sudo bash -s -- -D${FOAM_REMOTE_OUTPUT}/${FOAM_TARBALL} -C${CLUSTER} -B${BACKUP} -S${SYSTEM_NAME} -V${VERSION} -U${USER} -G${GROUP}" < ./foam3/tools/deploy/bin/install.sh
 
 if [ ! $? -eq 0 ]; then
     quit;
