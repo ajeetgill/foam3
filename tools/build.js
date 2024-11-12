@@ -618,6 +618,12 @@ task('Show version information.', [ 'getProjectGitHash', 'getFOAMGitHash'], func
 
 task('Show application information.', [], function appName() {
   console.log(`Application Name: ${PROJECT.name}`);
+  console.log(`Application VendorId: ${PROJECT.vendorId}`);
+});
+
+task('Show application information.', [], function deploymentDetails() {
+  console.log('User: '+pom.deploymentDetails.user);
+//  console.log(`UserID: ${PROJECT.deploymentDetails.userId}`);
 });
 
 

@@ -4,8 +4,6 @@ SYSTEM_NAME='foam'
 VERSION=
 USER='foam'
 USER_ID=3626
-GROUP='foam'
-GROUP_ID=3626
 
 FOAM_TARBALL=
 FOAM_REMOTE_OUTPUT=/tmp/tar_extract
@@ -38,21 +36,22 @@ function usage {
     echo "  -G name           : Group name"
     echo "  -O <path>         : Remote directory tarball is extracted to, default to ~/tar_extract"
     echo "  -S name           : systemd service name"
-    echo "  -U name           : User name"
+    echo "  -U name           : User and Group name"
     echo "  -V version        : application version"
+    echo "  -Y userId         : User and Group ID"
     echo ""
 }
 
-while getopts "B:C:D:G:O:S:U:V:" opt ; do
+while getopts "B:C:D:G:O:S:U:V:Y:" opt ; do
     case $opt in
         B) BACKUP=${OPTARG};;
         C) CLUSTER=${OPTARG};;
         D) FOAM_TARBALL=${OPTARG};;
-        G) GROUP=${OPTARG};;
         O) FOAM_REMOTE_OUTPUT=$OPTARG;;
         S) SYSTEM_NAME=${OPTARG};;
         U) USER=${OPTARG};;
         V) VERSION=${OPTARG};;
+        Y) USER_ID=${OPTARG};;
         ?) usage; exit 0;;
    esac
 done
@@ -70,6 +69,8 @@ CONF_HOME=${UNIQUE_HOME}/conf
 BACKUP_HOME=${UNIQUE_HOME}/backups
 VAR_HOME=${UNIQUE_HOME}/var
 SYSTEM_SERVICE_FILE=/lib/systemd/system/$SYSTEM_NAME.service
+GROUP=$USER
+GROUP_ID=$USER_ID
 
 # if [ -z $FOAM_HOME ]; then
 #     echo "ERROR :: [$HOSTNAME] FOAM_HOME is undefined"
@@ -325,8 +326,8 @@ function setupSystemd {
         sudo rm "${SYSTEM_SERVICE_FILE}"
     fi
 
-    SERVICE_FILE=${FOAM_HOME}/etc/${SYSTEM_NAME}.service
-    sudo cp ${FOAM_HOME}/etc/system.service ${SERVICE_FILE}
+    SERVICE_FILE="${FOAM_HOME}/etc/${SYSTEM_NAME}.service"
+    sudo cp "${FOAM_HOME}/etc/system.service" ${SERVICE_FILE}
     sudo sed -i -e "s/SYSTEM_NAME/${SYSTEM_NAME}/g" ${SERVICE_FILE}
     sudo sed -i -e "s/VERSION/${VERSION}/g" ${SERVICE_FILE}
     sudo sed -i -e "s/USER/${USER}/g" ${SERVICE_FILE}

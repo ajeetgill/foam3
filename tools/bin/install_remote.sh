@@ -2,8 +2,6 @@
 
 USER='foam'
 USER_ID=3626
-GROUP='foam'
-GROUP_ID=3626
 
 FOAM_TARBALL=
 FOAM_REMOTE_OUTPUT=/tmp
@@ -31,26 +29,25 @@ function usage {
     echo "  -B <true | false>  : backup"
     echo "  -c                   : enable clustering, CLUSTER=true"
     echo "  -C <true | false>  : clustering"
-    echo "  -G name            : Group name"
     echo "  -i                 : Install only"
     echo "  -I <ssh-key>       : SSH Key to use to connect to remote server"
     echo "  -O <path>          : Remote Location to put tarball, default to /tmp"
     echo "  -R <filepath>      : remoterc file to load, default to ./config/foam/remoterc"
     echo "  -S name            : systemd service name"
     echo "  -T <tarball>       : Name of tarball, looks in target/package"
-    echo "  -U name            : User name"
+    echo "  -U name            : User and Group name"
     echo "  -V version         : application version"
     echo "  -W <web-address>   : Remote url to connect to"
     echo "  -X name            : Remote user to connect to"
+    echo "  -Y userId          : User and Group ID"
     echo ""
 }
 
-while getopts "B:cC:G:iI:O:R:S:T:U:V:W:X:" opt ; do
+while getopts "B:cC:iI:O:R:S:T:U:V:W:X:Y:" opt ; do
     case $opt in
         B) BACKUP=${OPTARG};;
         c) CLUSTER=true;;
         C) CLUSTER=${OPTARG};;
-        G) GROUP==${OPTARG};;
         i) INSTALL_ONLY=1;;
         I) SSH_KEY=${OPTARG};;
         O) FOAM_REMOTE_OUTPUT=${OPTARG};;
@@ -61,6 +58,7 @@ while getopts "B:cC:G:iI:O:R:S:T:U:V:W:X:" opt ; do
         V) VERSION=${OPTARG};;
         W) REMOTE_URL=${OPTARG};;
         X) REMOTE_USER=${OPTARG};;
+        Y) USER_ID=${OPTARG};;
         ?) usage; exit 0;;
    esac
 done
@@ -118,11 +116,7 @@ if [ $INSTALL_ONLY -eq 0 ]; then
     fi
 fi
 
-echo SYSTEM_NAME=$SYSTEM_NAME
-echo VERSION=$VERSION
-echo USER=$USER
-
-ssh ${SSH_KEY_OPT} ${REMOTE} "sudo bash -s -- -D${FOAM_REMOTE_OUTPUT}/${FOAM_TARBALL} -C${CLUSTER} -B${BACKUP} -S${SYSTEM_NAME} -V${VERSION} -U${USER} -G${GROUP}" < ./foam3/tools/deploy/bin/install.sh
+ssh ${SSH_KEY_OPT} ${REMOTE} "sudo bash -s -- -D${FOAM_REMOTE_OUTPUT}/${FOAM_TARBALL} -C${CLUSTER} -B${BACKUP} -S${SYSTEM_NAME} -V${VERSION} -U${USER} -Y${USER_ID}" < ./foam3/tools/deploy/bin/install.sh
 
 if [ ! $? -eq 0 ]; then
     quit;
