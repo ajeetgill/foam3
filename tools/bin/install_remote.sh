@@ -4,6 +4,7 @@ NAME=foam
 SYSTEM_NAME=foam
 USER=foam
 USER_ID=3626
+WEB_PORT=8443
 
 source build/env.sh
 
@@ -36,7 +37,6 @@ function usage {
     echo "  -O <path>          : Remote Location to put tarball, default to /tmp"
     echo "  -R <filepath>      : remoterc file to load, default to ./config/foam/remoterc"
     echo "  -T <tarball>       : Name of tarball, looks in target/package"
-    echo "  -W <web-address>   : Remote url to connect to"
     echo "  -X name            : Remote user to connect to"
     echo ""
 }
@@ -110,7 +110,7 @@ if [ $INSTALL_ONLY -eq 0 ]; then
     fi
 fi
 
-ssh ${SSH_KEY_OPT} ${REMOTE} "sudo bash -s -- -D${FOAM_REMOTE_OUTPUT}/${FOAM_TARBALL} -C${CLUSTER} -B${BACKUP} -A${NAME} -S${SYSTEM_NAME} -V${VERSION} -U${USER} -Y${USER_ID}" < ./foam3/tools/deploy/bin/install.sh
+ssh ${SSH_KEY_OPT} ${REMOTE} "sudo bash -s -- -D${FOAM_REMOTE_OUTPUT}/${FOAM_TARBALL} -C${CLUSTER} -B${BACKUP} -A${NAME} -S${SYSTEM_NAME} -V${VERSION} -U${USER} -Y${USER_ID} -W${WEB_PORT}" < ./foam3/tools/deploy/bin/install.sh
 
 if [ ! $? -eq 0 ]; then
     quit;

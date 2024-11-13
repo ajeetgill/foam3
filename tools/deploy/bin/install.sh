@@ -1,10 +1,11 @@
-
 #!/bin/bash
+
 APP_NAME=
 SYSTEM_NAME=
 VERSION=
 USER=
 USER_ID=
+WEB_PORT=8443
 FOAM_TARBALL=
 FOAM_REMOTE_OUTPUT=/tmp/tar_extract
 BACKUP=true
@@ -38,11 +39,12 @@ function usage {
     echo "  -S name           : systemd service name"
     echo "  -U name           : User and Group name"
     echo "  -V version        : application version"
+    echo "  -W port           : Web port"
     echo "  -Y userId         : User and Group ID"
     echo ""
 }
 
-while getopts "A:B:C:D:O:S:U:V:Y:" opt ; do
+while getopts "A:B:C:D:O:S:U:V:W:Y:" opt ; do
     case $opt in
         A) APP_NAME=${OPTARG};;
         B) BACKUP=${OPTARG};;
@@ -52,6 +54,7 @@ while getopts "A:B:C:D:O:S:U:V:Y:" opt ; do
         S) SYSTEM_NAME=${OPTARG};;
         U) USER=${OPTARG};;
         V) VERSION=${OPTARG};;
+        W) WEB_PORT=${OPTARG};;
         Y) USER_ID=${OPTARG};;
         ?) usage; exit 0;;
    esac
@@ -329,6 +332,7 @@ function setupSystemd {
     sed -i -e "s/VERSION/${VERSION}/g" ${SERVICE_FILE}
     sed -i -e "s/USER/${USER}/g" ${SERVICE_FILE}
     sed -i -e "s/GROUP/${GROUP}/g" ${SERVICE_FILE}
+    sed -i -e "s/WEB_PORT/${WEB_PORT}/g" ${SERVICE_FILE}
 
     sudo ln -s ${SERVICE_FILE} ${SYSTEM_SERVICE_FILE}
 

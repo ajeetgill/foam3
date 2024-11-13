@@ -11,7 +11,8 @@ foam.POM({
       { name: 'NAME', value: 'foam'},
       { name: 'SYSTEM_NAME', value: 'foam'},
       { name: 'USER', value: 'foam' },
-      { name: 'USER_ID', value: 3626 }
+      { name: 'USER_ID', value: 3626 },
+      { name: 'WEB_PORT', value: 8443 }
     ],
     excludes: [ 'node_modules' ],
     projects: [
