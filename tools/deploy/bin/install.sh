@@ -30,7 +30,7 @@ function usage {
     echo "Usage: $0 [OPTIONS]"
     echo ""
     echo "Options are:"
-    echo "  -A name           : Application name, also jar prefix"
+    echo "  -A <app-name>     : Application name, also prefix of jar file"
     echo "  -B <true | false> : disable Backup "
     echo "  -C <true | false> : Enable clustering"
     echo "  -D <path>         : Remote location of tarball"

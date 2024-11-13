@@ -33,6 +33,7 @@ function usage {
     echo "Usage: $0 [OPTIONS]"
     echo ""
     echo "Options are:"
+    echo "  -A <app_name>       : Application nmae and also prefix of jar file"
     echo "  -C <true>           : enable clustering"
     echo "  -D 0 or 1           : Debug mode."
     echo "  -E <debug port>     : Port to run debugger on."
@@ -40,7 +41,6 @@ function usage {
     echo "  -H <hostname>       : hostname "
     echo "  -J 0 or 1           : JProfiler enabled"
     echo "  -P PORT             : JProfiler PORT"
-    echo "  -N <name>           : Application name (also name prefix on jar)"
     echo "  -S <system_name>    : System name."
     echo "  -U <user>           : User to run script as"
     echo "  -V <version>        : Version."
@@ -49,8 +49,9 @@ function usage {
     echo "  -Z <0/1>            : Daemonize."
 }
 
-while getopts "C:D:E:F:H:J:N:P:S:U:V:W:Y:Z:" opt ; do
+while getopts "A:C:D:E:F:H:J:P:S:U:V:W:Y:Z:" opt ; do
     case $opt in
+        A) APP_NAME=$OPTARG;;
         C) CLUSTER=$OPTARG;;
         D) DEBUG_DEV=$OPTARG;;
         E) DEBUG_PORT=$OPTARG;;
@@ -58,7 +59,6 @@ while getopts "C:D:E:F:H:J:N:P:S:U:V:W:Y:Z:" opt ; do
         H) HOST_NAME=$OPTARG;;
         J) PROFILER=$OPTARG;;
         P) PROFILER_PORT=$OPTARG;;
-        N) APP_NAME=$OPTARG;;
         S) SYSTEM_NAME=$OPTARG;;
         U) RUN_USER=$OPTARG;;
         V) VERSION=$OPTARG;;
