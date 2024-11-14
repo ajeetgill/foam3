@@ -37,7 +37,8 @@ function usage {
     echo "  -O <path>          : Remote Location to put tarball, default to /tmp"
     echo "  -R <filepath>      : remoterc file to load, default to ./config/foam/remoterc"
     echo "  -T <tarball>       : Name of tarball, looks in target/package"
-    echo "  -X name            : Remote user to connect to"
+    echo "  -W hostname        : Remote host to connect to"
+    echo "  -X name            : Remote user to connect as"
     echo ""
 }
 
