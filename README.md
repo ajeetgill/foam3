@@ -37,47 +37,51 @@ tools by doing the following.
 
 * Install nodejs.
 
-* Run 'npm install' in the root of the FOAM repository, where
+* Run `npm install` in the root of the FOAM repository, where
   package.json is found.
 
 ## Building Java
 
-`./build.sh`
+**NOTE: default configuration is setup for Java 21** 
 
-**-h** - help - show all options
+If using a version less than 21, change the `java: 21` property in the root pom.js.
 
-common commands:
-**-c** - clean
-**-d** - debug mode allowing connection by a remote debugger
-**-j** - delete runtime journals
-**-Jpom1,pom2,...,pomN** - where pomN,... are found relative to the deployment folder. 
-**-u** - build and deploy from a single Java jar file
+If deploying with **-u** or remotely, update the garbage collection configuration in `tools/deploy/etc/shrc.local`. 
 
+### Build and run Java webserver
+
+`./build.sh [options]`
+
+* visit: http://localhost:8080/src/foam/nanos/controller/index.html
+
+#### common options:
+
+* **-h** - help - show all options
+* **-c** - clean
+* **-d** - debug mode allowing connection by a remote debugger
+* **-j** - delete runtime journals
+* **-Jpom1,pom2,...,pomN** - where pomN,... are found relative to the deployment folder. 
+* **-u** - build and deploy from a single Java jar file
+
+#### If building with option **-u**, then 
+
+* visit: https://localhost:8443
+
+<!--
 ## Running Application Controller
 
 The FOAM Application Controller allows you to access components of your foam
 app by using the browser & displaying it as a GUI.
 To access, run the following in the parent directory of foam3:
-
-* Build (see above)
-
-* Visit http://localhost:8080/src/foam/nanos/controller/index.html
-
-If building with option **-u**, then visit
-https://localhost:8443
+-->
 
 ## Remote deployment
 
 To build and deploy to a remote linux instance
 
-build with
-`./build.sh -uck[Jpom...]`
-
-then deploy with
-`foam3/tools/bin/install.sh hostname`
-
-then visit
-https://hostname:8443
+1. build: `./build.sh -uck[Jpom...]`
+1. deploy: `foam3/tools/bin/install.sh hostname`
+1. visit: https://hostname:8443
 
 ## Style Guide
 
