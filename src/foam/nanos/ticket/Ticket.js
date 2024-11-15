@@ -245,7 +245,9 @@ foam.CLASS({
       value: '',
       storageTransient: true,
       section: 'infoSection',
+      createVisibility: 'HIDDEN',
       readVisibility: 'HIDDEN',
+      updateVisibility: 'RW',
       validationPredicates: [
         {
           args: ['id', 'comment', 'externalComment'],
