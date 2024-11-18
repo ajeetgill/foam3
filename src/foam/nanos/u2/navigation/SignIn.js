@@ -223,7 +223,7 @@ foam.CLASS({
                 }
                 authwindow.close();
               }
-            }
+            };
 
             window.addEventListener('message', listener);
 
@@ -234,7 +234,7 @@ foam.CLASS({
         }
 
         this.subject = await this.auth.getCurrentSubject(x);
-        this.username = this.subject.user
+        this.username = this.subject.user;
         await this.ctrl.reloadClient();
         this.loginSuccess = true;
         await this.ctrl.onUserAgentAndGroupLoaded();

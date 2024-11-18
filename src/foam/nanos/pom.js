@@ -229,6 +229,8 @@ foam.POM({
     { name: "auth/UserPropertyAvailabilityServiceInterface",                              flags: "js|java" },
     { name: "auth/ClientUserPropertyAvailabilityService",                                 flags: "js|java" },
     { name: "auth/UserMDCitationView",                                                    flags: "js" },
+    { name: "auth/UserRegistrationDAO",                                                   flags: "js|java" },
+    { name: "auth/UserRegistrationSanitationDAO",                                         flags: "js|java" },
     { name: "auth/CommonPassword",                                                        flags: "js|java" },
     { name: "auth/AddressConfig",                                                         flags: "js|java" },
     { name: "auth/AuthorizeAnonymousClientDecorator",                                     flags: "js" },

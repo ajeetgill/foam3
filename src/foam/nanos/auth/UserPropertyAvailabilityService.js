@@ -38,8 +38,7 @@ foam.CLASS({
       javaCode: `
         if ( getX().get("crunchService") == null ||
              ( ! targetProperty.equals("userName") &&
-               ! targetProperty.equals("email") )
-        ) {
+               ! targetProperty.equals("email") ) ) {
           throw new AuthorizationException();
         }
 
@@ -49,24 +48,24 @@ foam.CLASS({
         if ( "email".equals(targetProperty) ) {
           if ( PreventDuplicateEmailAction.spidPreventDuplicateEmailPermission(getX(), spid) ) {
             return
-              (
-                userDAO
+              userDAO
                 .find(AND(
                   EQ(User.EMAIL, value),
                   EQ(User.TYPE, "User"),
-                  EQ(User.SPID, spid)))
-              ) == null;
+                  EQ(User.SPID, spid),
+                  NEQ(User.LIFECYCLE_STATE, LifecycleState.DELETED)
+                )) == null;
           }
           return true;
         }
         return
-          (
-            userDAO
+          userDAO
             .find(AND(
               EQ(User.USER_NAME, value),
               EQ(User.TYPE, "User"),
-              EQ(User.SPID, spid)))
-          ) == null;
+              EQ(User.SPID, spid),
+              NEQ(User.LIFECYCLE_STATE, LifecycleState.DELETED)
+            )) == null;
       `
     }
   ]

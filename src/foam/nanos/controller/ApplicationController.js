@@ -69,6 +69,7 @@ foam.CLASS({
   ],
 
   imports: [
+    'auth',
     'analyticEventDAO',
     'capabilityDAO',
     'installCSS',
@@ -202,9 +203,9 @@ foam.CLASS({
   properties: [
     {
       name: 'loginVariables',
-      expression: function(client$userDAO) {
+      expression: function(client$userRegistrationDAO) {
         return {
-          dao_: client$userDAO || null,
+          dao_: client$userRegistrationDAO || null,
           imgPath: ''
         };
       }
@@ -371,7 +372,7 @@ foam.CLASS({
       of: 'foam.nanos.auth.Language',
       name: 'defaultLanguage',
       factory: function() {
-        return foam.nanos.auth.Language.create({code: 'en'})
+        return foam.nanos.auth.Language.create({code: 'en'});
       }
     },
     {
@@ -423,23 +424,21 @@ foam.CLASS({
       // done to start using SectionedDetailViews instead of DetailViews
       this.__subContext__.register(foam.u2.detail.SectionedDetailView, 'foam.u2.DetailView');
 
-      var self = this;
-
       // Reload styling on theme change
       this.onDetach(this.sub('themeChange', this.reloadStyles));
     },
 
     async function initMenu() {
       if ( this.route ) {
-        this.pushMenu(this.route)
+        this.pushMenu(this.route);
       } else  {
         this.pushDefaultMenu();
       }
     },
 
-    function onClientLoad() {
+    async function onClientLoad() {
       let self = this;
-      this.clientPromise.then(async function(client) {
+      await this.clientPromise.then(async function(client) {
         if ( self.client != client ) {
           console.log('Stale Client in ApplicationController, waiting for update.');
           await self.client.promise;
@@ -499,19 +498,37 @@ foam.CLASS({
       });
     },
 
-    function render() {
-      var self = this;
-      self.addMacroLayout();
+    async function render() {
+      // var self = this;
+      // self.addMacroLayout();
+      // this.onClientLoad();
+      // this.initLayout.then(() => {
+      //   this.layoutInitialized = true;
+      // });
+      // window.addEventListener('resize', this.updateDisplayWidth);
+      // this.updateDisplayWidth();
+
+
+      // self.AppStyles.create();
+      // self.Fonts.create();
+      this.addMacroLayout();
       this.onClientLoad();
-      this.initLayout.then(() => {
-        this.layoutInitialized = true;
-      });
+      if ( ! this.client || ! this.client.auth ) {
+        await this.reloadClient();
+      }
+      this.fetchSubject();
+      // adding a listener to track the display width here as well since we don't call super
       window.addEventListener('resize', this.updateDisplayWidth);
       this.updateDisplayWidth();
 
+      this.initLayout.then(() => {
+        this.layoutInitialized = true;
+      });
 
-      self.AppStyles.create();
-      self.Fonts.create();
+      foam.nanos.controller.AppStyles.create({}, this);
+      foam.nanos.controller.Fonts.create({}, this);
+      this.AppStyles.create();
+      this.Fonts.create();
     },
 
     async function reloadClient() {
@@ -562,7 +579,7 @@ foam.CLASS({
         // TODO: don't update language setting for anonymous users
         // Can tell if a user is anonymous if their id === their spid's.anonymousUser
         if ( ! userPreferLanguage ) {
-          foam.locale = this.defaultLanguage.toString()
+          foam.locale = this.defaultLanguage.toString();
           let user = this.subject.realUser;
           user.language = this.defaultLanguage.id;
           await client.userDAO.put(user);
@@ -595,7 +612,7 @@ foam.CLASS({
 
         promptLogin = promptLogin && await this.client.auth.check(this, 'auth.promptlogin');
         var authResult =  await this.client.auth.check(this, '*');
-        if ( ! result || ! result.user ) throw new Error();
+        if ( ! result || ! result.user || promptLogin && ! authResult ) throw new Error();
         this.fetchGroup();
       } catch (err) {
         if ( ! promptLogin || authResult ) return;
@@ -718,7 +735,7 @@ foam.CLASS({
 
     async function findDefaultMenu(dao) {
       var menu;
-      var menuArray = this.theme?.defaultMenu.concat(this.theme?.unauthenticatedDefaultMenu)
+      var menuArray = this.theme?.defaultMenu.concat(this.theme?.unauthenticatedDefaultMenu);
       if ( ! menuArray || ! menuArray.length ) return null;
       for ( menuId in menuArray ) {
         menu = await dao.find(menuArray[menuId]);
@@ -754,23 +771,31 @@ foam.CLASS({
 
     function requestLogin() {
       var self = this;
+      var view =  {
+        // REVIEW: BaseUnAuthBorder failing render - blank screen
+        // ...(self.loginView ?? { class: 'foam.u2.borders.BaseUnAuthBorder' }),
+        // children: [ { class: 'foam.u2.view.LoginView', mode_: 'SignIn' } ]
+        ...(self.loginView ?? { class: 'foam.u2.view.LoginView' }),
+        mode_: 'SignIn'
+      };
 
       // don't go to log in screen if going to reset password screen
       if ( location.hash && location.hash === '#reset' ) {
-        return new Promise(function(resolve, reject) {
-          self.stack.set({
-            class: 'foam.nanos.auth.ChangePasswordView',
-            modelOf: 'foam.nanos.auth.resetPassword.ResetPasswordByToken'
-           }, self);
-          self.loginSuccess$.sub(resolve);
-        });
+        view = {
+          class: 'foam.nanos.auth.ChangePasswordView',
+          modelOf: 'foam.nanos.auth.resetPassword.ResetPasswordByToken'
+        };
       }
 
+      // don't go to log in screen if going to sign up password screen
+      if ( location.hash && location.hash === '#sign-up' && ! self.loginSuccess ) {
+        view = {
+          ...(self.loginView ?? { class: 'foam.u2.view.LoginView' }),
+          mode_: 'SignUp'
+        };
+      }
       return new Promise(function(resolve, reject) {
-        self.stack.set({
-            ...(self.loginView ?? { class: 'BaseUnAuthBorder' }),
-            children: [ { class: 'foam.u2.view.LoginView', mode_: 'SignIn' } ]
-          },self);
+        self.stack.set(view, self);
         self.loginSuccess$.sub(resolve);
       });
     },
@@ -785,14 +810,18 @@ foam.CLASS({
       var notification = this.Notification.create();
 
       notification.userId = this.subject && this.subject.realUser ?
-        this.subject.realUser.id : this.user.id;
+        this.subject.realUser.id : this.user && this.user.id || 0;
       notification.toastMessage    = toastMessage;
       notification.toastSubMessage = toastSubMessage;
       notification.toastState      = this.ToastState.REQUESTED;
       notification.severity        = severity || this.LogLevel.INFO;
       notification.transient       = foam.Undefined.isInstance(transient) ? true : transient;
       notification.icon            = icon;
-      this.__subContext__.myNotificationDAO?.put(notification);
+      if ( notification.userId == 0 ) {
+        this.__subContext__.notificationDAO?.put(notification);
+      } else {
+        this.__subContext__.myNotificationDAO?.put(notification);
+      }
     },
 
     function displayToastMessage(sub, on, put, obj) {
@@ -1038,7 +1067,7 @@ foam.CLASS({
       }
     },
     function logAnalyticEvent(evt) {
-      this.__subContext__.analyticEventDAO.put(this.AnalyticEvent.create(evt), this);
+      this.__subContext__.analyticEventDAO?.put(this.AnalyticEvent.create(evt), this);
     }
   ]
 });

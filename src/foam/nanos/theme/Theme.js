@@ -206,8 +206,8 @@ foam.CLASS({
       class: 'String',
       name: 'loginView',
       documentation: `Border used to wrap unauthenticated views like loginViews. Set to nullBorder for no additional borders`,
-      value: 'foam.u2.borders.BaseUnAuthBorder'
     },
+//      value: 'foam.u2.borders.BaseUnAuthBorder'
     {
       class: 'Image',
       name: 'logo',

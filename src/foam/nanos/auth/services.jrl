@@ -459,3 +459,39 @@ p({
     }
   """
 })
+
+p({
+  "class": "foam.nanos.boot.NSpec",
+  "name": "userRegistrationDAO",
+  "lazy": false,
+  "serve": true,
+  "authenticate": false,
+  "authNotes": "UserRegistrationDAO disables find, select and remove operations.",
+  "serviceScript":
+  """
+    return new foam.dao.EasyDAO.Builder(x)
+      .setOf(foam.nanos.auth.User.getOwnClassInfo())
+      .setInnerDAO(x.get("localUserDAO"))
+      .setDecorator(
+        new foam.nanos.auth.UserRegistrationSanitationDAO(x,
+        new foam.nanos.auth.UserRegistrationDAO(x,
+        new foam.dao.NullDAO(x,foam.nanos.auth.User.getOwnClassInfo()))))
+      .setAuthorize(false)
+      .setRuler(true)
+      .setPm(true)
+      .setValidated(true)
+      .setEnableInterfaceDecorators(false)
+      .build();
+  """,
+  "client": """
+    {
+      "of": "foam.nanos.auth.User",
+      "cache": true,
+      "retryBoxMaxAttempts": 0
+    }
+  """
+})
+// "decorators": [
+//   { "class": "foam.nanos.fs.FileDAODecorator" },
+//   { "class": "foam.nanos.fs.FileArrayDAODecorator"}
+// ],

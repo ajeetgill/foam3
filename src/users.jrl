@@ -28,3 +28,24 @@ p({
   "onboarded":true,
   "loginEnabled":true
 })
+p({
+  class:"foam.nanos.auth.User",
+  id:95250647,
+  spid:"foam",
+  userName:"anonymous-foam",
+  firstName:"Anonymous",
+  lastName:"Foam",
+  email:"anonymous-foam@foam.foam",
+  emailVerified:true,
+  password:"WsJlIJDGGGQ=:cnE+tRNtF/yhOheF2POyNuocgKTZDVyXia7dITQFUEVPS9hpuQqp8lVTTm2iQQXbYk/8cBUCOV/prsUkO793Sg==",
+  passwordLastModified:1596216443346,
+  created:1596216443346,
+  lastModified:1596216443346,
+  lifecycleState:1,
+  lastModifiedBy:1,
+  group:"anonymous",
+  createdBy:1,
+  createdByAgent:1,
+  compliance:2,
+  isPublic: false
+})

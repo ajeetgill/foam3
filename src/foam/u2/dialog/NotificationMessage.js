@@ -224,8 +224,10 @@ foam.CLASS({
                   this.add(self.description);
                   console.log(self.description);
                 }, function() {
-                  this.tag(self.description);
-                  console.log(self.description);
+                  if ( self.description ) {
+                    this.tag(self.description);
+                    console.log(self.description);
+                  }
                 })
               .end()
             .end()
