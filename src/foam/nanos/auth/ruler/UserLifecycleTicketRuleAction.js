@@ -81,6 +81,12 @@ foam.CLASS({
               ticket.setStatus("CLOSED");
             } catch (Throwable t) {
               ticket.setMessage(t.getMessage());
+              if ( nu == LifecycleState.DISABLED ||
+                   nu == LifecycleState.DELETED ) {
+                user.setLoginEnabled(false);
+                ((Logger) x.get("logger")).warning("UserLifecycleTicket", user.getId(), "disable login", t.getMessage());
+                ((DAO) ruler.getX().get("localUserDAO")).put(user);
+              }
             }
           }
         }, "UserLifecycleTicketRuleAction");
