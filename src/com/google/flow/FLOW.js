@@ -254,7 +254,7 @@ foam.CLASS({
       name: 'scope',
       factory: function() {
         var self = this;
-        return {
+        var scope = {
           repeat: function(n, fn) {
             for ( var i = 1 ; i <= n ; i++ ) fn.call(this, i);
             return this;
@@ -329,6 +329,8 @@ foam.CLASS({
             }).then(function() { if ( ! first ) log('\nflow> '); });
           }
         };
+        scope.scope = scope;
+        return scope;
       },
       documentation: 'Scope to run reactive formulas in.'
     },
@@ -736,6 +738,12 @@ foam.CLASS({
 
           if ( this.Physical.isInstance(o) ) {
             this.physics.remove(o);
+          }
+
+          // TODO: This is poor design but the above doesn't work because
+          // Spring and Strut aren't physical
+          if ( com.google.flow.Spring.isInstance(o) || com.google.flow.Strut.isInstance(o) ) {
+            o.detach();
           }
         } else {
           this.properties.find(p.parent).then(function(p2) {
