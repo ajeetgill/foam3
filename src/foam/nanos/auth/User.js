@@ -1035,15 +1035,15 @@ foam.CLASS({
         if ( getLifecycleState() != foam.nanos.auth.LifecycleState.ACTIVE ) {
           throw new AuthenticationException("User disabled");
         }
-        
+
         // check if user login enabled
         if ( ! getLoginEnabled() ) {
           throw new AccessDeniedException();
         }
-        
-        if ( ! getEmailVerified() ) {
-          throw new UnverifiedEmailException();
-        }
+        // This is an application requirement, not foam's.
+        //   if ( ! getEmailVerified() ) {
+        //     throw new UnverifiedEmailException();
+        //   }
       `
     }
   ]
