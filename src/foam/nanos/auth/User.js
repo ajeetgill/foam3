@@ -653,9 +653,9 @@ foam.CLASS({
       readVisibility: 'RO',
       documentation: `
         Setting default lifecyclestate as ACTIVE and moving PENDING
-        value to nanopay refinement because foam User does not implement 
+        value to application refinement because foam User does not implement 
         ApprovableAware interface, whose decorator (ApprovableAwareDAO) 
-        is responsible for setting the lifecyclestate to ACTIVE on create.
+        can be responsible for setting the lifecyclestate to ACTIVE on create.
       `,
     },
     {
