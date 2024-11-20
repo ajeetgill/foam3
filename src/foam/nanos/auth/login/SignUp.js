@@ -8,10 +8,15 @@ foam.CLASS({
   package: 'foam.nanos.auth.login',
   name: 'SignUp',
 
+  requires: [
+    'foam.nanos.auth.User'
+  ],
+
   messages: [
     { name: 'EMAIL_ERR', message: 'Valid email required' },
     { name: 'PASSWORD_ERR', message: 'Password should be at least 10 characters' },
     { name: 'USERNAME_EMPTY_ERR', message: 'Username required' },
+    { name: 'USERNAME_ERR', message: 'Valid username required' },
     { name: 'USERNAME_AVAILABILITY_ERR', message: 'This username is taken. Please try another.' },
     { name: 'EMAIL_AVAILABILITY_ERR', message: 'This email is already in use. Please sign in or use a different email' },
     { name: 'WEAK_PASSWORD_ERR', message: 'Password is weak' }
@@ -27,10 +32,8 @@ foam.CLASS({
         return {
           class: 'foam.u2.view.UserPropertyAvailabilityView',
           icon: 'images/checkmark-small-green.svg',
-          onKey: true,
           isAvailable$: X.data.usernameAvailable$,
-          inputValidation: /^[^\s\/]+$/,
-          restrictedCharacters: /^[^\s\/]$/
+          inputValidation: X.data.User.USER_NAME_MATCHER
         };
       },
       validationPredicates: [
@@ -41,8 +44,8 @@ foam.CLASS({
         },
         {
           args: ['usernameAvailable'],
-          query: 'usernameAvailable==true',
-          errorMessage: 'USERNAME_AVAILABILITY_ERR'
+          query: 'usernameAvailable!="invalid"',
+          errorMessage: 'USERNAME_ERR'
         }
       ]
     },
