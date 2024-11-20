@@ -430,6 +430,8 @@ p({
   "authenticate": true,
   "boxClass": "foam.nanos.auth.UniqueUserServiceSkeleton",
   "serviceScript": """
+    x = x.put("localUserDAO", x.get("localUserDAO")
+      .where(foam.mlang.MLang.NEQ(foam.nanos.auth.User.LIFECYCLE_STATE, foam.nanos.auth.LifecycleState.DELETED)));
     ul = new foam.nanos.auth.PreventDuplicateEmailLoginService(x);
     ul = new foam.nanos.auth.FilterBySpidService.Builder(x)
       .setDelegate(ul)
