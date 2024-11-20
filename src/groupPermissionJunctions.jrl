@@ -12,12 +12,13 @@ p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"anonymous",targetId
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"anonymous",targetId:"service.prerequisiteCapabilityJunctionDAO"})
 
 // basicUser
+p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.serviceProviderDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.userDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.groupDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"group.read.basicUser"})
-p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"localsetting.create"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.languageDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.localSettingDAO"})
+p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"localsetting.create"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.strategyDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.strategizer"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"historyrecord.create"})
@@ -26,7 +27,7 @@ p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"menu.read.currency"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"menu.read.notifications"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"menu.read.password"})
-p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"menu.read.set-password"})
+// p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"menu.read.set-password"}) - requires email support
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"menu.read.set-personal"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"menu.read.sign-out"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"menu.read.settings"})
@@ -59,6 +60,7 @@ p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.notificationSettingDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.notificationSettingDefaultsDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"notificationsetting.create"})
+p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"menu.read.notification-settings"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"strategyreference.read.NotificationSetting-NotificationSetting"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"strategyreference.read.NotificationSetting-EmailSetting"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"strategyreference.read.NotificationSetting-SmsSetting"})
@@ -67,7 +69,6 @@ p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.myNotificationDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.notificationTemplateDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"notificationtemplate.read.*"})
-p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"menu.read.notification-settings"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"rule.read.create-referralCode"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"referralCode.create"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.referralCodeDAO"})
@@ -76,3 +77,4 @@ p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId
 
 // foam
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"foam",targetId:"group.read.foam"})
+p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"foam",targetId:"serviceprovider.read.foam"})
