@@ -143,10 +143,8 @@ foam.CLASS({
           throw new UserNotFoundException();
         }
 
-        if ( user.passwordIsSet_ ) {
-          if ( ! Password.verify(password, user.getPassword()) ) {
-            throw new InvalidPasswordException();
-          }
+        if ( ! Password.verify(password, user.getPassword()) ) {
+          throw new InvalidPasswordException();
         }
 
         return getLoginService().login(x, user); 
