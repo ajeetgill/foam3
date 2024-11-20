@@ -34,11 +34,7 @@ foam.CLASS({
               EQ(User.EMAIL, identifier.toLowerCase()),
               EQ(User.USER_NAME, identifier)
             ),
-            OR (
-              // REVIEW - create user flow - new user is PENDING - temporary. - Joel,
-              EQ(User.LIFECYCLE_STATE, LifecycleState.PENDING),
-              EQ(User.LIFECYCLE_STATE, LifecycleState.ACTIVE)
-            )
+            EQ(User.LIFECYCLE_STATE, LifecycleState.ACTIVE)
           ));
 
         // TODO: this needs to be predicate on the capability which imposes unique emails.
