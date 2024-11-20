@@ -405,6 +405,9 @@ foam.CLASS({
       name: 'signInAction',
       label: 'Sign in',
       buttonStyle: 'PRIMARY',
+      isEnabled: function(data, data$errors_) {
+        return data && ! data$errors_;
+      },
       code: function(X) {
         this.clientLoginService.signin(X, this.data);
       }
@@ -413,6 +416,9 @@ foam.CLASS({
       name: 'signUpAction',
       label: 'Get started',
       buttonStyle: 'PRIMARY',
+      isEnabled: function(data, data$errors_) {
+        return data && ! data$errors_;
+      },
       code: function(X) {
         this.clientLoginService.signup(X, this.data);
       }
