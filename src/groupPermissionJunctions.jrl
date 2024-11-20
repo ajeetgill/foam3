@@ -32,8 +32,10 @@ p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"menu.read.settings"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"menu.read.user-config"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"menu.read.redirect"})
+p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.addressConfigDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"user.rw.lifecyclestate"}) // REVIEW
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.columnConfigToPropertyConverter"})
+p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.unitDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"unit.read.*"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.emailMessageDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.groupPermissionJunctionDAO"})
@@ -44,6 +46,7 @@ p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.blobService"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.referralCodeDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"referralcode.create"})
+p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"rule.read.create-referralCode"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.capabilityDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.userCapabilityJunctionDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.crunchService"})
