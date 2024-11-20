@@ -36,7 +36,11 @@ foam.CLASS({
     {
       name: 'checkAvailability',
       javaCode: `
-        if ( getX().get("crunchService") == null ||
+        // NOTE: query with system context, as this is usually being
+        // called anonymous during user signup
+        x = getX();
+
+        if ( x.get("crunchService") == null ||
              ( ! targetProperty.equals("username") &&
                ! targetProperty.equals("email") )
         ) {
@@ -45,9 +49,9 @@ foam.CLASS({
 
         Theme theme = (Theme) ((Themes) x.get("themes")).findTheme(x);
         var spid = theme.getSpid();
-        DAO userDAO = ((DAO) getX().get("localUserDAO")).inX(x);
+        DAO userDAO = ((DAO) x.get("localUserDAO")).inX(x);
         if ( "email".equals(targetProperty) ) {
-          if ( PreventDuplicateEmailAction.spidPreventDuplicateEmailPermission(getX(), spid) ) {
+          if ( PreventDuplicateEmailAction.spidPreventDuplicateEmailPermission(x, spid) ) {
             return
               userDAO
                 .find(AND(
