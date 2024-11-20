@@ -178,6 +178,13 @@ foam.CLASS({
       view: { class: 'foam.u2.detail.VerticalDetailView' }
     },
     {
+      name: 'view',
+      factory: () => {
+       return {};
+      },
+      view: { class: 'foam.u2.detail.VerticalDetailView' }
+    },
+    {
       name: 'param',
       factory: function() {
         return {};
@@ -294,7 +301,7 @@ foam.CLASS({
         .start()
           .addClass('align-end')
           .startContext({ data: self })
-            .callIf(self.mode_ == self.SIGN_IN && self.showAction, function() { this.tag(self.RESET_PASSWORD) })
+            .callIf(self.mode_ == self.SIGN_IN && self.showAction, function() { this.tag(self.RESET_PASSWORD); })
           .endContext()
         .end()
         .br()
@@ -306,8 +313,8 @@ foam.CLASS({
                 .startContext({ data: self })
                   .callIfElse(
                     self.mode_ == self.SIGN_IN,
-                    function() { this.tag(self.SIGN_IN_ACTION) },
-                    function() { this.tag(self.SIGN_UP_ACTION) }
+                    function() { this.tag(self.SIGN_IN_ACTION); },
+                    function() { this.tag(self.SIGN_UP_ACTION); }
                   )
                 .endContext()
                 .br()
@@ -322,24 +329,23 @@ foam.CLASS({
                       .addClass('text-with-pad')
                       .callIfElse(
                         self.mode_ == self.SIGN_IN,
-                        function() { this.add(self.SWITCH_TO_SIGN_UP_TXT) },
-                        function() { this.add(self.SWITCH_TO_SIGN_IN_TXT) }
+                        function() { this.add(self.SWITCH_TO_SIGN_UP_TXT); },
+                        function() { this.add(self.SWITCH_TO_SIGN_IN_TXT); }
                       )
                     .end()
                     .start('span')
                       .callIfElse(
                         self.mode_ == self.SIGN_IN,
-                        function() { this.add(self.SWITCH_TO_SIGN_UP) },
-                        function() { this.add(self.SWITCH_TO_SIGN_IN) }
+                        function() { this.add(self.SWITCH_TO_SIGN_UP); },
+                        function() { this.add(self.SWITCH_TO_SIGN_IN); }
                       )
                     .end()
                   .end()
                   .endContext()
                 .end();
-            })
+            });
           })
-        )
-        
+        );
 
       // CREATE SPLIT VIEW
       if ( this.imgPath || this.leftView ) {
