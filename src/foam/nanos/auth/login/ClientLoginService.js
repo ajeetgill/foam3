@@ -111,7 +111,6 @@ foam.CLASS({
         var user = await data.dao_.put(createdUser);
         if ( user ) {
           this.notify(this.SIGNUP_SUCCESS_TITLE, this.SIGNUP_SUCCESS_MSG, this.LogLevel.INFO, true);
-          x.notify(this.SIGNUP_SUCCESS_TITLE, this.SIGNUP_SUCCESS_MSG, this.LogLevel.INFO, true);
 
           var signinModel = this.SignIn.create({ identifier: data.email, username: data.username, email: data.email, password: data.desiredPassword });
           await this.signin(x, signinModel, wizardFlow);

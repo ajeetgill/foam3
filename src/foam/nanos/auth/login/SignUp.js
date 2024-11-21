@@ -32,8 +32,7 @@ foam.CLASS({
   properties: [
     {
       class: 'String',
-      name: 'userName',
-      label: 'Username',
+      name: 'username',
       placeholder: 'example123',
       view: function(_, X) {
         return {
@@ -46,12 +45,12 @@ foam.CLASS({
       required: true,
       validationPredicates: [
         {
-          args: ['usernameAvailable', 'userName'],
+          args: ['usernameAvailable', 'username'],
           query: 'usernameAvailable!="invalid"',
           errorMessage: 'USERNAME_INVALID_ERR'
         },
         {
-          args: ['usernameAvailable', 'userName'],
+          args: ['usernameAvailable', 'username'],
           query: 'usernameAvailable!="unavailable"',
           errorMessage: 'USERNAME_AVAILABILITY_ERR'
         }
