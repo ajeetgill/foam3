@@ -99,7 +99,7 @@ foam.CLASS({
         },
         {
           args: ['passwordAvailable'],
-          query: 'passwordAvailable=="available"',
+          query: 'passwordAvailable==true',
           errorMessage: 'WEAK_PASSWORD_ERR'
         }
       ]
