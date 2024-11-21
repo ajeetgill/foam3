@@ -73,6 +73,7 @@ foam.CLASS({
     'analyticEventDAO',
     'capabilityDAO',
     'installCSS',
+    'myNotificationDAO',
     'notificationDAO',
     'params',
     'sessionSuccess',
@@ -448,9 +449,9 @@ foam.CLASS({
       }
     },
 
-    async function onClientLoad() {
+    function onClientLoad() {
       let self = this;
-      await this.clientPromise.then(async function(client) {
+      this.clientPromise.then(async function(client) {
         if ( self.client != client ) {
           console.log('Stale Client in ApplicationController, waiting for update.');
           await self.client.promise;
@@ -510,23 +511,18 @@ foam.CLASS({
       });
     },
 
-    async function render() {
+    function render() {
       this.addMacroLayout();
       this.onClientLoad();
-      // if ( ! this.client || ! this.client.auth ) {
-      //   await this.reloadClient();
-      // }
-      this.fetchSubject();
-      // adding a listener to track the display width here as well since we don't call super
-      window.addEventListener('resize', this.updateDisplayWidth);
-      this.updateDisplayWidth();
-
       this.initLayout.then(() => {
         this.layoutInitialized = true;
       });
+      // this.fetchSubject();
+      window.addEventListener('resize', this.updateDisplayWidth);
+      this.updateDisplayWidth();
 
-      foam.nanos.controller.AppStyles.create({}, this);
-      foam.nanos.controller.Fonts.create({}, this);
+      // foam.nanos.controller.AppStyles.create({}, this);
+      // foam.nanos.controller.Fonts.create({}, this);
       this.AppStyles.create();
       this.Fonts.create();
     },
@@ -816,11 +812,15 @@ foam.CLASS({
       notification.severity        = severity || this.LogLevel.INFO;
       notification.transient       = foam.Undefined.isInstance(transient) ? true : transient;
       notification.icon            = icon;
-      if ( notification.userId == 0 ) {
-        this.__subContext__.notificationDAO?.put(notification);
-      } else {
-        this.__subContext__.myNotificationDAO?.put(notification);
-      }
+      var dao = notification.userId == 0 ?
+          this.notificationDAO || this.__subContext.notificationDAO :
+          this.myNotificationDAO || this.__subContext__.myNotificationDAO || this.notificationDAO || this.__subContext__.notificationDAO;
+      dao?.put(notification);
+    //   if ( notification.userId == 0 ) {
+    //     this.__subContext__.notificationDAO?.put(notification);
+    //   } else {
+    //     this.__subContext__.myNotificationDAO?.put(notification);
+    //   }
     },
 
     function displayToastMessage(sub, on, put, obj) {
