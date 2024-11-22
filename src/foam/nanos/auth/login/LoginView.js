@@ -172,22 +172,23 @@ foam.CLASS({
         .start('form')
           .setID('login')
           .startContext({ data: this }).tag(this.DATA).endContext()
-        .end()
         // signin signup action
-        .start()
-          .add(this.slot(function(showAction, mode_) {
-            return self.E().callIf(showAction, function() {
-              this
-                .startContext({ data: self })
-                  .start().addClass('align-end').callIf(mode_ == self.SIGN_IN && showAction, function() { this.tag(self.RESET_PASSWORD); }).end()
-                  .callIfElse(
-                    mode_ == self.SIGN_IN,
-                    function() { this.start(self.SIGN_IN_ACTION).attrs({ type: 'submit', form: 'login' }).end(); },
-                    function() { this.start(self.SIGN_UP_ACTION).attrs({ type: 'submit', form: 'login' }).end(); }
-                  )
-                .endContext();
-            });
-          }))
+          .start()
+            .add(this.slot(function(showAction, mode_) {
+              return self.E().callIf(showAction, function() {
+                this
+                  .startContext({ data: self })
+                    .start().addClass('align-end').callIf(mode_ == self.SIGN_IN && showAction, function() { this.start(self.RESET_PASSWORD)
+                      .attr('type', 'button').end(); }).end()
+                    .callIfElse(
+                      mode_ == self.SIGN_IN,
+                      function() { this.start(self.SIGN_IN_ACTION).attrs({ type: 'submit', form: 'login' }).end(); },
+                      function() { this.start(self.SIGN_UP_ACTION).attrs({ type: 'submit', form: 'login' }).end(); }
+                    )
+                  .endContext();
+              });
+            }))
+          .end()
         .end()
         .start().style({ display: 'contents' })
           .callIf(self.data.oidcProviderDAO, function() {
