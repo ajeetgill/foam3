@@ -172,18 +172,13 @@ foam.CLASS({
           .setID('login')
           .startContext({ data: this }).tag(this.DATA).endContext()
         .end()
-        .start()
-          .addClass('align-end')
-          .startContext({ data: self })
-            .callIf(self.mode_ == self.SIGN_IN && self.showAction, function() { this.tag(self.RESET_PASSWORD); })
-          .endContext()
-        .end()
         // signin signup action
         .start()
           .add(this.slot(function(showAction, mode_) {
             return self.E().callIf(showAction, function() {
               this
                 .startContext({ data: self })
+                  .start().addClass('align-end').callIf(mode_ == self.SIGN_IN && showAction, function() { this.tag(self.RESET_PASSWORD); }).end()
                   .callIfElse(
                     mode_ == self.SIGN_IN,
                     function() { this.start(self.SIGN_IN_ACTION).attrs({ type: 'submit', form: 'login' }).end(); },
