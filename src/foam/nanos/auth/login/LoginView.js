@@ -13,7 +13,6 @@ foam.CLASS({
     'appConfig',
     'clientLoginService',
     'loginVariables',
-    'memento',
     'stack',
     'theme',
     'displayWidth?',
