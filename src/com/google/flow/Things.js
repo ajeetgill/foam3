@@ -421,7 +421,7 @@ foam.CLASS({
     function init() {
       this.add(this.circle);
       this.circle.add(this.text);
-      this.collisionSet_ = {};
+      this.collisionSet_     = {};
       this.lastCollisionSet_ = {};
     },
 
@@ -486,7 +486,7 @@ foam.CLASS({
   ],
 
   methods: [
-    function init() {
+    function initCView() {
       this.SUPER();
       this.onDetach(this.timer.time$.sub(this.tick));
       this.propertyChange.sub(this.tick);
@@ -587,7 +587,7 @@ foam.CLASS({
   ],
 
   methods: [
-    function init() {
+    function initCView() {
       this.SUPER();
       this.onDetach(this.physics.onTick.sub(this.tick));
       this.propertyChange.sub(this.tick);
@@ -708,9 +708,49 @@ foam.CLASS({
   ]
 });
 
+
 foam.CLASS({
   package: 'com.google.flow',
-  name: 'KScope',
+  name: 'Mirror',
+  extends: 'foam.graphics.CView',
+
+  imports: [
+    'scope'
+  ],
+
+  properties: [
+    {
+      class: 'foam.graphics.Radians',
+      name: 'angleOfReflection'
+    },
+    {
+      class: 'Boolean',
+      name: 'showMirror'
+    },
+    [ 'width',  50 ],
+    [ 'height', 50 ]
+  ],
+
+  methods: [
+    function paintChildren(x) {
+      this.SUPER(x);
+      x.rotate(this.angleOfReflection);
+      x.scale(-1, 1);
+//       this.SUPER(x);
+      // Don't paint relfected halos
+      for ( var j = 0 ; j < this.children.length ; j++ ) {
+        var c = this.children[j];
+        if ( ! com.google.flow.Halo.isInstance(c) )
+          c.paint(x);
+      }
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'com.google.flow',
+  name: 'RadialMirror',
   extends: 'foam.graphics.CView',
 
   imports: [
@@ -721,13 +761,14 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'n',
-      value: 1
+      value: 5
     },
     [ 'width',  50 ],
     [ 'height', 50 ]
   ],
 
   methods: [
+    /*
     function paint(x) {
       if ( this.n == 1 ) {
         this.SUPER(x);
@@ -739,9 +780,24 @@ foam.CLASS({
         this.SUPER(x);
       }
       this.rotation = r;
+    },
+    */
+
+    // Better than the above version because it only paints the Halo once
+    // Maybe revert if Halo design is changed
+    function paintChildren(x) {
+      for ( var i = 0 ; i < this.n ; i++ ) {
+        if ( i ) x.rotate(Math.PI * 2 / this.n);
+        for ( var j = 0 ; j < this.children.length ; j++ ) {
+          var c = this.children[j];
+          if ( i == 0 || ! com.google.flow.Halo.isInstance(c) )
+            c.paint(x);
+        }
+      }
     }
   ]
 });
+
 
 foam.CLASS({
   package: 'com.google.flow',

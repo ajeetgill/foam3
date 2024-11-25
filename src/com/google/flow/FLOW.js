@@ -254,7 +254,7 @@ foam.CLASS({
       name: 'scope',
       factory: function() {
         var self = this;
-        return {
+        var scope = {
           repeat: function(n, fn) {
             for ( var i = 1 ; i <= n ; i++ ) fn.call(this, i);
             return this;
@@ -329,6 +329,8 @@ foam.CLASS({
             }).then(function() { if ( ! first ) log('\nflow> '); });
           }
         };
+        scope.scope = scope;
+        return scope;
       },
       documentation: 'Scope to run reactive formulas in.'
     },
@@ -388,7 +390,8 @@ foam.CLASS({
         dao.put(com.google.flow.Cursor.model_);
         dao.put(com.google.flow.Script.model_);
         dao.put(com.google.flow.Proxy.model_);
-        dao.put(com.google.flow.KScope.model_);
+        dao.put(com.google.flow.Mirror.model_);
+        dao.put(com.google.flow.RadialMirror.model_);
         dao.put(foam.input.Gamepad.model_);
         dao.put(foam.core.Model.model_);
         // dao.put(com.google.dxf.ui.DXFDiagram.model_);
@@ -590,6 +593,12 @@ foam.CLASS({
             end().
 //            tag('br').
             start(foam.u2.Tabs).
+            /*
+              start(foam.u2.Tab, {label: 'FLOWs'}).
+                style({display: 'flex'}).
+                add('ADD CONTENT').
+              end().
+            */
               start(foam.u2.Tab, {label: 'canvas1'}).
                 style({display: 'flex'}).
                 start('div').
@@ -736,6 +745,12 @@ foam.CLASS({
 
           if ( this.Physical.isInstance(o) ) {
             this.physics.remove(o);
+          }
+
+          // TODO: This is poor design but the above doesn't work because
+          // Spring and Strut aren't physical
+          if ( com.google.flow.Spring.isInstance(o) || com.google.flow.Strut.isInstance(o) ) {
+            o.detach();
           }
         } else {
           this.properties.find(p.parent).then(function(p2) {
