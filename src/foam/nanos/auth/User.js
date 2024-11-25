@@ -1056,15 +1056,21 @@ foam.CLASS({
         var ticket = foam.nanos.auth.ruler.UserLifecycleTicket.create({
           createdFor: this.id,
           spid: this.spid
-        });
+        }, X);
         this.stack.push(this.StackBlock.create({
-          // parent: this,
+          parent: this,
           view: {
             class: foam.comics.v2.DAOSummaryView,
             config: foam.comics.v2.DAOControllerConfig.create({ daoKey: 'ticketDAO' }, this),
             data: ticket,
           }, parent: this.__subContext__.createSubContext({ currentControllerMode: 'create' })
         }));
+      //   this.stack.push({
+      //     class: 'foam.comics.v3.CreateView',
+      //     data: ticket,
+      //     config: foam.comics.v2.DAOControllerConfig.create({ daoKey: 'ticketDAO' }, this),
+      //     of: ticket.of
+      //   });
       }
     }
   ]
