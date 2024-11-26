@@ -390,8 +390,8 @@ foam.CLASS({
         dao.put(com.google.flow.Cursor.model_);
         dao.put(com.google.flow.Script.model_);
         dao.put(com.google.flow.Proxy.model_);
-        dao.put(com.google.flow.Mirror.model_);
-        dao.put(com.google.flow.RadialMirror.model_);
+        dao.put(com.google.flow.Reflector.model_);
+        dao.put(com.google.flow.Revolver.model_);
         dao.put(foam.input.Gamepad.model_);
         dao.put(foam.core.Model.model_);
         // dao.put(com.google.dxf.ui.DXFDiagram.model_);
@@ -461,6 +461,7 @@ foam.CLASS({
 
         var p;
 
+        // TODO: these shouldn't be hard-coded here
         p = this.Property.create({name: 'canvas1', value: this.canvas});
         this.physics.setPrivate_('lpp_', p);
         dao.put(p);
