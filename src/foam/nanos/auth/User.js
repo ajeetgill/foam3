@@ -1091,7 +1091,7 @@ foam.CLASS({
           title: 'Delete user',
           createdFor: this.id,
           spid: this.spid,
-          requestedLifecycleState: foam.naos.auth.LifecycleState.DISABLED
+          requestedLifecycleState: foam.nanos.auth.LifecycleState.DISABLED
         });
         this.stack.push(this.StackBlock.create({
           parent: this,
@@ -1119,7 +1119,7 @@ foam.CLASS({
           title: 'Undelete user',
           createdFor: this.id,
           spid: this.spid,
-          requestedLifecycleState: foam.naos.auth.LifecycleState.ACTIVE
+          requestedLifecycleState: foam.nanos.auth.LifecycleState.ACTIVE
         });
         this.stack.push(this.StackBlock.create({
           parent: this,

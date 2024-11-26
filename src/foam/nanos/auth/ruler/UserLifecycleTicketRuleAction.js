@@ -93,6 +93,7 @@ foam.CLASS({
                 ((Logger) x.get("logger")).warning("UserLifecycleTicket", user.getId(), "Failed",ticket.getRequestedLifecycleState(), "only disabling", t.getMessage());
                 ((DAO) ruler.getX().get("localUserDAO")).put(user);
               }
+              ticket.setStatus(((Ticket)oldObj).getStatus());
             }
           }
         }, "UserLifecycleTicketRuleAction");

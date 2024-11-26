@@ -161,5 +161,17 @@ foam.CLASS({
       section: 'infoSection',
       order: 12
     }
+  ],
+
+  actions: [
+    {
+      // NOTE: Ticket.close uses TicketCloseCommand which doesn't allow for
+      // failing the close operation if the user cannot or should not
+      // be disabled or deleted.
+      name: 'close',
+      isAvailable: function(status, id) {
+        return false;
+      }
+    }
   ]
 })
