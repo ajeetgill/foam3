@@ -12,11 +12,12 @@ foam.CLASS({
   imports: [
     'appConfig',
     'clientLoginService',
-    'loginVariables',
-    'stack',
-    'logAnalyticEvent',
     'currentMenu?',
-    'params'
+    'loginVariables',
+    'logAnalyticEvent',
+    'oidcProviderDAO',
+    'params',
+    'stack'
   ],
 
   requires: [
@@ -191,11 +192,12 @@ foam.CLASS({
           .end()
         .end()
         .start().style({ display: 'contents' })
-          .callIf(self.data.oidcProviderDAO, function() {
+          .callIf(self.oidcProviderDAO, function() {
             this.
-              select(self.data.oidcProviderDAO, function(provider) {
+              select(self.oidcProviderDAO, function(provider) {
+                debugger
                 if ( ! provider ) return;
-                let action = self.Action.create({
+                let action = foam.core.Action.create({
                   name: 'signIn',
                   label: provider.description,
                   code: async function () {
@@ -203,7 +205,7 @@ foam.CLASS({
                   }
                 });
     
-                return self.E().style({ display: "contents" }).startContext({ data: self.data }).add(action).endContext();
+                return self.E().style({ display: 'contents' }).startContext({ data: self.data }).add(action).endContext();
               });
           })
         .end()
