@@ -13,6 +13,7 @@ foam.CLASS({
 
   javaImports: [
     'foam.core.FObject',
+    'foam.core.Identifiable',
     'foam.core.PropertyInfo',
     'foam.core.X',
     'foam.dao.DAO',
