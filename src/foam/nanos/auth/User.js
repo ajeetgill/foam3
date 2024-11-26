@@ -28,9 +28,10 @@ foam.CLASS({
 
   imports: [
     'auth',
+    'routeTo',
     'ticketDAO'
   ],
-  
+
   javaImports: [
     'foam.core.X',
     'foam.dao.DAO',
@@ -803,6 +804,14 @@ foam.CLASS({
       class: 'String',
       name: 'trackingId',
       documentation: 'Unique id optionally used to track a user.'
+    },
+    {
+      class: 'String',
+      name: 'ticketMenu',
+      documentation: 'Menu id for UserLifecycleTicket creation. Meant to be refined by applications',
+      value: 'admin.tickets',
+      hidden: true,
+      transient: true
     }
   ],
 
@@ -1060,19 +1069,15 @@ foam.CLASS({
       },
       code: function(X) {
         if ( ! this.stack ) return;
+        var self = this;
         var ticket = foam.nanos.auth.ruler.UserLifecycleTicket.create({
           title: 'Delete user',
           createdFor: this.id,
           spid: this.spid
         });
-        this.stack.push(this.StackBlock.create({
-          parent: this,
-          view: {
-            class: foam.comics.v2.DAOCreateView,
-            config: foam.comics.v2.DAOControllerConfig.create({ daoKey: 'ticketDAO' }, this),
-            data: ticket,
-          }
-        }));
+        this.ticketDAO.put(ticket).then(function(t) {
+          self.routeTo(self.ticketMenu+"/"+t.id);
+        });
       }
     },
     {
@@ -1087,20 +1092,16 @@ foam.CLASS({
       },
       code: function(X) {
         if ( ! this.stack ) return;
+        var self = this;
         var ticket = foam.nanos.auth.ruler.UserLifecycleTicket.create({
           title: 'Delete user',
           createdFor: this.id,
           spid: this.spid,
           requestedLifecycleState: foam.nanos.auth.LifecycleState.DISABLED
         });
-        this.stack.push(this.StackBlock.create({
-          parent: this,
-          view: {
-            class: foam.comics.v2.DAOCreateView,
-            config: foam.comics.v2.DAOControllerConfig.create({ daoKey: 'ticketDAO' }, this),
-            data: ticket,
-          }
-        }));
+        this.ticketDAO.put(ticket).then(function(t) {
+          self.routeTo(self.ticketMenu+"/"+t.id);
+        });
       }
     },
     {
@@ -1115,20 +1116,16 @@ foam.CLASS({
       },
       code: function(X) {
         if ( ! this.stack ) return;
+        var self = this;
         var ticket = foam.nanos.auth.ruler.UserLifecycleTicket.create({
           title: 'Undelete user',
           createdFor: this.id,
           spid: this.spid,
           requestedLifecycleState: foam.nanos.auth.LifecycleState.ACTIVE
         });
-        this.stack.push(this.StackBlock.create({
-          parent: this,
-          view: {
-            class: foam.comics.v2.DAOCreateView,
-            config: foam.comics.v2.DAOControllerConfig.create({ daoKey: 'ticketDAO' }, this),
-            data: ticket,
-          }
-        }));
+        this.ticketDAO.put(ticket).then(function(t) {
+          self.routeTo(self.ticketMenu+"/"+t.id);
+        });
       }
     },
     // TOOD: undeleteUser - when UserLifecycleTicket supports it.

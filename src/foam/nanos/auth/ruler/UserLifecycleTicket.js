@@ -169,9 +169,27 @@ foam.CLASS({
       // failing the close operation if the user cannot or should not
       // be disabled or deleted.
       name: 'close',
+      section: 'infoSection',
+      confirmationRequired: function() {
+        return true;
+      },
       isAvailable: function(status, id) {
-        return false;
+        return id && status !== 'CLOSED';
+      },
+      code: function(X) {
+        var ticket = this.clone();
+        ticket.status = "CLOSED";
+
+        return this.ticketDAO.put(ticket).then(res => {
+          this.ticketDAO.cmd(this.AbstractDAO.PURGE_CMD);
+          this.ticketDAO.cmd(this.AbstractDAO.RESET_CMD);
+          this.finished.pub();
+          this.notify(this.SUCCESS_CLOSED, '', this.LogLevel.INFO, true);
+        }, e => {
+          this.throwError.pub(e);
+          this.notify(e.message, '', this.LogLevel.ERROR, true);
+        });
       }
     }
   ]
-})
+});
