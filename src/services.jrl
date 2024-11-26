@@ -898,7 +898,7 @@ p({
 
 p({
   "class":"foam.nanos.boot.NSpec",
-  "name":"loginService",
+  "name":"clientLoginService",
   "serve":true,
   "lazyClient": false,
   "authenticate":false,
