@@ -16,7 +16,7 @@ foam.CLASS({
   ],
 
   requires: [
-    'foam.nanos.auth.login.SignIn.',
+    'foam.nanos.auth.login.SignIn',
     'foam.nanos.auth.login.SignUp'
   ],
 
