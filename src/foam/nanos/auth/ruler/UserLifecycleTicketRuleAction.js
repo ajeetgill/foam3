@@ -56,13 +56,11 @@ foam.CLASS({
         agency.submit(x, new ContextAgent() {
           @Override
           public void execute(X x) {
-            X rulerX = ruler.getX();
             User admin = new User();
             admin.setId(1);
             admin.setGroup("admin");
-            X systemX = foam.util.Auth.sudo(ruler.getX(), admin);
             UserLifecycleTicket ticket = (UserLifecycleTicket) obj;
-            DAO dao = (DAO) rulerX.get("userDAO");
+            DAO dao = (DAO) ruler.getX().get("userDAO");
             User user = (User) dao.find(ticket.getCreatedFor());
 
             LifecycleState old = user.getLifecycleState();
@@ -74,7 +72,7 @@ foam.CLASS({
             try {
               if ( old != nu ) {
                 updateUserAssociations(
-                  systemX
+                  ruler.getX()
                     .put("logger", new PrefixLogger(new Object[] { "UserLifecycleTicket", user.getId() }, (Logger) x.get("logger")))
                     .put(UserLifecycleTicket.class, ticket),
                   user, nu);
