@@ -70,7 +70,7 @@ and then
           .where(
             AND(
               EQ(User.USER_NAME, user.getUserName()),
-              EQ(User.LIFECYCLE_STATE, LifecycleState.ACTIVE),
+              NEQ(User.LIFECYCLE_STATE, LifecycleState.DELETED),
               EQ(User.SPID, user.getSpid())
             ))
            .select(new ArraySink())).getArray();
