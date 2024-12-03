@@ -23,11 +23,14 @@ foam.CLASS({
   requires: [
     'foam.nanos.auth.Address',
     'foam.nanos.auth.LifecycleState',
-    'foam.nanos.auth.PriorPassword'
+    'foam.nanos.auth.PriorPassword',
+    'foam.nanos.auth.ruler.UserLifecycleTicket',
+    'foam.nanos.ticket.Ticket'
   ],
 
   imports: [
     'auth',
+    'notify',
     'routeTo',
     'ticketDAO'
   ],
@@ -733,8 +736,8 @@ foam.CLASS({
       section: 'systemInformation',
       order: 110,
       gridColumns: 6,
-      columnPermissionRequired: true,
-      writePermissionRequired: true
+      columnPermissionRequired: true
+      // writePermissionRequired: true
     },
     {
       class: 'Password',
@@ -1070,13 +1073,39 @@ foam.CLASS({
       code: function(X) {
         if ( ! this.stack ) return;
         var self = this;
-        var ticket = foam.nanos.auth.ruler.UserLifecycleTicket.create({
-          title: 'Delete user',
-          createdFor: this.id,
-          spid: this.spid
-        });
-        this.ticketDAO.put(ticket).then(function(t) {
-          self.routeTo(self.ticketMenu+"/"+t.id);
+        var ticket = this.ticketDAO.find(
+          this.AND(
+            this.EQ(this.Ticket.CREATED_FOR, this.id),
+            this.EQ(this.Ticket.SPID, this.spid),
+            this.EQ(this.Ticket.STATUS, "OPEN"),
+            this.OR(
+              this.EQ(this.UserLifecycleTicket.REQUESTED_LIFECYCLE_STATE, this.LifecycleState.DELETED),
+              this.EQ(this.UserLifecycleTicket.REQUESTED_LIFECYCLE_STATE, this.LifecycleState.DISABLED)
+            )
+          )
+        ).then(t => {
+          if ( t ) {
+            if ( t.status == "CLOSED" ) {
+              t.comment = "Re-open. "+t.title;
+              t.status = "OPEN";
+            }
+            t.requestedLifecycleState = this.LifecycleState.DELETED;
+            self.ticketDAO.put(t).then(function(t) {
+              self.routeTo(self.ticketMenu+"/"+t.id);
+            });
+          } else {
+            var ticket = self.UserLifecycleTicket.create({
+              title: 'Delete user',
+              createdFor: self.id,
+              spid: self.spid,
+              requestedLifecycleState: self.LifecycleState.DELETED
+            });
+            self.ticketDAO.put(ticket).then(function(t) {
+              self.routeTo(self.ticketMenu+"/"+t.id);
+            });
+          }
+        }, e => {
+          self.notify(e, '', this.LogLevel.ERROR);
         });
       }
     },
@@ -1084,7 +1113,7 @@ foam.CLASS({
       name: 'disableUser',
       label: 'Disable',
       toolTip: 'Open ticket to disable a user and all associated entities',
-      availablePermissions: ['user.action.disable','user.action.delete'],
+      availablePermissions: ['user.action.disable'],
       isAvailable: async function(id, spid, lifecycleState) {
         // NOTE: testing spid as hack so action only available from detail view
         return id && spid && ( lifecycleState != this.LifecycleState.DISABLED &&
@@ -1093,14 +1122,39 @@ foam.CLASS({
       code: function(X) {
         if ( ! this.stack ) return;
         var self = this;
-        var ticket = foam.nanos.auth.ruler.UserLifecycleTicket.create({
-          title: 'Delete user',
-          createdFor: this.id,
-          spid: this.spid,
-          requestedLifecycleState: foam.nanos.auth.LifecycleState.DISABLED
-        });
-        this.ticketDAO.put(ticket).then(function(t) {
-          self.routeTo(self.ticketMenu+"/"+t.id);
+        var ticket = this.ticketDAO.find(
+          this.AND(
+            this.EQ(this.Ticket.CREATED_FOR, this.id),
+            this.EQ(this.Ticket.SPID, this.spid),
+            this.EQ(this.Ticket.STATUS, "OPEN"),
+            this.OR(
+              this.EQ(this.UserLifecycleTicket.REQUESTED_LIFECYCLE_STATE, this.LifecycleState.DELETED),
+              this.EQ(this.UserLifecycleTicket.REQUESTED_LIFECYCLE_STATE, this.LifecycleState.DISABLED)
+            )
+          )
+        ).then(t => {
+          if ( t ) {
+            t.requestedLifecycleState = this.LifecycleState.DISABLED;
+            if ( t.status == "CLOSED" ) {
+              t.comment = "Re-open. "+t.title;
+              t.status = "OPEN";
+            }
+            self.ticketDAO.put(t).then(function(t) {
+              self.routeTo(self.ticketMenu+"/"+t.id);
+            });
+          } else {
+            var ticket = self.UserLifecycleTicket.create({
+              title: 'Disable user',
+              createdFor: self.id,
+              spid: self.spid,
+              requestedLifecycleState: self.LifecycleState.DISABLED
+            });
+            self.ticketDAO.put(ticket).then(function(t) {
+              self.routeTo(self.ticketMenu+"/"+t.id);
+            });
+          }
+        }, e => {
+          self.notify(e, '', this.LogLevel.ERROR);
         });
       }
     },
@@ -1112,23 +1166,52 @@ foam.CLASS({
       isAvailable: async function(id, spid, lifecycleState) {
         // NOTE: testing spid as hack so action only available from detail view
         return id && spid && ( lifecycleState == this.LifecycleState.DISABLED ||
+                               lifecycleState == this.LifecycleState.DELETED ||
                                lifecycleState == this.LifecycleState.PENDING );
       },
       code: function(X) {
         if ( ! this.stack ) return;
         var self = this;
-        var ticket = foam.nanos.auth.ruler.UserLifecycleTicket.create({
-          title: 'Undelete user',
-          createdFor: this.id,
-          spid: this.spid,
-          requestedLifecycleState: foam.nanos.auth.LifecycleState.ACTIVE
-        });
-        this.ticketDAO.put(ticket).then(function(t) {
-          self.routeTo(self.ticketMenu+"/"+t.id);
+        // find existing ticket
+        var ticket = this.ticketDAO.find(
+          this.AND(
+            this.EQ(this.Ticket.CREATED_FOR, this.id),
+            this.EQ(this.Ticket.SPID, this.spid)
+          )
+        ).then(t => {
+          if ( t ) {
+            if ( t.status == "CLOSED" ) {
+              t.comment = "Re-open. "+t.title;
+              t.status = "OPEN";
+            }
+            if ( t.requestedLifecycleState == this.LifecycleState.DELETED ||
+                 t.requestedLifecycleState == this.LifecycleState.DISABLED ) {
+              t.revertRelationships = t.includeRelationships && t.updated && t.updated.length > 0;
+              t.includeRelationships = t.revertRelationships;
+              t.requestedLifecycleState = self.LifecycleState.ACTIVE;
+              t.title = "Re-activate user";
+            }
+            self.ticketDAO.put(t).then(function(t) {
+              self.routeTo(self.ticketMenu+"/"+t.id);
+            });
+          } else {
+            var ticket = self.UserLifecycleTicket.create({
+              title: 'Activate user',
+              createdFor: self.id,
+              spid: self.spid,
+              requestedLifecycleState: self.LifecycleState.ACTIVE,
+              includeRelationships: false,
+              revertRelationships: false
+            });
+            self.ticketDAO.put(ticket).then(function(t) {
+              self.routeTo(self.ticketMenu+"/"+t.id);
+            });
+          }
+        }, e => {
+          self.notify(e, '', this.LogLevel.ERROR);
         });
       }
-    },
-    // TOOD: undeleteUser - when UserLifecycleTicket supports it.
+    }
   ]
 });
 
