@@ -22,7 +22,14 @@ foam.CLASS({
 
   requires: [
     'foam.nanos.auth.Address',
+    'foam.nanos.auth.LifecycleState',
     'foam.nanos.auth.PriorPassword'
+  ],
+
+  imports: [
+    'auth',
+    'routeTo',
+    'ticketDAO'
   ],
 
   javaImports: [
@@ -54,6 +61,8 @@ foam.CLASS({
   tableColumns: [
     'id',
     'type',
+    'lifecycleState',
+    'userName',
     'group.id',
     'email'
   ],
@@ -63,7 +72,8 @@ foam.CLASS({
     'type',
     'spid',
     'group',
-    'enabled',
+    'lifecycleState',
+    'userName',
     'firstName',
     'preferredName',
     'lastName',
@@ -646,6 +656,7 @@ foam.CLASS({
       order: 40,
       gridColumns: 6,
       value: foam.nanos.auth.LifecycleState.PENDING,
+      visibility: 'RO',
       writePermissionRequired: true
     },
     {
@@ -709,20 +720,21 @@ foam.CLASS({
       displayWidth: 30,
       width: 100,
       storageTransient: true,
-      validateObj: function (password) {
-        var re = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{7,32}$/;
+      // validateObj: function (password) {
+      //   var re = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{7,32}$/;
 
-        if ( password.length > 0 && ! re.test(password) ) {
-          return 'Password must contain one lowercase letter, one uppercase letter, one digit, and be between 7 and 32 characters in length.';
-        }
-      },
+      //   if ( password.length > 0 && ! re.test(password) ) {
+      //     return 'Password must contain one lowercase letter, one uppercase letter, one digit, and be between 7 and 32 characters in length.';
+      //   }
+      // },
       createVisibility: 'RW',
       updateVisibility: 'RW',
       readVisibility: 'HIDDEN',
       section: 'systemInformation',
       order: 110,
       gridColumns: 6,
-      columnPermissionRequired: true
+      columnPermissionRequired: true,
+      writePermissionRequired: true
     },
     {
       class: 'Password',
@@ -792,6 +804,14 @@ foam.CLASS({
       class: 'String',
       name: 'trackingId',
       documentation: 'Unique id optionally used to track a user.'
+    },
+    {
+      class: 'String',
+      name: 'ticketMenu',
+      documentation: 'Menu id for UserLifecycleTicket creation. Meant to be refined by applications',
+      value: 'admin.tickets',
+      hidden: true,
+      transient: true
     }
   ],
 
@@ -1024,17 +1044,91 @@ foam.CLASS({
         if ( getLifecycleState() != foam.nanos.auth.LifecycleState.ACTIVE ) {
           throw new AuthenticationException("User disabled");
         }
-        
+
         // check if user login enabled
         if ( ! getLoginEnabled() ) {
           throw new AccessDeniedException();
         }
-        
+
         if ( ! getEmailVerified() ) {
           throw new UnverifiedEmailException();
         }
       `
     }
+  ],
+
+  actions: [
+    {
+      name: 'deleteUser',
+      label: 'Delete',
+      toolTip:'Open ticket to delete a user and all associated entities',
+      availablePermissions: ['user.action.delete'],
+      isAvailable: async function(id, spid, lifecycleState) {
+        // NOTE: testing spid as hack so action only available from detail view
+        return id && spid && lifecycleState != this.LifecycleState.DELETED;
+      },
+      code: function(X) {
+        if ( ! this.stack ) return;
+        var self = this;
+        var ticket = foam.nanos.auth.ruler.UserLifecycleTicket.create({
+          title: 'Delete user',
+          createdFor: this.id,
+          spid: this.spid
+        });
+        this.ticketDAO.put(ticket).then(function(t) {
+          self.routeTo(self.ticketMenu+"/"+t.id);
+        });
+      }
+    },
+    {
+      name: 'disableUser',
+      label: 'Disable',
+      toolTip: 'Open ticket to disable a user and all associated entities',
+      availablePermissions: ['user.action.disable','user.action.delete'],
+      isAvailable: async function(id, spid, lifecycleState) {
+        // NOTE: testing spid as hack so action only available from detail view
+        return id && spid && ( lifecycleState != this.LifecycleState.DISABLED &&
+                               lifecycleState != this.LifecycleState.DELETED );
+      },
+      code: function(X) {
+        if ( ! this.stack ) return;
+        var self = this;
+        var ticket = foam.nanos.auth.ruler.UserLifecycleTicket.create({
+          title: 'Delete user',
+          createdFor: this.id,
+          spid: this.spid,
+          requestedLifecycleState: foam.nanos.auth.LifecycleState.DISABLED
+        });
+        this.ticketDAO.put(ticket).then(function(t) {
+          self.routeTo(self.ticketMenu+"/"+t.id);
+        });
+      }
+    },
+    {
+      name: 'activateUser',
+      label: 'Activate',
+      toolTip: 'Open a ticket to activate a new user or previously disabled user',
+      availablePermissions: ['user.action.activate'],
+      isAvailable: async function(id, spid, lifecycleState) {
+        // NOTE: testing spid as hack so action only available from detail view
+        return id && spid && ( lifecycleState == this.LifecycleState.DISABLED ||
+                               lifecycleState == this.LifecycleState.PENDING );
+      },
+      code: function(X) {
+        if ( ! this.stack ) return;
+        var self = this;
+        var ticket = foam.nanos.auth.ruler.UserLifecycleTicket.create({
+          title: 'Undelete user',
+          createdFor: this.id,
+          spid: this.spid,
+          requestedLifecycleState: foam.nanos.auth.LifecycleState.ACTIVE
+        });
+        this.ticketDAO.put(ticket).then(function(t) {
+          self.routeTo(self.ticketMenu+"/"+t.id);
+        });
+      }
+    },
+    // TOOD: undeleteUser - when UserLifecycleTicket supports it.
   ]
 });
 
