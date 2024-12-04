@@ -102,7 +102,9 @@ foam.CLASS({
             } catch (Throwable t) {
               ticket.setMessage(t.getMessage());
               ticket.setComment(old.getName()+" -> "+nu.getName()+" failed: "+t.getMessage());
-              ((Logger) x.get("logger")).warning(ticket.getComment(), t);
+              if ( ! ( t instanceof IllegalStateException ) ) {
+                ((Logger) x.get("logger")).warning(ticket.getComment(), t);
+              }
               if ( nu == LifecycleState.DISABLED ||
                    nu == LifecycleState.DELETED ) {
                 user.setLifecycleState(LifecycleState.DISABLED);
