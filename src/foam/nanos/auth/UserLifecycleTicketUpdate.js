@@ -5,7 +5,7 @@
  */
 
 foam.CLASS({
-  package: 'foam.nanos.auth.ruler',
+  package: 'foam.nanos.auth',
   name: 'UserLifecycleTicketUpdate',
 
   properties: [

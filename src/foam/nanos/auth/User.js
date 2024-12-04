@@ -24,7 +24,7 @@ foam.CLASS({
     'foam.nanos.auth.Address',
     'foam.nanos.auth.LifecycleState',
     'foam.nanos.auth.PriorPassword',
-    'foam.nanos.auth.ruler.UserLifecycleTicket',
+    'foam.nanos.auth.UserLifecycleTicket',
     'foam.nanos.ticket.Ticket'
   ],
 

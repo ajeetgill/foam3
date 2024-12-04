@@ -5,7 +5,7 @@
  */
 
 foam.CLASS({
-  package: 'foam.nanos.auth.ruler',
+  package: 'foam.nanos.auth',
   name: 'UserLifecycleDeleteSelfRuleAction',
 
   documentation: `When a user attempts to delete themselves, set user to disabled and open a UserLifecycleTicket for an operator to properly delete the user`,
@@ -22,9 +22,6 @@ foam.CLASS({
     'foam.dao.DAO',
     'foam.dao.Sink',
     'static foam.mlang.MLang.*',
-    'foam.nanos.auth.AuthService',
-    'foam.nanos.auth.LifecycleState',
-    'foam.nanos.auth.User',
     'foam.nanos.logger.Logger',
     'foam.nanos.logger.Loggers',
     'foam.nanos.session.Session',

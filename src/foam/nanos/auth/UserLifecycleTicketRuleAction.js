@@ -5,7 +5,7 @@
  */
 
 foam.CLASS({
-  package: 'foam.nanos.auth.ruler',
+  package: 'foam.nanos.auth',
   name: 'UserLifecycleTicketRuleAction',
 
   documentation: 'Change User Lifecycle state with consideration of associated data.',
@@ -24,12 +24,6 @@ foam.CLASS({
     'foam.dao.DAO',
     'foam.dao.Sink',
     'static foam.mlang.MLang.*',
-    'foam.nanos.auth.AuthService',
-    'foam.nanos.auth.DuplicateUserNameException',
-    'foam.nanos.auth.EnabledAware',
-    'foam.nanos.auth.LifecycleAware',
-    'foam.nanos.auth.LifecycleState',
-    'foam.nanos.auth.User',
     'foam.nanos.session.Session',
     'foam.nanos.crunch.UserCapabilityJunction',
     'foam.nanos.logger.Logger',

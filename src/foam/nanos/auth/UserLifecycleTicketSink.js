@@ -5,7 +5,7 @@
  */
 
 foam.CLASS({
-  package: 'foam.nanos.auth.ruler',
+  package: 'foam.nanos.auth',
   name: 'UserLifecycleTicketSink',
   extends: 'foam.dao.AbstractSink',
 
@@ -19,10 +19,6 @@ foam.CLASS({
     'foam.dao.DAO',
     'foam.dao.ProxyDAO',
     'foam.dao.Sink',
-    'foam.nanos.auth.EnabledAware',
-    'foam.nanos.auth.LifecycleAware',
-    'foam.nanos.auth.LifecycleState',
-    'foam.nanos.auth.User',
     'foam.nanos.logger.Logger',
     'foam.nanos.logger.Loggers',
     'java.util.HashMap',

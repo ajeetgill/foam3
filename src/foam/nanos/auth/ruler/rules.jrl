@@ -62,7 +62,7 @@ p({
 
 p({
   "class":"foam.nanos.ruler.Rule",
-  "id":"foam-nanos-auth-ruler-UserLifecycleTicketRule",
+  "id":"foam-nanos-auth-UserLifecycleTicketRule",
   "name":"UserLifecycleTicketRule",
   "documentation":"Manipulate User Lifecycle based on ticket request",
   "enabled":true,
@@ -73,16 +73,16 @@ p({
   "lifecycleState": 1,
   "predicate": {
     class: "foam.nanos.ruler.predicate.FScriptRulePredicate",
-    query: 'n instanceof foam.nanos.auth.ruler.UserLifecycleTicket && (o.status != n.status) && n.status == "CLOSED"'
+    query: 'n instanceof foam.nanos.auth.UserLifecycleTicket && (o.status != n.status) && n.status == "CLOSED"'
   },
   action: {
-    "class": "foam.nanos.auth.ruler.UserLifecycleTicketRuleAction"
+    "class": "foam.nanos.auth.UserLifecycleTicketRuleAction"
   }
 })
 
 p({
   "class":"foam.nanos.ruler.Rule",
-  "id":"foam-nanos-auth-ruler-UserLifecycleDeleteSelfRule",
+  "id":"foam-nanos-auth-UserLifecycleDeleteSelfRule",
   "name":"UserLifecycleDeleteSelfRule",
   "documentation":"When user deletes themselves, generate a UserLifecycleTicket to manage the operation",
   "enabled":true,
@@ -97,7 +97,7 @@ p({
     query: 'o.lifecycleState == foam.nanos.auth.LifecycleState.ACTIVE && n.lifecycleState == foam.nanos.auth.LifecycleState.DELETED && n.loginEnabled == true && n.type == "User"',
   },
   action: {
-    "class": "foam.nanos.auth.ruler.UserLifecycleDeleteSelfRuleAction"
+    "class": "foam.nanos.auth.UserLifecycleDeleteSelfRuleAction"
   },
   "generateTicket": false
 })

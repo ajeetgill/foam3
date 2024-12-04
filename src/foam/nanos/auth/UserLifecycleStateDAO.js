@@ -5,7 +5,7 @@
  */
 
 foam.CLASS({
-  package: 'foam.nanos.auth.ruler',
+  package: 'foam.nanos.auth',
   name: 'UserLifecycleStateDAO',
   extends: 'foam.dao.ProxyDAO',
 
@@ -16,10 +16,6 @@ themselves`,
   javaImports: [
     'foam.core.X',
     'foam.dao.DAO',
-    'foam.nanos.auth.AuthorizationException',
-    'foam.nanos.auth.LifecycleState',
-    'foam.nanos.auth.Subject',
-    'foam.nanos.auth.User',
     'foam.nanos.logger.Loggers'
   ],
 
