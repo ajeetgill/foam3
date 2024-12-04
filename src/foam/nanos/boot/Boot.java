@@ -227,7 +227,6 @@ public class Boot {
     user.setId(User.SYSTEM_USER_ID);
     user.setFirstName("system");
     user.setGroup("system");
-    user.setSpid("foam");
     user.setLoginEnabled(false);
 
     Session session = new Session();
