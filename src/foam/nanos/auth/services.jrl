@@ -394,8 +394,7 @@ p({
       .setDecorator(
         new foam.dao.ValidatingDAO(x,
           new foam.nanos.auth.UserPasswordHashingDAO(x,
-          new foam.nanos.auth.ruler.UserLifecycleDeletedDAO(x,
-            new foam.dao.NullDAO(x, foam.nanos.auth.User.getOwnClassInfo()))),
+            new foam.dao.NullDAO(x, foam.nanos.auth.User.getOwnClassInfo())),
           new foam.nanos.auth.validators.UserGroupAndSpidValidator()
         )
       )

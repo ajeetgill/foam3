@@ -207,7 +207,7 @@ foam.POM({
     { name: "auth/ruler/PreventDuplicateUsernameAction",                                  flags: "js|java" },
     { name: "auth/ruler/PreventInvalidUsernameAction",                                    flags: "js|java" },
     { name: "auth/ruler/EnsurePropertyOnCreateRule",                                      flags: "js|java" },
-    { name: "auth/ruler/UserLifecycleDeletedDAO",                                         flags: "js|java" },
+    { name: "auth/ruler/UserLifecycleDeleteSelfRuleAction",                               flags: "js|java" },
     { name: "auth/ruler/UserLifecycleTicket",                                             flags: "js|java" },
     { name: "auth/ruler/UserLifecycleTicketSink",                                         flags: "js|java" },
     { name: "auth/ruler/UserLifecycleTicketRuleAction",                                   flags: "js|java" },
