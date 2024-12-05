@@ -172,8 +172,13 @@ foam.CLASS({
       name: 'updateUCJs',
       args: 'X x, User user, LifecycleState state',
       javaCode: `
-      ((foam.dao.ManyToManyRelationship) user.getCapabilities(x)).getDAO().select(
-        new UserLifecycleTicketSink(x, state, "userCapabilityJunctionDAO"));
+      // NOTE: put to bareUserCapabilityJunctionDAO to prevent rules on
+      // userCapabilityJunctionDAO from firing which could invoke sudo-ing
+      // as the deleted user then fails.
+      DAO dao = (DAO) x.get("bareUserCapabilityJunctionDAO");
+      dao = dao.where(EQ(UserCapabilityJunction.SOURCE_ID, user.getId()));
+      dao.select(
+        new UserLifecycleTicketSink(x, state, "bareUserCapabilityJunctionDAO"));
       `
     },
     {

@@ -89,9 +89,12 @@ foam.CLASS({
           aware = (LifecycleAware) ((FObject)aware).fclone();
           update.setPreviousState(aware.getLifecycleState());
           aware.setLifecycleState(requestedState);
+          aware = (LifecycleAware) dao.put_(x, (FObject) aware);
+          if ( aware.getLifecycleState() != requestedState ) {
+            logger.error(obj.getClass().getSimpleName(), "update failed");
+          }
           update.setCurrentState(aware.getLifecycleState());
-          dao.put_(x, (FObject) aware);
-          logger.debug(update);
+          logger.debug(obj.getClass().getSimpleName(), update);
           ticket.getUpdated().add(update);
         }
       } else if ( obj instanceof EnabledAware ) {

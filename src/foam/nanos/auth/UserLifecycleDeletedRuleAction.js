@@ -6,9 +6,11 @@
 
 foam.CLASS({
   package: 'foam.nanos.auth',
-  name: 'UserLifecycleDeleteSelfRuleAction',
+  name: 'UserLifecycleDeletedRuleAction',
 
-  documentation: `When a user attempts to delete themselves, set user to disabled and open a UserLifecycleTicket for an operator to properly delete the user`,
+  documentation: `User remove, via LifecycleAwareDAO, is mapped to put
+with lifecycleState DELETED.  Create a ticket, if enabled, to set all
+associated data to state DELETED, and log user out, otherwise log user out.`,
 
   implements: [
     'foam.nanos.ruler.RuleAction'
@@ -30,7 +32,7 @@ foam.CLASS({
 
   properties: [
     {
-      documentation: 'Create UserLifeycleTicket on user deletion for an operator to ensure all associated data is deleted.',
+      documentation: 'Create UserLifeycleTicket on user remove for an operator to ensure all associated data is removed.',
       name: 'generateTicket',
       class: 'Boolean',
       value: true
@@ -68,42 +70,41 @@ foam.CLASS({
                 ticket = (UserLifecycleTicket) dao.put(ticket);
                 ticket = (UserLifecycleTicket) dao.find(ticket.getId());
                 if ( ticket.getStatus() == "CLOSED" ) {
-                  logger.info("User self deletion complete", user.getId());
+                  logger.info("User remove complete", user.getId());
                 } else {
                   // Operations needs to deal with the ticket.
                   // TODO: generate ER perhaps.
-                  logger.warning("User self deletion pending", user.getId(), "ticket", ticket.getId());
+                  logger.warning("User remove pending", user.getId(), "ticket", ticket.getId());
                 }
               }
               return;
             } catch (Throwable t) {
               logger.error("Failed to create UserLifecycleTicket", "user", user.getId(), t);
+              // disable, for an admin to deal with.
+              user.setLifecycleState(LifecycleState.DISABLED);
             }
           }
 
-          // Ensure user is at least disabled.
+          // log out by deleting session
           try {
-             user.setLifecycleState(LifecycleState.DISABLED);
-
-              // and logout user for now
-              AuthService auth = (AuthService) x.get("auth");
-                ((DAO) rulerX.get("sessionDAO")).where(
-                  OR(
-                    EQ(Session.USER_ID, user.getId()),
-                    EQ(Session.AGENT_ID, user.getId())
-                  )
-                ).select(new AbstractSink() {
-                  @Override
-                  public void put(Object obj, Detachable sub) {
-                    Session session = (Session) obj;
-                    auth.logout(session.getContext());
-                  }
-                });
+            AuthService auth = (AuthService) x.get("auth");
+              ((DAO) rulerX.get("sessionDAO")).where(
+                OR(
+                  EQ(Session.USER_ID, user.getId()),
+                  EQ(Session.AGENT_ID, user.getId())
+                )
+              ).select(new AbstractSink() {
+                @Override
+                public void put(Object obj, Detachable sub) {
+                  Session session = (Session) obj;
+                  auth.logout(session.getContext());
+                }
+              });
           } catch (Throwable t) {
             logger.error("Failed to logout", "user", user.getId(), t);
           }
         }
-      }, "UserLifecycleDeleteSelfRuleAction");
+      }, "UserLifecycleDeletedRuleAction");
       `
     }
   ]
