@@ -592,7 +592,7 @@ foam.CLASS({
         if ( group == null ) throw new Error(this.GROUP_NULL_ERR);
         this.group = group;
       } catch (err) {
-        this.notify(this.GROUP_FETCH_ERR, '', this.LogLevel.ERROR, true);
+        // this.notify(this.GROUP_FETCH_ERR, '', this.LogLevel.ERROR, true);
         console.error(err.message || this.GROUP_FETCH_ERR);
       }
     },
