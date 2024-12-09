@@ -80,13 +80,11 @@ p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.referralCodeDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.approvalRequestDAO"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"service.approvalRequestClassificationDAO"})
+p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"basicUser",targetId:"menu.read.set-password"})
 
 // foam
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"foam",targetId:"group.read.foam"})
 p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"foam",targetId:"serviceprovider.read.foam"})
 
-// Password management
-// 1. Change password secured via email or token
-// p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"foam",targetId:"menu.read.set-password"})
-// 2. Change password directly via single view
+// Reset (Forgot password) password via secured email or token - when not logged in.
 // p({class:"foam.nanos.auth.GroupPermissionJunction",sourceId:"foam",targetId:"menu.read.reset-password"})
