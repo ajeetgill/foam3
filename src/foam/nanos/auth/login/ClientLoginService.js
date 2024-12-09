@@ -47,18 +47,18 @@ foam.CLASS({
         try {
           this.ctrl.groupLoadingHandled = true;
           var loginId = data.usernameRequired_ ? data.username : data.identifier;
-          let logedInUser = await this.auth.login(x, loginId, data.password);
+          let loggedInInUser = await this.auth.login(x, loginId, data.password);
 
-          if ( ! logedInUser ) {
+          if ( ! loggedInInUser ) {
             if ( analyticable ) data.report('^fail-missing-subject', ['auth', 'error']);
             return;
           }
 
-          data.email = logedInUser.email;
-          data.username = logedInUser.userName;
+          data.email = loggedInInUser.email;
+          data.username = loggedInInUser.userName;
 
-          this.subject.user = logedInUser;
-          this.subject.realUser = logedInUser;
+          this.subject.user = loggedInInUser;
+          this.subject.realUser = loggedInInUser;
 
           this.loginSuccess = true;
           await this.ctrl.reloadClient();
@@ -76,9 +76,9 @@ foam.CLASS({
             data.email = data.identifier;
             if ( this.username ) {
               try {
-                logedInUser = await this.auth.login(x, data.username, data.password);
-                this.subject.user = logedInUser;
-                this.subject.realUser = logedInUser;
+                loggedInInUser = await this.auth.login(x, data.username, data.password);
+                this.subject.user = loggedInInUser;
+                this.subject.realUser = loggedInInUser;
                 return;
               } catch ( err ) {
                 data.username = '';
@@ -166,7 +166,13 @@ foam.CLASS({
         if ( user ) {
           this.notify(this.SIGNUP_SUCCESS_TITLE, this.SIGNUP_SUCCESS_MSG, this.LogLevel.INFO, true);
 
-          var signinModel = this.SignIn.create({ identifier: data.email, username: data.username, email: data.email, password: data.desiredPassword });
+          var signinModel = this.SignIn.create({
+            identifier: user.userName ? user.userName : user.email,
+            username: user.userName,
+            email: user.email,
+            password: data.desiredPassword,
+            usernameRequired: true
+          });
           await this.signin(x, signinModel, wizardFlow);
         } else {
           this.notify(err.data, this.SIGNUP_ERR, this.LogLevel.ERROR, true);
