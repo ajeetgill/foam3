@@ -93,7 +93,7 @@ foam.CLASS({
       validationPredicates: [
         {
           args: ['desiredPassword'],
-          query: 'desiredPassword exists && desiredPassword.len>10',
+          query: 'desiredPassword exists && desiredPassword.len>=10',
           errorMessage: 'PASSWORD_ERR'
         },
         {
