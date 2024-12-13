@@ -34,6 +34,7 @@ foam.CLASS({
       class: 'String',
       name: 'username',
       placeholder: 'example123',
+      order: 0,
       view: function(_, X) {
         return {
           class: 'foam.u2.view.UserPropertyAvailabilityView',
@@ -60,6 +61,7 @@ foam.CLASS({
       class: 'EMail',
       name: 'email',
       placeholder: 'example123@example.com',
+      order: 1,
       view: function(_, X) {
         return {
           class: 'foam.u2.view.UserPropertyAvailabilityView',
@@ -92,6 +94,7 @@ foam.CLASS({
       class: 'Password',
       name: 'desiredPassword',
       label: 'Password',
+      order: 2,
       view: function(_, X) {
         return {
           class: 'foam.u2.view.PasswordView',

@@ -206,7 +206,7 @@ foam.CLASS({
   properties: [
     {
       name: 'loginVariables',
-      expression: function(client$userRegistrationDAO, group$emailRequired ) {
+      expression: function( client$userRegistrationDAO, group$emailRequired ) {
         return {
           dao_: client$userRegistrationDAO || null,
           emailRequired_: group$emailRequired,
