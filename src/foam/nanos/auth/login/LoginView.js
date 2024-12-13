@@ -188,12 +188,10 @@ foam.CLASS({
             return self.E().addClass(self.myClass('buttonHolder')).callIf(showAction, function() {
               this
                 .startContext({ data: self })
-                .start().addClass('align-end').callIf(mode_ == self.SIGN_IN && showAction, function() {
-                  this.start().callIf(self.loginVariables.emailRequired_, function() {
+                  .start().addClass('align-end').callIf(mode_ == self.SIGN_IN && showAction && self.loginVariables.emailRequired_, function() {
                     this.start(self.RESET_PASSWORD)
                       .attr('type', 'button').end()
                   }).end()
-                }).end()
                   .callIfElse(
                     mode_ == self.SIGN_IN,
                     function() { this.start(self.SIGN_IN_ACTION).addClass('full-width-button').attrs({ type: 'submit', form: 'login' }).end(); },
