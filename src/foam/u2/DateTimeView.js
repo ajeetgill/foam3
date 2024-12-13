@@ -50,9 +50,11 @@ foam.CLASS({
         if ( ! date ) {
           slot.set('');
         } else {
-          if ( ! date.toISOString )
+          if ( ! foam.Date.isInstance(date) )
             date = new Date(date);
-
+          let offsetInMillis = date.getTimezoneOffset() * 60 * 1000; // Timezone offset returns mins of offset from UTC
+          let newValue = date.valueOf() - offsetInMillis;
+          date = new Date(newValue)
           slot.set(date.toISOString().substring(0,16));
         }
       }
