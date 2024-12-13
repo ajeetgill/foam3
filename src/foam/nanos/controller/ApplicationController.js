@@ -206,9 +206,11 @@ foam.CLASS({
   properties: [
     {
       name: 'loginVariables',
-      expression: function(client$userRegistrationDAO) {
+      expression: function(client$userRegistrationDAO, group$emailRequired ) {
         return {
           dao_: client$userRegistrationDAO || null,
+          emailRequired_: group$emailRequired,
+          disableEmail_: ! group$emailRequired,
           imgPath: ''
         };
       }
@@ -479,11 +481,10 @@ foam.CLASS({
 
         self.onDetach(self.__subContext__.cssTokenOverrideService?.cacheUpdated.sub(self.reloadStyles));
 
+        await self.fetchGroup();
 
         self.subToNotifications();
         let ret = await self.initMenu();
-
-        await self.fetchGroup();
 
         // For anonymous users, we shouldn't reinstall the language
         // because the user's language setting isn't meaningful.
