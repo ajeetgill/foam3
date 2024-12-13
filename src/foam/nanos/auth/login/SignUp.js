@@ -31,33 +31,6 @@ foam.CLASS({
 
   properties: [
     {
-      class: 'String',
-      name: 'username',
-      placeholder: 'example123',
-      order: 0,
-      view: function(_, X) {
-        return {
-          class: 'foam.u2.view.UserPropertyAvailabilityView',
-          icon: 'images/checkmark-small-green.svg',
-          isAvailable$: X.data.usernameAvailable$,
-          inputValidation: X.data.User.USER_NAME_MATCHER
-        };
-      },
-      required: true,
-      validationPredicates: [
-        {
-          args: ['usernameAvailable', 'username'],
-          query: 'usernameAvailable!="invalid"',
-          errorMessage: 'USERNAME_INVALID_ERR'
-        },
-        {
-          args: ['usernameAvailable', 'username'],
-          query: 'usernameAvailable!="unavailable"',
-          errorMessage: 'USERNAME_AVAILABILITY_ERR'
-        }
-      ]
-    },
-    {
       class: 'EMail',
       name: 'email',
       placeholder: 'example123@example.com',
@@ -89,6 +62,33 @@ foam.CLASS({
           foam.u2.DisplayMode.HIDDEN :
           foam.u2.DisplayMode.RW;
       }
+    },
+    {
+      class: 'String',
+      name: 'username',
+      placeholder: 'example123',
+      order: 0,
+      view: function(_, X) {
+        return {
+          class: 'foam.u2.view.UserPropertyAvailabilityView',
+          icon: 'images/checkmark-small-green.svg',
+          isAvailable$: X.data.usernameAvailable$,
+          inputValidation: X.data.User.USER_NAME_MATCHER
+        };
+      },
+      required: true,
+      validationPredicates: [
+        {
+          args: ['usernameAvailable', 'username'],
+          query: 'usernameAvailable!="invalid"',
+          errorMessage: 'USERNAME_INVALID_ERR'
+        },
+        {
+          args: ['usernameAvailable', 'username'],
+          query: 'usernameAvailable!="unavailable"',
+          errorMessage: 'USERNAME_AVAILABILITY_ERR'
+        }
+      ]
     },
     {
       class: 'Password',
