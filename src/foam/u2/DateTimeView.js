@@ -46,14 +46,22 @@ foam.CLASS({
       var slot    = this.attrSlot(); //null, this.onKey ? 'input' : null);
 
       function updateSlot() {
-        var date = self.data;
-        if ( ! date ) {
+        if ( ! self.data ) {
           slot.set('');
         } else {
-          if ( ! date.toISOString )
-            date = new Date(date);
-
-          slot.set(date.toISOString().substring(0,16));
+          // Convert date with timezone into ISO format
+          // Browser date pickers require date in ISO format: yyyy-mm-ddThh:mm,
+          // but toISOString only outputs date in UTC, while
+          // toLocaleString outputs in requested timezone, but does not
+          // offer a format suitable for browser date picker ingestion,
+          // hence the brute force conversion.
+          const date = new Date(self.data);
+          const day = date.toLocaleString(foam.locale, { day: "2-digit" });
+          const month = date.toLocaleString(foam.locale, { month: "2-digit" });
+          const year = date.toLocaleString(foam.locale, { year: "numeric" });
+          const time = date.toLocaleString(foam.locale, { hour: "2-digit", minute: "2-digit", hour12: false });
+          const value = `${year}-${month}-${day}T${time}`;
+          slot.set(value);
         }
       }
 
