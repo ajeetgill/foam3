@@ -41,6 +41,7 @@ foam.CLASS({
     'foam.dao.ArraySink',
     'static foam.mlang.MLang.AND',
     'static foam.mlang.MLang.EQ',
+    'foam.nanos.auth.Group',
     'foam.nanos.auth.LifecycleAware',
     'foam.nanos.auth.LifecycleState',
     'foam.nanos.notification.NotificationSetting',
@@ -51,6 +52,7 @@ foam.CLASS({
     'java.util.HashMap',
     'java.util.HashSet',
     'java.util.List',
+    'foam.nanos.logger.Loggers',
     'java.util.regex.Pattern'
   ],
 
@@ -1046,10 +1048,18 @@ foam.CLASS({
         if ( ! getLoginEnabled() ) {
           throw new AccessDeniedException();
         }
-        // This is an application requirement, not foam's.
-        //   if ( ! getEmailVerified() ) {
-        //     throw new UnverifiedEmailException();
-        //   }
+
+        Group group = null;
+        try {
+          group = (Group) ((DAO) foam.core.XLocator.get().get("groupDAO")).find(getGroup());
+        } catch (Throwable e) {
+          foam.nanos.logger.StdoutLogger.instance().error(e);
+          throw new AuthenticationException("Group not found");
+        }
+        if ( group != null &&
+             group.getEmailRequired() && ! getEmailVerified() ) {
+          throw new UnverifiedEmailException();
+        }
       `
     }
   ],
