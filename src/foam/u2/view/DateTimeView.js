@@ -16,17 +16,6 @@ foam.CLASS({
     'foam.u2.view.date.DateTimePicker'
   ],
 
-//   properties: [
-//     {
-//       name: 'readView',
-// //      value: { class: 'foam.u2.view.RODateTimeView' }
-//       value: { class: 'foam.u2.DateTimeView' }
-//     },
-//     {
-//       name: 'writeView',
-//       value: { class: 'foam.u2.DateTimeView' }
-//     }
-//   ]
   constants: [
     {
       // Choose the writeView delegate based on browser compatibility.
