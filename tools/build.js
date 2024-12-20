@@ -808,9 +808,6 @@ const ARGS = {
   u: [ 'Run from jar. Intented for Production deployments. Connect to https://localhost:8443/',
     () => {
       RUN_JAR = true;
-      JOURNAL_CONFIG = comma(JOURNAL_CONFIG, '../foam3/deployment/u');
-      if ( fs.existsSync('deployment/u') )
-        JOURNAL_CONFIG = comma(JOURNAL_CONFIG, 'u');
     } ],
   U: [ 'User to run as',
     args => RUN_USER = args ],
