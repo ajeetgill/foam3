@@ -28,7 +28,7 @@ foam.CLASS({
     function toE(args, x) {
       var self = this;
 
-      return x.E('span').add(self.dynamic(function(markup) {
+      return x.E('span').add(this.dynamic(function(markup) {
         var f = self.htmlish.parseString(markup, self.cls_.id);
         this.add(f ? f(x) : 'Syntax Error' /*self.htmlish.getLastError()*/);
       }));
