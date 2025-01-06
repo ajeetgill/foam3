@@ -45,6 +45,41 @@ foam.CLASS({
     'foam.nanos.script.Language'
   ],
 
+  axioms: [
+    {
+      class: 'foam.comics.v2.CannedQuery',
+      label: 'DAOs',
+      predicateFactory: function(e, cls) {
+        return e.ENDS_WITH(cls.NAME, 'DAO');
+      }
+    },
+    {
+      class: 'foam.comics.v2.CannedQuery',
+      label: 'Served DAOs',
+      predicateFactory: function(e, cls) {
+        return e.AND(
+          e.EQ(cls.SERVE, e.True),
+          e.ENDS_WITH(cls.NAME, 'DAO'));
+      }
+    },
+    {
+      class: 'foam.comics.v2.CannedQuery',
+      label: 'Servcies',
+      predicateFactory: function(e, cls) {
+        return e.NOT(e.ENDS_WITH(cls.NAME, 'DAO'));
+      }
+    },
+    {
+      class: 'foam.comics.v2.CannedQuery',
+      label: 'Served Servcies',
+      predicateFactory: function(e, cls) {
+        return e.AND(
+          e.EQ(cls.SERVE, e.True),
+          e.NOT(e.ENDS_WITH(cls.NAME, 'DAO')));
+      }
+    }
+  ],
+
   ids: [ 'name' ],
 
   tableColumns: [ 'name', 'lazy', 'serve', 'authenticate', /*'serviceClass',*/ 'configure' ],
