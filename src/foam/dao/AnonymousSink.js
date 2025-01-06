@@ -9,8 +9,6 @@ foam.CLASS({
   name: 'AnonymousSink',
   implements: [ 'foam.dao.Sink' ],
 
-  flags: [],
-
   axioms: [
     {
       class: 'foam.box.Remote',
