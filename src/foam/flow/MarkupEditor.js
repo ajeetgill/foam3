@@ -65,8 +65,7 @@ table-layout: fixed;
       name: 'updatePreview',
       isMerged: 1000,
       code: function() {
-        this.preview = this.__context__.lookup('foam.flow.Document').create(
-          {markup: this.data});
+        this.preview = this.__context__.lookup('foam.flow.Document').create({markup: this.data});
       }
     }
   ]
