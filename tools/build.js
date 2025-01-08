@@ -87,7 +87,6 @@ var
   DEBUG_SUSPEND             = false,
   DELETE_RUNTIME_JOURNALS   = false,
   DELETE_RUNTIME_LOGS       = false,
-  EXPLICIT_JOURNALS         = '',
   FS                        = 'rw',
   FOAM_REVISION,
   GEN_JAVA                  = true,
@@ -129,7 +128,6 @@ var TASKS, EXPORTS;
 var JAVA_RELEASE = '17';
 
 var BUILD_DIR  = './build';
-console.log("post buildEnv INSTANCE", INSTANCE, "PORT", WEB_PORT);
 
 
 globalThis.foam = {
@@ -749,8 +747,6 @@ const ARGS = {
       warning('Skipping genJava task');
       GEN_JAVA = false;
     } ],
-  E: [ 'EXPLICIT_JOURNALS :',
-    args => EXPLICIT_JOURNALS = '-E' + args ],
   F: [ '<rw | ro> : File System Read-Write (default) or Read-Only',
     args => FS = args ],
   g: [ 'Output running/notrunning status of daemonized nanos.',
@@ -759,10 +755,15 @@ const ARGS = {
     () => { install(); quit(0); } ],
   j: [ 'Delete runtime journals, build, and run app as usual.',
     () => DELETE_RUNTIME_JOURNALS = true ],
-  J: [ 'JOURNAL_CONFIG : additional journal configuration. See find.sh - deployment/CONFIG i.e. deployment/staging',
+  J: [ 'JOURNALS : additional journals.',
     args => {
-//      POM = POM ? POM + ',' args : args;
       JOURNAL_CONFIG = comma(JOURNAL_CONFIG, args) ;
+      var list = '';
+      args.split(',').forEach(p => {
+        if ( list ) list += ',';
+        list += 'deployment/' + p + '/pom';
+      });
+      if ( list ) POM = POM ? POM + ',' + list : list;
     } ],
   k: [ 'Package up a deployment tarball.',
     () => { BUILD_ONLY = PACKAGE = true; } ],
