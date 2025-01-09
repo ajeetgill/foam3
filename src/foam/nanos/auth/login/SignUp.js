@@ -156,6 +156,6 @@ foam.CLASS({
         return searchParams.get('referral');
       },
       hidden: true
-    },
+    }
   ]
 });
