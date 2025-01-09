@@ -755,16 +755,8 @@ const ARGS = {
     () => { install(); quit(0); } ],
   j: [ 'Delete runtime journals, build, and run app as usual.',
     () => DELETE_RUNTIME_JOURNALS = true ],
-  J: [ 'JOURNALS : additional journals.',
-    args => {
-      JOURNAL_CONFIG = comma(JOURNAL_CONFIG, args) ;
-      var list = '';
-      args.split(',').forEach(p => {
-        if ( list ) list += ',';
-        list += 'deployment/' + p + '/pom';
-      });
-      if ( list ) POM = POM ? POM + ',' + list : list;
-    } ],
+  J: [ 'JOURNALS_CONFIG : additional journals.',
+    args => { JOURNAL_CONFIG = comma(JOURNAL_CONFIG, args); } ],
   k: [ 'Package up a deployment tarball.',
     () => { BUILD_ONLY = PACKAGE = true; } ],
   l: [ 'turn on build logging/verbose mode', () => VERBOSE = '-flags=verbose' ],
