@@ -8,8 +8,7 @@ foam.POM({
   name: "foam",
   version: 3,
   excludes: [
-    'DatastoreDAO.java',
-    'com/google/flow/scripts.flow'
+    'DatastoreDAO.java'
   ],
   licenses: [
     `
