@@ -25,7 +25,6 @@ foam.CLASS({
   javaImports: [
     'foam.core.ContextAgent',
     'foam.core.X',
-    'foam.nanos.ruler.predicate.IsInstancePredicate',
     'foam.nanos.ruler.predicate.PropertyEQValue',
     'foam.nanos.ruler.predicate.PropertyIsSetPredicate',
     'foam.util.SafetyUtil',
@@ -67,14 +66,11 @@ foam.CLASS({
       transient: true,
       visibility: 'HIDDEN',
       javaGetter: `
-        var isInstanceOfPredicate = new IsInstancePredicate();
-        isInstanceOfPredicate.setOf(getOf());
-
         var propertyIsSetPredicate = new PropertyIsSetPredicate();
         propertyIsSetPredicate.setPropName(getPropName());
 
         return AND(
-          isInstanceOfPredicate,
+          INSTANCE_OF(getOf()),
           NOT(propertyIsSetPredicate)
         );
       `
