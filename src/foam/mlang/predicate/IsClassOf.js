@@ -44,6 +44,13 @@ foam.CLASS({
       return getPropExpr() == null ? getOf().getObjClass() == obj.getClass() : getOf().getObjClass() == getPropExpr().f(obj).getClass();
       `
     },
+    {
+      name: 'ruleF',
+      type: 'Boolean',
+      args: 'Context x, foam.core.FObject o, foam.core.FObject n',
+      code: 'return this.f(n);',
+      javaCode: 'return f(n);'
+    },
     function toString() {
       return foam.String.constantize(this.cls_.name) +
           '(' + this.of.id + ')';

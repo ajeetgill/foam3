@@ -616,7 +616,6 @@ foam.POM({
     { name: "ruler/predicate/PropertyEQValue",                                            flags: "js|java" },
     { name: "ruler/predicate/PropertyNEQValue",                                           flags: "js|java" },
     { name: "ruler/predicate/NewEqOld",                                                   flags: "js|java" },
-    { name: "ruler/predicate/IsClassPredicate",                                           flags: "js|java" },
     { name: "ruler/predicate/PropertyIsInstance",                                         flags: "js|java" },
     { name: "ruler/predicate/PropertyIsClass",                                            flags: "js|java" },
     { name: "ruler/predicate/ContextContainsPredicate",                                   flags: "js|java" },
