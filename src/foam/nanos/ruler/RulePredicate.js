@@ -37,6 +37,7 @@ foam.CLASS({
       type: 'Boolean',
       args: 'Context x, foam.core.FObject o, foam.core.FObject n',
       code: 'return this.f(n);',
+//      javaCode: 'return f(n);'
       javaCode: 'return f(x.put("OLD", o).put("NEW", n));'
     }
   ]
