@@ -51,9 +51,9 @@ foam.CLASS({
       var cls   = this.data;
       var model = cls.model_;
       var impls = cls.getAxiomsByClass(this.Implements);
+      var exts  = [];
+      var m     = cls;
 
-      var exts = [];
-      var m = cls;
       while ( m.id != 'foam.core.FObject' ) {
         m = foam.lookup(m.model_.extends);
         exts.push(m);
@@ -148,14 +148,13 @@ foam.CLASS({
             start(this.AxiomListView, {
               of: this.PropertyAxiom,
               modelId: id,
-              titleFn: function() {
-                  return this.E('h4').
-                    add('Properties inherited from ').
-                    start(this.ClassLink, { data: id }).
-                    end()
-              }.bind(this),
+              titleFn: () => {
+                return this.E('h4').
+                  add('Properties inherited from ').
+                  tag(this.ClassLink, { data: id });
+              },
             }).
-            end()
+            end();
         }).
 
         add(this.AxiomSummaryView.create({
@@ -169,13 +168,13 @@ foam.CLASS({
             start(this.AxiomListView, {
               of: this.MethodAxiom,
               modelId: id,
-              titleFn: function() {
-                  return this.E('h4').
-                    add('Methods inherited from ').
-                    tag(this.ClassLink, { data: id });
-              }.bind(this),
+              titleFn: () => {
+                return this.E('h4').
+                  add('Methods inherited from ').
+                  tag(this.ClassLink, { data: id });
+              },
             }).
-            end()
+            end();
         })
 
         // TODO property and method detail sections.
