@@ -102,7 +102,7 @@ p({
 })
 p({
   "class": "foam.nanos.boot.NSpec",
-  "name": "localUserDAO",
+  "name": "historyRecordServiceTestUserDAO",
   "serve": false,
   "serviceScript": """
     return new foam.dao.EasyDAO.Builder(x)
