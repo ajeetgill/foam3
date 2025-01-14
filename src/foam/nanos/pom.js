@@ -431,7 +431,7 @@ foam.POM({
     { name: "pool/ThreadPoolAgency",                                                      flags: "js|java" },
     { name: "pool/Throttle",                                                              flags: "js|java" },
     { name: "pool/ThrottledAgency",                                                       flags: "js|java" },
-    { name: "pool/test/ThrottledAgencyTest",                                              flags: "java" },
+    { name: "pool/test/ThrottledAgencyTest",                                              flags: "js|java" },
     { name: "auth/PMAuthService",                                                         flags: "js|java" },
     { name: "notification/ClientResendNotificationService",                               flags: "js|java" },
     { name: "notification/DAONotificationRuleAction",                                     flags: "js|java" },
