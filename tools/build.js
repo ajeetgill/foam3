@@ -481,13 +481,6 @@ task('Build Java JAR file.', [ 'versions', 'jarWebroot', 'jarImages' ], function
 });
 
 
-task('Package files into a TAR archive', [], function buildTar() {
-  // Notice that the argument to the second -C is relative to the directory from the first -C, since -C
-  // switches the current directory.
-  ensureDir(BUILD_DIR + '/package');
-  execSync(`tar -a -cf ${BUILD_DIR}/package/${PROJECT.name}-deploy-${VERSION}.tar.gz -C ./foam3/tools/deploy bin etc -C ../../../ -C${BUILD_DIR} lib`);
-});
-
 task('Delete runtime journals.', [], function deleteRuntimeJournals() {
   info('Runtime journals deleted.');
   emptyDir(JOURNAL_HOME);
@@ -862,7 +855,7 @@ task('Stop running NANOS server.', [], function stopNanos() {
 
 task(
 'Build everything specified by flags.',
-[ 'clean', 'setenv', 'deleteRuntimeJournals', 'deleteRuntimeLogs', 'setupDirs', 'packageFOAM', 'buildJava', 'deploy', 'buildJar', 'deployToHome', 'buildTar', 'startNanos' ],
+[ 'clean', 'setenv', 'deleteRuntimeJournals', 'deleteRuntimeLogs', 'setupDirs', 'packageFOAM', 'buildJava', 'deploy', 'buildJar', 'deployToHome', 'startNanos' ],
 function all() {
   processSingleCharArgs(ARGS, moreUsage);
   setenv();
@@ -895,7 +888,6 @@ function all() {
 
     if ( PACKAGE ) {
       buildJar();
-      buildTar();
     }
   }
 
