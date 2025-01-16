@@ -769,7 +769,8 @@ foam.CLASS({
       this.SUPER(proto);
       foam.CSS.returnTokenValue(this.backgroundColor, this.cls_, this.__subContext__);
       let self = this;
-      let oldGetter = Object.getOwnPropertyDescriptor(proto, this.name).get;
+      let descriptor = Object.getOwnPropertyDescriptor(proto, this.name);
+      let oldGetter = descriptor.get;
       Object.defineProperty(proto, self.name, {
         get: function resolveTokenGetter() {
           let value = oldGetter.apply(this);
@@ -782,7 +783,7 @@ foam.CLASS({
       });
       Object.defineProperty(proto, self.name + '$raw', {
         get: oldGetter,
-        set: proto.set,
+        set: descriptor.set,
         configurable: true
       });
     }
