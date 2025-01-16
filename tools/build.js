@@ -78,9 +78,9 @@ var
   APP_ROOT                  = '/opt',
   BENCHMARK                 = false,
   BENCHMARKS                = '',
+  BUILD_JAR                 = false,
   BUILD_ONLY                = false,
   CLEAN_BUILD               = false,
-  CLUSTER                   = false,
   DAEMONIZE                 = false,
   DEBUG                     = false,
   DEBUG_PORT                = 8000,
@@ -103,7 +103,6 @@ var
   PWD                       = process.cwd(),
   RESTART_ONLY              = false,
   RESTART                   = false,
-  RUN_JAR                   = false,
   RUN_USER                  = '',
   STAGE_JS                  = true,
   STOP_ONLY                 = false,
@@ -285,7 +284,7 @@ task('Build web root directory for inclusion in JAR.', [], function jarWebroot()
 
   execSync(__dirname + `/pmake.js -makers=Webroot -pom=${pom()} -builddir=${BUILD_DIR}`, {stdio: 'inherit'});
 
-  if ( PACKAGE || RUN_JAR ) {
+  if ( PACKAGE || BUILD_JAR ) {
     execSync(`cp foam-bin-* ${webroot + '/'}`, {stdio: 'inherit'});
   }
 });
@@ -351,7 +350,7 @@ task('Deploy journal files from JOURNAL_OUT to JOURNAL_HOME.', [], function depl
 
 
 task('Deploy documents, journals.', [ 'deployDocuments','deployJournals'], function deploy() {
-  if ( ! RUN_JAR && ! TEST && ! BENCHMARK ) {
+  if ( ! BUILD_JAR && ! TEST && ! BENCHMARK ) {
     deployJournals();
     deployDocuments();
     envVars();
@@ -378,7 +377,7 @@ task('Clean build files, include pom.xml and java libraries. Cleaner than clean.
 
 
 task('Remove generated files.', [], function clean() {
-  if ( RUN_JAR || TEST || BENCHMARK ) {
+  if ( BUILD_JAR || TEST || BENCHMARK ) {
     emptyDir(`${APP_HOME}/bin`);
     emptyDir(`${APP_HOME}/lib`);
   }
@@ -416,7 +415,7 @@ task("Call pmake with JS Maker to build 'foam-bin.js'.", [], function genJS() {
 
 task('Generate Java and JS packages.', [ 'genJava', 'genJS' ], function packageFOAM() {
   genJava();
-  if ( RUN_JAR ) {
+  if ( BUILD_JAR ) {
     genJS();
   }
 });
@@ -511,14 +510,6 @@ task('Copy required files to APP_HOME deployment directory.', [], function deplo
 task('Start NANOS application server.', [ 'setenv' ], function startNanos() {
   setenv();
 
-  if ( RUN_JAR ) {
-    var OPT_ARGS = ``;
-
-    var SYSTEM_NAME = ( INSTANCE !== 'localhost' ) ? `/${PROJECT.name}_` + INSTANCE : `/${PROJECT.name}`;
-    if ( RUN_USER ) OPT_ARGS += ` -U${RUN_USER}`;
-    if ( WEB_PORT ) OPT_ARGS += ` -W${WEB_PORT}`;
-    exec(`${APP_HOME}/bin/run.sh -Z${DAEMONIZE ? 1 : 0} -D${DEBUG ? 1 : 0} -Y${DEBUG_SUSPEND ? 'y' : 'n'} -E${DEBUG_PORT} -A${PROJECT.name} -S${SYSTEM_NAME} -C${CLUSTER} -H${HOST_NAME} -J${PROFILER ? 1 : 0} -P${PROFILER_PORT} -F${FS} ${OPT_ARGS}`);
-  } else {
     MESSAGE = `Starting NANOS ${INSTANCE}`;
 
     // process.chdir(PROJECT_HOME);
@@ -561,7 +552,6 @@ task('Start NANOS application server.', [ 'setenv' ], function startNanos() {
         JAVA_OPTS += ' -Dfoam.main=benchmarkRunnerScript';
         if ( BENCHMARKS ) JAVA_OPTS += ' -Dfoam.benchmarks=' + BENCHMARKS;
       }
-    }
 
     info('JAVA_OPTS:' + JAVA_OPTS);
     info(MESSAGE);
@@ -724,7 +714,7 @@ function moreUsage() {
 
 const ARGS = {
   a: [ 'Run/launch from Java jar file.',
-    () => RUN_JAR = true ],
+    () => BUILD_JAR = true ],
   b: [ 'run all benchmarks.',
     () => {
       BENCHMARK = true;
@@ -763,8 +753,6 @@ const ARGS = {
   L: [ 'in combination with tTbB, set JVM log level (one of: ERROR, WARN, INFO, DEBUG)',
        args => { LOG_LEVEL = args; }
      ],
-  m: [ "Enable Medusa clustering. Not required for 'nodes'. Same as -Ctrue",
-    () => CLUSTER = true ],
   N: [ `NAME : start another instance with given instance name. Deployed to /opt/${PROJECT.name}_NAME.`,
        args => { INSTANCE = HOST_NAME = args; NANOS_PIDFILE=`/tmp/nanos_${INSTANCE}.pid`; info('INSTANCE=' + args); } ],
   o: [ "Build only - don't start nanos.",
@@ -787,20 +775,12 @@ const ARGS = {
       MODE = 'test';
       DELETE_RUNTIME_JOURNALS = true;
       JOURNAL_CONFIG = comma(JOURNAL_CONFIG, 'test');
-      JOURNAL_CONFIG = comma(JOURNAL_CONFIG, '../foam3/deployment/test');
       APP_ROOT='/tmp';
     } ],
   T: [ 'testId1,testId2,... : Run listed tests.',
     args => {
       ARGS.t[1]();
       TESTS = args;
-    } ],
-  u: [ 'Run from jar. Intented for Production deployments. Connect to https://localhost:8443/',
-    () => {
-      RUN_JAR = true;
-      JOURNAL_CONFIG = comma(JOURNAL_CONFIG, '../foam3/deployment/u');
-      if ( fs.existsSync('deployment/u') )
-        JOURNAL_CONFIG = comma(JOURNAL_CONFIG, 'u');
     } ],
   U: [ 'User to run as',
     args => RUN_USER = args ],
@@ -906,7 +886,7 @@ function all() {
   setupDirs();
 
   if ( ! RESTART_ONLY ) {
-    if ( PACKAGE || RUN_JAR || TEST || BENCHMARK ) {
+    if ( PACKAGE || BUILD_JAR || TEST || BENCHMARK ) {
       packageFOAM();
     }
 
@@ -914,7 +894,7 @@ function all() {
     deploy();
 
     // ???: Why is this?
-    if ( RUN_JAR || TEST || BENCHMARK ) {
+    if ( BUILD_JAR || TEST || BENCHMARK ) {
       buildJar();
       deployToHome();
     }
