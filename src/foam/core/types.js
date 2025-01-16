@@ -763,7 +763,30 @@ foam.CLASS({
   name: 'Color',
   extends: 'String',
   label: 'Color',
-  properties: [ [ 'displayWidth', 20 ] ]
+  properties: [ [ 'displayWidth', 20 ] ],
+  methods: [
+    function installInProto(proto) {
+      this.SUPER(proto);
+      foam.CSS.returnTokenValue(this.backgroundColor, this.cls_, this.__subContext__);
+      let self = this;
+      let oldGetter = Object.getOwnPropertyDescriptor(proto, this.name).get;
+      Object.defineProperty(proto, self.name, {
+        get: function resolveTokenGetter() {
+          let value = oldGetter.apply(this);
+          if ( foam.String.isInstance(value) && value.startsWith('$') ) {
+            value = foam.CSS.returnTokenValue(value, this.cls_, this.__subContext__);
+          }
+          return value;
+        },
+        configurable: true
+      });
+      Object.defineProperty(proto, self.name + '$raw', {
+        get: oldGetter,
+        set: proto.set,
+        configurable: true
+      });
+    }
+  ]
 });
 
 
