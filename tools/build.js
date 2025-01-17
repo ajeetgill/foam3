@@ -56,7 +56,6 @@
 //
 // TODO:
 //   - should Makers be responsible for building target directories?
-//   - only add deployments/u when -u specified
 
 /*
 diskutil erasevolume HFS+ RAM_Disk $(hdiutil attach -nomount ram://1000000)
@@ -95,8 +94,6 @@ var
   MODE                      = '',
   PACKAGE                   = false,
   POM                       = 'pom',
-  PROFILER                  = false,
-  PROFILER_PORT             = 8849,
   PROJECT_REVISION,
   PWD                       = process.cwd(),
   RESTART_ONLY              = false,
@@ -501,9 +498,7 @@ task('Start NANOS application server.', [ 'setenv' ], function startNanos() {
     JAVA_OPTS = ` -Dhostname=${HOST_NAME} ${JAVA_OPTS}`;
   }
 
-  if ( PROFILER ) {
-
-  } else if ( DEBUG ) {
+  if ( DEBUG ) {
     JAVA_OPTS = `-agentlib:jdwp=transport=dt_socket,server=y,suspend=${DEBUG_SUSPEND ? 'y' : 'n'},address=*:${DEBUG_PORT} ${JAVA_OPTS}`;
   }
 
@@ -739,10 +734,6 @@ const ARGS = {
        args => { INSTANCE = HOST_NAME = args; NANOS_PIDFILE=`/tmp/nanos_${INSTANCE}.pid`; info('INSTANCE=' + args); } ],
   o: [ "Build only - don't start nanos.",
     () => BUILD_ONLY = true ],
-  p: [ 'Enable profiling on default port',
-    () => PROFILER = true ],
-  P: [ "pom file : name and path of the root pom file. Defaults to 'pom' at the root of the project.",
-    args => { POM = args; info('POM=' + POM); } ],
   r: [ 'Run NANOS with whatever was last built.',
     () => RESTART_ONLY = true ],
   R: [ 'Set app deployment root directory',
@@ -897,22 +888,9 @@ if ( TASKS ) {
   // Exports local variables and functions for POM tasks
   var poms = pom();
   EXPORTS = {
-    APP_HOME,
     BUILD_DIR,
-    DAEMONIZE,
-    DEBUG,
-    DEBUG_PORT,
-    DEBUG_SUSPEND,
-    FS,
-    HOST_NAME,
-    INSTANCE,
-    PACKAGE,
-    PROFILER,
-    PROFILER_PORT,
     JOURNAL_CONFIG,
     PROJECT,
-    RUN_JAR,
-    WEB_PORT,
     VERSION,
     copyDir,
     copyFile,
