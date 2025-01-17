@@ -499,7 +499,7 @@ task('Start NANOS application server.', [ 'setenv' ], function startNanos() {
   }
 
   if ( DEBUG ) {
-    JAVA_OPTS = `-agentlib:jdwp=transport=dt_socket,server=y,suspend=${DEBUG_SUSPEND ? 'y' : 'n'},address=*:${DEBUG_PORT} ${JAVA_OPTS}`;
+    JAVA_OPTS = `-agentlib:jdwp=transport=dt_socket,server=y,suspend=${DEBUG_SUSPEND ? 'y' : 'n'},address=127.0.0.1:${DEBUG_PORT} ${JAVA_OPTS}`;
   }
 
   if ( WEB_PORT ) {
