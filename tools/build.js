@@ -274,7 +274,7 @@ function pom() {
 task('Build web root directory for inclusion in JAR.', [], function jarWebroot() {
   JAR_INCLUDES += ` -C ${BUILD_DIR} webroot `;
 
-  var webroot = BUILD_DIR + '/webroot'; // ???: Why doesResourceMaker uses journals/webroot instead?
+  var webroot = BUILD_DIR + '/webroot';
   ensureDir(webroot);
 
   execSync(__dirname + `/pmake.js -makers=Webroot -pom=${pom()} -builddir=${BUILD_DIR}`, {stdio: 'inherit'});
@@ -420,7 +420,6 @@ task('Call pmake to generate & compile java, collect journals, call Maven and co
   var makers = VERBOSE ? 'Verbose,' : '';
   makers += GEN_JAVA ? 'Java,Maven,Javac' : 'Maven' ;
   makers += ',Journal,Doc';
-  makers += ',Resource'; // TODO: get rid of ResourceMaker and move to custom task in NP pom
   execSync(__dirname + `/pmake.js -makers=${makers} ${VERBOSE} -d=${BUILD_DIR}/classes/java/main -builddir=${BUILD_DIR} -outdir=${BUILD_DIR}/src/java -javacParams='--release ${JAVA_RELEASE} -proc:none' -pom=${pom()}`, { stdio: 'inherit' });
 });
 
