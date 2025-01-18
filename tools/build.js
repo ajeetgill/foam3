@@ -471,7 +471,7 @@ task('Build Java JAR file.', [ 'versions', 'jarWebroot', 'jarImages' ], function
   jarJournals();
 
   fs.writeFileSync(BUILD_DIR + '/MANIFEST.MF', manifest());
-  execSync(`jar cfm ${JAR_OUT} ${BUILD_DIR}/MANIFEST.MF -C ${BUILD_DIR} documents ${JAR_INCLUDES} -C ${BUILD_DIR}/classes/java/main .`);
+  execSync(`jar cfm ${BUILD_DIR}/lib/${JAR_NAME} ${BUILD_DIR}/MANIFEST.MF -C ${BUILD_DIR} documents ${JAR_INCLUDES} -C ${BUILD_DIR}/classes/java/main .`);
 });
 
 
@@ -634,8 +634,8 @@ buildEnv({
   LOG_HOME:          () => `${APP_HOME}/logs`,
 
   JAR_LIB_DIR:       () => ( PACKAGE ? `${PROJECT_HOME}/${BUILD_DIR}` : APP_HOME ) + '/lib',
-  JAR_OUT:           () => `${JAR_LIB_DIR}/${PROJECT.name}-${VERSION}.jar`,
-
+  JAR_NAME:          () => `${PROJECT.name}-${VERSION}.jar`,
+  JAR_OUT:           () => `${JAR_LIB_DIR}/${JAR_NAME}`,
   // Project resources path
   PROJECT_HOME:      PWD,
   JOURNAL_OUT:       () => `${PROJECT_HOME}/${BUILD_DIR}/journals`,
