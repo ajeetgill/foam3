@@ -59,6 +59,7 @@ If using a version less than 21, change the `java: 21` property in the root pom.
 * **-d** - debug mode allowing connection by a remote debugger
 * **-j** - delete runtime journals
 * **-Jpom1,pom2,...,pomN** - where pomN,... are found relative to the deployment folder. 
+* **-a** - build and deploy from a single Java jar file. Intended for remote server installs.
 
 <!--
 ## Running Application Controller
@@ -67,6 +68,14 @@ The FOAM Application Controller allows you to access components of your foam
 app by using the browser & displaying it as a GUI.
 To access, run the following in the parent directory of foam3:
 -->
+
+## Remote deployment
+
+To build and deploy to a remote linux instance
+
+1. build: `./build.sh -ack[Jpom...]`
+1. deploy: `foam3/tools/bin/install_remote.sh -Hhostname`
+1. visit: http://hostname:8080
 
 ## Style Guide
 

@@ -2,27 +2,26 @@
 // Build and Deploy a FOAM Application
 //
 // Tools
-//   foam3/tools/genjs.js
+//   tools/JSMaker.js
 //     - collects and minifies .js files into a single foam-bin.js file
 //     - uses the UglifyJS library to minimize the size of the packaged .js files
-//   foam3/tools/genjava.js
+//   tools/JavaMaker.js
 //     - generates .java files from .js models
-//     - copies .jrl files into /target/journals
-//     - copies .flow files into /target/documents
-//     - create /target/javacfiles file containing list of modified or static .java files
+//     - create /build/javacfiles file containing list of modified or static .java files
 //     - build pom.xml from accumulated javaDependencies
 //     - call maven to update dependencies if pom.xml updated
 //     - call javac to compile files in javacfiles
 //     - create a Maven pom.xml file with accumulated POM javaDependencies information
+//   tools/JournalMaker.js
+//     - copies .jrl files into /build/journals
+//   tools/DocMaker.js
+//     - copies .flow files into /build/documents
 //
 // Directory Structure:
-//   /deployments
-//     /resources   - deployment speicific resources
+//   /deployment    - deployment specific journals
 //   /build
 //     /src         - java source files created by genJava
 //     /classes     - compiled java class files created with javac (called by genJava)
-//   /target
-//     /MANIFEST.MF - JAR manifest file, used when creating project .jar file with jar
 //     /classes
 //       /documents
 //       /images
@@ -36,23 +35,12 @@
 //   /opt/<pom.name>
 //     /bin
 //     /etc
-//     /keys
 //     /logs
-//     /target
 //     /documents
 //     /journals
 //     /lib
 //     /saf
 //     /var
-//
-// Differences from build.sh:
-//  1. -S replaced with -$
-//  2. Does not write empty .0 journal files
-//  3. Usage displays available tasks
-//  4. -X lets you explicitly execute a comma delimited set of tasks
-//  5. migrate_journals was removed, but no longer used by build.sh either
-//  6. remove PID / DAEMON support (no longer true???)
-//  7. -XcleanLib will cause pom.xml to be regenerated and maven to be rerun
 //
 // TODO:
 //   - should Makers be responsible for building target directories?
@@ -78,29 +66,28 @@ var
   BENCHMARKS                = '',
   BUILD_ONLY                = false,
   CLEAN_BUILD               = false,
-  DAEMONIZE                 = false,
+  CLUSTER                   = false,
   DEBUG                     = false,
   DEBUG_PORT                = 8000,
   DEBUG_SUSPEND             = false,
   DELETE_RUNTIME_JOURNALS   = false,
   DELETE_RUNTIME_LOGS       = false,
-  FS                        = 'rw',
   FOAM_REVISION,
   GEN_JAVA                  = true,
   HOST_NAME                 = 'localhost',
-  INSTANCE                  = 'localhost',
+  APP_NAME,
   JOURNAL_CONFIG            = '',
   LOG_LEVEL                 = null,
   MODE                      = '',
   PACKAGE                   = false,
   POM                       = 'pom',
+  PROFILER                  = false,
+  PROFILER_PORT             = 8849,
   PROJECT_REVISION,
   PWD                       = process.cwd(),
   RESTART_ONLY              = false,
-  RESTART                   = false,
-  RUN_JAR                   = false,
+  BUILD_JAR                   = false,
   STAGE_JS                  = true,
-  STOP_ONLY                 = false,
   TEST                      = false,
   TESTS                     = '',
   WEB_PORT                  = null,
@@ -133,6 +120,7 @@ globalThis.foam = {
     TIMESTAMP_VERSION = `${VERSION}-${TIMESTAMP}`;
     TASKS   = pom.tasks;
     JAVA_RELEASE = pom.java || JAVA_RELEASE;
+    APP_NAME = PROJECT.name;
   }
 };
 
@@ -236,11 +224,11 @@ function manifest() {
 Manifest-Version: 1.0
 Main-Class: foam.nanos.boot.Boot
 Class-Path: ${jars}
-Implementation-Title: ${PROJECT.name}
+Implementation-Title: ${APP_NAME}
 Implementation-Version: ${TIMESTAMP_VERSION}
 Specification-Version: ${PROJECT_REVISION}
 Implementation-Timestamp: ${TIMESTAMP}
-${PROJECT.name}-Revision: ${PROJECT_REVISION}
+${APP_NAME}-Revision: ${PROJECT_REVISION}
 FOAM-Revision: ${FOAM_REVISION}
 Implementation-Vendor: ${PROJECT.name}
 `.trim() + '\n';
@@ -279,7 +267,7 @@ task('Build web root directory for inclusion in JAR.', [], function jarWebroot()
 
   execSync(__dirname + `/pmake.js -makers=Webroot -pom=${pom()} -builddir=${BUILD_DIR}`, {stdio: 'inherit'});
 
-  if ( PACKAGE || RUN_JAR ) {
+  if ( PACKAGE || BUILD_JAR ) {
     execSync(`cp foam-bin-* ${webroot + '/'}`, {stdio: 'inherit'});
   }
 });
@@ -306,26 +294,22 @@ task('Show POM structure.', [], function showPOMStructure() {
 });
 
 
-task('Install npm and git hooks.', [], function install() {
-  process.chdir(PROJECT_HOME);
+// TODO: remove/replace - np specific
+// task('Install npm and git hooks.', [], function install() {
+//   process.chdir(PROJECT_HOME);
 
-  execSync('npm install');
-  process.chdir('foam3');
-  execSync('npm install');
-  process.chdir('..');
+//   execSync('npm install');
+//   process.chdir('foam3');
+//   execSync('npm install');
+//   process.chdir('..');
 
-  ensureDir(join(APP_HOME, 'journals'));
-  ensureDir(join(APP_HOME, 'logs'));
+//   ensureDir(join(APP_HOME, 'journals'));
+//   ensureDir(join(APP_HOME, 'logs'));
 
-  // git hooks
-  execSync('git config core.hooksPath .githooks');
-  execSync('git config submodule.recurse true');
-
-  // install pkcs12
-//  if ( IS_MAC ) {
-    exec('./tools/cert/copy-pkcs12.sh');
-//  }
-});
+//   // git hooks
+//   execSync('git config core.hooksPath .githooks');
+//   execSync('git config submodule.recurse true');
+// });
 
 
 task('Deploy documents from DOCUMENT_OUT to DOCUMENT_HOME.', [], function deployDocuments() {
@@ -345,7 +329,7 @@ task('Deploy journal files from JOURNAL_OUT to JOURNAL_HOME.', [], function depl
 
 
 task('Deploy documents, journals.', [ 'deployDocuments','deployJournals'], function deploy() {
-  if ( ! RUN_JAR && ! TEST && ! BENCHMARK ) {
+  if ( ! BUILD_JAR && ! TEST && ! BENCHMARK ) {
     deployJournals();
     deployDocuments();
   }
@@ -371,7 +355,7 @@ task('Clean build files, include pom.xml and java libraries. Cleaner than clean.
 
 
 task('Remove generated files.', [], function clean() {
-  if ( RUN_JAR || TEST || BENCHMARK ) {
+  if ( BUILD_JAR || TEST || BENCHMARK ) {
     emptyDir(`${APP_HOME}/bin`);
     emptyDir(`${APP_HOME}/lib`);
   }
@@ -409,7 +393,7 @@ task("Call pmake with JS Maker to build 'foam-bin.js'.", [], function genJS() {
 
 task('Generate Java and JS packages.', [ 'genJava', 'genJS' ], function packageFOAM() {
   genJava();
-  if ( RUN_JAR ) {
+  if ( PACKAGE || BUILD_JAR ) {
     genJS();
   }
 });
@@ -462,8 +446,8 @@ task('Generate and compile java source.', [ 'genJava', 'copyLib' ], function bui
 
 task('Build Java JAR file.', [ 'versions', 'jarWebroot', 'jarImages' ], function buildJar() {
   // remove any previous timestamped versions
-  execSync(`rm -f ${JAR_LIB_DIR}/${PROJECT.name}-*.jar >/dev/null 2>&1`);
-  execSync(`rm -f ${BUILD_DIR}/lib/${PROJECT.name}-*.jar >/dev/null 2>&1`);
+  execSync(`rm -f ${JAR_LIB_DIR}/${APP_NAME}-*.jar >/dev/null 2>&1`);
+  execSync(`rm -f ${BUILD_DIR}/lib/${APP_NAME}-*.jar >/dev/null 2>&1`);
 
   versions();
   jarWebroot();
@@ -475,6 +459,14 @@ task('Build Java JAR file.', [ 'versions', 'jarWebroot', 'jarImages' ], function
 });
 
 
+task('Package files into a TAR archive', [], function buildTar() {
+  // Notice that the argument to the second -C is relative to the directory from the first -C, since -C
+  // switches the current directory.
+  ensureDir(BUILD_DIR + '/package');
+  execSync(`tar -a -cf ${BUILD_DIR}/package/${APP_NAME}-deploy-${VERSION}.tar.gz -C ./foam3/tools/deploy bin etc -C ../../../ -C${BUILD_DIR} lib`);
+});
+
+
 task('Delete runtime journals.', [], function deleteRuntimeJournals() {
   info('Runtime journals deleted.');
   emptyDir(JOURNAL_HOME);
@@ -482,6 +474,8 @@ task('Delete runtime journals.', [], function deleteRuntimeJournals() {
 
 
 task('Copy required files to APP_HOME deployment directory.', [], function deployToHome() {
+  copyDir('./foam3/tools/deploy/bin', join(APP_HOME, 'bin'));
+  copyDir('./foam3/tools/deploy/etc', join(APP_HOME, 'etc'));
   copyDir(BUILD_DIR + '/lib', join(APP_HOME, 'lib'));
 });
 
@@ -489,71 +483,75 @@ task('Copy required files to APP_HOME deployment directory.', [], function deplo
 task('Start NANOS application server.', [ 'setenv' ], function startNanos() {
   setenv();
 
-  MESSAGE = `Starting NANOS ${INSTANCE}`;
+  if ( BUILD_JAR ) {
+    var OPT_ARGS = ``;
 
-  // process.chdir(PROJECT_HOME);
+    if ( WEB_PORT ) OPT_ARGS += ` -W${WEB_PORT}`;
+    if ( DEBUG ) OPT_ARGS += ` -D${DEBUG_PORT}`;
+    if ( DEBUG_SUSPEND ) OPT_ARGS += ` -s`;
+    if ( PROFILER ) OPT_ARGS += ` -P${PROFILER_PORT}`;
+    if ( CLUSTER ) OPT_ARGS += ` -m`;
+    if ( HOST_NAME && HOST_NAME !== 'localhost' ) OPT_ARGS += ` -H${HOSTNAME}`;
 
-  if ( HOST_NAME ) {
-    JAVA_OPTS = ` -Dhostname=${HOST_NAME} ${JAVA_OPTS}`;
-  }
+    exec(`${APP_HOME}/bin/run.sh -N${APP_NAME} -V${VERSION} ${OPT_ARGS}`);
+  } else {
 
-  if ( DEBUG ) {
-    JAVA_OPTS = `-agentlib:jdwp=transport=dt_socket,server=y,suspend=${DEBUG_SUSPEND ? 'y' : 'n'},address=127.0.0.1:${DEBUG_PORT} ${JAVA_OPTS}`;
-  }
+    if ( HOST_NAME ) {
+      JAVA_OPTS = ` -Dhostname=${HOST_NAME} ${JAVA_OPTS}`;
+    }
 
-  if ( WEB_PORT ) {
-    JAVA_OPTS += ` -Dhttp.port=${WEB_PORT}`;
-  }
+    if ( DEBUG ) {
+      JAVA_OPTS = `-agentlib:jdwp=transport=dt_socket,server=y,suspend=${DEBUG_SUSPEND ? 'y' : 'n'},address=127.0.0.1:${DEBUG_PORT} ${JAVA_OPTS}`;
+    }
 
-  JAVA_OPTS += ` -Dnanos.webroot=${PROJECT_HOME}`;
+    if ( WEB_PORT ) {
+      JAVA_OPTS += ` -Dhttp.port=${WEB_PORT}`;
+    }
 
-  CLASSPATH = `${BUILD_DIR}/lib/\*:${BUILD_DIR}/classes/java/main`;
+    JAVA_OPTS += ` -Dnanos.webroot=${PROJECT_HOME}`;
 
-  logLevelLower = 'info';
-  if ( LOG_LEVEL ) {
-    JAVA_OPTS = ` -Dlog.level=${LOG_LEVEL} ${JAVA_OPTS}`;
-    logLevelLower = `${LOG_LEVEL}`.toLowerCase();
-  }
-  JAVA_OPTS = ` -Dorg.slf4j.simpleLogger.defaultLogLevel=${logLevelLower} ${JAVA_OPTS}`;
+    CLASSPATH = `${BUILD_DIR}/lib/\*:${BUILD_DIR}/classes/java/main`;
 
-  if ( TEST || BENCHMARK ) {
-    // TODO: move to pom task
-    JAVA_OPTS += ' -Dresource.journals.dir=journals';
-    JAVA_OPTS += ' -DRES_JAR_HOME=' + JAR_OUT;
+    logLevelLower = 'info';
+    if ( LOG_LEVEL ) {
+      JAVA_OPTS = ` -Dlog.level=${LOG_LEVEL} ${JAVA_OPTS}`;
+      logLevelLower = `${LOG_LEVEL}`.toLowerCase();
+    }
+    JAVA_OPTS = ` -Dorg.slf4j.simpleLogger.defaultLogLevel=${logLevelLower} ${JAVA_OPTS}`;
+
+    MESSAGE = `Starting NANOS ${APP_NAME}`;
+    if ( TEST || BENCHMARK ) {
+      // TODO: move to pom task
+      JAVA_OPTS += ' -Dresource.journals.dir=journals';
+      JAVA_OPTS += ' -DRES_JAR_HOME=' + JAR_OUT;
+
+      if ( TEST ) {
+        MESSAGE = 'Running tests...';
+        JAVA_OPTS += ' -Dfoam.main=testRunnerScript';
+        if ( TESTS ) JAVA_OPTS += ' -Dfoam.tests=' + TESTS;
+      } else if ( BENCHMARK ) {
+        MESSAGE = 'Running benchmarks...';
+        JAVA_OPTS += ' -Dfoam.main=benchmarkRunnerScript';
+        if ( BENCHMARKS ) JAVA_OPTS += ' -Dfoam.benchmarks=' + BENCHMARKS;
+      }
+    }
+
+    info('JAVA_OPTS:' + JAVA_OPTS);
+    info(MESSAGE);
 
     if ( TEST ) {
-      MESSAGE = 'Running tests...';
-      JAVA_OPTS += ' -Dfoam.main=testRunnerScript';
-      if ( TESTS ) JAVA_OPTS += ' -Dfoam.tests=' + TESTS;
+      try {
+        exec(`java -jar ${JAR_OUT}`);
+      } catch ( e ) {
+        // Failing tests, no need to throw
+      }
+      process.exit(0);
     } else if ( BENCHMARK ) {
-      MESSAGE = 'Running benchmarks...';
-      JAVA_OPTS += ' -Dfoam.main=benchmarkRunnerScript';
-      if ( BENCHMARKS ) JAVA_OPTS += ' -Dfoam.benchmarks=' + BENCHMARKS;
-    }
-  }
-
-  info('JAVA_OPTS:' + JAVA_OPTS);
-  info(MESSAGE);
-
-  if ( TEST ) {
-    try {
       exec(`java -jar ${JAR_OUT}`);
-    } catch ( e ) {
-      // Failing tests, no need to throw
+    } else {
+      // Acquires environment variables via JAVA_TOOL_OPTIONS (JAVA_OPTS)
+      exec(`java -cp "${CLASSPATH}" foam.nanos.boot.Boot`);
     }
-    process.exit(0);
-  } else if ( BENCHMARK ) {
-    exec(`java -jar ${JAR_OUT}`);
-  } else if ( DAEMONIZE ) {
-    var proc = spawn(`java -cp ${CLASSPATH} foam.nanos.boot.Boot`);
-    writeToPidFile(proc.pid);
-    console.log('Nanos started successfully');
-  } else {
-    //             exec java -cp "$CLASSPATH" foam.nanos.boot.Boot
-
-    // info('Environment'); console.log(process.env);
-    // ??? What environmental variables does this use?
-    exec(`java -cp "${CLASSPATH}" foam.nanos.boot.Boot`);
   }
 });
 
@@ -580,12 +578,12 @@ task('Show version information.', [ 'getProjectGitHash', 'getFOAMGitHash'], func
   getFOAMGitHash();
 
   console.log(`Application Version: ${VERSION}`);
-  console.log(`${PROJECT.name} revision:    ${PROJECT_REVISION}`);
+  console.log(`${APP_NAME} revision:    ${PROJECT_REVISION}`);
   console.log(`FOAM revision:       ${FOAM_REVISION}`);
 });
 
 task('Show application information.', [], function appName() {
-  console.log(`Application Name: ${PROJECT.name}`);
+  console.log(`Application Name: ${APP_NAME}`);
   console.log(`Application VendorId: ${PROJECT.vendorId}`);
 });
 
@@ -628,13 +626,14 @@ function readFromPidFile() {
 // Environment Variables which are exported when updated
 buildEnv({
   // App resources path
-  APP_HOME:          () => APP_ROOT + ( ( INSTANCE !== 'localhost' ) ? `/${PROJECT.name}_` + INSTANCE : `/${PROJECT.name}`),
+  APP_HOME:          () => APP_ROOT + '/' + APP_NAME,
   JOURNAL_HOME:      () => `${APP_HOME}/journals`,
   DOCUMENT_HOME:     () => `${APP_HOME}/documents`,
   LOG_HOME:          () => `${APP_HOME}/logs`,
 
   JAR_LIB_DIR:       () => ( PACKAGE ? `${PROJECT_HOME}/${BUILD_DIR}` : APP_HOME ) + '/lib',
-  JAR_NAME:          () => `${PROJECT.name}-${VERSION}.jar`,
+//  JAR_NAME:          () => `${PROJECT.name}-${VERSION}.jar`,
+  JAR_NAME:          () => `${APP_NAME}-${VERSION}.jar`,
   JAR_OUT:           () => `${JAR_LIB_DIR}/${JAR_NAME}`,
   // Project resources path
   PROJECT_HOME:      PWD,
@@ -657,16 +656,6 @@ task('Set environmental variables needed by Java.', [], function setenv() {
 
   JAVA_OPTS += ` -DJOURNAL_HOME=${JOURNAL_HOME}`;
   JAVA_OPTS += ` -DDOCUMENT_HOME=${DOCUMENT_HOME}`;
-
-  /*
-  if [[ -z $JAVA_HOME ]]; then
-    if [[ $IS_MAC -eq 1 ]]; then
-      warning "Java home isn't properly configured!"
-    elif [[ $IS_LINUX -eq 1 ]]; then
-      JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))
-    fi
-  fi
-  */
 });
 
 
@@ -692,7 +681,7 @@ function moreUsage() {
 
 const ARGS = {
   a: [ 'Run/launch from Java jar file.',
-    () => RUN_JAR = true ],
+    () => BUILD_JAR = true ],
   b: [ 'run all benchmarks.',
     () => {
       BENCHMARK = true;
@@ -702,46 +691,40 @@ const ARGS = {
     } ],
   B: [ 'benchmarkId1,benchmarkId2,... : Run listed benchmarks.',
     args => { ARGS.b[1](); BENCHMARKS = args; } ],
-  c: [ 'Clean generated code before building.  Required if generated classes have been removed.',
+  c: [ 'Clean generated code before building.  Required if generated classes have been removed. Use -XcleanAll to remove build/ directory. NOTE: if compilation fails after option c is issued, clean is again required until a succesful build.',
     () => CLEAN_BUILD = true ],
-  d: [ 'Run with JDPA debugging enabled on port 8000',
+  d: [ 'Run with JDPA debugging enabled on port 8000.',
     () => DEBUG = true ],
-  D: [ 'PORT : JDPA debugging enabled on port PORT.',
+  D: [ 'PORT : Run with JDPA debugging enabled on port PORT.',
     args => { ARGS.d[1](); DEBUG_PORT = args; info('DEBUG_PORT=' + DEBUG_PORT); } ],
   e: [ 'Skipping genJava task.',
     () => {
       warning('Skipping genJava task');
       GEN_JAVA = false;
     } ],
-  F: [ '<rw | ro> : File System Read-Write (default) or Read-Only',
-    args => FS = args ],
-  g: [ 'Output running/notrunning status of daemonized nanos.',
-    () => { statusNanos(); quit(0); } ],
-  i: [ 'Install npm and git hooks',
-    () => { install(); quit(0); } ],
+  H: [ 'Hostname',
+       () => HOST_NAME = args ],
   j: [ 'Delete runtime journals, build, and run app as usual.',
     () => DELETE_RUNTIME_JOURNALS = true ],
   J: [ 'JOURNALS_CONFIG : additional journals.',
     args => { JOURNAL_CONFIG = comma(JOURNAL_CONFIG, args); } ],
   k: [ 'Package up a deployment tarball.',
-    () => { BUILD_ONLY = PACKAGE = true; } ],
+    () => { BUILD_JAR = BUILD_ONLY = PACKAGE = true; } ],
   l: [ 'turn on build logging/verbose mode', () => VERBOSE = '-flags=verbose' ],
-  L: [ 'in combination with tTbB, set JVM log level (one of: ERROR, WARN, INFO, DEBUG)',
+  L: [ 'in combination with tTbB, set JVM log level to WARN, INFO, DEBUG. Defaults to ERROR.',
        args => { LOG_LEVEL = args; }
      ],
-  N: [ `NAME : start another instance with given instance name. Deployed to /opt/${PROJECT.name}_NAME.`,
-       args => { INSTANCE = HOST_NAME = args; NANOS_PIDFILE=`/tmp/nanos_${INSTANCE}.pid`; info('INSTANCE=' + args); } ],
+  N: [ `NAME : start another instance with given instance name. Deployed to /opt/NAME.`,
+       args => { APP_NAME = args; NANOS_PIDFILE=`/tmp/nanos_${APP_NAME}.pid`; info('APP_NAME=' + args); } ],
   o: [ "Build only - don't start nanos.",
     () => BUILD_ONLY = true ],
   P: [ "pom file : name and path of the root pom file. Defaults to 'pom' at the root of the project.",
      args => { POM = args; info('POM=' + POM); } ],
-  r: [ 'Run NANOS with whatever was last built.',
+  r: [ 'Run NANOS with whatever was last built. (restart)',
     () => RESTART_ONLY = true ],
   R: [ 'Set app deployment root directory',
-        args => { APP_ROOT = args } ],
-  s: [ 'Stop a running daemonized nanos.',
-    () => STOP_ONLY = true ],
-  '$': [ 'When debugging, start suspended.', // renamed from 'S' in build.sh
+       args => APP_ROOT = args ],
+  s: [ 'When debugging, start suspended.',
     () => DEBUG_SUSPEND = true ],
   t: [ 'Run All tests.',
     () => {
@@ -791,27 +774,8 @@ const ARGS = {
         }
       });
       quit(0);
-    } ],
-  z: [ 'Daemonize into the background, will write PID into $PIDFILE environment variable.',
-    () => DAEMONIZE = true ]
+    } ]
 };
-
-
-function statusNanos() {
-  var pid = readFromPidFile();
-  if ( ! pid ) {
-    info('NANOS not running.');
-  } else {
-    try {
-      execSync(`kill -0 ${pid} &>/dev/null`);
-      info('NANOS running.');
-    } catch (e) {
-      rmfile(NANOS_PIDFILE);
-      error('Stale PID file.');
-    }
-  }
-}
-
 
 task('Stop running NANOS server.', [], function stopNanos() {
   console.log('Stopping Nanos server...');
@@ -821,15 +785,10 @@ task('Stop running NANOS server.', [], function stopNanos() {
     if ( pid ) {
       execSync(`kill -9 ${pid} &>/dev/null`);
       rmfile(NANOS_PIDFILE);
-    } else {
-      execSync('killall -SIGTERM nanos', { stdio: 'ignore' });
     }
     console.log('Nanos server stopped successfully.');
   } catch (e) {
-    if ( STOP_ONLY ) {
-      console.log(e);
-      error('Error occurred while stopping Nanos server.');
-    }
+    console.log('Nanos server not running, or failed to stop');
   }
 });
 
@@ -840,16 +799,16 @@ task('Stop running NANOS server.', [], function stopNanos() {
 
 task(
 'Build everything specified by flags.',
-[ 'clean', 'setenv', 'deleteRuntimeJournals', 'deleteRuntimeLogs', 'setupDirs', 'packageFOAM', 'buildJava', 'deploy', 'buildJar', 'deployToHome', 'startNanos' ],
+  [ 'clean', 'setenv', 'deleteRuntimeJournals', 'deleteRuntimeLogs', 'setupDirs', 'packageFOAM', 'buildJava', 'deploy', 'buildJar', 'deployToHome', 'buildTar', 'startNanos' ],
 function all() {
   processSingleCharArgs(ARGS, moreUsage);
   setenv();
 
-  stopNanos();
+  if( ! ( PACKAGE || BUILD_ONLY ) ) {
+    stopNanos();
+  }
 
   if ( DELETE_RUNTIME_JOURNALS ) deleteRuntimeJournals();
-
-  if ( STOP_ONLY ) quit(0);
 
   if ( CLEAN_BUILD && ! RESTART_ONLY ) {
     clean();
@@ -858,37 +817,38 @@ function all() {
   setupDirs();
 
   if ( ! RESTART_ONLY ) {
-    if ( PACKAGE || RUN_JAR || TEST || BENCHMARK ) {
+    if ( PACKAGE || BUILD_JAR || TEST || BENCHMARK ) {
       packageFOAM();
     }
 
     buildJava();
     deploy();
 
-    // ???: Why is this?
-    if ( RUN_JAR || TEST || BENCHMARK ) {
+    // Tests and benchmarks run from jar file
+    if ( PACKAGE || BUILD_JAR || TEST || BENCHMARK ) {
       buildJar();
       deployToHome();
     }
 
     if ( PACKAGE ) {
-      buildJar();
+      buildTar();
     }
   }
 
-  if ( ! BUILD_ONLY ) {
-    showSummary();
+  if( ! ( PACKAGE || BUILD_ONLY ) ) {
     startNanos();
   }
 });
 
 // Install POM tasks
 if ( TASKS ) {
+
   TASKS.forEach(f => task(f));
 
   // Exports local variables and functions for POM tasks
   var poms = pom();
   EXPORTS = {
+    APP_NAME,
     BUILD_DIR,
     JOURNAL_CONFIG,
     PROJECT,
@@ -905,7 +865,3 @@ if ( TASKS ) {
 all();
 
 quit(0);
-
-// IS_AWS, IS_MAC, IS_LINUX are no longer used
-// a note on 'c' clean on the current build.
-// if you issue 'c', and compilation fails, you need clean again to get a succesful deployment

@@ -1,47 +1,65 @@
 #!/bin/bash
 # Super simple launcher.
 
-APP_HOME=$(dirname $(dirname $0))
 HOST_NAME=`hostname -s`
-APP_NAME=foam
+APP_HOME=$(dirname $(dirname $0))
+APP_ROOT=$(echo $APP_HOME | cut -d "/" -f2)
+APP_NAME=$(echo $APP_HOME | cut -d "/" -f3)
 WEB_PORT=8080
-NANOS_PIDFILE=/tmp/nanos.pid
 export DEBUG=0
 export DEBUG_SUSPEND=n
 export DEBUG_PORT=8000
-
-if [ -f "build/env.sh" ]; then
-    source build/env.sh
-fi
+PROFILER=0
+PROFILER_PORT=8849
+CLUSTER=false
+VERSION=
 
 function usage {
     echo "Usage: $0 [OPTIONS]"
     echo ""
     echo "Options are:"
-    echo "  -A <app_name>       : Application name and also prefix of jar file"
     echo "  -d                  : Debug enabled"
-    echo "  -D [<port>]         : Debug enabled, suspend on lauch, on port (default 8000)"
-    echo "  -N <hostname>       : hostname "
-    echo "  -W <port>           : HTTP Port (default 8080)"
+    echo "  -D port             : Debug enabled, on port (default 8000)"
+    echo "  -H hostname         : Hostname override"
+    echo "  -m                  : Confiugure as Medusa mediator"
+    echo "  -N name             : Application name"
+    echo "  -P port             : Profiling enabled on PORT"
+    echo "  -p                  : Profiling enabled, default 8849"
+    echo "  -R path             : Application root path, default /opt"
+    echo "  -s                  : Debug enabled, suspend on launch"
+    echo "  -W port             : HTTP Port (default 8080)"
+    echo "  -V version          : Version"
 }
 
-while getopts "A:dD:N:W:" opt ; do
+# NOTE this run script is used for both local and remote jvm execution.
+# When used locally, the build.js arguments c (clean) and r (restart) are
+# handled as the script is often passed all parameters from build.js.
+# Similarly m and C are support for Medusa mediator configuration
+while getopts "D:dH:mN:P:pR:sW:V:" opt ; do
     case $opt in
-        A) APP_NAME=$OPTARG;;
-        d) DEBUG=1;
-           DEBUG_SUSPEND=y;;
         D) DEBUG=1;
-           DEBUG_SUSPEND=y;
-           if [ -n ${OPTARG} ]; then
-               DEBUG_PORT=$OPTARG;
+           if [ -n "${OPTARG}" ]; then
+               DEBUG_PORT=${OPTARG};
            fi;;
-        N) HOST_NAME=$OPTARG;;
-        W) WEB_PORT=$OPTARG;;
+        d) DEBUG=1;;
+        H) HOST_NAME=${OPTARG};;
+        m) CLUSTER=true;;
+        N) APP_NAME=${OPTARG};;
+        P) PROFILER=1;
+           PROFILER_PORT=${OPTARG};;
+        p) PROFILER=1;;
+        R) APP_ROOT=${OPTARG};;
+        s) DEBUG=1;
+           DEBUG_SUSPEND=y;;
+        W) WEB_PORT=${OPTARG};;
+        V) VERSION=${OPTARG};;
         ?) usage ; exit 0 ;;
    esac
 done
 
-echo "run.sh $APP_NAME @ $HOST_NAME:$WEB_PORT"
+APP_HOME="/${APP_ROOT}/${APP_NAME}"
+
+echo "starting $APP_NAME @ $HOST_NAME:$WEB_PORT"
 
 JAVA_OPTS=""
 export JOURNAL_HOME="${APP_HOME}/journals"
@@ -63,7 +81,17 @@ JAVA_OPTS="${JAVA_OPTS} -DJOURNAL_HOME=${JOURNAL_HOME}"
 JAVA_OPTS="${JAVA_OPTS} -DDOCUMENT_HOME=${DOCUMENT_HOME}"
 JAVA_OPTS="${JAVA_OPTS} -DLOG_HOME=${LOG_HOME}"
 
-JAR=$(ls ${APP_HOME}/lib/${APP_NAME}-*.jar | awk '{print $1}')
+if [[ "$PROFILER" -eq 1 ]]; then
+    JAVA_OPTS="${JAVA_OPTS} -agentpath:${PROFILER_AGENT_PATH}=port=$PROFILER_PORT"
+fi
+
+if [[ ${JAVA_OPTS} != *"CLUSTER"* ]]; then
+    if [[ ${CLUSTER} = "true" ]]; then
+        JAVA_OPTS="${JAVA_OPTS} -DCLUSTER=${CLUSTER}"
+    fi
+fi
+
+JAR=$(ls ${APP_HOME}/lib/${APP_NAME}-${VERSION}.jar | awk '{print $1}')
 
 export RES_JAR_HOME="${JAR}"
 
