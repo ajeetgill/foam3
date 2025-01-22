@@ -70,7 +70,7 @@ foam.CLASS({
            this.subject.realUser.id != this.subject.user.id ) {
         console.warn("Not supported update of user capabilities on behalf of another user");
       }
-      // Currently we don't support capabilities update buy the user who don't get the cupabilitie. E.g. user.id != realUser.Id
+      // Currently we don't support capabilities update by the user who don't get the cupabilitie. E.g. user.id != realUser.Id
       // this.crunchService.updateJunctionFor was removed
       let p = this.crunchService.updateJunction(
         null, wizardlet.capability.id, null, null
@@ -105,7 +105,7 @@ foam.CLASS({
         console.warn("Not supported update of user capabilities on behalf of another user");
       }
 
-      // Currently we don't support capabilities update buy the user who don't get the cupabilitie. E.g. user.id != realUser.Id
+      // Currently we don't support capabilities update by the user who don't get the cupabilitie. E.g. user.id != realUser.Id
       // this.crunchService.updateJunctionFor was removed
       let p = this.crunchService.updateJunction(null,
         wizardlet.capability.id, wData, null
