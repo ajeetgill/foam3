@@ -45,7 +45,7 @@ public class Whitespace
       }
     }
 
-    return null;
+    return ps;
   }
 
   public String toString() {
