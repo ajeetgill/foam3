@@ -465,7 +465,7 @@ task('Package files into a TAR archive', [], function buildTar() {
 });
 
 
-task('Copy required files to APP_HOME deployment directory.', [], function deploytohome() {
+task('Copy required files to APP_HOME deployment directory.', [], function deployToHome() {
   copyDir('./foam3/tools/deploy/bin', join(APP_HOME, 'bin'));
   copyDir('./foam3/tools/deploy/etc', join(APP_HOME, 'etc'));
   copyDir(BUILD_DIR + '/lib', join(APP_HOME, 'lib'));
