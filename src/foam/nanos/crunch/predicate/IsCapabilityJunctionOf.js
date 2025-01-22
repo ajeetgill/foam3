@@ -29,6 +29,6 @@ foam.RULE_PREDICATE({
   ruleF: `
     var ucj = (UserCapabilityJunction) n;
     return ucj.getTargetId().equals(getCapabilityId())
-        && ucj.findSourceId(x).getClass() == getOf().getObjClass();
+      && ucj.findSourceId(x).getClass() == getOf().getObjClass();
   `
 });

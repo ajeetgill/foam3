@@ -11,8 +11,10 @@ foam.CLASS({
   imports: [
     'auth',
     'ctrl',
+    'checkGeneralCapability',
     'defaultUserLanguage',
     'emailVerificationService',
+    'initLayout',
     'loginSuccess',
     'notify',
     'stack',
@@ -68,6 +70,9 @@ foam.CLASS({
 
           if ( ! wizardFlow ) {
             await this.onUserAgentAndGroupLoaded();
+          } else {
+            await this.checkGeneralCapability();
+            this.initLayout.resolve();
           }
         } catch (err) {
           let e = err && err.data ? err.data.exception : err;
@@ -171,7 +176,8 @@ foam.CLASS({
           userName: data.username,
           email: data.email,
           desiredPassword: data.desiredPassword,
-          language: this.defaultUserLanguage
+          language: this.defaultUserLanguage,
+          referralCode: data.referralToken
         });
         var user = await data.dao_.put(createdUser);
         if ( user ) {
