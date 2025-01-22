@@ -45,11 +45,11 @@ foam.CLASS({
 
     Port port = (Port) ((DAO) x.get("portDAO")).find_(x, id);
     if ( port == null ) {
-      FObject nspec = (FObject) x.get(id);
-      if ( nspec != null ) {
-        PropertyInfo pInfo = (PropertyInfo) nspec.getClassInfo().getAxiomByName("port");
+      FObject service = (FObject) x.get(id);
+      if ( service != null ) {
+        PropertyInfo pInfo = (PropertyInfo) service.getClassInfo().getAxiomByName("port");
         if ( pInfo != null ) {
-          Object p = pInfo.get(nspec);
+          Object p = pInfo.get(service);
           if ( p instanceof Integer ) {
             port = new Port();
             port.setNumber(((Integer) p).intValue());
