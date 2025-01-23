@@ -183,7 +183,9 @@ foam.CLASS({
     },
 
     function scrollToBottom() {
-      this.element_.scrollTop = this.element_.scrollHeight;
+      if ( this.U3 ) {
+        this.element_.scrollTop = this.element_.scrollHeight;
+      }
     },
 
     function h1(h) { this.outputDiv.start('h1').add(h).end(); },
