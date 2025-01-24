@@ -45,7 +45,7 @@ foam.CLASS({
       view: function(args, X) {
         return {
           class: 'foam.nanos.fs.fileDropZone.FileDropZone',
-          files$: X.data.documents$,
+          files$: X.data.documents$
         };
       },
       validateObj: function(documents, isRequired) {
