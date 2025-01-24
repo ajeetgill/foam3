@@ -16,10 +16,6 @@ foam.CLASS({
   css: `
     foreignObject^{pointer-events:none;}
     ^div {
-      position: absolute;
-      top: 15px;
-      left: 15px;
-
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
@@ -68,8 +64,8 @@ foam.CLASS({
     function render() {
       var self = this;
       var dims = {
-        width:  '' + (this.size[0] + 30),
-        height: '' + (this.size[1] + 30),
+        width:  '' + this.size[0],
+        height: '' + this.size[1],
       };
       var capability = this.data;
       var ucj = null;
