@@ -171,6 +171,6 @@ foam.CLASS({
     function DAY(d) { return foam.mlang.Day.create({numberOfDays: d}); },
     function HOURS(d) { return foam.mlang.Hours.create({arg1: d}); },
     function MINUTES(d) { return foam.mlang.Minutes.create({arg1: d}); },
-    function NOW() { return foam.mlang.CurrentTime.create(); },
+    function NOW() { return foam.mlang.CurrentTime.create(); }
   ]
 });
