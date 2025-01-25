@@ -247,7 +247,7 @@ foam.CLASS({
     'foam.u2.DetailView'
   ],
 
-  imports: [ 'eval_' ],
+  imports: [ 'eval_', 'setTimeout' ],
 
   css: `
     ^ .foam-u2-TextInputCSS {
@@ -469,10 +469,13 @@ foam.CLASS({
         if ( this.limit ) dao = dao.limit(this.limit);
         var cls   = foam.lookup(this.cls_.package + '.' + this.selectChoice + 'DAOAgent');
         var agent = cls.create({dao: dao, unlimitedDAO: unlimitedDAO});
-        var out   = this.content.start();
+        var out   = this.content.start().style({display: 'none'});
         await agent.execute(out);
-        this.previousOutput?.remove();
-        this.previousOutput = out;
+        this.setTimeout(() => {
+          this.previousOutput?.remove();
+          this.previousOutput = out;
+          out.style({display: 'block'});
+        }, 17)
       }
     },
     function clear() {
