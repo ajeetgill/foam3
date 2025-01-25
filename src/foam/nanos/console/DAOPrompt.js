@@ -244,7 +244,8 @@ foam.CLASS({
   requires: [
     'foam.nanos.console.Link',
     'foam.parse.QueryParser',
-    'foam.u2.DetailView'
+    'foam.u2.DetailView',
+    'foam.u2.tag.CircleIndicator'
   ],
 
   imports: [ 'eval_', 'setTimeout' ],
@@ -258,6 +259,8 @@ foam.CLASS({
       width: 130px;
     }
     ^ .property-skip { display: inline-flex; }
+    ^helper-icon svg { fill: currentColor; }
+    ^helper-icon { vertical-align: sub; }
   `,
 
   constants: {
@@ -419,7 +422,15 @@ foam.CLASS({
         start('blockquote').style({'margin-top': '0', 'margin-left': '20px'}).
         add('skip(',    this.SKIP,  ').').br().
         add('limit(',   this.LIMIT, ').').br().
-        add('where(').start(this.WHERE_CHOICE).style({'display': 'inline-flex'}).end().add(' ', this.WHERE, ' ').start(this.PROPERTY_CHOICE).style({'display': 'inline-flex'}).end().add(').').br().
+        add('where(').
+          start(this.WHERE_CHOICE).
+          style({'display': 'inline-flex'}).
+        end().
+        add(' ', this.WHERE, ' ').
+        start(this.PROPERTY_CHOICE).style({'display': 'inline-flex'}).end().
+        add('). ').
+        start(this.CircleIndicator, {glyph: 'helpIcon', icon: '/images/question-icon.svg', size:20}).addClass(this.myClass('helper-icon')).on('click', () => this.eval_('mqlhelp')).end().
+        br().
         add('orderBy(', this.ORDER, ' ').start(this.ORDER_CHOICE).style({'display': 'inline-flex'}).end().add(').').br().
         add('select(').start(this.SELECT_CHOICE).style({'display': 'inline-flex'}).end().add(' ',  this.SELECT, ')').
       end().
