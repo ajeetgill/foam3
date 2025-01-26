@@ -145,7 +145,7 @@ foam.CLASS({
           cls:      this.cls.bind(this),
           daos:     this.services.bind(this, this.NSpec.SERVED_DAOS),
           services: this.services.bind(this, this.NSpec.SERVED_SERVICES),
-          output:   this.output
+          output:   this.outputDiv
         };
       }
     }
