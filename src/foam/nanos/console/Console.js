@@ -253,8 +253,10 @@ foam.CLASS({
       this.outputDiv.removeAllChildren();
     },
 
-    function history() {
+    function history(q) {
+      if ( q ) q = q.toLowerCase();
       this.history_.forEach(h => {
+        if ( q != undefined && h.toLowerCase().indexOf(q) == -1 ) return;
         this.outputDiv.tag('br');
         this.outputLink(h, () => this.eval_(h));
       });
