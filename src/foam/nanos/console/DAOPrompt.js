@@ -121,6 +121,57 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.nanos.console',
+  name: 'GroupByDAOAgent',
+  extends: 'foam.nanos.console.AbstractDAOAgent',
+
+  methods: [
+    function execute(e) {
+      return this.dao.select(this.GROUP_BY(foam.demos.olympics.Medal.COLOR, this.COUNT())).then(s => {
+        e.add(s);
+      });
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.nanos.console',
+  name: 'GridByDAOAgent',
+  extends: 'foam.nanos.console.AbstractDAOAgent',
+
+  methods: [
+    function execute(e) {
+      return this.dao.select(this.GROUP_BY(foam.demos.olympics.Medal.GENDER, this.GROUP_BY(foam.demos.olympics.Medal.COLOR, this.COUNT()))).then(s => {
+//      return this.dao.select(this.GROUP_BY(foam.demos.olympics.Medal.COLOR, foam.demos.olympics.Medal.GENDER, this.COUNT())).then(s => {
+        e.add(s);
+      });
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.nanos.console',
+  name: 'PieDAOAgent',
+  extends: 'foam.nanos.console.AbstractDAOAgent',
+
+  requires: [ 'foam.u2.mlang.Pie' ],
+
+  methods: [
+    function execute(e) {
+      return this.dao.select(this.Pie.create({
+        arg1: foam.demos.olympics.Medal.COLOR,
+        arg2: this.COUNT()
+      })).then(s => {
+        e.add(s);
+      });
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.nanos.console',
   name: 'ViewDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
@@ -179,6 +230,7 @@ foam.CLASS({
 });
 
 
+
 foam.CLASS({
   package: 'foam.nanos.console',
   name: 'CellsDAOAgent',
@@ -195,7 +247,8 @@ foam.CLASS({
       for ( var i = 0 ; i < ps.length ; i++ ) {
         cs[String.fromCharCode(65+i) + 0] = '<b>' + ps[i].label + '</b';
       }
-      this.dao.select(o => {
+      // TODO: limit to 30k until Cells can handle more
+      this.dao.limit(30000).select(o => {
         for ( var i = 0 ; i < ps.length ; i++ ) {
           cs[String.fromCharCode(65+i) + row] = ps[i].get(o);
         }
@@ -276,6 +329,9 @@ foam.CLASS({
       [ 'Table', 'Table' ],
       [ 'ScrollTable', 'ScrollTable' ],
       [ 'Cells', 'Cells' ],
+      [ 'GroupBy', 'GroupBy' ],
+      [ 'GridBy', 'GridBy' ],
+      [ 'Pie',   'Pie' ],
       [ 'Count', 'COUNT' ],
       [ 'All', 'All' ]
     ]
