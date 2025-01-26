@@ -406,7 +406,7 @@ foam.CLASS({
     },
     'content',
     'rowCount',
-    'executionTime',
+    { name: 'executionTime', value: '-' },
     { class: 'Boolean', name: 'hasRun' }
   ],
 
@@ -459,10 +459,15 @@ foam.CLASS({
         }
 
         // Version which compiles on the Server
-        if ( this.where ) dao = dao.where(this.MQL(this.where));
+        // if ( this.where ) dao = dao.where(this.MQL(this.where));
 
         // Version which compiles on the Client
-        // if ( this.where) dao = dao.where(this.QueryParser.create({of: dao.of}).parseString(this.where));
+        if ( this.where) {
+          var p = this.QueryParser.create({of: dao.of}).parseString(this.where);
+          dao = dao.where(p);
+          // TODO: display syntax error if didn't parse
+        }
+
         if ( this.skip  ) dao = dao.skip(this.skip);
         if ( this.order ) {
           // TODO: Move this logic somewhere more reusable (to QueryParser maybe?)
