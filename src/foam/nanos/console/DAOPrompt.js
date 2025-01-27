@@ -36,42 +36,6 @@ foam.CLASS({
     ^helper-icon { vertical-align: sub; }
   `,
 
-  constants: {
-    AGENTS: [
-      // Value  Label
-      [ 'CSV', 'CSV' ],
-      [ 'XML', 'XML' ],
-      [ 'JSON', 'JSON' ],
-      [ 'Citation', 'Citation' ],
-      [ 'View', 'View' ],
-      [ 'Edit', 'Edit' ],
-      [ 'Controller', 'Controller' ],
-      [ 'Table', 'Table' ],
-      [ 'ScrollTable', 'ScrollTable' ],
-      [ 'Cells', 'Cells' ],
-      [ 'GroupBy', 'GroupBy' ],
-      [ 'GridBy', 'GridBy' ],
-      [ 'Pie',   'Pie' ],
-      [ 'Count', 'COUNT' ],
-      [ 'All', 'All' ]
-    ]
-        /*
-        'CONTROLLER',
-        'GROUP_BY',
-        'GRID_BY',
-        'PIE',
-        'SEQUENCE',
-        'TEMPLATE',
-        'FUNCTION',
-        'JS',
-        'TREE'
-        'Cost'
-        // A..Z Grid
-        // PROJECTION ? Same as Sequence?
-        // Array (store in variable?
-        */
-  },
-
   properties: [
     {
       class: 'String',
@@ -119,10 +83,6 @@ foam.CLASS({
       name: 'order',
       displayWidth: 60,
       view: { class: 'foam.u2.TextField', type: 'search' } // adds 'x' to clear field
-    },
-    {
-      name: 'select',
-      placeholder: '*'
     },
     {
       name: 'orderChoice',
@@ -176,9 +136,10 @@ foam.CLASS({
       }
     },
     {
-      name: 'selectChoice',
-      factory: function() { return this.AGENTS[0][0]; },
-      view: function(_, X) { return { class: 'foam.u2.view.ChoiceView', choices: X.data.AGENTS }; }
+      name: 'select',
+      view: function(_, X) {
+        return { class: 'foam.nanos.console.SinkView', dao: X.data.dao };
+      }
     },
     'content',
     'rowCount',
@@ -200,7 +161,7 @@ foam.CLASS({
         add('skip(',    this.SKIP,  ').').br().
         add('limit(',   this.LIMIT, ').').br().
         add('where(').
-          start(this.WHERE_CHOICE).
+        start(this.WHERE_CHOICE).
           style({'display': 'inline-flex'}).
         end().
         add(' ', this.WHERE, ' ').
@@ -209,7 +170,7 @@ foam.CLASS({
         start(this.CircleIndicator, {glyph: 'helpIcon', icon: '/images/question-icon.svg', size:20}).addClass(this.myClass('helper-icon')).on('click', () => this.eval_('mqlhelp')).end().
         br().
         add('orderBy(', this.ORDER, ' ').start(this.ORDER_CHOICE).style({'display': 'inline-flex'}).end().add(').').br().
-        add('select(').start(this.SELECT_CHOICE).style({'display': 'inline-flex'}).end().add(' ',  this.SELECT, ')').
+        add('select(').add(this.SELECT, ')').
       end().
       add(this.RUN, ' ', this.CLEAR).br().
       start().
@@ -272,8 +233,11 @@ foam.CLASS({
         var unlimitedDAO = dao;
         if ( this.limit ) dao = dao.limit(this.limit);
         var cls   = foam.lookup(this.cls_.package + '.' + this.selectChoice + 'DAOAgent');
-        var agent = cls.create({dao: dao, unlimitedDAO: unlimitedDAO});
-        var out   = this.content.start().style({display: 'none'});
+        var agent = this.select;
+        agent.dao          = dao;
+        agent.unlimitedDAO = unlimitedDAO;
+
+        var out       = this.content.start().style({display: 'none'});
         var startTime = Date.now();
         await agent.execute(out);
         this.executionTime = foam.core.Duration.duration(Date.now() - startTime);
