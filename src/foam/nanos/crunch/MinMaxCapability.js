@@ -42,7 +42,8 @@ foam.CLASS({
     },
     {
       name: 'min',
-      class: 'Int'
+      class: 'Int',
+      value: 0
     },
     {
       name: 'max',
