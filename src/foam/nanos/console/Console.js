@@ -434,10 +434,9 @@ YYYY-MM-DDTHH:MM
       this.addHistory(cmd);
       this.outputDiv.tag('br').start().show(self.showPrompts$).start('b').add('> ').end().add(cmd);
 
-      // with is deprecated
       with ( this.scope || {} ) {
         with ( this.localScope ) {
-          let scope = { ...(this.scope || {} ), ...this.localScope }
+          let scope = { ...(this.scope || {} ), ...this.localScope };
           var r, arg
           try {
             r = eval(cmd);
