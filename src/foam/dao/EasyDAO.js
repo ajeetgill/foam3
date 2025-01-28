@@ -682,19 +682,22 @@ foam.CLASS({
         // TODO: This should come from the server via a lookup from a NamedBox.
         var box = this.TimeoutBox.create({
           delegate: this.remoteListenerSupport ?
-            this.WebSocketBox.create({ uri: this.serviceName }) :
-            this.HTTPBox.create({ url: this.serviceName })
+            this.WebSocketBox.create({uri: this.serviceName}) :
+            this.HTTPBox.create({url: this.serviceName})
         });
+
         if ( this.crunchBoxEnabled ) {
-          box = this.CrunchClientBox.create({ delegate: box });
+          box = this.CrunchClientBox.create({delegate: box});
         }
+
         if ( this.retryBoxMaxAttempts != 0 ) {
           box = this.RetryBox.create({
             maxAttempts: this.retryBoxMaxAttempts,
-            delegate: box,
+            delegate: box
           });
         }
-        return this.SessionClientBox.create({ delegate: box });
+
+        return this.SessionClientBox.create({delegate: box});
       }
     },
     {

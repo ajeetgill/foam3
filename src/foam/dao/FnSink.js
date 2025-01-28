@@ -14,15 +14,6 @@ foam.CLASS({
     Used internally when you do dao.listen(function).
   `,
 
-  axioms: [
-    // Makes it so that the Sink isn't Serialized but instead has a Skeleton
-    // registered to receive remote callbacks.
-    {
-      class: 'foam.box.Remote',
-      clientClass: 'foam.dao.ClientSink'
-    }
-  ],
-
   properties: [
     {
       name: 'fn',

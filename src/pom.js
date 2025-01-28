@@ -269,6 +269,7 @@ foam.POM({
     { name: "foam/dao/NullJournal",                                   flags: "js|java" },
     { name: "foam/dao/Sink",                                          flags: "js|java" },
     { name: "foam/dao/ProxySink",                                     flags: "js|java" },
+    { name: "foam/dao/RemoteSink",                                    flags: "js" },
     { name: "foam/dao/AbstractSink",                                  flags: "js|java" },
     { name: "foam/dao/PipeSink",                                      flags: "js|java" },
     { name: "foam/dao/ResetListener",                                 flags: "js|java" },

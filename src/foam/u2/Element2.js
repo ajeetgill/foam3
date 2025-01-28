@@ -259,13 +259,6 @@ foam.CLASS({
   extends: 'foam.u2.FunctionNode',
   implements: [ 'foam.dao.Sink' ],
 
-  axioms: [
-    {
-      class: 'foam.box.Remote',
-      clientClass: 'foam.dao.ClientSink'
-    }
-  ],
-
   properties: [
     'dao',
     'code',
