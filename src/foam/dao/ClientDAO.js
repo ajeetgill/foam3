@@ -19,6 +19,7 @@ foam.CLASS({
   package: 'foam.dao',
   name: 'ResetSink',
   extends: 'foam.dao.ProxySink',
+
   methods: [
     {
       name: 'put',
@@ -38,6 +39,7 @@ foam.CLASS({
   package: 'foam.dao',
   name: 'MergedResetSink',
   extends: 'foam.dao.ResetSink',
+
   methods: [
     {
       name: 'reset',
@@ -45,6 +47,7 @@ foam.CLASS({
       javaCode: `doReset(sub);`
     }
   ],
+
   listeners: [
     {
       name: 'doReset',
@@ -180,6 +183,6 @@ return sink
       },
       javaCode: `super.listen_(null, sink, predicate);`,
       swiftCode: `return try super.listen_(nil, sink, predicate)`
-    },
+    }
   ]
 });
