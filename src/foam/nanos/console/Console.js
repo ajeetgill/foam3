@@ -223,7 +223,6 @@ foam.CLASS({
       if ( args.length == 0 ) return;
       this.outputDiv.tag('br');
       this.outputDiv.add(args.join(' '));
-      // this.scrollToBottom();
     },
 
     function scrollToBottom() {
@@ -498,8 +497,6 @@ YYYY-MM-DDTHH:MM
 
       this.log(r);
       this.input_.focus();
-      // TODO: this is a bit hackish, do some better way.
-      // this.setTimeout(this.scrollToBottom.bind(this), 60);
 
     }
   ],
