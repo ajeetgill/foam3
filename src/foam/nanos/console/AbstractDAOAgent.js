@@ -172,8 +172,7 @@ foam.CLASS({
   methods: [
     function execute(e) {
       return this.dao.select(this.Pie.create({
-        arg1: this.prop,
-        arg2: this.COUNT()
+        arg1: this.prop
       })).then(s => {
         e.add(s);
       });
