@@ -72,7 +72,6 @@ var
   DEBUG_SUSPEND             = false,
   DELETE_RUNTIME_JOURNALS   = false,
   DELETE_RUNTIME_LOGS       = false,
-  FOAM_BIN_VERSION,
   FOAM_REVISION,
   GEN_JAVA                  = true,
   HOST_NAME                 = 'localhost',
@@ -217,7 +216,6 @@ function error(msg) {
 
 
 function manifest() {
-  setenv();
   versions();
   var jars = execSync(`find ${BUILD_DIR}/lib -type f -name "*.jar"`).toString()
       .replaceAll(`${BUILD_DIR}/lib/`, '  ').trim();
@@ -226,7 +224,7 @@ Manifest-Version: 1.0
 Main-Class: foam.nanos.boot.Boot
 Class-Path: ${jars}
 Implementation-Title: ${APP_NAME}
-Implementation-Version: ${FOAM_BIN_VERSION}
+Implementation-Version: ${foamBinVersion()}
 Specification-Version: ${PROJECT_REVISION}
 Implementation-Timestamp: ${TIMESTAMP}
 ${APP_NAME}-Revision: ${PROJECT_REVISION}
@@ -379,14 +377,14 @@ task('Copy Java libraries from BUILD_DIR/lib to APP_HOME/lib.', [], function cop
 
 
 task("Call pmake with JS Maker to build 'foam-bin.js'.", [], function genJS() {
-  setenv();
   execSync(`rm -f ${BUILD_DIR}/js/foam-bin-* >/dev/null 2>&1`);
+  var version = foamBinVersion();
   if ( STAGE_JS ) {
-    execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${FOAM_BIN_VERSION} -pom=${pom()} -builddir=${BUILD_DIR} -stage=0`, { stdio: 'inherit' });
-    execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${FOAM_BIN_VERSION} -pom=${pom()} -builddir=${BUILD_DIR} -stage=1`, { stdio: 'inherit' });
-    execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${FOAM_BIN_VERSION} -pom=${pom()} -builddir=${BUILD_DIR} -stage=2`, { stdio: 'inherit' });
+    execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${version} -pom=${pom()} -builddir=${BUILD_DIR} -stage=0`, { stdio: 'inherit' });
+    execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${version} -pom=${pom()} -builddir=${BUILD_DIR} -stage=1`, { stdio: 'inherit' });
+    execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${version} -pom=${pom()} -builddir=${BUILD_DIR} -stage=2`, { stdio: 'inherit' });
   } else {
-    execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${FOAM_BIN_VERSION} -pom=${pom()} -builddir=${BUILD_DIR}`, { stdio: 'inherit' });
+    execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${version} -pom=${pom()} -builddir=${BUILD_DIR}`, { stdio: 'inherit' });
   }
 });
 
@@ -642,8 +640,6 @@ buildEnv({
 
 
 task('Set environmental variables needed by Java.', [], function setenv() {
-  FOAM_BIN_VERSION = ( TIMESTAMP_FOAM_BIN ? `${VERSION}-${TIMESTAMP}` : `${VERSION}`);
-
   if ( TEST || BENCHMARK ) {
     rmdir(APP_HOME);
     JAVA_OPTS = '-enableassertions ' + JAVA_OPTS;
@@ -653,6 +649,9 @@ task('Set environmental variables needed by Java.', [], function setenv() {
   JAVA_OPTS += ` -DDOCUMENT_HOME=${DOCUMENT_HOME}`;
 });
 
+function foamBinVersion() {
+  return TIMESTAMP_FOAM_BIN ? `${VERSION}-${TIMESTAMP}` : `${VERSION}`;
+}
 
 function moreUsage() {
   console.log('\nTasks:');
