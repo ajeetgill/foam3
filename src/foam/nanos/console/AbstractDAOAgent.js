@@ -127,9 +127,7 @@ foam.CLASS({
   requires: [ 'foam.nanos.console.PropertyChoiceView' ],
 
   properties: [
-    {
-      name: 'prop'
-    }
+    'prop'
   ],
 
   methods: [
@@ -151,12 +149,23 @@ foam.CLASS({
   name: 'GridByDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
+  requires: [ 'foam.nanos.console.PropertyChoiceView' ],
+
+  properties: [
+    'prop1', 'prop2'
+  ],
+
   methods: [
     function execute(e) {
-      return this.dao.select(this.GROUP_BY(foam.demos.olympics.Medal.GENDER, this.GROUP_BY(foam.demos.olympics.Medal.COLOR, this.COUNT()))).then(s => {
-//      return this.dao.select(this.GROUP_BY(foam.demos.olympics.Medal.COLOR, foam.demos.olympics.Medal.GENDER, this.COUNT())).then(s => {
+      return this.dao.select(this.GROUP_BY(this.prop1, this.GROUP_BY(this.prop2))).then(s => {
         e.add(s);
       });
+    },
+
+    function addToE(e) {
+      e.tag(this.PropertyChoiceView, { of: this.of, data$: this.prop1$ });
+      e.add(', ');
+      e.tag(this.PropertyChoiceView, { of: this.of, data$: this.prop2$ });
     }
   ]
 });
