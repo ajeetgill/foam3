@@ -158,12 +158,13 @@ foam.CLASS({
   ],
 
   methods: [
-    function render() {
+    async function render() {
       this.SUPER();
 
       this.addClass();
 
-      this.dao.select(this.COUNT()).then(v => this.rowCount = v.value);
+      // We await for the rowCount so we know how to size the slider for the limit
+      this.rowCount = (await this.dao.select(this.COUNT())).value;
 
       this.
         start(this.Link).add(this.daoKey$, '.').on('click', this.describe).end().
