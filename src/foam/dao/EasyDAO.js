@@ -429,9 +429,10 @@ foam.CLASS({
       class: 'Property'
     },
     {
-      documentation: 'Enable local in-memory caching of the DAO',
+      // For a full-cache set both ttlPurgeTime and ttlSelectPurgeTime to 0
       class: 'Boolean',
       name: 'cache',
+      documentation: 'Enable local in-memory caching of the DAO',
       generateJava: false
     },
     {
@@ -442,23 +443,25 @@ foam.CLASS({
       generateJava: false
     },
     {
-      documentation: 'Set polling property for the caching DAO',
       class: 'FObjectProperty',
-      of: 'foam.core.Property',
       name: 'pollingProperty',
+      documentation: 'Set polling property for the caching DAO',
+      of: 'foam.core.Property',
       generateJava: false
     },
     {
-      documentation: 'Time to wait before purging cache on find().',
+      // Default is changed to 15000 (15s) in ClientBuilder
       class: 'Long',
       name: 'ttlPurgeTime',
+      documentation: 'Time to wait before purging cache on find().',
       units: 'ms',
       generateJava: false
     },
     {
-      documentation: 'Time to wait before purging cache on select().',
+      // Default is changed to 15000 (15s) in ClientBuilder
       class: 'Long',
       name: 'ttlSelectPurgeTime',
+      documentation: 'Time to wait before purging cache on select().',
       units: 'ms',
       generateJava: false
     },
