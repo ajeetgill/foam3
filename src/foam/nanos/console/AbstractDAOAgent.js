@@ -12,7 +12,7 @@ foam.CLASS({
     'foam.mlang.Expressions'
   ],
 
-  imports: [ 'dao as referenceDAO', 'sinkDAO as dao', 'sinkUnlimitedAO as unlimitedDAO' ],
+  imports: [ 'dao as referenceDAO', 'sinkDAO as dao', 'sinkUnlimitedDAO as unlimitedDAO' ],
 
   properties: [
     {
@@ -285,6 +285,9 @@ foam.CLASS({
       foam.nanos.console.SinkView.AGENTS.forEach(a => {
         a = a[0];
         if ( a == 'All' ) return;
+        if ( a == 'GroupBy' ) return;
+        if ( a == 'GridBy' ) return;
+        if ( a == 'Pie' ) return;
 
         var cls = foam.lookup(this.cls_.package + '.' + a + 'DAOAgent');
         var agent = cls.create({}, this);
