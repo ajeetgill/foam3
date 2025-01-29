@@ -165,14 +165,14 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.nanos.console',
   name: 'PieDAOAgent',
-  extends: 'foam.nanos.console.AbstractDAOAgent',
+  extends: 'foam.nanos.console.GroupByDAOAgent',
 
   requires: [ 'foam.u2.mlang.Pie' ],
 
   methods: [
     function execute(e) {
       return this.dao.select(this.Pie.create({
-        arg1: foam.demos.olympics.Medal.COLOR,
+        arg1: this.prop,
         arg2: this.COUNT()
       })).then(s => {
         e.add(s);
