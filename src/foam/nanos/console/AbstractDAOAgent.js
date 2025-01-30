@@ -23,9 +23,8 @@ foam.CLASS({
 
   methods: [
     function createSink() { return foam.dao.ArraySink.create(); },
-    function addToE() {},
-    function execute() {},
-    function execute(e) { return this.dao.select(this.createSink()).then(t => e.add(t)); }
+    function execute(e) { return this.dao.select(this.createSink()).then(s => e.add(s)); },
+    function addToE() {}
   ]
 });
 
@@ -36,12 +35,7 @@ foam.CLASS({
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
   methods: [
-    function createSink() { return this.COUNT(); },
-    function execute(e) {
-      return this.dao.select(this.createSink()).then(c => {
-        e.start('b').add('Count: ').end().add(c.value).br();
-      });
-    }
+    function createSink() { return this.COUNT(); }
   ]
 });
 
@@ -78,12 +72,7 @@ foam.CLASS({
   requires: [ 'foam.dao.CSVSink' ],
 
   methods: [
-    function createSink() { return this.CSVSink.create({of: this.of}); },
-    function execute(e) {
-      return this.dao.select(this.createSink()).then(c => {
-        e.start('pre').add(c.csv);
-      });
-    }
+    function createSink() { return this.CSVSink.create({of: this.of}); }
   ]
 });
 
@@ -93,12 +82,10 @@ foam.CLASS({
   name: 'XMLDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
+  requires: [ 'foam.nanos.console.XMLSink' ],
+
   methods: [
-    function execute(e) {
-      return this.dao.select(this.createSink()).then(a => {
-        e.start('pre').add(foam.xml.Pretty.stringify(a.array));
-      });
-    }
+    function createSink() { return this.XMLSink.create({of: this.of}); }
   ]
 });
 
