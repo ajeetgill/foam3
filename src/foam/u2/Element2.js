@@ -1183,6 +1183,10 @@ foam.CLASS({
           this.addChild_(c[i], parentNode);
         return;
       }
+      if ( c.addToE ) {
+        c.addToE(this);
+        return;
+      }
       if ( c.toE ) {
         c = c.toE(null, this.__subSubContext__);
       }
@@ -1511,7 +1515,7 @@ foam.CLASS({
       name: 'onKey'
     },
     {
-      // Experimental Code to make it easier to add underlying Property View
+      // Makes it easier to add underlying Property View
       // Without wrapping in a PropertyBorder
       name: '__',
       transient: true,
