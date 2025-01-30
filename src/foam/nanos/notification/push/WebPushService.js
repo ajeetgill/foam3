@@ -14,10 +14,6 @@ foam.CLASS({
   package: 'foam.nanos.notification.push',
   name: 'WebPushService',
 
-  implements: [
-    'foam.nanos.notification.push.PushService'
-  ],
-
   javaImports: [
     'java.security.Security',
     'foam.dao.*',
@@ -70,49 +66,6 @@ foam.CLASS({
   ],
 
   methods: [
-    {
-      name: 'sendPushById',
-      javaCode:
-      `
-        System.err.println("Push to User: " + id);
-        DAO  userDAO = (DAO) getX().get("localUserDAO");
-        User user    = (User) userDAO.find(id);
-
-        sendPush(user, title, body);
-
-        return true;
-      `
-    },
-    {
-      name: 'sendPush',
-      javaCode:
-      `
-      if ( user == null || title.isEmpty() ) {
-        throw new RuntimeException("Invalid Parameters: Missing user or title"); 
-      }
-
-        getPushService();
-
-        System.err.println("Push to User: " + user.getId());
-        DAO pushRegistrationDAO = user.getPushRegistrations(getX());
-
-        List   subs = ((ArraySink) pushRegistrationDAO.select(new ArraySink())).getArray();
-        HashMap msgMap = new HashMap<String, String>()
-          {
-              {
-                  put("title", title);
-                  put("body", body);
-              }
-          };
-
-        for ( Object obj : subs ) {
-          PushRegistration sub = (PushRegistration) obj;
-          send(sub, msgMap);
-        }
-
-        return true;
-      `
-    },
     {
       name: 'send',
       args: 'PushRegistration sub, HashMap msgMap',
