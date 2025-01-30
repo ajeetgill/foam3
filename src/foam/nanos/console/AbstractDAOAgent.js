@@ -22,8 +22,10 @@ foam.CLASS({
   ],
 
   methods: [
+    function createSink() { return foam.dao.ArraySink.create(); },
     function addToE() {},
-    function execute() {}
+    function execute() {},
+    function execute(e) { return this.dao.select(this.createSink()).then(t => e.add(t)); }
   ]
 });
 
@@ -34,8 +36,9 @@ foam.CLASS({
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
   methods: [
+    function createSink() { return this.COUNT(); },
     function execute(e) {
-      return this.dao.select(this.COUNT()).then(c => {
+      return this.dao.select(this.createSink()).then(c => {
         e.start('b').add('Count: ').end().add(c.value).br();
       });
     }
@@ -62,11 +65,7 @@ foam.CLASS({
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
   methods: [
-    function execute(e) {
-      return this.dao.select(foam.u2.mlang.Table.create({}, this)).then(t => {
-        e.add(t);
-      });
-    }
+    function createSink() { return foam.u2.mlang.Table.create({}, this); }
   ]
 });
 
@@ -79,9 +78,9 @@ foam.CLASS({
   requires: [ 'foam.dao.CSVSink' ],
 
   methods: [
+    function createSink() { return this.CSVSink.create({of: this.of}); },
     function execute(e) {
-      var csv = this.CSVSink.create({of: this.of});
-      return this.dao.select(csv).then(c => {
+      return this.dao.select(this.createSink()).then(c => {
         e.start('pre').add(c.csv);
       });
     }
@@ -96,7 +95,7 @@ foam.CLASS({
 
   methods: [
     function execute(e) {
-      return this.dao.select().then(a => {
+      return this.dao.select(this.createSink()).then(a => {
         e.start('pre').add(foam.xml.Pretty.stringify(a.array));
       });
     }
@@ -111,7 +110,7 @@ foam.CLASS({
 
   methods: [
     function execute(e) {
-      return this.dao.select().then(a => {
+      return this.dao.select(this.createSink()).then(a => {
         e.start('pre').add(foam.json.Pretty.stringify(a.array));
       });
     }
@@ -131,12 +130,7 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute(e) {
-      return this.dao.select(this.GROUP_BY(this.prop, this.COUNT())).then(s => {
-        e.add(s);
-      });
-    },
-
+    function createSink() { return this.GROUP_BY(this.prop, this.COUNT()); },
     function addToE(e) {
       e.tag(this.PropertyChoiceView, { of: this.of, data$: this.prop$ });
     }
@@ -156,12 +150,7 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute(e) {
-      return this.dao.select(this.GROUP_BY(this.prop1, this.GROUP_BY(this.prop2))).then(s => {
-        e.add(s);
-      });
-    },
-
+    function createSink() { return this.GROUP_BY(this.prop1, this.GROUP_BY(this.prop2)); },
     function addToE(e) {
       e.tag(this.PropertyChoiceView, { of: this.of, data$: this.prop1$ });
       e.add(', ');
@@ -179,13 +168,7 @@ foam.CLASS({
   requires: [ 'foam.u2.mlang.Pie' ],
 
   methods: [
-    function execute(e) {
-      return this.dao.select(this.Pie.create({
-        arg1: this.prop
-      })).then(s => {
-        e.add(s);
-      });
-    }
+    function createSink() { return this.Pie.create({arg1: this.prop}); }
   ]
 });
 
@@ -197,6 +180,7 @@ foam.CLASS({
 
   methods: [
     function execute(e) {
+      // TODO:
       e = e.startContext({controllerMode: foam.u2.ControllerMode.VIEW});
       return this.dao.select(o => e.add(o));
     }
@@ -211,6 +195,7 @@ foam.CLASS({
 
   methods: [
     function execute(e) {
+      // TODO:
       return this.dao.select(o => {
         var data = foam.comics.DAOUpdateController.create({data: o, dao: this.dao}, this);
         e.tag({class: 'foam.comics.DAOUpdateControllerView', controllerMode: foam.u2.ControllerMode.EDIT, detailView: 'foam.u2.DetailView', dao: this.dao, data: data });
@@ -242,6 +227,7 @@ foam.CLASS({
 
   methods: [
     function execute(e) {
+      // TODO:
       return this.dao.select(o => e.tag(this.CitationView, {data: o}));
     }
   ]
@@ -259,7 +245,7 @@ foam.CLASS({
   methods: [
     function execute(e) {
       var ps  = this.of.getAxiomsByClass(foam.core.Property).
-          filter(p => ! p.networkTransient && ! p.hidden);
+        filter(p => ! p.networkTransient && ! p.hidden);
       var cs  = {};
       var row = 1;
       for ( var i = 0 ; i < ps.length ; i++ ) {
