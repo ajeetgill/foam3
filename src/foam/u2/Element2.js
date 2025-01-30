@@ -213,7 +213,7 @@ foam.CLASS({
     {
       name: 'endElement_',
       factory: function() { return this.document.createComment('/dynamic'); }
-    },
+    }
   ],
 
   methods: [
@@ -241,7 +241,6 @@ foam.CLASS({
 
         return this;
       };
-
       this.onDetach(this.fn);
     },
 
@@ -259,13 +258,6 @@ foam.CLASS({
   name: 'DAOSelectNode',
   extends: 'foam.u2.FunctionNode',
   implements: [ 'foam.dao.Sink' ],
-
-  axioms: [
-    {
-      class: 'foam.box.Remote',
-      clientClass: 'foam.dao.ClientSink'
-    }
-  ],
 
   properties: [
     'dao',
@@ -442,21 +434,16 @@ foam.CLASS({
       factory: function() { return foam.u2.DefaultValidator.create(); }
     },
     {
-      documentation: `Keys which respond to keydown but not keypress`,
-      name: 'KEYPRESS_CODES',
-      value: { 8: true, 13: true, 27: true, 33: true, 34: true, 37: true, 38: true, 39: true, 40: true }
-    },
-    {
       name: 'NAMED_CODES',
       value: {
         '8':   'backspace',
         '13':  'enter',
-        '27':  'esc',
-        '37':  'left',
-        '38':  'up',
-        '39':  'right',
-        '40':  'down',
-        '127': 'del'
+        '27':  'escape',
+        '37':  'arrowleft',
+        '38':  'arrowup',
+        '39':  'arrowright',
+        '40':  'arrowdown',
+        '127': 'delete'
       }
     }
   ],
@@ -562,11 +549,6 @@ foam.CLASS({
     {
       name: 'childNodes',
       documentation: 'Children of this Element.',
-      factory: function() { return []; }
-    },
-    {
-      name: 'elListeners',
-      documentation: 'DOM listeners of this Element. Stored as topic then listener.',
       factory: function() { return []; }
     },
     {
@@ -689,9 +671,7 @@ foam.CLASS({
       if ( evt.ctrlKey  ) s += 'ctrl-';
       if ( evt.shiftKey && evt.type === 'keydown' ) s += 'shift-';
       if ( evt.metaKey  ) s += 'meta-';
-      s += evt.type === 'keydown' ?
-          this.NAMED_CODES[evt.which] || String.fromCharCode(evt.which) :
-          String.fromCharCode(evt.charCode);
+      s += evt.key.toLowerCase() || this.NAMED_CODES[evt.keyCode];
       return s;
     },
 
@@ -990,8 +970,8 @@ foam.CLASS({
       }
     },
 
-    function addEventListener(topic, listener, capture = false) {
-      this.element_.addEventListener(topic, listener, capture);
+    function addEventListener(topic, listener, opt_args) {
+      this.element_.addEventListener(topic, listener, opt_args || false);
     },
 
     function removeEventListener(topic, listener) {
@@ -1010,7 +990,7 @@ foam.CLASS({
 
     function addClass(cls) { /* ...( Slot | String ) */
       if ( arguments.length > 1 ) {
-        for ( let i = 0; i < arguments.length; i++ ) {
+        for ( let i = 0 ; i < arguments.length ; i++ ) {
           this.addClass(arguments[i]);
         }
         return this;
@@ -1206,6 +1186,10 @@ foam.CLASS({
       if ( foam.Array.isInstance(c) ) {
         for ( var i = 0 ; i < c.length ; i++ )
           this.addChild_(c[i], parentNode);
+        return;
+      }
+      if ( c.addToE ) {
+        c.addToE(this);
         return;
       }
       if ( c.toE ) {
@@ -1435,7 +1419,6 @@ foam.CLASS({
           to your $$DOC{ref:'foam.ui.View'}.
       `,
       code: function(evt) {
-        if ( evt.type === 'keydown' && ! this.KEYPRESS_CODES[evt.which] ) return;
         var action = this.keyMap_[this.evtToCharCode(evt)];
         if ( action ) {
           action();
@@ -1534,7 +1517,7 @@ foam.CLASS({
       name: 'onKey'
     },
     {
-      // Experimental Code to make it easier to add underlying Property View
+      // Makes it easier to add underlying Property View
       // Without wrapping in a PropertyBorder
       name: '__',
       transient: true,

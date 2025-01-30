@@ -21,7 +21,8 @@ foam.CLASS({
     },
     {
       class: 'foam.mlang.SinkProperty',
-      name: 'arg2'
+      name: 'arg2',
+      factory: function() { return foam.mlang.sink.Count.create(); }
     },
     {
       class: 'Int',
@@ -61,12 +62,7 @@ foam.CLASS({
     {
       name: 'sortedKeys',
       javaType: 'java.util.List',
-      args: [
-        {
-          name: 'comparator',
-          type: 'foam.mlang.order.Comparator'
-        }
-      ],
+      args: 'foam.mlang.order.Comparator comparator',
       code: function sortedKeys(opt_comparator) {
         this.groupKeys.sort(opt_comparator || this.arg1.comparePropertyValues);
         return this.groupKeys;
@@ -180,16 +176,19 @@ return clone;`
     {
       name: 'toString',
       code: function toString() {
-        return 'groupBy(' + this.arg1 + "," + this.arg2 + "," + this.groupLimit + ')';
+        return 'groupBy(' + this.arg1 + ',' + this.arg2 + ',' + this.groupLimit + ')';
       },
       javaCode: 'return this.getGroups().toString();'
     },
 
     function toE(_, x) {
+      var self = this;
+
+      // TODO: sort keys
       return x.E('table').
         add(this.slot(function(arg1, groups) {
           return x.E('tbody').
-            forEach(Object.keys(groups), function(g) {
+            forEach(self.sortedKeys(), function(g) {
               this.start('tr').
                 start('td').add(g).end().
                 start('td').add(groups[g]).end()

@@ -398,13 +398,6 @@ foam.CLASS({
       3. an implementation of the 'cleanup' method.
   `,
 
-  axioms: [
-    {
-      class: 'foam.box.Remote',
-      clientClass: 'foam.dao.ClientSink'
-    }
-  ],
-
   properties: [
     {
       class: 'foam.dao.DAOProperty',
@@ -1551,7 +1544,12 @@ foam.CLASS({
         // Remove null values
         if ( c === undefined || c === null ) {
           // nop
-        } else if ( foam.Function.isInstance(c) ) {
+        } else if ( c.addToE ) {
+          var e = this.E();
+          c.addToE(e);
+          c = e;
+          es.push(e);
+        }  else if ( foam.Function.isInstance(c) ) {
           this.add_([(parentNode.__context__.data || parentNode).dynamic({code: c, self: this})], parentNode);
         } else if ( foam.core.DynamicFunction.isInstance(c) ) {
           //this.add('TODO DYNAMIC FUNCTION');

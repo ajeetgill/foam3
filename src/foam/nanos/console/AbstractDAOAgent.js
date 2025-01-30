@@ -12,18 +12,19 @@ foam.CLASS({
     'foam.mlang.Expressions'
   ],
 
+  imports: [ 'dao as referenceDAO', 'sinkDAO as dao', 'sinkUnlimitedDAO as unlimitedDAO' ],
+
   properties: [
-    'dao',
-    'unlimitedDAO',
     {
       name: 'of',
-      factory: function() { return this.dao.of; }
+      factory: function() { return this.referenceDAO.of; }
     }
   ],
 
   methods: [
-    function addToE() {},
-    function execute() {}
+    function createSink() { return foam.dao.ArraySink.create(); },
+    function execute(e) { return this.dao.select(this.createSink()).then(s => e.add(s)); },
+    function addToE() {}
   ]
 });
 
@@ -34,11 +35,7 @@ foam.CLASS({
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
   methods: [
-    function execute(e) {
-      return this.dao.select(this.COUNT()).then(c => {
-        e.start('b').add('Count: ').end().add(c.value).br();
-      });
-    }
+    function createSink() { return this.COUNT(); }
   ]
 });
 
@@ -62,11 +59,7 @@ foam.CLASS({
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
   methods: [
-    function execute(e) {
-      return this.dao.select(foam.u2.mlang.Table.create({}, this)).then(t => {
-        e.add(t);
-      });
-    }
+    function createSink() { return foam.u2.mlang.Table.create({}, this); }
   ]
 });
 
@@ -79,12 +72,7 @@ foam.CLASS({
   requires: [ 'foam.dao.CSVSink' ],
 
   methods: [
-    function execute(e) {
-      var csv = this.CSVSink.create({of: this.of});
-      return this.dao.select(csv).then(c => {
-        e.start('pre').add(c.csv);
-      });
-    }
+    function createSink() { return this.CSVSink.create({of: this.of}); }
   ]
 });
 
@@ -94,12 +82,10 @@ foam.CLASS({
   name: 'XMLDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
+  requires: [ 'foam.nanos.console.XMLSink' ],
+
   methods: [
-    function execute(e) {
-      return this.dao.select().then(a => {
-        e.start('pre').add(foam.xml.Pretty.stringify(a.array));
-      });
-    }
+    function createSink() { return this.XMLSink.create({of: this.of}); }
   ]
 });
 
@@ -111,7 +97,7 @@ foam.CLASS({
 
   methods: [
     function execute(e) {
-      return this.dao.select().then(a => {
+      return this.dao.select(this.createSink()).then(a => {
         e.start('pre').add(foam.json.Pretty.stringify(a.array));
       });
     }
@@ -124,23 +110,17 @@ foam.CLASS({
   name: 'GroupByDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
-  requires: [ 'foam.nanos.console.PropertyChoiceView' ],
-
   properties: [
-    {
-      name: 'prop'
-    }
+    { name: 'prop', view: function(_, X) {
+      return { class: 'foam.nanos.console.PropertyChoiceView', of: X.data.of };
+    }},
+    { name: 'sink', view: 'foam.nanos.console.SinkView' }
   ],
 
   methods: [
-    function execute(e) {
-      return this.dao.select(this.GROUP_BY(foam.demos.olympics.Medal.COLOR, this.COUNT())).then(s => {
-        e.add(s);
-      });
-    },
-
+    function createSink() { return this.GROUP_BY(this.prop, this.sink.createSink()); },
     function addToE(e) {
-      e.tag(this.PropertyChoiceView, { of: this.of });
+      e.startContext({data: this}).start().style({display: 'flex'}).add(this.PROP, ', ', this.SINK);
     }
   ]
 });
@@ -151,12 +131,18 @@ foam.CLASS({
   name: 'GridByDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
+  requires: [ 'foam.nanos.console.PropertyChoiceView' ],
+
+  properties: [
+    'prop1', 'prop2'
+  ],
+
   methods: [
-    function execute(e) {
-      return this.dao.select(this.GROUP_BY(foam.demos.olympics.Medal.GENDER, this.GROUP_BY(foam.demos.olympics.Medal.COLOR, this.COUNT()))).then(s => {
-//      return this.dao.select(this.GROUP_BY(foam.demos.olympics.Medal.COLOR, foam.demos.olympics.Medal.GENDER, this.COUNT())).then(s => {
-        e.add(s);
-      });
+    function createSink() { return this.GROUP_BY(this.prop1, this.GROUP_BY(this.prop2)); },
+    function addToE(e) {
+      e.tag(this.PropertyChoiceView, { of: this.of, data$: this.prop1$ });
+      e.add(', ');
+      e.tag(this.PropertyChoiceView, { of: this.of, data$: this.prop2$ });
     }
   ]
 });
@@ -165,19 +151,12 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.nanos.console',
   name: 'PieDAOAgent',
-  extends: 'foam.nanos.console.AbstractDAOAgent',
+  extends: 'foam.nanos.console.GroupByDAOAgent',
 
   requires: [ 'foam.u2.mlang.Pie' ],
 
   methods: [
-    function execute(e) {
-      return this.dao.select(this.Pie.create({
-        arg1: foam.demos.olympics.Medal.COLOR,
-        arg2: this.COUNT()
-      })).then(s => {
-        e.add(s);
-      });
-    }
+    function createSink() { return this.Pie.create({arg1: this.prop}); }
   ]
 });
 
@@ -189,6 +168,7 @@ foam.CLASS({
 
   methods: [
     function execute(e) {
+      // TODO:
       e = e.startContext({controllerMode: foam.u2.ControllerMode.VIEW});
       return this.dao.select(o => e.add(o));
     }
@@ -203,6 +183,7 @@ foam.CLASS({
 
   methods: [
     function execute(e) {
+      // TODO:
       return this.dao.select(o => {
         var data = foam.comics.DAOUpdateController.create({data: o, dao: this.dao}, this);
         e.tag({class: 'foam.comics.DAOUpdateControllerView', controllerMode: foam.u2.ControllerMode.EDIT, detailView: 'foam.u2.DetailView', dao: this.dao, data: data });
@@ -219,9 +200,7 @@ foam.CLASS({
 
   methods: [
     function execute(e) {
-      return this.dao.select(o => {
-        e.tag({class: 'foam.comics.v3.DAOView', data: this.unlimitedDAO});
-      });
+      e.tag({class: 'foam.comics.v3.DAOView', data: this.unlimitedDAO});
     }
   ]
 });
@@ -236,6 +215,7 @@ foam.CLASS({
 
   methods: [
     function execute(e) {
+      // TODO:
       return this.dao.select(o => e.tag(this.CitationView, {data: o}));
     }
   ]
@@ -253,7 +233,7 @@ foam.CLASS({
   methods: [
     function execute(e) {
       var ps  = this.of.getAxiomsByClass(foam.core.Property).
-          filter(p => ! p.networkTransient && ! p.hidden);
+        filter(p => ! p.networkTransient && ! p.hidden);
       var cs  = {};
       var row = 1;
       for ( var i = 0 ; i < ps.length ; i++ ) {
@@ -284,12 +264,15 @@ foam.CLASS({
 
   methods: [
     function execute(e) {
-      foam.nanos.console.DAOPrompt.AGENTS.forEach(a => {
+      foam.nanos.console.SinkView.AGENTS.forEach(a => {
         a = a[0];
         if ( a == 'All' ) return;
+        if ( a == 'GroupBy' ) return;
+        if ( a == 'GridBy' ) return;
+        if ( a == 'Pie' ) return;
 
         var cls = foam.lookup(this.cls_.package + '.' + a + 'DAOAgent');
-        var agent = cls.create({dao: this.dao, unlimitedDAO: this.unlimitedDAO});
+        var agent = cls.create({}, this);
         e.start('h2').add(a).end().start().call(function () { agent.execute(this); });
       });
     }
