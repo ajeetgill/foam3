@@ -970,8 +970,8 @@ foam.CLASS({
       }
     },
 
-    function addEventListener(topic, listener, opt_args) {
-      this.element_.addEventListener(topic, listener, opt_args || false);
+    function addEventListener(topic, listener, opt_options) {
+      this.element_.addEventListener(topic, listener, opt_options || false);
     },
 
     function removeEventListener(topic, listener) {
