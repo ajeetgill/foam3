@@ -1,7 +1,7 @@
 foam.POM({
   name: 'console',
   files: [
-    { name: "../../u2/mlang/Table",    flags: "js" },
+    { name: "../../u2/mlang/Table",    flags: "js|java" },
     { name: "Link",                    flags: "js" },
     { name: "PropertyChoiceView",      flags: "js" },
     { name: "PropertyOrderChoiceView", flags: "js" },
