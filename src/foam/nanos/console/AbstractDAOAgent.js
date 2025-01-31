@@ -180,12 +180,10 @@ foam.CLASS({
   name: 'ViewDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
+  requires: [ 'foam.nanos.console.ViewSink' ],
+
   methods: [
-    function execute(e) {
-      // TODO:
-      e = e.startContext({controllerMode: foam.u2.ControllerMode.VIEW});
-      return this.dao.select(o => e.add(o));
-    }
+    function createSink() { return this.ViewSink.create({arg1: this.prop}); },
   ]
 });
 
@@ -195,14 +193,10 @@ foam.CLASS({
   name: 'EditDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
+  requires: [ 'foam.nanos.console.EditSink' ],
+
   methods: [
-    function execute(e) {
-      // TODO:
-      return this.dao.select(o => {
-        var data = foam.comics.DAOUpdateController.create({data: o, dao: this.dao}, this);
-        e.tag({class: 'foam.comics.DAOUpdateControllerView', controllerMode: foam.u2.ControllerMode.EDIT, detailView: 'foam.u2.DetailView', dao: this.dao, data: data });
-      });
-    }
+    function createSink() { return this.EditSink.create({arg1: this.prop}); },
   ]
 });
 

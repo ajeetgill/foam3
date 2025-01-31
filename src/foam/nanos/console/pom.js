@@ -12,6 +12,8 @@ foam.POM({
     { name: "CitationSink",            flags: "js|java" },
     { name: "JSONSink",                flags: "js|java" },
     { name: "XMLSink",                 flags: "js|java" },
+    { name: "ViewSink",                flags: "js|java" },
+    { name: "EditSink",                flags: "js|java" },
     { name: "SinkView",                flags: "js" },
     { name: "DAOPrompt",               flags: "js" },
     { name: "DocumentReadWriteView",   flags: "js" },
