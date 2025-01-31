@@ -30,7 +30,7 @@ foam.CLASS({
       expression: function(groups) {
         var seriesValues = Object.values(groups).map(function(sink) {
           return sink.value;
-        })
+        });
         if ( ! seriesValues.length ) seriesValues = [0];
         var p = this.PieGraph.create(this);
         p.seriesValues = seriesValues;

@@ -49,14 +49,14 @@ foam.CLASS({
       }
 
       for ( var i in this.seriesValues ) {
-        var circlePiePresentation = foam.graphics.Arc.create({
+        var circlePiePresentation = foam.graphics.Circle.create({
           x: this.x,
           y: this.y,
           radius: this.radius,
           start: startAng,
-          end: ( 2 * Math.PI * this.seriesValues[ i ] / total ) + startAng,
+          end: ( 2 * Math.PI * this.seriesValues[i] / total ) + startAng,
           border: this.lineColor,
-          color: this.graphColors[ i ] || '#FFFFFF'
+          color: this.graphColors[i % this.graphColors.length] || '#FFFFFF'
         });
 
         rayLine = foam.graphics.Line.create({
@@ -68,14 +68,15 @@ foam.CLASS({
           lineWidth: this.lineWidth
         });
 
+        var textH = h || 19;
         InfoData = foam.graphics.Label.create({
           align: this.align,
-          x: Math.cos( ( 2 * Math.PI * this.seriesValues[ i ] / total / 2 ) + startAng ) * ( this.radius * this.margin ) + this.x,
-          y: Math.sin( ( 2 * Math.PI * this.seriesValues[ i ] / total / 2 ) + startAng ) * ( this.radius * this.margin ) + this.y,
+          x: Math.cos( ( 2 * Math.PI * this.seriesValues[ i ] / total / 2 ) + startAng ) * ( this.radius * this.margin ) + this.x / 2,
+          y: Math.sin( ( 2 * Math.PI * this.seriesValues[ i ] / total / 2 ) + startAng ) * ( this.radius * this.margin ) + (this.y + textH)/ 2,
           color: this.textColor,
           font: this.fontValue,
           width: w || 50,
-          height: h || 19,
+          height: textH,
           text: symbol ? this.seriesValues[ i ] + this.symbol : this.seriesValues[ i ]
         });
 

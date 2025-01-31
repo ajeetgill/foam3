@@ -169,7 +169,10 @@ foam.CLASS({
   requires: [ 'foam.u2.mlang.Pie' ],
 
   methods: [
-    function createSink() { return this.Pie.create({arg1: this.prop}); }
+    function createSink() { return this.Pie.create({arg1: this.prop}); },
+    function addToE(e) {
+      e.startContext({data: this}).start().style({display: 'flex'}).add(this.PROP);
+    }
   ]
 });
 
