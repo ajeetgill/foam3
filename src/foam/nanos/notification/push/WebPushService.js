@@ -79,7 +79,11 @@ foam.CLASS({
           if ( SafetyUtil.isEmpty(sub.getEndpoint()) ) {
             return;
           }
-          String msg  = "{\\"title\\":\\"" + msgMap.get("title") + "\\",\\"body\\":\\"" + msgMap.get("body") + "\\"}";
+          var msg = javax.json.Json.createObjectBuilder()
+            .add("title", (String)msgMap.get("title"))
+            .add("body", (String)msgMap.get("body"))
+            .build()
+            .toString();
           Notification n = new Notification(
             sub.getEndpoint(),
             sub.getKey(),  // sub.getUserPublicKey(),
