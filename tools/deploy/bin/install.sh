@@ -129,8 +129,9 @@ function backupFiles {
 
 function cleanupFiles {
     if [ -d ${FOAM_HOME}/lib ]; then
-        sudo rm -rf ${FOAM_HOME/lib/ }
+        sudo rm -rf ${FOAM_HOME}/lib
     fi
+    sudo rm -f ${FOAM_HOME}/${APP_NAME}-*.jar
 }
 
 function installFiles {
@@ -148,6 +149,7 @@ function installFiles {
     chmod 750 ${FOAM_HOME}/lib
 
     cp -r ${FOAM_REMOTE_OUTPUT}/lib/* ${FOAM_HOME}/lib
+    cp -r ${FOAM_REMOTE_OUTPUT}/${APP_NAME}*.jar ${FOAM_HOME}
 
     if [ ! -d ${FOAM_HOME}/bin ]; then
         mkdir -p ${FOAM_HOME}/bin
