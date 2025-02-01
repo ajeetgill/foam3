@@ -19,12 +19,12 @@ foam.CLASS({
     // their own class and add them as a trait to this model so any new args
     // used by PieGraph are automatically picked up by this model.
     [ 'graphColors', [ '#d81e05', '$black', '#59a5d5', '#2cab70' ] ],
-    [ 'height', 150 ],
+    { name: 'width',  factory: function() { return this.radius * 3; } },
+    { name: 'height', factory: function() { return this.radius * 3; } },
     [ 'margin', 1.5 ],
     [ 'radius', 50 ],
-    [ 'width', 150 ],
-    [ 'x', 50 ],
-    [ 'y', 50 ],
+    { name: 'x', factory: function() { return this.radius * 0.75; } },
+    { name: 'y', factory: function() { return this.radius * 0.75; } },
     {
       name: 'graph_',
       expression: function(groups) {
@@ -40,8 +40,7 @@ foam.CLASS({
   ],
 
   methods: [
-    function toE(_, x) {
-      return x.E().add(this.graph_$);
-    }
+    function toE(_, x) { return x.E().add(this.graph_$); },
+    function addToE(e) { e.add(this.graph_$); }
   ]
 });
