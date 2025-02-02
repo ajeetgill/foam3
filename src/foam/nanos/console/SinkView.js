@@ -30,6 +30,7 @@ foam.CLASS({
       [ 'GridBy', 'GridBy' ],
       [ 'Pie',   'Pie' ],
       [ 'Count', 'COUNT' ],
+      [ 'Min', 'MIN' ],
       [ 'All', 'All' ]
     ]
         /*

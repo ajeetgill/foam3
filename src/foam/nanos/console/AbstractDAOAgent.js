@@ -42,6 +42,29 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.nanos.console',
+  name: 'MinDAOAgent',
+  extends: 'foam.nanos.console.AbstractDAOAgent',
+
+  properties: [
+    {
+      name: 'prop',
+      view: function(_, X) {
+       return { class: 'foam.nanos.console.PropertyChoiceView', of: X.data.of };
+      }
+    }
+  ],
+
+  methods: [
+    function createSink() { return this.MIN(this.prop); },
+    function addToE(e) {
+      e.startContext({data: this}).start().style({display: 'flex'}).add(this.PROP);
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.nanos.console',
   name: 'ScrollTableDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
