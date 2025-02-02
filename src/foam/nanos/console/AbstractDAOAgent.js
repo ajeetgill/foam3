@@ -132,7 +132,7 @@ foam.CLASS({
   name: 'GridByDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
-  requires: [ 'foam.nanos.console.PropertyChoiceView' ],
+  requires: [ 'foam.nanos.console.GridBy' ],
 
   properties: [
     {
@@ -147,11 +147,15 @@ foam.CLASS({
        return { class: 'foam.nanos.console.PropertyChoiceView', of: X.data.of };
       }
     },
-    { name: 'sink', view: 'foam.nanos.console.SinkView' }
+    { name: 'sink', view: { class: 'foam.nanos.console.SinkView', choice: 'Count' } }
   ],
 
   methods: [
-    function createSink() { return this.GROUP_BY(this.prop1, this.GROUP_BY(this.prop2, this.sink.createSink())); },
+    function createSink() { return this.GridBy.create({
+      yFunc: this.prop1,
+      xFunc: this.prop2,
+      acc:   this.sink.createSink()
+    }); },
     function addToE(e) {
       e.startContext({data: this}).start().style({display: 'flex'}).add(this.PROP1, ', ', this.PROP2, ', ', this.SINK);
     }
@@ -166,10 +170,15 @@ foam.CLASS({
 
   requires: [ 'foam.u2.mlang.Pie' ],
 
+  properties: [ { class: 'Int', name: 'radius', value: 50 } ],
+
   methods: [
-    function createSink() { return this.Pie.create({arg1: this.prop}); },
+    function createSink() {
+      return this.Pie.create({arg1: this.prop, radius: this.radius});
+    },
     function addToE(e) {
-      e.startContext({data: this}).start().style({display: 'flex'}).add(this.PROP);
+      e.startContext({data: this}).start().style({display: 'flex'}).
+        add(' r:', this.RADIUS,' ', this.PROP);
     }
   ]
 });
