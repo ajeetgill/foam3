@@ -20,7 +20,7 @@ foam.CLASS({
     [ 'graphColors', 'black' ],
     [ 'h' ],
     [ 'height', 500 ],
-    [ 'lineColor', 'black' ],
+    [ 'lineColor', '#555' ],
     [ 'lineWidth', 2 ],
     [ 'margin', 0 ],
     [ 'radius', 4 ],
@@ -56,7 +56,8 @@ foam.CLASS({
           start: startAng,
           end: ( 2 * Math.PI * this.seriesValues[i] / total ) + startAng,
           border: this.lineColor,
-          color: this.graphColors[i % this.graphColors.length] || '#FFFFFF'
+          //           color: this.graphColors[i % this.graphColors.length] || '#FFFFFF'
+          color: this.hsl( startAng/(Math.PI*2)*360, 90, 50)
         });
 
         rayLine = foam.graphics.Line.create({
