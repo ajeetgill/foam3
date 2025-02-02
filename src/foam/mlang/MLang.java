@@ -118,6 +118,10 @@ public class MLang
     return groupBy;
   }
 
+  public static Sink GROUP_BY(Expr o1) {
+    return GROUP_BY(o1, COUNT());
+  }
+
   public static Sink COUNT() {
     return new Count();
   }
