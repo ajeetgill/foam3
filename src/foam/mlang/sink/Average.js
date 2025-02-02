@@ -39,6 +39,8 @@ foam.CLASS({
 setCount(getCount() + 1);
 setValue((getValue() + ((Number)this.getArg1().f(obj)).doubleValue()) / getCount());
       `,
-    }
+    },
+    function toSummary() { return this.value; },
+    function addToE(e) { e.add(this.value); }
   ]
 });
