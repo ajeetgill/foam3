@@ -17,6 +17,7 @@ foam.POM({
     { name: "GridBy",                  flags: "js|java" },
     { name: "SinkView",                flags: "js" },
     { name: "DAOPrompt",               flags: "js" },
+    { name: "ModelDAO",                flags: "js" },
     { name: "DocumentReadWriteView",   flags: "js" },
     { name: 'ConsoleZACClient',        flags: 'js' }
   ]
