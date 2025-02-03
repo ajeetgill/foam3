@@ -394,16 +394,16 @@ YYYY-MM-DDTHH:MM
       ];
       var shortcuts = [
         [ 'ESC',     'Toggle prompt display' ],
-        [ 'Up',  'Previous from history' ],
-        [ 'Down',  'Next from history' ],
+        [ 'Up',      'Previous from history' ],
+        [ 'Down',    'Next from history' ],
         [ 'CMD + k / CTRL + k',  'Clear console' ],
-        [ 'CTRL + `',  'Focus input' ],
-      ]
+        [ 'CTRL + `', 'Focus input' ]
+      ];
       this.outputDiv.start('h3').add('Commands').end().
-      start('table').attr('width', '100%').
+      start('table').style({width: 'max-content'}).
         forEach(cmds, function(c) {
           this.start('tr').
-            start('th').attr('align', 'left').call(function() {
+            start('th').attr('width', '250').attr('align', 'left').call(function() {
               if ( c[2] ) {
                 self.outputLink(c[0], () => self.eval_(c[0]), this);
               } else {
@@ -412,11 +412,12 @@ YYYY-MM-DDTHH:MM
             }).end().
             start('td').attr('align', 'left').add(c[1]);
         }).
+        end().
         br().
         start('h3').add('Keyboard Shortcuts').end().
-        start('table').attr('width', '100%').
+        start('table').style({width: 'max-content'}).
           forEach(shortcuts, function(c) {
-            this.start('tr').start('th').attr('align', 'left').add(c[0]).end().start('td').add(c[1]);
+            this.start('tr').start('th').attr('width', '250').attr('align', 'left').add(c[0]).end().start('td').add(c[1]);
           }).
         end();
 
