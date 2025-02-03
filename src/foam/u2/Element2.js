@@ -438,6 +438,7 @@ foam.CLASS({
         '38':  'arrowup',
         '39':  'arrowright',
         '40':  'arrowdown',
+        '112': 'f1',
         '127': 'delete'
       }
     }
