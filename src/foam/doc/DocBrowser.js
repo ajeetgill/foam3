@@ -342,7 +342,7 @@ foam.CLASS({
   documentation: 'FOAM documentation browser.',
 
   requires: [
-    'foam.dao.ArrayDAO',
+    'foam.dao.MDAO',
     'foam.doc.ClassDocView',
     'foam.doc.ClassDocViewEnumValue',
     'foam.doc.ClassList',
@@ -384,8 +384,8 @@ foam.CLASS({
       name: 'modelDAO',
       factory: function(/*nSpecDAO, allowedModels*/) {
         var self = this;
-        var dao  = self.ArrayDAO.create({of: self.Model}).orderBy(foam.core.Model.ID);
-        var all = [];
+        var dao  = self.MDAO.create({of: self.Model}).orderBy(foam.core.Model.ID);
+        var all  = [];
         var packages = { '--All--': all };
         function addModel(m) {
           try {
