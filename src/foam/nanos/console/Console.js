@@ -501,6 +501,11 @@ YYYY-MM-DDTHH:MM
 
   actions: [
     {
+      name: 'helpKey',
+      code: function() { this.help(); },
+      keyboardShortcuts: [ 'f1' ]
+    },
+    {
       name: 'focusInput',
       code: function() { this.input_.focus(); },
       keyboardShortcuts: [ 'ctrl-`' ]
