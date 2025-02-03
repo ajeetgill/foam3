@@ -52,7 +52,7 @@ foam.CLASS({
 
   imports: [ 'flowDAO', 'nSpecDAO', 'scope?', 'window', 'setTimeout' ],
 
-  exports: [ 'eval_', 'modelDAO', 'scrollToBottom' ],
+  exports: [ 'eval_', 'scrollToBottom' ],
 
   css: `
     ^ {
@@ -92,12 +92,9 @@ foam.CLASS({
 
   properties: [
     {
-      __copyFrom__: 'foam.doc.ModelBrowser.MODEL_DAO'
-    },
-    {
       class: 'String',
       name: 'input',
-      view: { 
+      view: {
         class: 'foam.u2.TextField', // Avoids ModeAltView focus() issue
         autocomplete: 'off',
         onKey: true
@@ -193,7 +190,7 @@ foam.CLASS({
         end();
 
         // These observers might cause scroll issues later when queries in the console can be edited
-        // In that case there should be an explicit flag to only do the scroll when the query is submitted 
+        // In that case there should be an explicit flag to only do the scroll when the query is submitted
         // from the main console input
         const resizeObserver = new ResizeObserver(this.scrollToBottom.bind(this));
         var observer = new MutationObserver(function(mutations) {
@@ -216,7 +213,7 @@ foam.CLASS({
 
         observer.observe(this.outputDiv.element_, config);
         this.onDetach(() => observer.disconnect());
-        this.setTimeout(this.focusInput.bind(this), 500) 
+        this.setTimeout(this.focusInput.bind(this), 500)
     },
 
     function log(...args) {
@@ -396,17 +393,18 @@ YYYY-MM-DDTHH:MM
         [ 'save',     'Save the current flow to a specified name' ]
       ];
       var shortcuts = [
+        [ 'F1',      'Help' ],
         [ 'ESC',     'Toggle prompt display' ],
-        [ 'Up',  'Previous from history' ],
-        [ 'Down',  'Next from history' ],
+        [ 'Up',      'Previous from history' ],
+        [ 'Down',    'Next from history' ],
         [ 'CMD + k / CTRL + k',  'Clear console' ],
-        [ 'CTRL + `',  'Focus input' ],
-      ]
+        [ 'CTRL + `', 'Focus input' ]
+      ];
       this.outputDiv.start('h3').add('Commands').end().
-      start('table').attr('width', '100%').
+      start('table').style({width: 'max-content'}).
         forEach(cmds, function(c) {
           this.start('tr').
-            start('th').attr('align', 'left').call(function() {
+            start('th').attr('width', '250').attr('align', 'left').call(function() {
               if ( c[2] ) {
                 self.outputLink(c[0], () => self.eval_(c[0]), this);
               } else {
@@ -415,14 +413,15 @@ YYYY-MM-DDTHH:MM
             }).end().
             start('td').attr('align', 'left').add(c[1]);
         }).
+        end().
         br().
         start('h3').add('Keyboard Shortcuts').end().
-        start('table').attr('width', '100%').
+        start('table').style({width: 'max-content'}).
           forEach(shortcuts, function(c) {
-            this.start('tr').start('th').attr('align', 'left').add(c[0]).end().start('td').add(c[1]);
+            this.start('tr').start('th').attr('width', '250').attr('align', 'left').add(c[0]).end().start('td').add(c[1]);
           }).
         end();
-          
+
 
     },
 
@@ -503,6 +502,11 @@ YYYY-MM-DDTHH:MM
 
   actions: [
     {
+      name: 'helpKey',
+      code: function() { this.help(); },
+      keyboardShortcuts: [ 'f1' ]
+    },
+    {
       name: 'focusInput',
       code: function() { this.input_.focus(); },
       keyboardShortcuts: [ 'ctrl-`' ]
@@ -514,7 +518,7 @@ YYYY-MM-DDTHH:MM
     },
     {
       name: 'stepUpHistory',
-      code: function() { 
+      code: function() {
         this.historyPosition = foam.Number.clamp(0, this.historyPosition+1, this.history_.length);
         this.input = this.history_[this.history_.length - this.historyPosition] ?? '';
       },
@@ -522,7 +526,7 @@ YYYY-MM-DDTHH:MM
     },
     {
       name: 'stepDownHistory',
-      code: function() { 
+      code: function() {
         this.historyPosition--;
         this.input = this.history_[this.history_.length - this.historyPosition] ?? '';
       },
@@ -534,7 +538,7 @@ YYYY-MM-DDTHH:MM
       themeIcon: 'next',
       size: 'SMALL',
       buttonStyle: 'TEXT',
-      code: function() { 
+      code: function() {
         var input = this.input;
         this.input = '';
         this.eval_(input);
@@ -543,7 +547,7 @@ YYYY-MM-DDTHH:MM
     },
     {
       name: 'clear',
-      code: function() { 
+      code: function() {
         this.cls();
         this.focusInput();
       },

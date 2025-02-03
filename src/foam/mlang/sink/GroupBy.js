@@ -22,6 +22,7 @@ foam.CLASS({
     {
       class: 'foam.mlang.SinkProperty',
       name: 'arg2',
+      javaFactory: 'return foam.mlang.MLang.COUNT();',
       factory: function() { return foam.mlang.sink.Count.create(); }
     },
     {
@@ -33,6 +34,7 @@ foam.CLASS({
       class: 'Map',
       name: 'groups',
       hidden: true,
+      javaCloneProperty: '// noop',
       factory: function() { return {}; },
       javaFactory: 'return new java.util.HashMap<Object, foam.dao.Sink>();'
     },
@@ -40,11 +42,10 @@ foam.CLASS({
       class: 'List',
       hidden: true,
       name: 'groupKeys',
+      javaCloneProperty: '// noop',
       transient: true,
       javaFactory: 'return new java.util.ArrayList(this.getGroups().keySet());',
-      factory: function() {
-        return Object.keys(this.groups);
-      },
+      factory: function() { return Object.keys(this.groups); },
     },
     {
       class: 'Boolean',
@@ -77,27 +78,14 @@ return getGroupKeys();`
     },
     {
       name: 'putInGroup_',
-      args: [
-        {
-          name: 'sub',
-          type: 'foam.core.Detachable'
-        },
-        {
-          name: 'key',
-          type: 'Object'
-        },
-        {
-          name: 'obj',
-          type: 'Object'
-        }
-      ],
+      args: 'foam.core.Detachable sub, Object key, Object obj',
       code: function putInGroup_(sub, key, obj) {
         var group = this.groups.hasOwnProperty(key) && this.groups[key];
         if ( ! group ) {
           group = this.arg2.clone();
-          this.groups[key] = group;
           if ( ! this.groupKeys.includes(key) )
             this.groupKeys.push(key);
+          this.groups[key] = group;
         }
         group.put(obj, sub);
         this.pub('propertyChange', 'groups');
@@ -158,22 +146,6 @@ if ( getGroupLimit() == getGroups().size() && sub != null ) sub.detach();
     function eof() { },
 
     {
-      // TODO(adamvy): Is this right?  Seems like we should be overriding the foam2
-      // fclone or deepClone method.
-      name: 'clone',
-      type: 'foam.mlang.sink.GroupBy',
-      code: function clone() {
-        // Don't use the default clone because we don't want to copy 'groups'.
-        return this.cls_.create({ arg1: this.arg1, arg2: this.arg2 });
-      },
-      javaCode:
-`GroupBy clone = new GroupBy();
-clone.setArg1(this.getArg1());
-clone.setArg2(this.getArg2());
-return clone;`
-    },
-
-    {
       name: 'toString',
       code: function toString() {
         return 'groupBy(' + this.arg1 + ',' + this.arg2 + ',' + this.groupLimit + ')';
@@ -182,18 +154,19 @@ return clone;`
     },
 
     function toE(_, x) {
-      var self = this;
+      var e = x.E();
+      this.addToE(e);
+      return e;
+    },
 
-      // TODO: sort keys
-      return x.E('table').
-        add(this.slot(function(arg1, groups) {
-          return x.E('tbody').
-            forEach(self.sortedKeys(), function(g) {
-              this.start('tr').
-                start('td').add(g).end().
-                start('td').add(groups[g]).end()
-            });
-        }));
+    function addToE(e) {
+      var groups = this.groups;
+      e.start('table').start('tbody').
+        forEach(this.sortedKeys(), function(g) {
+          this.start('tr').
+            start('td').add(g.toString()).end().
+            start('td').add(groups[g]);
+        });
     }
   ]
 });

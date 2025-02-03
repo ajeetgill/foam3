@@ -452,7 +452,7 @@ foam.CLASS({
        * named by the 'name' parameter.
        */
 
-      return ! foam.Undefined.isInstance(this.instance_[name]);
+      return this.instance_ && ! foam.Undefined.isInstance(this.instance_[name]);
     },
 
     function hasDefaultValue(name) {
