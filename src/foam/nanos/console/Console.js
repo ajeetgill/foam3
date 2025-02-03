@@ -393,6 +393,7 @@ YYYY-MM-DDTHH:MM
         [ 'save',     'Save the current flow to a specified name' ]
       ];
       var shortcuts = [
+        [ 'F1',      'Help' ],
         [ 'ESC',     'Toggle prompt display' ],
         [ 'Up',      'Previous from history' ],
         [ 'Down',    'Next from history' ],
