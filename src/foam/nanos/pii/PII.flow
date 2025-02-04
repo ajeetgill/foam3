@@ -1,0 +1,10 @@
+<h1>PII - Personal Identifiable Information<h1/>
+
+Topics:
+Ticket
+PDF Key Value Document, other documents
+Email
+
+<h2>Access</h2>
+<p>Grant operations groups permission <b>user.action.pii</b> to allow them to generate a PIIReportTicket for a user.</p>
+<p>Grant end user groups permissoin <b>menu.read.pii-report</b> to access to the <b>Settings</b> menu <b>PII Report</b> which allows the user to generate and email themselves their PII Report</p>

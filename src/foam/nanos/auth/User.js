@@ -1083,9 +1083,9 @@ foam.CLASS({
         var self = this;
         var ticket = this.ticketDAO.find(
           this.AND(
+            this.EQ(this.Ticket.TYPE, this.UserLifecycleTicket.cls_.name),
             this.EQ(this.Ticket.CREATED_FOR, this.id),
             this.EQ(this.Ticket.SPID, this.spid),
-            this.EQ(this.Ticket.STATUS, "OPEN"),
             this.OR(
               this.EQ(this.UserLifecycleTicket.REQUESTED_LIFECYCLE_STATE, this.LifecycleState.DELETED),
               this.EQ(this.UserLifecycleTicket.REQUESTED_LIFECYCLE_STATE, this.LifecycleState.DISABLED)
@@ -1132,9 +1132,9 @@ foam.CLASS({
         var self = this;
         var ticket = this.ticketDAO.find(
           this.AND(
+            this.EQ(this.Ticket.TYPE, this.UserLifecycleTicket.cls_.name),
             this.EQ(this.Ticket.CREATED_FOR, this.id),
             this.EQ(this.Ticket.SPID, this.spid),
-            this.EQ(this.Ticket.STATUS, "OPEN"),
             this.OR(
               this.EQ(this.UserLifecycleTicket.REQUESTED_LIFECYCLE_STATE, this.LifecycleState.DELETED),
               this.EQ(this.UserLifecycleTicket.REQUESTED_LIFECYCLE_STATE, this.LifecycleState.DISABLED)
@@ -1183,6 +1183,7 @@ foam.CLASS({
         // find existing ticket
         var ticket = this.ticketDAO.find(
           this.AND(
+            this.EQ(this.Ticket.TYPE, this.UserLifecycleTicket.cls_.name),
             this.EQ(this.Ticket.CREATED_FOR, this.id),
             this.EQ(this.Ticket.SPID, this.spid)
           )

@@ -9,7 +9,7 @@ foam.CLASS({
   name: 'PIIReportTicket',
   extends: 'foam.nanos.ticket.Ticket',
 
-  documentation: 'Regenerate a PII Report for a user',
+  documentation: 'Generate a PII Report for a user',
 
   implements: [
     'foam.mlang.Expressions'
@@ -17,30 +17,66 @@ foam.CLASS({
 
   javaImports: [
     'foam.dao.DAO',
-    'foam.nanos.auth.User'
+    'foam.lib.html.Outputter',
+    'foam.nanos.auth.User',
+    'java.util.ArrayList',
+    'java.util.HashMap',
+    'java.util.List',
+    'java.util.Map',
+    'java.util.Set'
+  ],
+
+  imports: [
+    'userDAO',
+    'sessionDAO'
+  ],
+
+  requires: [
+    'foam.nanos.auth.LifecycleState',
+    'foam.nanos.auth.User',
+    'foam.nanos.session.Session',
   ],
 
   properties: [
+    {
+      name: 'title',
+      value: 'PII Report Request'
+    },
     {
       name: 'status',
       order: 5,
       createVisibility: 'HIDDEN'
     },
-    // {
-    //   name: 'createdFor',
-    //   hidden: true,
-    //   required: false
-    // },
-    // {
-    //   name: 'assignedTo',
-    //   hidden: true
-    // },
     {
-      name: 'assignedToGroup',
-      hidden: true
+      name: 'statusChoices',
+      hidden: true,
+      factory: function() {
+        var s = [];
+        if ( 'CLOSED' == this.status ) {
+          s.push(['CLOSED', 'CLOSED']);
+          s.push(['OPEN', 'OPEN']);
+        } else {
+          s.push(this.status);
+          s.push(['CLOSED', 'CLOSED']);
+        }
+        return s;
+      }
     },
     {
       name: 'comment',
+      order: 6
+    },
+    {
+      name: 'createdFor',
+      gridColumns: '12'
+    },
+    {
+      name: 'state',
+      hidden: true,
+      transient: true
+    },
+    {
+      name: 'assignedToGroup',
       hidden: true
     },
     {
@@ -48,8 +84,32 @@ foam.CLASS({
       hidden: true
     },
     {
-      name: 'type',
-      hidden: true
+      class: 'List',
+      of: 'foam.nanos.fs.File',
+      name: 'documents',
+      createVisibility: 'HIDDEN',
+      readVisibility: 'RO',
+      updateVisibility: 'RO',
+      section: 'infoSection',
+      order: 15,
+      gridColumns: 12,
+      tableCellFormatter: function(documents) {
+        if ( ! (Array.isArray(documents) && documents.length > 0) ) return;
+        var actions = documents.map((file) => {
+          return foam.core.Action.create({
+            label: file.filename,
+            code: function() {
+              window.open(file.address, '_blank');
+            }
+          });
+        });
+        this.tag({
+          class: 'foam.u2.view.OverlayActionListView',
+          data: actions,
+          icon: '/images/attachment.svg',
+          showDropdownIcon: false
+        });
+      }
     }
   ]
-})
+});

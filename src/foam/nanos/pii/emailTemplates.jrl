@@ -1,0 +1,35 @@
+p({
+  "class": "foam.nanos.notification.email.EmailTemplate",
+  "id": "foam-nanos-pii-report-EmailTemplate-en",
+  "name": "foam-nanos-pii-report-EmailTemplate",
+  "group": "*",
+  "locale": "en",
+  "displayName": "{{appName}}",
+  "subject": "PII Report",
+  "body": """
+Dear {{user.legalName}}<br>
+Please find your PII Report data attached.<br>
+<br>
+Application: {{appName}}<br>
+Data Owner: {{user.legalName}}<br>
+Owner Status: {{user.lifecycleState}}<br>
+Generation Date: {{ticket.created}}<br>
+  """
+})
+p({
+  "class": "foam.nanos.notification.email.EmailTemplate",
+  "id": "foam-nanos-pii-report-kv-EmailTemplate-en",
+  "name": "foam-nanos-pii-report-kv-EmailTemplate",
+  "group": "*",
+  "locale": "en",
+  "displayName": "{{appName}}",
+  "subject": "PII Key-Value Report",
+  "body": """
+Application: {{appName}}<br>
+Data Owner: {{user.legalName}}<br>
+Owner Status: {{user.lifecycleState}}<br>
+Generation Date: {{ticket.created}}<br>
+<br>
+{{keyValueData}}
+  """
+})

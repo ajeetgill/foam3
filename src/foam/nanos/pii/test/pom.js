@@ -1,7 +1,7 @@
 foam.POM({
   name: "pii-test",
   files: [
-  { name: "ViewPIIRequestDAOTest",
+  { name: "PIIReportTest",
     flags: "js|java" }
   ]
 })
