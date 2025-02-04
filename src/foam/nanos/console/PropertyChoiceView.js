@@ -19,6 +19,7 @@ foam.CLASS({
           if ( p.hidden || p.networkTransient ) return;
           choices.push([p, p.name]);
         });
+        if ( choices.length ) this.data = choices[0][0];
         return choices;
       }
     }
