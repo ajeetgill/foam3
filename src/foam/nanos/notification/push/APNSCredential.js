@@ -34,6 +34,14 @@ foam.CLASS({
     },
     {
       class: 'String',
+      name: 'certificateAlias'
+    },
+    {
+      class: 'String',
+      name: 'keyAlias'
+    },
+    {
+      class: 'String',
       name: 'appBundleId'
     }
   ]
