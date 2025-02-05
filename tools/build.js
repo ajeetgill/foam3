@@ -90,6 +90,7 @@ var
   STAGE_JS                  = true,
   TEST                      = false,
   TESTS                     = '',
+  TIMESTAMP_FOAM_BIN        = true,
   WEB_PORT                  = null,
   VERBOSE                   = '',
   VULNERABILITY_CHECK       = false,
@@ -102,7 +103,6 @@ var PROJECT;
 // Short-form of PROJECT.version
 var VERSION;
 var TIMESTAMP;
-var TIMESTAMP_VERSION;
 
 // Root POM tasks and exports
 var TASKS, EXPORTS;
@@ -117,7 +117,6 @@ globalThis.foam = {
     PROJECT = pom;
     TIMESTAMP = Date.now();
     VERSION = pom.version;
-    TIMESTAMP_VERSION = `${VERSION}-${TIMESTAMP}`;
     TASKS   = pom.tasks;
     JAVA_RELEASE = pom.java || JAVA_RELEASE;
     APP_NAME = PROJECT.name;
@@ -225,7 +224,7 @@ Manifest-Version: 1.0
 Main-Class: foam.nanos.boot.Boot
 Class-Path: ${jars}
 Implementation-Title: ${APP_NAME}
-Implementation-Version: ${TIMESTAMP_VERSION}
+Implementation-Version: ${foamBinVersion()}
 Specification-Version: ${PROJECT_REVISION}
 Implementation-Timestamp: ${TIMESTAMP}
 ${APP_NAME}-Revision: ${PROJECT_REVISION}
@@ -372,19 +371,15 @@ task('Remove generated files.', [], function clean() {
 });
 
 
-task('Copy Java libraries from BUILD_DIR/lib to APP_HOME/lib.', [], function copyLib() {
-  copyDir(join(BUILD_DIR, 'lib'), join(APP_HOME, 'lib'));
-});
-
-
 task("Call pmake with JS Maker to build 'foam-bin.js'.", [], function genJS() {
   execSync(`rm -f ${BUILD_DIR}/js/foam-bin-* >/dev/null 2>&1`);
+  var version = foamBinVersion();
   if ( STAGE_JS ) {
-    execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${TIMESTAMP_VERSION} -pom=${pom()} -builddir=${BUILD_DIR} -stage=0`, { stdio: 'inherit' });
-    execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${TIMESTAMP_VERSION} -pom=${pom()} -builddir=${BUILD_DIR} -stage=1`, { stdio: 'inherit' });
-    execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${TIMESTAMP_VERSION} -pom=${pom()} -builddir=${BUILD_DIR} -stage=2`, { stdio: 'inherit' });
+    execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${version} -pom=${pom()} -builddir=${BUILD_DIR} -stage=0`, { stdio: 'inherit' });
+    execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${version} -pom=${pom()} -builddir=${BUILD_DIR} -stage=1`, { stdio: 'inherit' });
+    execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${version} -pom=${pom()} -builddir=${BUILD_DIR} -stage=2`, { stdio: 'inherit' });
   } else {
-    execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${TIMESTAMP_VERSION} -pom=${pom()} -builddir=${BUILD_DIR}`, { stdio: 'inherit' });
+    execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${version} -pom=${pom()} -builddir=${BUILD_DIR}`, { stdio: 'inherit' });
   }
 });
 
@@ -436,9 +431,8 @@ task('Get Maven java sources.', [], function mavenGetSources(value) {
   }
 });
 
-task('Generate and compile java source.', [ 'genJava', 'copyLib' ], function buildJava() {
+task('Generate and compile java source.', [ 'genJava' ], function buildJava() {
   genJava();
-  copyLib();
 });
 
 
@@ -461,11 +455,13 @@ task('Package files into a TAR archive', [], function buildTar() {
   // Notice that the argument to the second -C is relative to the directory from the first -C, since -C
   // switches the current directory.
   ensureDir(BUILD_DIR + '/package');
-  execSync(`tar -a -cf ${BUILD_DIR}/package/${APP_NAME}-deploy-${VERSION}.tar.gz -C ./foam3/tools/deploy bin etc -C ../../../ -C${BUILD_DIR} lib`);
+  execSync(`tar -a -cf ${BUILD_DIR}/package/${APP_NAME}-deploy-${VERSION}.tar.gz -C ./foam3/tools/deploy bin etc -C${require('path').resolve(BUILD_DIR)} lib`);
 });
 
 
-task('Copy required files to APP_HOME deployment directory.', [], function deployToHome() {
+task('Copy deployment files to APP_HOME deployment directory.', [], function deploy() {
+  deployJournals();
+  deployDocuments();
   copyDir('./foam3/tools/deploy/bin', join(APP_HOME, 'bin'));
   copyDir('./foam3/tools/deploy/etc', join(APP_HOME, 'etc'));
   copyDir(BUILD_DIR + '/lib', join(APP_HOME, 'lib'));
@@ -582,20 +578,22 @@ task('Show application information.', [], function appName() {
 
 task('Create empty build and deployment directory structures if required.', [], function setupDirs() {
   try {
-    ensureDir(APP_HOME);
-    if ( ensureDir(BUILD_DIR + '/lib') ) {
+    if ( ! BUILD_ONLY ) {
+      ensureDir(APP_HOME);
+      ensureDir(`${APP_HOME}/lib`);
+      ensureDir(`${APP_HOME}/bin`);
+      ensureDir(`${APP_HOME}/etc`);
+      ensureDir(LOG_HOME);
+      ensureDir(JOURNAL_HOME);
+      ensureDir(DOCUMENT_HOME);
+    }
+    if (ensureDir(BUILD_DIR + '/lib')) {
       // Remove stale pom.xml if the /lib dir needed to be created
       // Wouldn't be necessary if pom.xml were written into the BUILD_DIR but then
       // you couldn't check it in to get dependbot warnings.
       rmfile('pom.xml');
     }
-    ensureDir(`${APP_HOME}/lib`);
-    ensureDir(`${APP_HOME}/bin`);
-    ensureDir(`${APP_HOME}/etc`);
-    ensureDir(LOG_HOME);
     ensureDir(JOURNAL_OUT);
-    ensureDir(JOURNAL_HOME);
-    ensureDir(DOCUMENT_HOME);
     ensureDir(DOCUMENT_OUT);
   } catch ( e ) {
     console.log(e);
@@ -649,6 +647,9 @@ task('Set environmental variables needed by Java.', [], function setenv() {
   JAVA_OPTS += ` -DDOCUMENT_HOME=${DOCUMENT_HOME}`;
 });
 
+function foamBinVersion() {
+  return TIMESTAMP_FOAM_BIN ? `${VERSION}-${TIMESTAMP}` : `${VERSION}`;
+}
 
 function moreUsage() {
   console.log('\nTasks:');
@@ -693,6 +694,8 @@ const ARGS = {
       warning('Skipping genJava task');
       GEN_JAVA = false;
     } ],
+  g: [ 'Do not timestamp foam-bin javascript file to retain breakpoints during development cycle.',
+    () => TIMESTAMP_FOAM_BIN = false ],
   H: [ 'Hostname',
        args => HOST_NAME = args ],
   j: [ 'Delete runtime journals, build, and run app as usual.',
@@ -814,12 +817,14 @@ function all() {
     }
 
     buildJava();
-    deploy();
 
-    // Tests and benchmarks run from jar file
     if ( PACKAGE || BUILD_JAR || TEST || BENCHMARK ) {
       buildJar();
-      deployToHome();
+    }
+
+    // Tests and benchmarks run from a deployed jar
+    if ( BUILD_JAR || TEST || BENCHMARK ) {
+      deploy();
     }
 
     if ( PACKAGE ) {

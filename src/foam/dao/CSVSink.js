@@ -81,7 +81,6 @@ foam.CLASS({
         getOutputter().outputFObject(getX(), (foam.core.FObject)obj);
       `
     },
-
     {
       name: 'eof',
       code: function() {
@@ -91,7 +90,6 @@ foam.CLASS({
         setCsv(getOutputter().toString());
       `
     },
-
     {
       name: 'reset',
       code: function() {
@@ -102,7 +100,8 @@ foam.CLASS({
         getOutputter().flush();
         setCsv("");
       `
-    }
+    },
+    function addToE(e) { e.start('pre').add(this.csv); }
   ]
 });
 

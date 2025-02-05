@@ -22,8 +22,9 @@ foam.CLASS({
   ],
 
   methods: [
-    function addToE() {},
-    function execute() {}
+    function createSink() { return foam.dao.ArraySink.create(); },
+    function execute(e) { return this.dao.select(this.createSink()).then(s => e.add(s)); },
+    function addToE() {}
   ]
 });
 
@@ -34,12 +35,55 @@ foam.CLASS({
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
   methods: [
-    function execute(e) {
-      return this.dao.select(this.COUNT()).then(c => {
-        e.start('b').add('Count: ').end().add(c.value).br();
-      });
+    function createSink() { return this.COUNT(); }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.nanos.console',
+  name: 'MinDAOAgent',
+  extends: 'foam.nanos.console.AbstractDAOAgent',
+
+  properties: [
+    {
+      name: 'prop',
+      view: function(_, X) {
+       return { class: 'foam.nanos.console.PropertyChoiceView', of: X.data.of };
+      }
+    }
+  ],
+
+  methods: [
+    function createSink() { return this.MIN(this.prop); },
+    function addToE(e) {
+      e.startContext({data: this}).start().style({display: 'flex'}).add(this.PROP);
     }
   ]
+});
+
+
+foam.CLASS({
+  package: 'foam.nanos.console',
+  name: 'MaxDAOAgent',
+  extends: 'foam.nanos.console.MinDAOAgent',
+  methods: [ function createSink() { return this.MAX(this.prop); } ]
+});
+
+
+foam.CLASS({
+  package: 'foam.nanos.console',
+  name: 'AvgDAOAgent',
+  extends: 'foam.nanos.console.MinDAOAgent',
+  methods: [ function createSink() { return this.AVG(this.prop); } ]
+});
+
+
+foam.CLASS({
+  package: 'foam.nanos.console',
+  name: 'SumDAOAgent',
+  extends: 'foam.nanos.console.MinDAOAgent',
+  methods: [ function createSink() { return this.SUM(this.prop); } ]
 });
 
 
@@ -62,11 +106,7 @@ foam.CLASS({
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
   methods: [
-    function execute(e) {
-      return this.dao.select(foam.u2.mlang.Table.create({}, this)).then(t => {
-        e.add(t);
-      });
-    }
+    function createSink() { return foam.u2.mlang.Table.create({}, this); }
   ]
 });
 
@@ -79,12 +119,7 @@ foam.CLASS({
   requires: [ 'foam.dao.CSVSink' ],
 
   methods: [
-    function execute(e) {
-      var csv = this.CSVSink.create({of: this.of});
-      return this.dao.select(csv).then(c => {
-        e.start('pre').add(c.csv);
-      });
-    }
+    function createSink() { return this.CSVSink.create({of: this.of}); }
   ]
 });
 
@@ -94,12 +129,10 @@ foam.CLASS({
   name: 'XMLDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
+  requires: [ 'foam.nanos.console.XMLSink' ],
+
   methods: [
-    function execute(e) {
-      return this.dao.select().then(a => {
-        e.start('pre').add(foam.xml.Pretty.stringify(a.array));
-      });
-    }
+    function createSink() { return this.XMLSink.create({of: this.of}); }
   ]
 });
 
@@ -109,12 +142,10 @@ foam.CLASS({
   name: 'JSONDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
+  requires: [ 'foam.nanos.console.JSONSink' ],
+
   methods: [
-    function execute(e) {
-      return this.dao.select().then(a => {
-        e.start('pre').add(foam.json.Pretty.stringify(a.array));
-      });
-    }
+    function createSink() { return this.JSONSink.create({of: this.of}); }
   ]
 });
 
@@ -124,21 +155,20 @@ foam.CLASS({
   name: 'GroupByDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
-  requires: [ 'foam.nanos.console.PropertyChoiceView' ],
-
   properties: [
-    'prop'
+    {
+      name: 'prop',
+      view: function(_, X) {
+       return { class: 'foam.nanos.console.PropertyChoiceView', of: X.data.of };
+      }
+    },
+    { name: 'sink', view: 'foam.nanos.console.SinkView' }
   ],
 
   methods: [
-    function execute(e) {
-      return this.dao.select(this.GROUP_BY(this.prop, this.COUNT())).then(s => {
-        e.add(s);
-      });
-    },
-
+    function createSink() { return this.GROUP_BY(this.prop, this.sink.createSink()); },
     function addToE(e) {
-      e.tag(this.PropertyChoiceView, { of: this.of, data$: this.prop$ });
+      e.startContext({data: this}).start().style({display: 'flex'}).add(this.PROP, ', ', this.SINK);
     }
   ]
 });
@@ -149,23 +179,32 @@ foam.CLASS({
   name: 'GridByDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
-  requires: [ 'foam.nanos.console.PropertyChoiceView' ],
+  requires: [ 'foam.nanos.console.GridBy' ],
 
   properties: [
-    'prop1', 'prop2'
+    {
+      name: 'prop1',
+      view: function(_, X) {
+       return { class: 'foam.nanos.console.PropertyChoiceView', of: X.data.of };
+      }
+    },
+    {
+      name: 'prop2',
+      view: function(_, X) {
+       return { class: 'foam.nanos.console.PropertyChoiceView', of: X.data.of };
+      }
+    },
+    { name: 'sink', view: { class: 'foam.nanos.console.SinkView', choice: 'Count' } }
   ],
 
   methods: [
-    function execute(e) {
-      return this.dao.select(this.GROUP_BY(this.prop1, this.GROUP_BY(this.prop2))).then(s => {
-        e.add(s);
-      });
-    },
-
+    function createSink() { return this.GridBy.create({
+      yFunc: this.prop1,
+      xFunc: this.prop2,
+      acc:   this.sink.createSink()
+    }); },
     function addToE(e) {
-      e.tag(this.PropertyChoiceView, { of: this.of, data$: this.prop1$ });
-      e.add(', ');
-      e.tag(this.PropertyChoiceView, { of: this.of, data$: this.prop2$ });
+      e.startContext({data: this}).start().style({display: 'flex'}).add(this.PROP1, ', ', this.PROP2, ', ', this.SINK);
     }
   ]
 });
@@ -178,13 +217,15 @@ foam.CLASS({
 
   requires: [ 'foam.u2.mlang.Pie' ],
 
+  properties: [ { class: 'Int', name: 'radius', value: 50 } ],
+
   methods: [
-    function execute(e) {
-      return this.dao.select(this.Pie.create({
-        arg1: this.prop
-      })).then(s => {
-        e.add(s);
-      });
+    function createSink() {
+      return this.Pie.create({arg1: this.prop, radius: this.radius});
+    },
+    function addToE(e) {
+      e.startContext({data: this}).start().style({display: 'flex'}).
+        add(' r:', this.RADIUS,' ', this.PROP);
     }
   ]
 });
@@ -195,11 +236,10 @@ foam.CLASS({
   name: 'ViewDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
+  requires: [ 'foam.nanos.console.ViewSink' ],
+
   methods: [
-    function execute(e) {
-      e = e.startContext({controllerMode: foam.u2.ControllerMode.VIEW});
-      return this.dao.select(o => e.add(o));
-    }
+    function createSink() { return this.ViewSink.create({arg1: this.prop}); },
   ]
 });
 
@@ -209,13 +249,10 @@ foam.CLASS({
   name: 'EditDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
+  requires: [ 'foam.nanos.console.EditSink' ],
+
   methods: [
-    function execute(e) {
-      return this.dao.select(o => {
-        var data = foam.comics.DAOUpdateController.create({data: o, dao: this.dao}, this);
-        e.tag({class: 'foam.comics.DAOUpdateControllerView', controllerMode: foam.u2.ControllerMode.EDIT, detailView: 'foam.u2.DetailView', dao: this.dao, data: data });
-      });
-    }
+    function createSink() { return this.EditSink.create({arg1: this.prop}); },
   ]
 });
 
@@ -238,12 +275,10 @@ foam.CLASS({
   name: 'CitationDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
-  requires: [ 'foam.u2.CitationView' ],
+  requires: [ 'foam.nanos.console.CitationSink' ],
 
   methods: [
-    function execute(e) {
-      return this.dao.select(o => e.tag(this.CitationView, {data: o}));
-    }
+    function createSink() { return this.CitationSink.create({of: this.of}); }
   ]
 });
 
@@ -254,29 +289,10 @@ foam.CLASS({
   name: 'CellsDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
-  requires: [ 'foam.demos.sevenguis.Cells' ],
+  requires: [ 'foam.nanos.console.CellsSink' ],
 
   methods: [
-    function execute(e) {
-      var ps  = this.of.getAxiomsByClass(foam.core.Property).
-          filter(p => ! p.networkTransient && ! p.hidden);
-      var cs  = {};
-      var row = 1;
-      for ( var i = 0 ; i < ps.length ; i++ ) {
-        cs[String.fromCharCode(65+i) + 0] = '<b>' + ps[i].label + '</b';
-      }
-      // TODO: limit to 30k until Cells can handle more
-      this.dao.limit(30000).select(o => {
-        for ( var i = 0 ; i < ps.length ; i++ ) {
-          cs[String.fromCharCode(65+i) + row] = ps[i].get(o);
-        }
-        row++;
-      }).then(() => {
-        var cells = this.Cells.create({rows: row+2, columns: ps.length+2}, this);
-        cells.loadCells(cs);
-        e.tag(cells);
-      });
-    }
+    function createSink() { return this.CellsSink.create({of: this.of}); }
   ]
 });
 

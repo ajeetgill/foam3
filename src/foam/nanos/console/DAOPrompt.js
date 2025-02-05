@@ -34,6 +34,9 @@ foam.CLASS({
       width: auto;
       height: 22px;
     }
+    ^ .foam-u2-TextInputCSS,.foam-u2-TextArea {
+      height: auto;
+    }
     ^ select[name="selectChoice"] {
       width: 130px;
     }
@@ -149,7 +152,7 @@ foam.CLASS({
     },
     {
       name: 'select',
-      view: 'foam.nanos.console.SinkView'
+      view: { class: 'foam.nanos.console.SinkView', sinksOnly: false }
     },
     'content',
     'rowCount',
@@ -168,7 +171,7 @@ foam.CLASS({
 
       this.
         start(this.Link).add(this.daoKey$, '.').on('click', this.describe).end().
-        start('blockquote').style({'margin-top': '0', 'margin-left': '20px'}).
+        start('blockquote').style({'margin-top': '0', 'margin-left': '20px', 'line-height': '26px'}).
         add('skip(',    this.SKIP,  ').').br().
         add('limit(',   this.LIMIT, ').').br().
         add('where(').

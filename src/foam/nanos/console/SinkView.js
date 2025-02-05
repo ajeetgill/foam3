@@ -16,21 +16,25 @@ foam.CLASS({
   constants: {
     AGENTS: [
       // Value  Label
-      [ 'CSV', 'CSV' ],
-      [ 'XML', 'XML' ],
-      [ 'JSON', 'JSON' ],
-      [ 'Citation', 'Citation' ],
-      [ 'View', 'View' ],
-      [ 'Edit', 'Edit' ],
-      [ 'Controller', 'Controller' ],
-      [ 'Table', 'Table' ],
-      [ 'ScrollTable', 'ScrollTable' ],
-      [ 'Cells', 'Cells' ],
-      [ 'GroupBy', 'GroupBy' ],
-      [ 'GridBy', 'GridBy' ],
-      [ 'Pie',   'Pie' ],
-      [ 'Count', 'COUNT' ],
-      [ 'All', 'All' ]
+      [ 'CSV', 'CSV', true ],
+      [ 'XML', 'XML', true  ],
+      [ 'JSON', 'JSON', true  ],
+      [ 'Citation', 'Citation', true  ],
+      [ 'View', 'View', true  ],
+      [ 'Edit', 'Edit', true  ],
+      [ 'Table', 'Table', true  ],
+      [ 'Cells', 'Cells', true  ],
+      [ 'GroupBy', 'GroupBy', true  ],
+      [ 'GridBy', 'GridBy', true  ],
+      [ 'Pie',   'Pie', true  ],
+      [ 'Count', 'COUNT', true  ],
+      [ 'Min', 'MIN', true  ],
+      [ 'Max', 'MAX', true  ],
+      [ 'Avg', 'AVG', true  ],
+      [ 'Sum', 'SUM', true  ],
+      [ 'Controller', 'Controller', false  ],
+      [ 'ScrollTable', 'ScrollTable', false  ],
+      [ 'All', 'All', false  ]
     ]
         /*
         'SEQUENCE',
@@ -47,10 +51,16 @@ foam.CLASS({
 
   properties: [
     {
+      class: 'Boolean',
+      name: 'sinksOnly',
+      value: true
+    },
+    {
       name: 'choice',
       factory: function() { return this.AGENTS[0][0]; },
       view: function(_, X) {
-        return { class: 'foam.u2.view.ChoiceView', choices: X.AGENTS };
+        var choices = X.data.sinksOnly ? X.AGENTS.filter(s => s[2]) : X.AGENTS;
+        return { class: 'foam.u2.view.ChoiceView', choices: choices };
       }
     },
     {
@@ -65,11 +75,14 @@ foam.CLASS({
   methods: [
     function render() {
       var self = this;
+
       this.
         addClass().
         style({'display': 'inline-flex'}).
         startContext({data: this}).
-        add(this.CHOICE, ' ', self.dynamic(function (data) {
+        add(this.CHOICE).
+        start(). // TODO: This line needed for U2, remove when U3
+        add(' ', self.dynamic(function (data) {
           if ( ! self.dao ) return;
           data.addToE(this);
         }));

@@ -22,11 +22,10 @@ foam.CLASS({
       value: function(json, opt_cls, opt_ctx) {
         var cls = json.of || opt_cls;
         var array = json.array;
-        if ( ! array ) return foam.dao.ArraySink.create({ of: cls }, opt_ctx);
+        if ( ! array ) return this.create({ of: cls }, opt_ctx);
         if ( foam.typeOf(cls) === foam.String )
           cls = ( opt_ctx || foam ).lookup(cls);
-
-        return foam.dao.ArraySink.create({
+        return this.create({
           of: cls,
           array: foam.json.parse(array, cls, opt_ctx)
         }, opt_ctx);

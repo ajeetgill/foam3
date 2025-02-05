@@ -206,6 +206,8 @@ foam.CLASS({
 
   properties: [
     'fn', // a foam.core.DynamicFunction
+    'before',
+    'after',
     {
       name: 'element_',
       factory: function() { return this.document.createComment('dynamic'); }
@@ -224,6 +226,7 @@ foam.CLASS({
 
       // Before rendering, remove all children between dynamic and /dynamic
       this.fn.pre = () => {
+        this.before?.call?.(this);
         var endElement_ = this.endElement_;
 
         for ( var i = 0 ; i < this.childNodes.length ; i++ ) {
@@ -241,6 +244,11 @@ foam.CLASS({
 
         return this;
       };
+
+      this.fn.post = () => {
+        this.after?.call?.(this);
+      };
+
       this.onDetach(this.fn);
     },
 
@@ -262,6 +270,8 @@ foam.CLASS({
   properties: [
     'dao',
     'code',
+    'before',
+    'after',
     {
       class: 'Int',
       name: 'batch',
@@ -274,6 +284,7 @@ foam.CLASS({
     {
       name: 'fn',
       factory: function() {
+        var self = this;
         return this.dynamic(function(data_) {
           data_.forEach(d => {
             this.startContext({ data: d });
@@ -438,6 +449,7 @@ foam.CLASS({
         '38':  'arrowup',
         '39':  'arrowright',
         '40':  'arrowdown',
+        '112': 'f1',
         '127': 'delete'
       }
     }
@@ -544,11 +556,6 @@ foam.CLASS({
     {
       name: 'childNodes',
       documentation: 'Children of this Element.',
-      factory: function() { return []; }
-    },
-    {
-      name: 'elListeners',
-      documentation: 'DOM listeners of this Element. Stored as topic then listener.',
       factory: function() { return []; }
     },
     {
@@ -970,23 +977,12 @@ foam.CLASS({
       }
     },
 
-    function addEventListener(topic, listener, opt_args) {
-      /* Add DOM listener. */
-      this.elListeners.push(topic, listener, opt_args);
-      this.addEventListener_(topic, listener, opt_args);
+    function addEventListener(topic, listener, opt_options) {
+      this.element_.addEventListener(topic, listener, opt_options || false);
     },
 
     function removeEventListener(topic, listener) {
-      /* Remove DOM listener. */
-      var ls = this.elListeners;
-      for ( var i = 0 ; i < ls.length ; i += 3 ) {
-        var t = ls[i], l = ls[i+1];
-        if ( t === topic && l === listener ) {
-          ls.splice(i, 3);
-          this.element_.removeEventListener(topic, listener);
-          return;
-        }
-      }
+      this.element_.removeEventListener(topic, listener);
     },
 
     function setID(id) {
@@ -1001,7 +997,7 @@ foam.CLASS({
 
     function addClass(cls) { /* ...( Slot | String ) */
       if ( arguments.length > 1 ) {
-        for ( let i = 0; i < arguments.length; i++ ) {
+        for ( let i = 0 ; i < arguments.length ; i++ ) {
           this.addClass(arguments[i]);
         }
         return this;
@@ -1199,6 +1195,10 @@ foam.CLASS({
           this.addChild_(c[i], parentNode);
         return;
       }
+      if ( c.addToE ) {
+        c.addToE(this);
+        return;
+      }
       if ( c.toE ) {
         c = c.toE(null, this.__subSubContext__);
       }
@@ -1346,10 +1346,12 @@ foam.CLASS({
      * @param {Boolean} update True if you'd like changes to each record to be put to
      * the DAO
      */
-    function select(dao, f, update) {
+    function select(dao, f, before, after) {
       this.add(foam.u2.DAOSelectNode.create({
         dao:  dao,
-        code: f
+        code: f,
+        before,
+        after,
       }, this));
       return this;
     },
@@ -1412,15 +1414,6 @@ foam.CLASS({
       this.css[key] = value;
       this.element_.style[key] = value;
       return this;
-    },
-
-    function addEventListener_(topic, listener, opt_args) {
-      this.element_.addEventListener(topic, listener, opt_args || false);
-    },
-
-    function removeEventListener_(topic, listener) {
-      var el = this.el_();
-      el && el.removeEventListener(topic, listener);
     }
   ],
 
@@ -1531,7 +1524,7 @@ foam.CLASS({
       name: 'onKey'
     },
     {
-      // Experimental Code to make it easier to add underlying Property View
+      // Makes it easier to add underlying Property View
       // Without wrapping in a PropertyBorder
       name: '__',
       transient: true,
@@ -2239,6 +2232,8 @@ foam.CLASS({
     {
       class: 'String',
       name: 'css',
+      label: 'CSS',
+      view: { class: 'foam.u2.tag.TextArea', rows: 20, cols: 80 },
       postSet: function(_, code) {
         var css = foam.u2.CSS.create({code: code});
         css.name = css.name + '-' + this.id;
@@ -2248,6 +2243,7 @@ foam.CLASS({
     {
       class: 'Boolean',
       name: 'inheritCSS',
+      hidden: true,
       value: true
     },
     {
