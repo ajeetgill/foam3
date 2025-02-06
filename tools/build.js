@@ -325,14 +325,6 @@ task('Delete runtime journals.', [], function deleteRuntimeJournals() {
 });
 
 
-task('Deploy documents, journals.', [ 'deployDocuments','deployJournals'], function deploy() {
-  if ( ! BUILD_JAR && ! TEST && ! BENCHMARK ) {
-    deployJournals();
-    deployDocuments();
-  }
-});
-
-
 task('Remove pom.xml and java lib directory.', [ ], function cleanLib() {
   rmfile('pom.xml');
   emptyDir(BUILD_DIR + '/lib');
@@ -459,19 +451,27 @@ task('Package files into a TAR archive', [], function buildTar() {
 });
 
 
-task('Copy deployment files to APP_HOME deployment directory.', [], function deploy() {
+task('Copy runtime data to deployment dir APP_HOME', [], function deployData() {
   deployJournals();
   deployDocuments();
+});
+
+
+task('Copy deployment files to APP_HOME deployment directory.', ['deployData'], function deploy() {
+  deployData();
   copyDir('./foam3/tools/deploy/bin', join(APP_HOME, 'bin'));
   copyDir('./foam3/tools/deploy/etc', join(APP_HOME, 'etc'));
   copyDir(BUILD_DIR + '/lib', join(APP_HOME, 'lib'));
 });
 
 
-task('Start NANOS application server.', [ 'setenv' ], function startNanos() {
+task('Start NANOS application server.', [ 'setenv', 'deployData', 'deploy' ], function startNanos() {
   setenv();
+  deployData();
 
   if ( BUILD_JAR ) {
+    // When running JARs we run from the deployemnt dir
+    deploy();
     var OPT_ARGS = ``;
 
     if ( WEB_PORT ) OPT_ARGS += ` -W${WEB_PORT}`;
@@ -795,7 +795,7 @@ task('Stop running NANOS server.', [], function stopNanos() {
 
 task(
 'Build everything specified by flags.',
-  [ 'clean', 'setenv', 'deleteRuntimeLogs', 'setupDirs', 'packageFOAM', 'buildJava', 'deleteRuntimeJournals', 'deploy', 'buildJar', 'deployToHome', 'buildTar', 'startNanos' ],
+  [ 'clean', 'setenv', 'deleteRuntimeLogs', 'setupDirs', 'packageFOAM', 'buildJava', 'deleteRuntimeJournals', 'deployData', 'deploy', 'buildJar', 'deployToHome', 'buildTar', 'startNanos' ],
 function all() {
   processSingleCharArgs(ARGS, moreUsage);
   setenv();
