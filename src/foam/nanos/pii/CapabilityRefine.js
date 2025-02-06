@@ -1,13 +1,13 @@
 /**
  * @license
- * Copyright 2024 The FOAM Authors. All Rights Reserved.
+ * Copyright 2025 The FOAM Authors. All Rights Reserved.
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
 foam.CLASS({
   package: 'foam.nanos.pii',
-  name: 'UserCapabilityJunctionRefine',
-  refines: 'foam.nanos.crunch.UserCapabilityJunction',
+  name: 'CapabilityRefine',
+  refines: 'foam.nanos.crunch.Capability',
 
   properties: [
     {
@@ -28,4 +28,4 @@ foam.CLASS({
       name: 'containsDeletablePII'
     }
   ]
-})
+});

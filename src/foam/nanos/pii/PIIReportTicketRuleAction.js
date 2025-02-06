@@ -27,9 +27,11 @@ foam.CLASS({
     'foam.lib.json.OutputterMode',
     'static foam.mlang.MLang.*',
     'foam.nanos.app.AppConfig',
+    'foam.nanos.auth.LifecycleState',
     'foam.nanos.auth.User',
-    'foam.nanos.fs.File',
+    'foam.nanos.crunch.Capability',
     'foam.nanos.crunch.UserCapabilityJunction',
+    'foam.nanos.fs.File',
     'foam.nanos.logger.Logger',
     'foam.nanos.logger.Loggers',
     'foam.nanos.notification.email.EmailMessage',
@@ -75,12 +77,13 @@ foam.CLASS({
 
             // build key/value PDF
             File file = buildKeyValuePDF(x, ruler.getX(), ticket, set);
-            List documents = ticket.getDocuments();
-            if ( documents == null ) {
-              documents = new ArrayList();
-            }
-            documents.add(file);
-            ticket.setDocuments(documents);
+            // List documents = ticket.getDocuments();
+            // if ( documents == null ) {
+            //   documents = new ArrayList();
+            // }
+            // documents.add(file);
+            // ticket.addDocument(documents);
+            ticket.addDocument(file);
           }
         }, "PIIReportTicketRuleAction");
       `
@@ -88,69 +91,106 @@ foam.CLASS({
     {
       documentation: 'Hook for application pii',
       name: 'addData',
-      args: 'X x, PIIReportTicket ticket, User user, Set data',
+      args: 'X x, PIIReportTicket ticket, User user, Set kvs',
       javaCode: `
-        addUserData(x, ticket, user, data);
-        addUCJData(x, ticket, user, data);
+        addUserData(x, ticket, user, kvs);
+        addUCJData(x, ticket, user, kvs);
+      `
+    },
+    {
+      name: 'addProperty',
+      args: 'X x, String prefix, PropertyInfo pInfo, FObject fObj, Set kvs',
+      javaCode: `
+        if ( pInfo.getNetworkTransient() ||
+             pInfo.getExternalTransient() )
+          return;
+
+        Object val = pInfo.get(fObj);
+        if ( val == null ) return;
+        StringBuilder key = new StringBuilder();
+        if ( ! SafetyUtil.isEmpty(prefix) ) {
+          key.append(prefix);
+          key.append(" ");
+        }
+        key.append(StringUtil.labelize(pInfo.getName()));
+        if ( val instanceof FObject ) {
+          addAllProperties(x, key.toString(), (FObject) val, kvs);
+        } else {
+          var s = String.valueOf(val);
+          if ( ! SafetyUtil.isEmpty(s) ) {
+            kvs.add(new KeyValue(key.toString(), s));
+          }
+        }
       `
     },
     {
       name: 'addAllProperties',
-      args: 'X x, String prefix, FObject fObj, Set data',
+      args: 'X x, String prefix, FObject fObj, Set kvs',
       javaCode: `
       List<PropertyInfo> props = fObj.getClassInfo().getAxiomsByClass(PropertyInfo.class);
       for ( PropertyInfo p : props ) {
-        Object val = p.get(fObj);
-        if ( val == null ) continue;
-        if ( val instanceof FObject ) {
-          addAllProperties(x, prefix + ' ' + StringUtil.labelize(p.getName()), (FObject) val, data);
-        } else {
-          var s = String.valueOf(val);
-          if ( ! SafetyUtil.isEmpty(s) ) {
-            data.add(new KeyValue(prefix + ' ' + StringUtil.labelize(p.getName()), s));
-          }
-        }
+        addProperty(x, prefix, p, fObj, kvs);
       }
       `
     },
     {
       name: 'addUserData',
-      args: 'X x, PIIReportTicket ticket, User user, Set data',
+      args: 'X x, PIIReportTicket ticket, User user, Set kvs',
       javaCode: `
       List<PropertyInfo> props = user.getClassInfo().getAxiomsByClass(PropertyInfo.class);
       for ( PropertyInfo p : props ) {
         if ( p.containsPII() ) {
-          Object val = p.get(user);
-          if ( val == null ) continue;
-          if ( val instanceof FObject ) {
-            addAllProperties(x, StringUtil.labelize(p.getName()), (FObject) val, data);
-          } else {
-            var s = String.valueOf(val);
-            if ( ! SafetyUtil.isEmpty(s) ) {
-              data.add(new KeyValue(StringUtil.labelize(p.getName()), s));
-            }
-          }
+          addProperty(x, null, p, user, kvs);
         }
       }
       `
     },
     {
       name: 'addUCJData',
-      args: 'X x, PIIReportTicket ticket, User user, Set data',
+      args: 'X x, PIIReportTicket ticket, User user, Set kvs',
       javaCode: `
+      ((DAO) x.get("bareUserCapabilityJunctionDAO"))
+        .where(EQ(UserCapabilityJunction.SOURCE_ID, user.getId()))
+        .select(new AbstractSink() {
+          @Override
+          public void put(Object obj, Detachable sub) {
+            UserCapabilityJunction ucj = (UserCapabilityJunction) obj;
+            Capability cap = ucj.findTargetId(x);
+            if ( cap.getContainsPII() ) {
+              Object data = ucj.getData();
+              if ( data == null ) return;
+              if ( data instanceof FObject ) {
+                // addAllProperties(x, cap.getName(), (FObject) data, kvs);
+                String str = ((FObject) data).toSummary();
+                if ( ! SafetyUtil.isEmpty(str) ) {
+                  kvs.add(new KeyValue(cap.getName(), ((FObject) data).toSummary()));
+                }
+              } else if ( data instanceof File ) {
+                ticket.addDocument((File) data);
+              } else {
+                String str = String.valueOf(data);
+                if ( ! SafetyUtil.isEmpty(str) ) {
+                  kvs.add(new KeyValue(cap.getName(), String.valueOf(data)));
+                }
+              }
+            }
+          }
+        });
       `
     },
     {
       name: 'buildKeyValuePDF',
-      args: 'X x, X rulerX, PIIReportTicket ticket, Set data',
+      args: 'X x, X rulerX, PIIReportTicket ticket, Set kvs',
       type: 'File',
       javaCode: `
       try {
         Outputter outputter = new Outputter(KeyValue.getOwnClassInfo(), OutputterMode.FULL);
+        // PDF generator does not support non-breaking space &nbsp;
+        outputter.setNbspEnabled(false);
         outputter.outputStartHtml();
         outputter.outputStartTable();
         outputter.outputHead(new KeyValue());
-        for ( KeyValue kv : (Set<KeyValue>) data ) {
+        for ( KeyValue kv : (Set<KeyValue>) kvs ) {
           outputter.put(kv, null);
         }
         outputter.outputEndTable();

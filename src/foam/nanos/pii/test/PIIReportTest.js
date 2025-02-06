@@ -44,10 +44,10 @@ foam.CLASS({
 
         test ( ticket != null, "Ticket created");
 
-        test ( ticket.getDocuments() != null && ticket.getDocuments().size() > 0, "Ticket has documents");
+        test ( ticket.getDocuments() != null && ticket.getDocuments().length > 0, "Ticket has documents");
 
-        if ( ticket.getDocuments() != null && ticket.getDocuments().size() > 0 ) {
-          File file = (File) ticket.getDocuments().get(0);
+        if ( ticket.getDocuments() != null && ticket.getDocuments().length > 0 ) {
+          File file = (File) ticket.getDocuments()[0];
           test ( file.getMimeType().equals("application/pdf"), "Document type PDF " + file.getMimeType());
           test ( file.getFilesize() > 0 || ! SafetyUtil.isEmpty(file.getDataString()), "Document size > 0 ");
         }

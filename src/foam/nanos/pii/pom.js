@@ -1,9 +1,17 @@
+/**
+ * @license
+ * Copyright 2025 The FOAM Authors. All Rights Reserved.
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 foam.POM({
   name: "pii",
   projects: [
     { name: "test/pom"},
   ],
   files: [
+    { name: "CapabilityRefine",
+      flags: "js|java" },
     { name: "KeyValue",
       flags: "js|java" },
     { name: "PIIReportRequestView",
@@ -14,9 +22,11 @@ foam.POM({
       flags: "js|java" },
     { name: "PIIReportTicketSendRuleAction",
       flags: "js|java" },
-    { name: "UserCapabilityJunctionRefines",
+    { name: "PropertyInfoRefine",
       flags: "js|java" },
-    { name: "UserRefines",
+    { name: "PropertyRefine",
+      flags: "js|java" },
+    { name: "UserRefine",
       flags: "js|java" }
   ]
 });

@@ -6,7 +6,7 @@
 
 foam.CLASS({
   package: 'foam.nanos.pii',
-  name: 'UserRefines',
+  name: 'PIIReportUserRefines',
   refines: 'foam.nanos.auth.User',
 
   imports: [

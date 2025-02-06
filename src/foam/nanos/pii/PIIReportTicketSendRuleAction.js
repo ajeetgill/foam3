@@ -31,6 +31,7 @@ foam.CLASS({
     'foam.nanos.session.Session',
     'foam.nanos.ticket.Ticket',
     'foam.util.SafetyUtil',
+    'java.util.Arrays',
     'java.util.HashMap',
     'java.util.List',
     'java.util.Map'
@@ -50,7 +51,7 @@ foam.CLASS({
       javaCode: `
         final PIIReportTicket ticket = (PIIReportTicket) obj;
         if ( ticket.getDocuments() == null ||
-             ticket.getDocuments().size() == 0 ) {
+             ticket.getDocuments().length == 0 ) {
           // TODO: how to report to user.
           Loggers.logger(x, this).warning("Documents not found", ticket.getId());
           return;
@@ -71,7 +72,7 @@ foam.CLASS({
               msg = (EmailMessage) ((EmailPropertyService) ruler.getX().get("emailPropertyService")).apply(x, user.getGroup(), msg, args);
               EmailMessage.TEMPLATE_ARGUMENTS.clear(msg);
               // String[] attachments = ((List<File>)ticket.getDocuments()).stream().map(File::getId).toArray(String[]::new);
-              String[] attachments = (String[]) ticket.getDocuments().stream().map(obj -> obj instanceof File ? ((File)obj).getId() : (String)((Map)obj).get("id")).toArray(String[]::new);
+              String[] attachments = (String[]) Arrays.stream(ticket.getDocuments()).map(obj -> obj instanceof File ? ((File)obj).getId() : (String)((Map)obj).get("id")).toArray(String[]::new);
               msg.setAttachments(attachments);
               ((DAO) ruler.getX().get("emailMessageDAO")).put(msg);
             } catch (Throwable t) {

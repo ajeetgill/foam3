@@ -11,9 +11,9 @@ Dear {{user.legalName}}<br>
 Please find your PII Report data attached.<br>
 <br>
 Application: {{appName}}<br>
-Data Owner: {{user.legalName}}<br>
-Owner Status: {{user.lifecycleState}}<br>
-Generation Date: {{ticket.created}}<br>
+User: {{user.legalName}}<br>
+User Status: {{user.lifecycleState}}<br>
+Report generated: {{ticket.created}}<br>
   """
 })
 p({
@@ -25,10 +25,12 @@ p({
   "displayName": "{{appName}}",
   "subject": "PII Key-Value Report",
   "body": """
+<b>Personal Identifiable Information Report</b>
+<br>
 Application: {{appName}}<br>
-Data Owner: {{user.legalName}}<br>
-Owner Status: {{user.lifecycleState}}<br>
-Generation Date: {{ticket.created}}<br>
+User: {{user.legalName}}<br>
+User status: {{user.lifecycleState}}<br>
+Report generated: {{ticket.created}}<br>
 <br>
 {{keyValueData}}
   """

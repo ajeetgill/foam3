@@ -19,6 +19,7 @@ foam.CLASS({
     'foam.dao.DAO',
     'foam.lib.html.Outputter',
     'foam.nanos.auth.User',
+    'foam.nanos.fs.File',
     'java.util.ArrayList',
     'java.util.HashMap',
     'java.util.List',
@@ -84,8 +85,7 @@ foam.CLASS({
       hidden: true
     },
     {
-      class: 'List',
-      of: 'foam.nanos.fs.File',
+      class: 'foam.nanos.fs.FileArray',
       name: 'documents',
       createVisibility: 'HIDDEN',
       readVisibility: 'RO',
@@ -109,7 +109,31 @@ foam.CLASS({
           icon: '/images/attachment.svg',
           showDropdownIcon: false
         });
+      },
+      view: function(_, x) {
+        return {
+            class: 'foam.nanos.fs.fileDropZone.FileDropZone',
+            files$: x.data.documents$
+        };
       }
+    }
+  ],
+  methods: [
+    {
+      name: 'addDocument',
+      args: 'File file',
+      javaCode: `
+      File[] files = getDocuments();
+      if ( files == null ||
+           files.length == 0 ) {
+        setDocuments(new File[] { file });
+      } else {
+        File[] nu = new File[files.length +1];
+        System.arraycopy(files, 0, nu, 0, files.length);
+        nu[nu.length] = file;
+        setDocuments(nu);
+      }
+      `
     }
   ]
 });
