@@ -27,6 +27,8 @@ foam.CLASS({
     'foam.lib.json.OutputterMode',
     'static foam.mlang.MLang.*',
     'foam.nanos.app.AppConfig',
+    'foam.nanos.auth.EnabledAware',
+    'foam.nanos.auth.LifecycleAware',
     'foam.nanos.auth.LifecycleState',
     'foam.nanos.auth.User',
     'foam.nanos.crunch.Capability',
@@ -43,6 +45,7 @@ foam.CLASS({
     'foam.util.SafetyUtil',
     'foam.util.StringUtil',
     'java.io.ByteArrayOutputStream',
+    'java.lang.reflect.Method',
     'java.util.ArrayList',
     'java.util.HashMap',
     'java.util.List',
@@ -71,19 +74,9 @@ foam.CLASS({
           public void execute(X x) {
             PIIReportTicket ticket = (PIIReportTicket) obj;
             User user = (User) ticket.findCreatedFor(x);
-            TreeSet<KeyValue> set = new TreeSet<KeyValue>((KeyValue kv1, KeyValue kv2) -> kv1.getKey().compareTo(kv2.getKey()));
-            // collect all key/value and document data.
-            addData(x, ticket, user, set);
-
-            // build key/value PDF
-            File file = buildKeyValuePDF(x, ruler.getX(), ticket, set);
-            // List documents = ticket.getDocuments();
-            // if ( documents == null ) {
-            //   documents = new ArrayList();
-            // }
-            // documents.add(file);
-            // ticket.addDocument(documents);
-            ticket.addDocument(file);
+            TreeSet<KeyValue> kvs = new TreeSet<KeyValue>((KeyValue kv1, KeyValue kv2) -> kv1.getKey().compareTo(kv2.getKey()));
+            addData(x, ticket, user, kvs);
+            ticket.addDocument(buildKeyValuePDF(x, ruler.getX(), ticket, kvs));
           }
         }, "PIIReportTicketRuleAction");
       `
@@ -98,29 +91,68 @@ foam.CLASS({
       `
     },
     {
-      name: 'addProperty',
-      args: 'X x, String prefix, PropertyInfo pInfo, FObject fObj, Set kvs',
+      name: 'addUserData',
+      args: 'X x, PIIReportTicket ticket, User user, Set kvs',
       javaCode: `
-        if ( pInfo.getNetworkTransient() ||
-             pInfo.getExternalTransient() )
-          return;
-
-        Object val = pInfo.get(fObj);
-        if ( val == null ) return;
-        StringBuilder key = new StringBuilder();
-        if ( ! SafetyUtil.isEmpty(prefix) ) {
-          key.append(prefix);
-          key.append(" ");
-        }
-        key.append(StringUtil.labelize(pInfo.getName()));
-        if ( val instanceof FObject ) {
-          addAllProperties(x, key.toString(), (FObject) val, kvs);
-        } else {
-          var s = String.valueOf(val);
-          if ( ! SafetyUtil.isEmpty(s) ) {
-            kvs.add(new KeyValue(key.toString(), s));
+      addFObject(x, null, user, kvs);
+      `
+    },
+    {
+      name: 'addUCJData',
+      args: 'X x, PIIReportTicket ticket, User user, Set kvs',
+      javaCode: `
+      ((DAO) x.get("bareUserCapabilityJunctionDAO"))
+        .where(EQ(UserCapabilityJunction.SOURCE_ID, user.getId()))
+        .select(new AbstractSink() {
+          @Override
+          public void put(Object obj, Detachable sub) {
+            UserCapabilityJunction ucj = (UserCapabilityJunction) obj;
+            if ( ucj.getData() == null ) return;
+            Capability cap = ucj.findTargetId(x);
+            Object data = ucj.getData();
+            if ( data instanceof FObject ) {
+              addFObject(x, "(UCJ FObject) "+cap.getName(), (FObject) data, kvs);
+            } else if ( data instanceof File ) {
+              ticket.addDocument((File) data);
+            } else {
+              String str = String.valueOf(data);
+              if ( ! SafetyUtil.isEmpty(str) ) {
+                kvs.add(new KeyValue("(UCJ String) "+cap.getName(), str));
+              }
+            }
           }
-        }
+        });
+      `
+    },
+    {
+      name: 'addFObject',
+      args: 'X x, String prefix, FObject fObj, Set kvs',
+      javaCode: `
+      if ( fObj instanceof LifecycleAware &&
+           ((LifecycleAware) fObj).getLifecycleState() == LifecycleState.DELETED )
+        return;
+
+      if ( fObj instanceof EnabledAware &&
+           ! ((EnabledAware) fObj).getEnabled() )
+        return;
+
+      String summary = getPIISummary(fObj);
+      if ( ! SafetyUtil.isEmpty(summary) ) {
+        kvs.add(new KeyValue(prefix, summary));
+      } else {
+        addAllProperties(x, prefix, fObj, kvs);
+      }
+      `
+    },
+    {
+      name: 'getPIISummary',
+      args: 'FObject fObj',
+      type: 'String',
+      javaCode: `
+      if ( fObj instanceof PIIAware &&
+           ! SafetyUtil.isEmpty(((PIIAware)fObj).piiSummary()) )
+        return summary;
+      return null;
       `
     },
     {
@@ -134,48 +166,34 @@ foam.CLASS({
       `
     },
     {
-      name: 'addUserData',
-      args: 'X x, PIIReportTicket ticket, User user, Set kvs',
+      name: 'addProperty',
+      args: 'X x, String prefix, PropertyInfo pInfo, FObject fObj, Set kvs',
       javaCode: `
-      List<PropertyInfo> props = user.getClassInfo().getAxiomsByClass(PropertyInfo.class);
-      for ( PropertyInfo p : props ) {
-        if ( p.containsPII() ) {
-          addProperty(x, null, p, user, kvs);
+        if ( pInfo.getNetworkTransient() ||
+             pInfo.getExternalTransient() )
+          return;
+
+        if ( ! pInfo.containsPII() )
+          return;
+
+        Object val = pInfo.get(fObj);
+        if ( val == null ) return;
+
+        StringBuilder key = new StringBuilder();
+        if ( ! SafetyUtil.isEmpty(prefix) ) {
+          key.append(prefix);
+          key.append(" - ");
         }
-      }
-      `
-    },
-    {
-      name: 'addUCJData',
-      args: 'X x, PIIReportTicket ticket, User user, Set kvs',
-      javaCode: `
-      ((DAO) x.get("bareUserCapabilityJunctionDAO"))
-        .where(EQ(UserCapabilityJunction.SOURCE_ID, user.getId()))
-        .select(new AbstractSink() {
-          @Override
-          public void put(Object obj, Detachable sub) {
-            UserCapabilityJunction ucj = (UserCapabilityJunction) obj;
-            Capability cap = ucj.findTargetId(x);
-            if ( cap.getContainsPII() ) {
-              Object data = ucj.getData();
-              if ( data == null ) return;
-              if ( data instanceof FObject ) {
-                // addAllProperties(x, cap.getName(), (FObject) data, kvs);
-                String str = ((FObject) data).toSummary();
-                if ( ! SafetyUtil.isEmpty(str) ) {
-                  kvs.add(new KeyValue(cap.getName(), ((FObject) data).toSummary()));
-                }
-              } else if ( data instanceof File ) {
-                ticket.addDocument((File) data);
-              } else {
-                String str = String.valueOf(data);
-                if ( ! SafetyUtil.isEmpty(str) ) {
-                  kvs.add(new KeyValue(cap.getName(), String.valueOf(data)));
-                }
-              }
-            }
+        key.append(StringUtil.labelize(pInfo.getName()));
+
+        if ( val instanceof FObject ) {
+          addFObject(x, key.toString(), (FObject) val, kvs);
+        } else {
+          var str = String.valueOf(val);
+          if ( ! SafetyUtil.isEmpty(str) ) {
+            kvs.add(new KeyValue(key.toString(), str));
           }
-        });
+        }
       `
     },
     {

@@ -10,9 +10,9 @@ foam.POM({
     { name: "test/pom"},
   ],
   files: [
-    { name: "CapabilityRefine",
-      flags: "js|java" },
     { name: "KeyValue",
+      flags: "js|java" },
+    { name: "PIIAware",
       flags: "js|java" },
     { name: "PIIReportRequestView",
       flags: "web" },

@@ -30,7 +30,8 @@ foam.CLASS({
     {
       documentation: 'Generate a PII Report Ticket',
       name: 'pii',
-      toolTip: 'Create a PII Report Ticket',
+      label: 'PII Report',
+      toolTip: 'Create a Personal Identifiable Information (PII) Report Ticket',
       availablePermissions: ['user.action.pii'],
       isAvailable: async function(id, type, lifecycleState) {
         return id && type == 'User' &&
