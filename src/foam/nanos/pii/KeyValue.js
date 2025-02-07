@@ -8,13 +8,6 @@ foam.CLASS({
   package: 'foam.nanos.pii',
   name: 'KeyValue',
 
-  // javaCode: `
-  // public KeyValue(String key, String value) {
-  //   setKey(key);
-  //   setValue(value);
-  // }
-  // `,
-  
   properties: [
     {
       name: 'key',
