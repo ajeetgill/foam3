@@ -265,9 +265,9 @@ foam.CLASS({
       tableWidth: 160,
       validateObj: function(firstName) {
         var invalidMatcher = new RegExp(foam.nanos.auth.User.INVALID_MATCHER, 'ug');
-        var invalidMatch = firstName.match(invalidMatcher)
+        var invalidMatch = firstName.match(invalidMatcher);
         if ( invalidMatch ) {
-          var invalidChars = [...new Set(invalidMatch.join(''))].join(', ')
+          var invalidChars = [...new Set(invalidMatch.join(''))].join(', ');
           return foam.nanos.auth.User.INVALID_FIRST_NAME + invalidChars;
         }
       },
@@ -308,9 +308,9 @@ foam.CLASS({
         if ( ! middleName.trim() ) return;
 
         var invalidMatcher = new RegExp(foam.nanos.auth.User.INVALID_MATCHER, 'ug');
-        var invalidMatch = middleName.match(invalidMatcher)
+        var invalidMatch = middleName.match(invalidMatcher);
         if ( invalidMatch ) {
-          var invalidChars = [...new Set(invalidMatch.join(''))].join(', ')
+          var invalidChars = [...new Set(invalidMatch.join(''))].join(', ');
           return foam.nanos.auth.User.INVALID_MIDDLE_NAME + invalidChars;
         }
       },
@@ -337,9 +337,9 @@ foam.CLASS({
       tableWidth: 160,
       validateObj: function(lastName) {
         var invalidMatcher = new RegExp(foam.nanos.auth.User.INVALID_MATCHER, 'ug');
-        var invalidMatch = lastName.match(invalidMatcher)
+        var invalidMatch = lastName.match(invalidMatcher);
         if ( invalidMatch ) {
-          var invalidChars = [...new Set(invalidMatch.join(''))].join(', ')
+          var invalidChars = [...new Set(invalidMatch.join(''))].join(', ');
           return foam.nanos.auth.User.INVALID_LAST_NAME + invalidChars;
         }
       },

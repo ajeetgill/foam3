@@ -149,9 +149,11 @@ foam.CLASS({
       args: 'FObject fObj',
       type: 'String',
       javaCode: `
-      if ( fObj instanceof PIIAware &&
-           ! SafetyUtil.isEmpty(((PIIAware)fObj).piiSummary()) )
-        return summary;
+      if ( fObj instanceof PIIAware ) {
+        String summary = ((PIIAware)fObj).piiSummary();
+        if ( ! SafetyUtil.isEmpty(summary) )
+          return summary;
+      }
       return null;
       `
     },

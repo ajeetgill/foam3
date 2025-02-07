@@ -10,6 +10,8 @@ foam.POM({
     { name: "test/pom"},
   ],
   files: [
+    { name: "AddressRefine",
+      flags: "js|java" },
     { name: "KeyValue",
       flags: "js|java" },
     { name: "PIIAware",
