@@ -7,9 +7,10 @@
 <ol>
 <li>action: <b>PII Report</b>
 <p>Grant operations groups permission <b>user.action.pii</b> to allow them to generate a <b>PIIReportTicket</b> for a user.</p>
+<p>An operator can select a user and then selection action <b>PII Report</b>. This will create a <b>PIIReportTicket</b> and redirect the operator to the ticket detail view.  The operator can review the Key Value document and then <b>CLOSE</b> the ticket to send the email</p>
 </li>
 <li>menu: <b>Settings -> PII Report</b>
-<p>Grant end user groups permission <b>menu.read.settings</b> and <b>menu.read.pii-report</b> for access to the <b>Settings</b> menu <b>PII Report</b> sub menu, which allows the user to generate and email themselves their PII Report.</p>
+<p>Grant end user groups permission <b>menu.read.settings</b> and <b>menu.read.pii-report</b> for access to the <b>Settings</b> menu <b>PII Report</b> sub menu, which allows the user to generate and email themselves their PII Report.  This process also creates an <b>PIIReportTicket</b> which is immediately <b>CLOSED</b> to send the email.</p>
 </li>
 </ol>
 
