@@ -16,8 +16,7 @@ foam.CLASS({
     {
       path: 'foam.mlang.Expressions',
       flags: ['js'],
-    },
-    'foam.nanos.pii.PIIAware'
+    }
   ],
 
   requires: [
