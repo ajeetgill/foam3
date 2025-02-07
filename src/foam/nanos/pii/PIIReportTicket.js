@@ -11,31 +11,12 @@ foam.CLASS({
 
   documentation: 'Generate a PII Report for a user',
 
-  implements: [
-    'foam.mlang.Expressions'
-  ],
+  // implements: [
+  //   'foam.mlang.Expressions'
+  // ],
 
   javaImports: [
-    'foam.dao.DAO',
-    'foam.lib.html.Outputter',
-    'foam.nanos.auth.User',
-    'foam.nanos.fs.File',
-    'java.util.ArrayList',
-    'java.util.HashMap',
-    'java.util.List',
-    'java.util.Map',
-    'java.util.Set'
-  ],
-
-  imports: [
-    'userDAO',
-    'sessionDAO'
-  ],
-
-  requires: [
-    'foam.nanos.auth.LifecycleState',
-    'foam.nanos.auth.User',
-    'foam.nanos.session.Session',
+    'foam.nanos.fs.File'
   ],
 
   properties: [
