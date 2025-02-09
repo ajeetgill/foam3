@@ -75,8 +75,8 @@ foam.CLASS({
         var actions = documents.map((file) => {
           return foam.core.Action.create({
             label: file.filename,
-            code: function() {
-              window.open(file.address, '_blank');
+            code: function(x) {
+              x.window.open(file.address, '_blank');
             }
           });
         });
