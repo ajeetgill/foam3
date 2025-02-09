@@ -25,6 +25,7 @@ foam.CLASS({
     'foam.dao.Sink',
     'foam.lib.html.Outputter',
     'foam.lib.json.OutputterMode',
+    'foam.log.LogLevel',
     'static foam.mlang.MLang.*',
     'foam.nanos.app.AppConfig',
     'foam.nanos.auth.EnabledAware',
@@ -33,6 +34,7 @@ foam.CLASS({
     'foam.nanos.auth.User',
     'foam.nanos.crunch.Capability',
     'foam.nanos.crunch.UserCapabilityJunction',
+    'foam.nanos.er.EventRecord',
     'foam.nanos.fs.File',
     'foam.nanos.logger.Logger',
     'foam.nanos.logger.Loggers',
@@ -76,7 +78,7 @@ foam.CLASS({
             User user = (User) ticket.findCreatedFor(x);
             TreeSet<KeyValue> kvs = new TreeSet<KeyValue>((KeyValue kv1, KeyValue kv2) -> kv1.getKey().compareTo(kv2.getKey()));
             addData(x, ticket, user, kvs);
-            ticket.addDocument(buildKeyValuePDF(x, ruler.getX(), ticket, kvs));
+            buildKeyValuePDF(x, ruler.getX(), ticket, kvs);
           }
         }, "PIIReportTicketRuleAction");
       `
@@ -201,7 +203,6 @@ foam.CLASS({
     {
       name: 'buildKeyValuePDF',
       args: 'X x, X rulerX, PIIReportTicket ticket, Set kvs',
-      type: 'File',
       javaCode: `
       try {
         Outputter outputter = new Outputter(KeyValue.getOwnClassInfo(), OutputterMode.FULL);
@@ -249,10 +250,9 @@ foam.CLASS({
         file.setFilename(file.getFilename().replaceAll("[-]+","-"));
         DAO fileDAO = (DAO) rulerX.get("fileDAO");
         file = (File) fileDAO.put(file);
-        return file;
+        ticket.addDocument(file);
       } catch ( Throwable t ) {
-        Loggers.logger(x, this).error(t);
-        return null;
+        ((DAO) rulerX.get("eventRecordDAO")).put(new EventRecord(x, "PIIReportTicketRuleAction", "buildKeyValuePDF", t.getMessage(), LogLevel.ERROR, t));
       }
       `
     }
