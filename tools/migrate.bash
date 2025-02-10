@@ -23,7 +23,7 @@ cd foam3/src/foam
 git mv core  lang
 git mv nanos core
 
-cd core
+cd core/boot
 git mv NSpec.js          COREService.js
 git mv NSpecAware.js     COREServiceAware.js
 git mv NSpecFactory.java COREServiceFactory.java
