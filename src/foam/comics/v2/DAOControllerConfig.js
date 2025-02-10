@@ -64,7 +64,11 @@ foam.CLASS({
       name: 'dao',
       hidden: true,
       expression: function(daoKey, predicate) {
-        var dao = this.__context__[daoKey] || foam.dao.NullDAO.create({of: foam.core.FObject});
+        var dao = this.__context__[daoKey];
+        if ( ! dao ) {
+          console.error('Missing DAO:', daoKey);
+          dao = foam.dao.NullDAO.create({of: foam.core.FObject});
+        }
         if ( this.hasOwnProperty('of') ) {
           dao = foam.dao.ProxyDAO.create({
             of: this.of,
