@@ -10,6 +10,10 @@ find ./ -type f \( \
      -name "*.html" -o \
      -name "*.md" \) \
    -exec perl -p -i -e 's/foam\.core/foam\.lang/g' \{} \; \
+   -exec perl -p -i -e 's/foam\/core/foam\/lang/g' \{} \; \
    -exec perl -p -i -e 's/NSpec/COREService/g'   \{} \; \
    -exec perl -p -i -e 's/nanos/core/g'          \{} \; \
    -exec perl -p -i -e 's/NANOS/CORE/g'          \{} \;
+
+ git mv foam3/src/foam/core  foam3/src/foam/lang
+ git mv foam3/src/foam/nanos foam3/src/foam/core
