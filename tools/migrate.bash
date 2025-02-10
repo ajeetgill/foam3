@@ -17,6 +17,7 @@ find ./ -type f \( \
    -exec perl -p -i -e 's/NanoService/COREService/g' \{} \; \
    -exec perl -p -i -e 's/nSpec/cSpec/g'             \{} \; \
    -exec perl -p -i -e 's/NSpec/CSpec/g'             \{} \; \
+   -exec perl -p -i -e 's/JDBCConnectiocSpec/JDBCConnectionSpec/g' \{} \; \
    -exec perl -p -i -e 's/nanos/core/g'              \{} \; \
    -exec perl -p -i -e 's/NANOS/CORE/g'              \{} \;
 
