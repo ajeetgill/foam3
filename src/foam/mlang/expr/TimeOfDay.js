@@ -47,9 +47,9 @@ foam.CLASS({
       name: 'f',
       code: function() {
         var typeToIdx = {
-          year: 0,
+          year:  0,
           month: 1,
-          day: 2
+          day:   2
         };
         var zonetime = new Intl.DateTimeFormat('default', {
           timeZone: this.timezone,
