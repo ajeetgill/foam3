@@ -1,7 +1,7 @@
 p({
   "class":"foam.nanos.menu.Menu",
-  "id":"gateway",
-  "label":"Gateway",
+  "id":"integration",
+  "label":"Integration",
   "handler":{
     "class":"foam.nanos.menu.SubMenu"
   },
@@ -21,7 +21,7 @@ p({
       "createTitle": "Create a DIG API Call"
     }
   },
-  "parent":"gateway"
+  "parent":"integration"
 })
 p({
   "class": "foam.nanos.menu.Menu",
@@ -41,7 +41,7 @@ p({
       "of": "foam.nanos.dig.DUGRule"
     }
   },
-  "parent": "gateway"
+  "parent": "integration"
 })
 
 p({
@@ -55,7 +55,7 @@ p({
       "daoKey":"dugDigestConfigDAO"
     }
   },
-  "parent":"gateway"
+  "parent":"integration"
 })
 
 p({
@@ -71,5 +71,7 @@ p({
       "createTitle": "Create a Service API Call"
     }
   },
-  "parent":"gateway"
+  "parent":"integration"
 })
+
+p({"class":"foam.nanos.menu.Menu","id":"integration.model-doc","label":"UML API Models","handler":{"class":"foam.nanos.menu.ViewMenu","view":{"class":"foam.doc.ModelBrowser"}},"parent":"integration"})
