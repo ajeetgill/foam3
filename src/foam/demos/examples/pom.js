@@ -8,7 +8,6 @@ foam.POM({
   name: "fbe",
   projects: [
     { name: '../../../../foam3/src/pom' },
-    { name: '../../../../foam3/src/foam/flow/laminar/pom' },
     { name: '../../../../foam3/src/io/c9/ace/pom' },
   ],
   files: [
