@@ -143,14 +143,8 @@ foam.CLASS({
         return this.data ? this.data.id : null;
       },
       adapt: function(_, id) {
-        if ( id ) {
-          if ( foam.core.MultiPartID.isInstance(this.config.of.ID) ) {
-            id = this.config.of.ID.of.FROM_STRING(id, this.config.of.ID);
-          } else {
-            // The id might be something like a Long and need to be converted from
-            // a String to the real type.
-            id = this.config.of.ID.adapt(_, id);
-          }
+        if ( id && foam.core.MultiPartID.isInstance(this.config.of.ID) ) {
+          id = this.config.of.ID.of.FROM_STRING(id, this.config.of.ID);
         }
 
         return id;
@@ -332,7 +326,6 @@ foam.CLASS({
         let self = this;
         let id   = this.data?.id ?? this.idOfRecord;
         self.config.unfilteredDAO.inX(self.__subContext__).find(id).then(d => {
-          debugger;
           if ( ! d ) {
             this.daoController.route = '';
             return;

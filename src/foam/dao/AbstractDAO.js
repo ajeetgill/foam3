@@ -493,6 +493,8 @@ return this.select_(this.getX(), sink, 0, this.MAX_SAFE_INTEGER, null, null);
           return (await this.limit(1).select()).array[0] ?? null;
         }
 
+        id = this.of.ID.adapt(null, id);
+
         return await this.find_(this.__context__, id);
       },
       swiftCode: 'return try find_(__context__, id)',

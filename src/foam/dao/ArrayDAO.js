@@ -159,7 +159,7 @@ foam.CLASS({
       code: function(x, id) {
         // id of type Predicate handled in AbstractDAO
         var identity = this.identityExpr
-        var val = this.of.isInstance(id) ? identity.f(id) : id;
+        var val      = this.of.isInstance(id) ? identity.f(id) : id;
         for ( var i = 0 ; i < this.array.length ; i++ ) {
           if ( foam.util.equals(identity.f(this.array[i]), val) )
             return Promise.resolve(this.array[i]);
