@@ -56,6 +56,11 @@ foam.CLASS({
       value: 'foam.nanos.controller.ApplicationController'
     },
     {
+      class: 'String',
+      name: 'bootservices',
+      value: ''
+    },
+    {
       class: "Boolean",
       name: 'html5',
       value: false
@@ -244,7 +249,7 @@ foam.CLASS({
         out.println("<!-- App Color Scheme, Logo, & Web App Name -->");
         out.print("<foam\\nclass=\\""+ getController() +"\\"\\nid=\\"ctrl\\"\\nwebApp=\\"");
         out.print(theme.getAppName());
-        out.println("\\">");
+        out.println("\\" bootservices=\\"" + getBootservices() + "\\">");
 
         out.print("<div style=\\" text-align:center;height:100%;display: flex;vertical-align:middle;width: 100%;flex-direction: column;justify-content: center;align-items: center; \\">");
         out.print("<img style=\\" max-width: 400px; \\" src=\\"");
