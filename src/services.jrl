@@ -305,11 +305,12 @@ p({"class":"foam.nanos.boot.NSpec","name":"appConfigService",                   
 p({
   "class":"foam.nanos.boot.NSpec",
   "name":"localDocumentDAO",
-
+  "serve": false,
   "serviceScript":
   """
   return new foam.dao.EasyDAO.Builder(x)
     .setOf(foam.flow.Document.getOwnClassInfo())
+    .setAuthorize(false)
     .setInnerDAO(new foam.flow.DocumentationFolderDAO.Builder(x).build())
     .build();
   """
