@@ -143,9 +143,16 @@ foam.CLASS({
         return this.data ? this.data.id : null;
       },
       adapt: function(_, id) {
-        if (id && foam.core.MultiPartID.isInstance(this.config.of.ID)) {
-          id = this.config.of.ID.of.FROM_STRING(id, this.config.of.ID);
+        if ( id ) {
+          if ( foam.core.MultiPartID.isInstance(this.config.of.ID) ) {
+            id = this.config.of.ID.of.FROM_STRING(id, this.config.of.ID);
+          } else {
+            // The id might be something like a Long and need to be converted from
+            // a String to the real type.
+            id = this.config.of.ID.adapt(_, id);
+          }
         }
+
         return id;
       }
     },
@@ -195,6 +202,7 @@ foam.CLASS({
         }
       });
     },
+
     function render() {
       var self = this;
       this.stack?.setTitle(this.viewTitle$, this);
@@ -203,8 +211,8 @@ foam.CLASS({
       this.onDetach(this.dynamic(function(currentData_, actionsOverrides){
         d?.detach?.();
         d = self.stack.setTrailingContainer(
-          this.E().style({ display: 'contents' }).start(foam.u2.ButtonGroup, { 
-              // overrides: { size: 'SMALL' }, 
+          this.E().style({ display: 'contents' }).start(foam.u2.ButtonGroup, {
+              // overrides: { size: 'SMALL' },
               overlaySpec: { obj: self, icon: '/images/Icon_More_Resting.svg', showDropdownIcon: false  }
             }, this.buttonGroup_$)
             .addClass(this.myClass('buttonGroup'))
@@ -232,7 +240,7 @@ foam.CLASS({
       }))
       this.dynamic(function(route, data) {
         if ( ! data ) return;
-        /* 
+        /*
           Only handle routing if detailView is currently visible as otherwise route changes
           are probably caused by sub views
         */
@@ -259,7 +267,7 @@ foam.CLASS({
         .end();
     }
   ],
-  
+
   listeners: [
     {
       name: 'getActionsOverrides',
@@ -284,6 +292,7 @@ foam.CLASS({
         this.actionsOverrides = actionsOverrides;
       }
     },
+
     async function populatePrimaryAction() {
       if ( ! this.currentData_ ) return;
       let data = this.currentData_;
@@ -302,7 +311,7 @@ foam.CLASS({
             b = aSlot.get();
           }
           if (b) { res = a; break; }
-        }  
+        }
         this.primary = res;
         this.actionArray = this.actionArray.filter(v => v !== res);
       }
@@ -321,12 +330,13 @@ foam.CLASS({
       delay: 100,
       code: function() {
         let self = this;
-        let id = this.data?.id ?? this.idOfRecord;
+        let id   = this.data?.id ?? this.idOfRecord;
         self.config.unfilteredDAO.inX(self.__subContext__).find(id).then(d => {
+          debugger;
           if ( ! d ) {
             this.daoController.route = '';
             return;
-          } 
+          }
           self.data = d;
           self.data.setPrivate_('__context__', self.data.__context__.createSubContext({ controllerMode: this.controllerMode$ }));
           if ( this.controllerMode == 'EDIT' ) this.edit();
