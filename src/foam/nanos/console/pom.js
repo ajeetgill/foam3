@@ -15,6 +15,7 @@ foam.POM({
     { name: "ViewSink",                flags: "js|java" },
     { name: "EditSink",                flags: "js|java" },
     { name: "GridBy",                  flags: "js|java" },
+    { name: "DuplicateSink",           flags: "js|java" },
     { name: "SinkView",                flags: "js" },
     { name: "DAOPrompt",               flags: "js" },
     { name: "ModelDAO",                flags: "js" },

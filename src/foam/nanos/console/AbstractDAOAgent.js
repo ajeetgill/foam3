@@ -176,6 +176,32 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.nanos.console',
+  name: 'DuplicateDAOAgent',
+  extends: 'foam.nanos.console.AbstractDAOAgent',
+
+  requires: [ 'foam.nanos.console.DuplicateSink' ],
+
+  properties: [
+    {
+      name: 'prop',
+      view: function(_, X) {
+       return { class: 'foam.nanos.console.PropertyChoiceView', of: X.data.of };
+      }
+    },
+    { name: 'sink', view: 'foam.nanos.console.SinkView' }
+  ],
+
+  methods: [
+    function createSink() { return this.DuplicateSink.create({expr: this.prop, sink: this.sink.createSink()}); },
+    function addToE(e) {
+      e.startContext({data: this}).start().style({display: 'flex'}).add(this.PROP, ', ', this.SINK);
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.nanos.console',
   name: 'GridByDAOAgent',
   extends: 'foam.nanos.console.AbstractDAOAgent',
 
@@ -309,6 +335,7 @@ foam.CLASS({
       foam.nanos.console.SinkView.AGENTS.forEach(a => {
         a = a[0];
         if ( a == 'All' ) return;
+        if ( a == 'Duplicate' ) return;
         if ( a == 'GroupBy' ) return;
         if ( a == 'GridBy' ) return;
         if ( a == 'Pie' ) return;
