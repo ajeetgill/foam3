@@ -91,9 +91,9 @@ foam.CLASS({
         }
         return a;
       },
-      javaType: 'foam.core.PropertyInfo',
-      javaInfoType: 'foam.core.AbstractObjectPropertyInfo',
-      javaFactory: 'return (foam.core.PropertyInfo)(getOf().getAxiomByName(getProperty()));'
+      javaType: 'foam.lang.PropertyInfo',
+      javaInfoType: 'foam.lang.AbstractObjectPropertyInfo',
+      javaFactory: 'return (foam.lang.PropertyInfo)(getOf().getAxiomByName(getProperty()));'
     }
   ],
 

@@ -56,4 +56,4 @@ PredicateProperty. It adapts an object containing the keys `sourceId`,
 based on these values.
 </p>
 
-<foam class="foam.flow.widgets.PropertyShortSummary" of="foam.nanos.crunch.UCJProperty" whitelist="['of', 'capability', 'view']" />
+<foam class="foam.flow.widgets.PropertyShortSummary" of="foam.core.crunch.UCJProperty" whitelist="['of', 'capability', 'view']" />

@@ -57,19 +57,19 @@ foam.CLASS({
         will store.
       */
       class: 'Class',
-      javaInfoType: 'foam.core.AbstractObjectPropertyInfo',
-      javaType: 'foam.core.ClassInfo',
+      javaInfoType: 'foam.lang.AbstractObjectPropertyInfo',
+      javaType: 'foam.lang.ClassInfo',
       name: 'of',
     },
     {
-      javaType: 'foam.core.PropertyInfo',
-      javaInfoType: 'foam.core.AbstractObjectPropertyInfo',
+      javaType: 'foam.lang.PropertyInfo',
+      javaInfoType: 'foam.lang.AbstractObjectPropertyInfo',
       swiftType: 'PropertyInfo',
       name: 'primaryKey',
       swiftExpressionArgs: ['of'],
       swiftExpression: 'return of.axiom(byName: "id") as! PropertyInfo',
       javaFactory: `
-return getOf() == null ? null : (foam.core.PropertyInfo) getOf().getAxiomByName("id");
+return getOf() == null ? null : (foam.lang.PropertyInfo) getOf().getAxiomByName("id");
       `,
     }
   ],
@@ -246,7 +246,7 @@ throw new UnsupportedOperationException();
       code: function(x, sink, predicate) {
         var mySink = this.decorateListener_(sink, predicate);
 
-        var sub = foam.core.FObject.create();
+        var sub = foam.lang.FObject.create();
 
         sub.onDetach(this.on.sub(function(s, on, e, obj) {
           switch(e) {
@@ -460,7 +460,7 @@ this.removeAll_(this.getX(), 0, this.MAX_SAFE_INTEGER, null, null);
         sink = { put: function(o) { foam.u2.DetailView.create({data: o}).write(document); } };
       }
 
-      if ( ! foam.core.FObject.isInstance(sink) ) {
+      if ( ! foam.lang.FObject.isInstance(sink) ) {
         sink = foam.dao.ProxySink.create({delegate: sink});
       }
 
@@ -502,7 +502,7 @@ return this.select_(this.getX(), sink, 0, this.MAX_SAFE_INTEGER, null, null);
 // Temporary until DAO supports find_(Predicate) directly
 if ( id instanceof foam.mlang.predicate.Predicate ) {
   java.util.List l = ((ArraySink) where((foam.mlang.predicate.Predicate) id).limit(1).select(new ArraySink())).getArray();
-  return l.size() == 1 ? (foam.core.FObject) l.get(0) : null;
+  return l.size() == 1 ? (foam.lang.FObject) l.get(0) : null;
 }
 
 return this.find_(this.getX(), id);
@@ -624,11 +624,11 @@ return sink;
         cls.extras.push(`
 public final static long MAX_SAFE_INTEGER = 9007199254740991l;
 
-public Object getPK(foam.core.FObject obj) {
+public Object getPK(foam.lang.FObject obj) {
   return getPrimaryKey().get(obj);
 }
 
-protected class DAOListener implements foam.core.Detachable {
+protected class DAOListener implements foam.lang.Detachable {
   protected Sink sink;
   protected java.util.Collection listeners;
 
@@ -641,7 +641,7 @@ protected class DAOListener implements foam.core.Detachable {
     listeners.remove(this);
   }
 
-  public void put(foam.core.FObject obj) {
+  public void put(foam.lang.FObject obj) {
     try {
       sink.put(obj, this);
     } catch (java.lang.Exception e) {
@@ -649,7 +649,7 @@ protected class DAOListener implements foam.core.Detachable {
     }
   }
 
-  public void remove(foam.core.FObject obj) {
+  public void remove(foam.lang.FObject obj) {
     try {
       sink.remove(obj, this);
     } catch (java.lang.Exception e) {
@@ -668,7 +668,7 @@ protected class DAOListener implements foam.core.Detachable {
 
 protected java.util.List<DAOListener> listeners_ = new java.util.concurrent.CopyOnWriteArrayList<DAOListener>();
 
-protected void onPut(foam.core.FObject obj) {
+protected void onPut(foam.lang.FObject obj) {
   java.util.Iterator<DAOListener> iter = listeners_.iterator();
 
   while ( iter.hasNext() ) {
@@ -676,12 +676,12 @@ protected void onPut(foam.core.FObject obj) {
     try {
       s.put(obj);
     } catch (Throwable t) {
-      foam.nanos.logger.StdoutLogger.instance().warning(getOf().getId(), "onPut", t);
+      foam.core.logger.StdoutLogger.instance().warning(getOf().getId(), "onPut", t);
     }
   }
 }
 
-protected void onRemove(foam.core.FObject obj) {
+protected void onRemove(foam.lang.FObject obj) {
   java.util.Iterator<DAOListener> iter = listeners_.iterator();
 
   while ( iter.hasNext() ) {
@@ -689,7 +689,7 @@ protected void onRemove(foam.core.FObject obj) {
     try {
       s.remove(obj);
     } catch (Throwable t) {
-      foam.nanos.logger.StdoutLogger.instance().warning(getOf().getId(), "onRemove", t);
+      foam.core.logger.StdoutLogger.instance().warning(getOf().getId(), "onRemove", t);
     }
   }
 }
@@ -702,7 +702,7 @@ protected void onReset() {
     try {
       s.reset();
     } catch (Throwable t) {
-      foam.nanos.logger.StdoutLogger.instance().warning(getOf().getId(), "onReset", t);
+      foam.core.logger.StdoutLogger.instance().warning(getOf().getId(), "onReset", t);
     }
   }
 }

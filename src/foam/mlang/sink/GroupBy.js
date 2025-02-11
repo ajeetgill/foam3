@@ -8,7 +8,7 @@ foam.CLASS({
   package: 'foam.mlang.sink',
   name: 'GroupBy',
   extends: 'foam.dao.AbstractSink',
-  implements: [ 'foam.core.Serializable' ],
+  implements: [ 'foam.lang.Serializable' ],
 
   documentation: 'Sink which behaves like the SQL group-by command.',
 
@@ -54,7 +54,7 @@ foam.CLASS({
       documentation: 'If true, each value of an array will be entered into a separate group.',
       factory: function() {
         // TODO: it would be good if it could also detect RelationshipJunction.sourceId/targetId
-        return ! foam.core.MultiPartID.isInstance(this.arg1);
+        return ! foam.lang.MultiPartID.isInstance(this.arg1);
       }
     }
   ],
@@ -78,7 +78,7 @@ return getGroupKeys();`
     },
     {
       name: 'putInGroup_',
-      args: 'foam.core.Detachable sub, Object key, Object obj',
+      args: 'foam.lang.Detachable sub, Object key, Object obj',
       code: function putInGroup_(sub, key, obj) {
         var group = this.groups.hasOwnProperty(key) && this.groups[key];
         if ( ! group ) {
@@ -93,7 +93,7 @@ return getGroupKeys();`
       javaCode:
 `foam.dao.Sink group = (foam.dao.Sink) getGroups().get(key);
  if ( group == null ) {
-   group = (foam.dao.Sink) (((foam.core.FObject)getArg2()).fclone());
+   group = (foam.dao.Sink) (((foam.lang.FObject)getArg2()).fclone());
    getGroups().put(key, group);
    if ( ! this.getGroupKeys().contains(key) )
      getGroupKeys().add(key);

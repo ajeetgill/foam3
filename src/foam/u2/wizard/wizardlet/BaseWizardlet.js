@@ -32,7 +32,7 @@ foam.CLASS({
   ],
 
   requires: [
-    'foam.core.SimpleSlot',
+    'foam.lang.SimpleSlot',
     'foam.log.LogLevel',
     'foam.u2.borders.LoadingLevel',
     'foam.u2.detail.AbstractSectionedDetailView',

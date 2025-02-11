@@ -48,7 +48,7 @@ A quick rundown of the features in FLOW
  */
 
 foam.CLASS({
-  package: 'foam.nanos.demo.relationship',
+  package: 'foam.core.demo.relationship',
   name: 'Student',
   ids: [ 'studentId' ],
   properties: [
@@ -64,8 +64,8 @@ foam.CLASS({
 });
 
 foam.RELATIONSHIP({
-  sourceModel: 'foam.nanos.demo.relationship.Student',
-  targetModel: 'foam.nanos.demo.relationship.Course',
+  sourceModel: 'foam.core.demo.relationship.Student',
+  targetModel: 'foam.core.demo.relationship.Course',
   cardinality: '*:*',
   forwardName: 'courses',
   inverseName: 'students'
@@ -73,7 +73,7 @@ foam.RELATIONSHIP({
 </code>
 </li>
 <li>Image support:</br>
-<img src="/src/foam/nanos/controller/foam_red.png"/>
+<img src="/src/foam/core/controller/foam_red.png"/>
 </ul>
 
 

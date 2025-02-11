@@ -6,7 +6,7 @@
 
 package foam.lib.json;
 
-import foam.core.*;
+import foam.lang.*;
 import foam.lib.parse.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
@@ -93,7 +93,7 @@ public class FObjectParser
               subx.set("obj", obj);
               subParser = ModelParserFactory.getInstance(obj.getClass());
             } else {
-              if ( c == foam.core.FObject.class ) return null;
+              if ( c == foam.lang.FObject.class ) return null;
 
               if ( c.isEnum() ) {
                 subx.set("enum", c);

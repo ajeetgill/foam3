@@ -81,7 +81,7 @@ foam.CLASS({
 
   requires: [
     'foam.box.SkeletonBox',
-    'foam.core.Serializable',
+    'foam.lang.Serializable',
     'foam.dao.ArraySink'
   ],
 
@@ -126,7 +126,7 @@ foam.CLASS({
 
             if ( ! sink ) return result;
 
-            var sub      = foam.core.FObject.create();
+            var sub      = foam.lang.FObject.create();
             var detached = false;
             sub.onDetach(function() { detached = true; });
 
@@ -188,7 +188,7 @@ return sink
           // to send the Sink across the network.
           this.SUPER(null, foam.dao.RemoteSink.create({delegate: sink}), predicate);
         }
-        return foam.core.FObject.create();
+        return foam.lang.FObject.create();
       },
       javaCode: `super.listen_(null, sink, predicate);`,
       swiftCode: `return try super.listen_(nil, sink, predicate)`

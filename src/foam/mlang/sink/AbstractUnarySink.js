@@ -10,7 +10,7 @@ foam.CLASS({
   extends: 'foam.dao.AbstractSink',
 
   implements: [
-    'foam.core.Serializable'
+    'foam.lang.Serializable'
   ],
 
   documentation: 'An Abstract Sink baseclass which takes only one argument.',

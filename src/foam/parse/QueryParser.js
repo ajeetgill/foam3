@@ -18,7 +18,7 @@
 foam.CLASS({
   package: 'foam.parse',
   name: 'PropertySearchableRefinements',
-  refines: 'foam.core.Property',
+  refines: 'foam.lang.Property',
 
   properties: [
     {
@@ -232,7 +232,7 @@ foam.CLASS({
       factory: function() {
         var cls = this.of;
         var fields = [];
-        var properties = cls.getAxiomsByClass(foam.core.Property);
+        var properties = cls.getAxiomsByClass(foam.lang.Property);
         for ( var i = 0 ; i < properties.length ; i++ ) {
           var prop = properties[i];
 
@@ -276,8 +276,8 @@ foam.CLASS({
         // If a Date-valued field is set to a single number, it expands into a
         // range spanning that whole year.
         var maybeConvertYearToDateRange = function(prop, num) {
-          var isDateField = foam.core.Date.isInstance(prop) ||
-            foam.core.Date.isInstance(prop);
+          var isDateField = foam.lang.Date.isInstance(prop) ||
+            foam.lang.Date.isInstance(prop);
           var isDateRange = Array.isArray(num) && num[0] instanceof Date;
 
           if ( isDateField && ! isDateRange ) {
@@ -400,14 +400,14 @@ foam.CLASS({
             var values = v[2];
             // Int is actually the parent of Float and Long, so this captures all
             // numeric properties.
-            var isNum = foam.core.Int.isInstance(prop) ||
-              foam.core.Reference.isInstance(prop) &&
-              foam.core.Int.isInstance(prop.of.ID);
+            var isNum = foam.lang.Int.isInstance(prop) ||
+              foam.lang.Reference.isInstance(prop) &&
+              foam.lang.Int.isInstance(prop.of.ID);
 
-            var isFloat = foam.core.Float.isInstance(prop);
+            var isFloat = foam.lang.Float.isInstance(prop);
 
-            var isDateField = foam.core.Date.isInstance(prop) ||
-                foam.core.DateTime.isInstance(prop);
+            var isDateField = foam.lang.Date.isInstance(prop) ||
+                foam.lang.DateTime.isInstance(prop);
             var isDateRange = Array.isArray(values[0]) &&
                 values[0][0] instanceof Date;
 
@@ -438,7 +438,7 @@ foam.CLASS({
               }
 
               expr = self.In.create({ arg1: prop, arg2: values });
-            } else if ( foam.core.Enum.isInstance(prop) ) {
+            } else if ( foam.lang.Enum.isInstance(prop) ) {
               // Convert string values into enum values, checking if either the
               // enum name or label starts with the supplied value.
               var newValues = [];
@@ -583,7 +583,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.parse',
   name: 'PropertyAliasesRefinement',
-  refines: 'foam.core.Property',
+  refines: 'foam.lang.Property',
 
   properties: [
     {

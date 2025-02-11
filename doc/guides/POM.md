@@ -65,7 +65,7 @@ Ex.
       "foam3/src/foam/u2/AllViews"
     ],
     2: [
-      "foam3/src/foam/core/debug"
+      "foam3/src/foam/lang/debug"
     ]
   }
 ```
@@ -209,7 +209,7 @@ foam.POM({
       "foam3/src/foam/u2/AllViews"
     ],
     2: [
-      "foam3/src/foam/core/debug"
+      "foam3/src/foam/lang/debug"
     ]
   },
   projects: [

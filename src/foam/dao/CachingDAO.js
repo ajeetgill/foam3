@@ -93,7 +93,7 @@ foam.CLASS({
     },
     {
       class: 'FObjectProperty',
-      of: 'foam.core.Property',
+      of: 'foam.lang.Property',
       name: 'pollingProperty'
     }
   ],

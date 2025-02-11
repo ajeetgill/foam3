@@ -107,12 +107,12 @@ return listener
     {
       buildJavaClass: function(cls) {
         cls.extras.push(`
-  public ProxyDAO(foam.core.X x, foam.dao.DAO delegate) {
+  public ProxyDAO(foam.lang.X x, foam.dao.DAO delegate) {
     setX(x);
     setDelegate(delegate);
   }
 
-  public ProxyDAO(foam.core.X x, foam.core.ClassInfo of, foam.dao.DAO delegate) {
+  public ProxyDAO(foam.lang.X x, foam.lang.ClassInfo of, foam.dao.DAO delegate) {
     setX(x);
     setOf(of);
     setDelegate(delegate);

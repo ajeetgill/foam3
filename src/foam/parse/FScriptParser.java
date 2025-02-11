@@ -6,7 +6,7 @@
 
 package foam.parse;
 
-import foam.core.*;
+import foam.lang.*;
 import foam.lib.json.BooleanParser;
 import foam.lib.json.NullParser;
 import foam.lib.json.Whitespace;
@@ -107,7 +107,7 @@ public class FScriptParser {
   private void addExpressions(List expressions) {
     this.expressions.addAll(expressions);
     this.expressions.sort(Comparator.comparing(LiteralIC::getString).reversed());
-    // foam.nanos.logger.StdoutLogger.instance().info(this.getClass().getSimpleName(), "expressions", this.expressions.stream().map(Object::toString).collect(java.util.stream.Collectors.joining(",")));
+    // foam.core.logger.StdoutLogger.instance().info(this.getClass().getSimpleName(), "expressions", this.expressions.stream().map(Object::toString).collect(java.util.stream.Collectors.joining(",")));
   }
 
   /**

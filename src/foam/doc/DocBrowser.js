@@ -95,9 +95,9 @@ foam.CLASS({
       name: 'name',
       projectionSafe: false,
       tableCellFormatter: function(value, obj, axiom) {
-        if ( obj.type === foam.core.Requires ) {
+        if ( obj.type === foam.lang.Requires ) {
           this.tag(obj.ClassLink, {data: obj.axiom.path, showPackage: true});
-        } else if ( obj.type === foam.core.Implements ) {
+        } else if ( obj.type === foam.lang.Implements ) {
           this.tag(obj.ClassLink, {data: obj.axiom.path, showPackage: true});
         } else {
           this.add(value);
@@ -189,7 +189,7 @@ foam.CLASS({
         cls = foam.maybeLookup(cls.model_.extends);
         if ( i ) this.add(' : ');
         this.start(this.ClassLink, {data: cls}).end();
-        if ( cls === foam.core.FObject ) break;
+        if ( cls === foam.lang.FObject ) break;
       }
       this.br();
       this.tag(foam.u2.HTMLView, {data: data.model_.documentation});
@@ -257,7 +257,7 @@ foam.CLASS({
         cls = foam.maybeLookup(cls.model_.extends);
         if ( i ) this.add(' : ');
         this.start(this.ClassLink, {data: cls}).end();
-        if ( cls === foam.core.FObject ) break;
+        if ( cls === foam.lang.FObject ) break;
       }
       this.br();
       this.tag(foam.u2.HTMLView, {data: data.model_.documentation});
@@ -268,7 +268,7 @@ foam.CLASS({
         for ( var key in data.axiomMap_ ) {
           if ( showInherited || Object.hasOwnProperty.call(data.axiomMap_, key) ) {
             var a  = data.axiomMap_[key];
-              if ( ( ! showOnlyProperties ) || foam.core.Property.isInstance(a) ) {
+              if ( ( ! showOnlyProperties ) || foam.lang.Property.isInstance(a) ) {
                 var ai = foam.doc.AxiomInfo.create({
                   axiom: a,
                   type: a.cls_,
@@ -373,7 +373,7 @@ foam.CLASS({
     {
       name: 'MODEL_COMPARATOR',
       factory: function() {
-        var c = foam.compare.compound([foam.core.Model.PACKAGE, foam.core.Model.NAME]);
+        var c = foam.compare.compound([foam.lang.Model.PACKAGE, foam.lang.Model.NAME]);
         return c.compare.bind(c);
       }
     }
@@ -382,9 +382,9 @@ foam.CLASS({
   properties: [
     {
       name: 'modelDAO',
-      factory: function(/*nSpecDAO, allowedModels*/) {
+      factory: function(/*cSpecDAO, allowedModels*/) {
         var self = this;
-        var dao  = self.MDAO.create({of: self.Model}).orderBy(foam.core.Model.ID);
+        var dao  = self.MDAO.create({of: self.Model}).orderBy(foam.lang.Model.ID);
         var all  = [];
         var packages = { '--All--': all };
         function addModel(m) {
@@ -409,7 +409,7 @@ foam.CLASS({
       name: 'path',
       width: 80,
       factory: function() {
-        return this.params.path || 'foam.core.Property';
+        return this.params.path || 'foam.lang.Property';
       }
     },
     {
@@ -433,7 +433,7 @@ foam.CLASS({
       expression: function (path) {
         return Object.values(foam.USED).
           filter(function(cls) {
-            return cls.extends === path || 'foam.core.' + cls.extends === path;
+            return cls.extends === path || 'foam.lang.' + cls.extends === path;
           }).
           sort(this.MODEL_COMPARATOR);
       }
@@ -452,7 +452,7 @@ foam.CLASS({
       name: 'relationshipClasses',
       expression: function (path) {
         var cls = foam.lookup(path);
-        var rs  = cls.getAxiomsByClass(foam.core.Reference);
+        var rs  = cls.getAxiomsByClass(foam.lang.Reference);
         return rs.map(r => r.of.model_).sort(this.MODEL_COMPARATOR);
       }
     },
@@ -573,7 +573,7 @@ foam.CLASS({
   name: 'DocBrowserWindow',
 
   requires: [
-    'foam.core.Window',
+    'foam.lang.Window',
     'foam.doc.DocBrowser'
   ],
 
@@ -587,7 +587,7 @@ foam.CLASS({
     function init() {
       // TODO: There should be some helper support to make this easier
       var w = this.window.open('', '', 'width=700, heigh=1000');
-      var window = foam.core.Window.create({window: w});
+      var window = foam.lang.Window.create({window: w});
       var browser = this.DocBrowser.create({path: this.initialClass}, window.__subContext__);
       w.document.body.insertAdjacentHTML('beforeend', browser.outerHTML);
       browser.load();
@@ -602,10 +602,10 @@ foam.debug.doc = function(opt_obj, showUnused) {
   }
 
   return foam.doc.DocBrowserWindow.create({
-    initialClass: foam.core.FObject.isSubClass(opt_obj) ?
+    initialClass: foam.lang.FObject.isSubClass(opt_obj) ?
       opt_obj.id :
       ( opt_obj && opt_obj.cls_ ) ? opt_obj.cls_.id :
-      'foam.core.FObject' });
+      'foam.lang.FObject' });
 };
 
 
@@ -1049,7 +1049,7 @@ foam.CLASS({
           font: '22px Arial',
           width: w || 200,
           height: h || 30,
-          text: 'Action:          '+ ( cls.getAxiomsByClass(foam.core.Action) !== undefined ? cls.getAxiomsByClass(foam.core.Action).length : 0 )
+          text: 'Action:          '+ ( cls.getAxiomsByClass(foam.lang.Action) !== undefined ? cls.getAxiomsByClass(foam.lang.Action).length : 0 )
         });
 
         var listenersNameLabel = foam.graphics.Label.create({
@@ -1060,7 +1060,7 @@ foam.CLASS({
           font: '22px Arial',
           width: w || 200,
           height: h || 30,
-          text: 'Listener:       ' + ( cls.getAxiomsByClass(foam.core.Listener) !== undefined ?  cls.getAxiomsByClass(foam.core.Listener).length : 0 )
+          text: 'Listener:       ' + ( cls.getAxiomsByClass(foam.lang.Listener) !== undefined ?  cls.getAxiomsByClass(foam.lang.Listener).length : 0 )
         });
 
         var RelationshipNameLabel = foam.graphics.Label.create({
@@ -1096,7 +1096,7 @@ foam.CLASS({
       for ( var key in data.axiomMap_ ) {
         if ( Object.hasOwnProperty.call(data.axiomMap_, key) ) {
           var a  = data.axiomMap_[key];
-          if ( foam.core.Property.isInstance( a ) ) {
+          if ( foam.lang.Property.isInstance( a ) ) {
             prop.push(a);
           }
         }
@@ -1118,7 +1118,7 @@ foam.CLASS({
 
       for ( var i = 0; cls; i++ ) {
         cls = foam.maybeLookup( cls.model_.extends);
-        if ( cls === foam.core.FObject ) break;
+        if ( cls === foam.lang.FObject ) break;
         var extendsBox = this.Box.create({
           x: x,
           y: y - ((i + 1) * d),
@@ -1156,7 +1156,7 @@ foam.CLASS({
 
         this.setData( extendsBox.x, extendsBox.y, cls.id );
 
-        //if ( cls === foam.core.FObject ) break;
+        //if ( cls === foam.lang.FObject ) break;
       }
     },
 
@@ -1341,7 +1341,7 @@ foam.CLASS({
         var req = Object.values(foam.USED).
         filter(function (cls) {
           if ( ! cls.model_ ) return false;
-          return cls.model_.extends == path || 'foam.core.' + cls.model_.extends == path;
+          return cls.model_.extends == path || 'foam.lang.' + cls.model_.extends == path;
         }).sort(this.MODEL_COMPARATOR);
       };
 

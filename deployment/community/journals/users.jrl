@@ -1,5 +1,5 @@
 // remove default admin user
 r({
-  "class":"foam.nanos.auth.User",
+  "class":"foam.core.auth.User",
   "id":42
 })

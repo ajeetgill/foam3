@@ -18,13 +18,13 @@ foam.CLASS({
     {
       name: 'put',
       code: function(o) { this.dao.put(o); },
-      javaCode: `getDao().put((foam.core.FObject) obj);`,
+      javaCode: `getDao().put((foam.lang.FObject) obj);`,
       swiftCode: '_ = try? dao?.put(obj as? foam_core_FObject)'
     },
     {
       name: 'remove',
       code: function(o) { this.dao.remove(o); },
-      javaCode: `getDao().remove((foam.core.FObject) obj);`,
+      javaCode: `getDao().remove((foam.lang.FObject) obj);`,
       swiftCode: '_ = try? dao?.remove(obj as? foam_core_FObject)'
     },
     {

@@ -14,8 +14,8 @@ foam.CLASS({
   ],
 
   requires: [
-    'foam.core.Implements',
-    'foam.core.Model',
+    'foam.lang.Implements',
+    'foam.lang.Model',
     'foam.doc.dao.AxiomDAO',
     'foam.doc.AxiomListView',
     'foam.doc.AxiomSummaryView',
@@ -58,7 +58,7 @@ foam.CLASS({
       var exts  = [];
       var m     = cls;
 
-      while ( m.id != 'foam.core.FObject' ) {
+      while ( m.id != 'foam.lang.FObject' ) {
         m = foam.lookup(m.model_.extends);
         exts.push(m);
       }

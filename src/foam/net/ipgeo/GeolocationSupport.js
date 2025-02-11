@@ -14,10 +14,10 @@ foam.CLASS({
     'com.maxmind.geoip2.DatabaseReader',
     'com.maxmind.geoip2.exception.GeoIp2Exception',
     'com.maxmind.geoip2.model.CityResponse',
-    'foam.core.X',
+    'foam.lang.X',
     'foam.dao.DAO',
-    'foam.nanos.fs.FileSystemStorage',
-    'foam.nanos.logger.Loggers',
+    'foam.core.fs.FileSystemStorage',
+    'foam.core.logger.Loggers',
     'foam.net.IPSupport',
     'foam.net.ipgeo.IPGeolocationInfo',
     'foam.util.SafetyUtil',
@@ -44,7 +44,7 @@ foam.CLASS({
     private final static GeolocationSupport instance__ = new GeolocationSupport();
     public static GeolocationSupport instance() {
       var ret = instance__;
-      X x = foam.core.XLocator.get();
+      X x = foam.lang.XLocator.get();
 
       // Load database
       if ( ret.getDbReader() == null ) {

@@ -146,9 +146,9 @@ foam.CLASS({
     },
 
     function mustSlot(v) {
-      return foam.core.Slot.isInstance(v) ?
+      return foam.lang.Slot.isInstance(v) ?
         v :
-        foam.core.SimpleSlot.create({ value: v });
+        foam.lang.SimpleSlot.create({ value: v });
     }
   ]
 });

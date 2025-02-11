@@ -11,9 +11,9 @@ foam.CLASS({
   documentation: 'Port DAO represents a global port map for an application. A port number can be relative to another port.',
 
   javaImports: [
-    'foam.core.FObject',
-    'foam.core.PropertyInfo',
-    'foam.core.X',
+    'foam.lang.FObject',
+    'foam.lang.PropertyInfo',
+    'foam.lang.X',
     'foam.dao.DAO',
     'foam.util.SafetyUtil',
     'java.lang.IllegalArgumentException'

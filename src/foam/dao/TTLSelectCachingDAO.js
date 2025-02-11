@@ -56,12 +56,12 @@ foam.CLASS({
     },
 
     function select_(x, sink, skip, limit, order, predicate) {
-      if ( ! foam.core.Serializable.isInstance(sink) ) {
+      if ( ! foam.lang.Serializable.isInstance(sink) ) {
         // console.log('************************ TTL CACHING NON SERIALIZABLE SINK:', sink);
         return this.select_(x, foam.dao.ArraySink.create(), skip, limit, order, predicate).then(a => {
           // TODO: the below code should be a method on ArraySink
           var items    = a.array;
-          var sub      = foam.core.FObject.create();
+          var sub      = foam.lang.FObject.create();
           var detached = false;
 
           sub.onDetach(function() { detached = true; });

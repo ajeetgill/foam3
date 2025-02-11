@@ -57,15 +57,15 @@ foam.CLASS({
   classes: [
     {
       name: 'Stack',
-      extends: 'foam.nanos.u2.navigation.Stack',
+      extends: 'foam.core.u2.navigation.Stack',
       imports: ['detailView'],
       methods: [
         function push(v, p) {
           let ctx;
           if ( foam.u2.stack.StackBlock.isInstance(v) && v.parent) {
-            ctx = foam.core.FObject.isInstance(v.parent) ? v.parent.__subContext__: v.parent;
+            ctx = foam.lang.FObject.isInstance(v.parent) ? v.parent.__subContext__: v.parent;
           } else {
-            ctx = (foam.core.FObject.isInstance(p) ? p.__subContext__: p) ?? v.__subContext__;
+            ctx = (foam.lang.FObject.isInstance(p) ? p.__subContext__: p) ?? v.__subContext__;
           }
           if ( this.detailView && this.detailView.stack.pos == this.detailView.__subContext__.stackPos ) {
             console.warn('***** Pushing inside detail view. Audit and maybe remove');
@@ -143,7 +143,7 @@ foam.CLASS({
         return this.data ? this.data.id : null;
       },
       adapt: function(_, id) {
-        if ( id && foam.core.MultiPartID.isInstance(this.config.of.ID) ) {
+        if ( id && foam.lang.MultiPartID.isInstance(this.config.of.ID) ) {
           id = this.config.of.ID.of.FROM_STRING(id, this.config.of.ID);
         }
 
@@ -240,12 +240,12 @@ foam.CLASS({
         */
         if ( route && this.stack.pos == this.__subContext__.stackPos ) {
           let axiom = self.data[foam.String.constantize(route)];
-          if ( foam.core.Action.isInstance(axiom) ) {
+          if ( foam.lang.Action.isInstance(axiom) ) {
             axiom.maybeCall(self.__subContext__.createSubContext({ action: axiom }), self.data);
             return;
           }
           // PropertyBorder handles routing so dont clear that as it hasn't been rendered yet
-          if ( ! foam.core.Property.isInstance(axiom) ) {
+          if ( ! foam.lang.Property.isInstance(axiom) ) {
             // Otherwise just clear route for now
             self.routeToMe();
           }
@@ -291,7 +291,7 @@ foam.CLASS({
       if ( ! this.currentData_ ) return;
       let data = this.currentData_;
       var self = this;
-      var allActions = this.of.getAxiomsByClass(foam.core.Action).filter(v => ! foam.comics.v3.ComicsAction.isInstance(v));
+      var allActions = this.of.getAxiomsByClass(foam.lang.Action).filter(v => ! foam.comics.v3.ComicsAction.isInstance(v));
       var defaultAction = allActions.filter((a) => a.isDefault);
       var acArray = [...defaultAction, ...allActions];
       this.actionArray = allActions;
@@ -349,7 +349,7 @@ foam.CLASS({
       internalIsEnabled: function(config, data) {
         if ( config.CRUDEnabledActionsAuth && config.CRUDEnabledActionsAuth.isEnabled ) {
           try {
-            let permissionString = config.CRUDEnabledActionsAuth.enabledActionsAuth.permissionFactory(foam.nanos.dao.Operation.UPDATE, data);
+            let permissionString = config.CRUDEnabledActionsAuth.enabledActionsAuth.permissionFactory(foam.core.dao.Operation.UPDATE, data);
 
             return this.auth?.check(null, permissionString) && this.data;
           } catch(e) {
@@ -377,7 +377,7 @@ foam.CLASS({
       internalIsEnabled: function(config, data) {
         if ( config.CRUDEnabledActionsAuth && config.CRUDEnabledActionsAuth.isEnabled ) {
           try {
-            let permissionString = config.CRUDEnabledActionsAuth.enabledActionsAuth.permissionFactory(foam.nanos.dao.Operation.CREATE, data);
+            let permissionString = config.CRUDEnabledActionsAuth.enabledActionsAuth.permissionFactory(foam.core.dao.Operation.CREATE, data);
 
             return this.auth?.check(null, permissionString);
           } catch(e) {
@@ -473,7 +473,7 @@ foam.CLASS({
       internalIsEnabled: function(config, data) {
         if ( config.CRUDEnabledActionsAuth && config.CRUDEnabledActionsAuth.isEnabled ) {
           try {
-            let permissionString = config.CRUDEnabledActionsAuth.enabledActionsAuth.permissionFactory(foam.nanos.dao.Operation.REMOVE, data);
+            let permissionString = config.CRUDEnabledActionsAuth.enabledActionsAuth.permissionFactory(foam.core.dao.Operation.REMOVE, data);
 
             return this.auth?.check(null, permissionString);
           } catch(e) {

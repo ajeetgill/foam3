@@ -363,7 +363,7 @@ foam.CLASS({
 
         start('h2').add('DAOBrowserView').end().
         /*
-        TODO: CSS column layout is broken outside of NANOS
+        TODO: CSS column layout is broken outside of CORE
         start({class: 'foam.comics.v2.DAOBrowserView', data: this.users }).
           style({height: '200px', display: 'contents'}).
         end().

@@ -8,7 +8,7 @@ foam.CLASS({
   package: 'foam.dao',
   name: 'ArraySink',
   extends: 'foam.dao.AbstractSink',
-  implements: [ 'foam.core.Serializable' ],
+  implements: [ 'foam.lang.Serializable' ],
 
   constants: [
     {

@@ -187,7 +187,7 @@ foam.CLASS({
   methods: [
     function init() {
       this.SUPER();
-      if ( foam?.nanos?.zac?.Client?.isInstance?.(this.ctrl) ) {
+      if ( foam?.core?.zac?.Client?.isInstance?.(this.ctrl) ) {
         this.ctrl.add(this);
       }
     },

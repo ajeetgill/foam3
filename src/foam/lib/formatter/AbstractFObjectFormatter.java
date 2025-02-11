@@ -6,10 +6,10 @@
 
 package foam.lib.formatter;
 
-import foam.core.ClassInfo;
-import foam.core.FObject;
-import foam.core.PropertyInfo;
-import foam.core.X;
+import foam.lang.ClassInfo;
+import foam.lang.FObject;
+import foam.lang.PropertyInfo;
+import foam.lang.X;
 import foam.lib.PropertyPredicate;
 import foam.lib.StorageOptionalPropertyPredicate;
 import java.util.*;

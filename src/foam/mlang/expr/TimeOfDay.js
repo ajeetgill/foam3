@@ -8,7 +8,7 @@ foam.CLASS({
   package: 'foam.mlang.expr',
   name: 'TimeOfDay',
   extends: 'foam.mlang.AbstractExpr',
-  implements: [ 'foam.core.Serializable' ],
+  implements: [ 'foam.lang.Serializable' ],
 
   javaImports: [
     'java.time.LocalDate',
@@ -31,7 +31,7 @@ foam.CLASS({
     },
     {
       class: 'Reference',
-      of: 'foam.nanos.auth.Country',
+      of: 'foam.core.auth.Country',
       name: 'country'
     },
     {

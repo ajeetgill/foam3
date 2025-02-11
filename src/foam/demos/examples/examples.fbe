@@ -220,7 +220,7 @@ log(a.cls_.name, a.name);
 ##  Test getAxiomsByClass
 Find all Axioms of a particular class using getAxiomsByClass
 --
-Test.getAxiomsByClass(foam.core.Method).forEach(function(a) {
+Test.getAxiomsByClass(foam.lang.Method).forEach(function(a) {
   log(a.cls_ && a.cls_.name, a.name);
 });
 
@@ -228,18 +228,18 @@ Test.getAxiomsByClass(foam.core.Method).forEach(function(a) {
 ##  Test Property constants
 Properties are defined on the class as constants
 --
-log("Method CODE property constant:", foam.core.Method.CODE);
-foam.core.Method.CODE.describe();
+log("Method CODE property constant:", foam.lang.Method.CODE);
+foam.lang.Method.CODE.describe();
 
 
 ##  Property mapping
 Property constants contain map functions
 --
-// foam.core.Method.NAME.f(obj) returns obj.name
+// foam.lang.Method.NAME.f(obj) returns obj.name
 log("Method names in Test:",
   Test
-    .getAxiomsByClass(foam.core.Method)
-    .map(foam.core.Method.NAME.f)
+    .getAxiomsByClass(foam.lang.Method)
+    .map(foam.lang.Method.NAME.f)
     .join(', ')
 );
 
@@ -247,13 +247,13 @@ log("Method names in Test:",
 ##  Property comparators
 Property constants contain comparators
 --
-// foam.core.Method.NAME.compare is a compare function
+// foam.lang.Method.NAME.compare is a compare function
 // that properly compares values of NAME.
 log("Method names in Test, sorted:",
   Test
-    .getAxiomsByClass(foam.core.Method)
-    .sort(foam.core.Method.NAME.compare)
-    .map(foam.core.Method.NAME.f)
+    .getAxiomsByClass(foam.lang.Method)
+    .sort(foam.lang.Method.NAME.compare)
+    .map(foam.lang.Method.NAME.f)
     .join(', ')
 );
 
@@ -627,8 +627,8 @@ log("Is Person a subclass of Person?", Person.isSubClass(Person));
 ##  Test FObject SubClass
 FObject is the root class of all other classes
 --
-log("Is Employee an FObject?", foam.core.FObject.isSubClass(Employee));
-log("Is Person an FObject?", foam.core.FObject.isSubClass(Person));
+log("Is Employee an FObject?", foam.lang.FObject.isSubClass(Employee));
+log("Is Person an FObject?", foam.lang.FObject.isSubClass(Person));
 
 
 ##  Test isSubClass and package
@@ -876,7 +876,7 @@ log("Emp.salary refined:", Emp.create().salary);
 
 
 ##  Refine Property
-Refine foam.core.Property Class
+Refine foam.lang.Property Class
 --
 // Property has special support for refinement or existing Property instances
 foam.CLASS({ name: 'Emp', properties: [ { class: 'Float', name: 'salary' } ] });
@@ -1232,7 +1232,7 @@ foam.CLASS({
 });
 
 log("ImplementsTest2 properties:",
-  ImplementsTest2.getAxiomsByClass(foam.core.Property));
+  ImplementsTest2.getAxiomsByClass(foam.lang.Property));
 
 
 ##  Property Inheritance
@@ -1558,12 +1558,12 @@ foam.CLASS({
     {
       class: 'FObjectArray',
       name: 'array',
-      of: 'foam.core.StringHolder',
+      of: 'foam.lang.StringHolder',
       factory: function() {
         return [
-          foam.core.StringHolder.create({value: 'str1'}),
-          foam.core.StringHolder.create({value: 'str2'}),
-          foam.core.StringHolder.create({value: 'str3'})
+          foam.lang.StringHolder.create({value: 'str1'}),
+          foam.lang.StringHolder.create({value: 'str2'}),
+          foam.lang.StringHolder.create({value: 'str3'})
         ];
       }
     }
@@ -1571,12 +1571,12 @@ foam.CLASS({
 });
 
 var test = IndexedSlotTest.create();
-var is = foam.core.internal.IndexedSlot.create({parent: test.array$, name: 1});
+var is = foam.lang.internal.IndexedSlot.create({parent: test.array$, name: 1});
 
 is.sub(function() { log('IndexedSlot update:', is.get().value, test.array[1].value); });
-is.set(foam.core.StringHolder.create({value: 'str2value2'}));
+is.set(foam.lang.StringHolder.create({value: 'str2value2'}));
 log('Time 1:', is.get().value);
-is.set(foam.core.StringHolder.create({value: 'str2value3'}));
+is.set(foam.lang.StringHolder.create({value: 'str2value3'}));
 log('Time 2:', is.get().value);
 log('Values:', test.array.map(a => a.value).join(','));
 log('at:', test.array$.get()[1].value, test.array$.at(1).get().value);
@@ -1773,7 +1773,7 @@ log("After clearing:", dv.get(), dv.isDefined());
 ##  ConstantSlot
 ConstantSlot creates an immutable slot
 --
-var s = foam.core.ConstantSlot.create({ value: 42 });
+var s = foam.lang.ConstantSlot.create({ value: 42 });
 log("Intial value:", s.get());
 s.value = 66;
 s.set(66);
@@ -1783,7 +1783,7 @@ log("After set to 66:", s.get());
 ##  SimpleSlot
 SimpleSlot creates a mutable slot.
 --
-var s = foam.core.SimpleSlot.create({ value: 42 });
+var s = foam.lang.SimpleSlot.create({ value: 42 });
 log("Intial value:", s.get());
 s.value = 66;
 s.set(66);
@@ -1802,7 +1802,7 @@ var promise = new Promise(function(resolve, reject) {
   log('Slot value:', value);
 });
 log('Promise created.', new Date());
-var s = foam.core.PromiseSlot.create({
+var s = foam.lang.PromiseSlot.create({
   value: 42,
   promise: promise
 });
@@ -1819,9 +1819,9 @@ ArraySlot provides a way to group several slots together so that when any of the
 var promise = new Promise(function(resolve, reject) {
   globalThis.setTimeout(() => resolve('bar'), 3000);
 });
-var s1 = foam.core.SimpleSlot.create({ value: 42 });
-var s2 = foam.core.PromiseSlot.create({ value: 'foo', promise: promise });
-var arraySlot = foam.core.ArraySlot.create({ slots: [s1, s2] });
+var s1 = foam.lang.SimpleSlot.create({ value: 42 });
+var s2 = foam.lang.PromiseSlot.create({ value: 'foo', promise: promise });
+var arraySlot = foam.lang.ArraySlot.create({ slots: [s1, s2] });
 log('Initial value:', arraySlot.get());
 arraySlot.sub((detachable, eventName, propName, slot) => {
   log('Value updated to:', arraySlot.get());
@@ -1833,13 +1833,13 @@ return promise;
 ##  ProxySlot
 ProxySlot provides a way to flatten/join a slot of a slot into what appears to be a slot of the inner slot's value. It lets you abstract away the inner slot.Using ProxySlot in this way is similar to how Promises that return Promises are automatically flattened/joined for you. However, in the case of slots, you need to explicitly use ProxySlot if you want this joining behaviour, otherwise you'll simply have a slot whose value is a slot. In this regard, slots are more flexible than Promises because it is up to the programmer to decide whether they want flattening/joining behaviour or not.
 --
-var s1 = foam.core.SimpleSlot.create({ value: 'fname' });
+var s1 = foam.lang.SimpleSlot.create({ value: 'fname' });
 foam.CLASS({ name: 'Person', properties: ['fname', 'lname'] });
 var p = Person.create({ fname: 'John', lname: 'Smith' });
 var slotOfSlot = s1.map((propName) => {
   return p.slot(propName).map((propValue) => propName + ' = ' + propValue);
 });
-var proxySlot = foam.core.ProxySlot.create({ delegate$: slotOfSlot });
+var proxySlot = foam.lang.ProxySlot.create({ delegate$: slotOfSlot });
 log('Value:', proxySlot.get());
 s1.set('lname');
 log('Value:', proxySlot.get());
@@ -1852,7 +1852,7 @@ foam.CLASS({ name: 'Person', properties: ['fname', 'lname'] });
 var p = Person.create({ fname: 'John', lname: 'Smith' });
 // When fname or lname changes, the new values are fed into the function
 // to produce a new value for ExpressionSlot e
-var e = foam.core.ExpressionSlot.create({
+var e = foam.lang.ExpressionSlot.create({
   args: [ p.fname$, p.lname$ ],
   code: function(f, l) { return f + ' ' + l; }
 });
@@ -1874,7 +1874,7 @@ ExpressionSlot can use an object to supply the source slots
 foam.CLASS({ name: 'Person', properties: [ 'f', 'l' ] });
 var p = Person.create({ f:'John', l: 'Smith' });
 // function arguments 'f' and 'l' are treated as property names on obj
-var e = foam.core.ExpressionSlot.create({
+var e = foam.lang.ExpressionSlot.create({
   obj: p,
   code: function(f, l) { return f + ' ' + l; }
 });
@@ -1956,8 +1956,8 @@ Detachables or functions can be registered to be called when an object is detach
 --
 // Detachables are objects with a detach() method, such as FObjects
 // and sub()-returned subscriptions.
-var o = foam.core.FObject.create();
-var o2 = foam.core.FObject.create();
+var o = foam.lang.FObject.create();
+var o2 = foam.lang.FObject.create();
 var detachs = '';
 
 // onDetach adds a function to be called when the object is detached
@@ -1978,7 +1978,7 @@ o.detach();
 ##  Detachables idempotent
 It doesn't hurt to try and detach an object more than once
 --
-var o = foam.core.FObject.create();
+var o = foam.lang.FObject.create();
 o.detach();
 o.detach();
 
@@ -1988,7 +1988,7 @@ o.detach();
 --
 // If an Object is detached, it will unsubscribe from any
 // subscriptions which subsequently try to deliver events.
-var source = foam.core.FObject.create();
+var source = foam.lang.FObject.create();
 var calls = 0;
 foam.CLASS({
   name: 'Sink',
@@ -3064,7 +3064,7 @@ log(a.cls_.name, a.name);
 ##  Test getAxiomsByClass
 Find all Axioms of a particular class using getAxiomsByClass
 --
-Test.getAxiomsByClass(foam.core.Method).forEach(function(a) {
+Test.getAxiomsByClass(foam.lang.Method).forEach(function(a) {
   log(a.cls_ && a.cls_.name, a.name);
 });
 
@@ -3072,18 +3072,18 @@ Test.getAxiomsByClass(foam.core.Method).forEach(function(a) {
 ##  Test Property constants
 Properties are defined on the class as constants
 --
-log("Method CODE property constant:", foam.core.Method.CODE);
-foam.core.Method.CODE.describe();
+log("Method CODE property constant:", foam.lang.Method.CODE);
+foam.lang.Method.CODE.describe();
 
 
 ##  Property mapping
 Property constants contain map functions
 --
-// foam.core.Method.NAME.f(obj) returns obj.name
+// foam.lang.Method.NAME.f(obj) returns obj.name
 log("Method names in Test:",
   Test
-    .getAxiomsByClass(foam.core.Method)
-    .map(foam.core.Method.NAME.f)
+    .getAxiomsByClass(foam.lang.Method)
+    .map(foam.lang.Method.NAME.f)
     .join(', ')
 );
 
@@ -3091,13 +3091,13 @@ log("Method names in Test:",
 ##  Property comparators
 Property constants contain comparators
 --
-// foam.core.Method.NAME.compare is a compare function
+// foam.lang.Method.NAME.compare is a compare function
 // that properly compares values of NAME.
 log("Method names in Test, sorted:",
   Test
-    .getAxiomsByClass(foam.core.Method)
-    .sort(foam.core.Method.NAME.compare)
-    .map(foam.core.Method.NAME.f)
+    .getAxiomsByClass(foam.lang.Method)
+    .sort(foam.lang.Method.NAME.compare)
+    .map(foam.lang.Method.NAME.f)
     .join(', ')
 );
 
@@ -3419,8 +3419,8 @@ log("Is Person a subclass of Person?", Person.isSubClass(Person));
 ##  Test FObject SubClass
 FObject is the root class of all other classes
 --
-log("Is Employee an FObject?", foam.core.FObject.isSubClass(Employee));
-log("Is Person an FObject?", foam.core.FObject.isSubClass(Person));
+log("Is Employee an FObject?", foam.lang.FObject.isSubClass(Employee));
+log("Is Person an FObject?", foam.lang.FObject.isSubClass(Person));
 
 
 ##  Test isSubClass and package
@@ -3626,7 +3626,7 @@ log("Emp.salary refined:", Emp.create().salary);
 
 
 ##  Refine Property
-Refine foam.core.Property Class
+Refine foam.lang.Property Class
 --
 // Property has special support for refinement or existing Property instances
 foam.CLASS({ name: 'Emp', properties: [ { class: 'Float', name: 'salary' } ] });
@@ -3955,7 +3955,7 @@ foam.CLASS({
 });
 
 log("ImplementsTest2 properties:",
-  ImplementsTest2.getAxiomsByClass(foam.core.Property));
+  ImplementsTest2.getAxiomsByClass(foam.lang.Property));
 
 
 ##  Property Inheritance
@@ -4461,7 +4461,7 @@ log("After clearing:", dv.get(), dv.isDefined());
 ##  ConstantSlot
 ConstantSlot creates an immutable slot
 --
-var s = foam.core.ConstantSlot.create({ value: 42 });
+var s = foam.lang.ConstantSlot.create({ value: 42 });
 log("Intial value:", s.get());
 s.value = 66;
 s.set(66);
@@ -4471,7 +4471,7 @@ log("After set to 66:", s.get());
 ##  SimpleSlot
 SimpleSlot creates a mutable slot.
 --
-var s = foam.core.SimpleSlot.create({ value: 42 });
+var s = foam.lang.SimpleSlot.create({ value: 42 });
 log("Intial value:", s.get());
 s.value = 66;
 s.set(66);
@@ -4490,7 +4490,7 @@ var promise = new Promise(function(resolve, reject) {
   log('Slot value:', value);
 });
 log('Promise created.', new Date());
-var s = foam.core.PromiseSlot.create({
+var s = foam.lang.PromiseSlot.create({
   value: 42,
   promise: promise
 });
@@ -4507,9 +4507,9 @@ ArraySlot provides a way to group several slots together so that when any of the
 var promise = new Promise(function(resolve, reject) {
   globalThis.setTimeout(() => resolve('bar'), 3000);
 });
-var s1 = foam.core.SimpleSlot.create({ value: 42 });
-var s2 = foam.core.PromiseSlot.create({ value: 'foo', promise: promise });
-var arraySlot = foam.core.ArraySlot.create({ slots: [s1, s2] });
+var s1 = foam.lang.SimpleSlot.create({ value: 42 });
+var s2 = foam.lang.PromiseSlot.create({ value: 'foo', promise: promise });
+var arraySlot = foam.lang.ArraySlot.create({ slots: [s1, s2] });
 log('Initial value:', arraySlot.get());
 arraySlot.sub((detachable, eventName, propName, slot) => {
   log('Value updated to:', arraySlot.get());
@@ -4521,13 +4521,13 @@ return promise;
 ##  ProxySlot
 ProxySlot provides a way to flatten/join a slot of a slot into what appears to be a slot of the inner slot's value. It lets you abstract away the inner slot.Using ProxySlot in this way is similar to how Promises that return Promises are automatically flattened/joined for you. However, in the case of slots, you need to explicitly use ProxySlot if you want this joining behaviour, otherwise you'll simply have a slot whose value is a slot. In this regard, slots are more flexible than Promises because it is up to the programmer to decide whether they want flattening/joining behaviour or not.
 --
-var s1 = foam.core.SimpleSlot.create({ value: 'fname' });
+var s1 = foam.lang.SimpleSlot.create({ value: 'fname' });
 foam.CLASS({ name: 'Person', properties: ['fname', 'lname'] });
 var p = Person.create({ fname: 'John', lname: 'Smith' });
 var slotOfSlot = s1.map((propName) => {
   return p.slot(propName).map((propValue) => propName + ' = ' + propValue);
 });
-var proxySlot = foam.core.ProxySlot.create({ delegate$: slotOfSlot });
+var proxySlot = foam.lang.ProxySlot.create({ delegate$: slotOfSlot });
 log('Value:', proxySlot.get());
 s1.set('lname');
 log('Value:', proxySlot.get());
@@ -4540,7 +4540,7 @@ foam.CLASS({ name: 'Person', properties: ['fname', 'lname'] });
 var p = Person.create({ fname: 'John', lname: 'Smith' });
 // When fname or lname changes, the new values are fed into the function
 // to produce a new value for ExpressionSlot e
-var e = foam.core.ExpressionSlot.create({
+var e = foam.lang.ExpressionSlot.create({
   args: [ p.fname$, p.lname$ ],
   code: function(f, l) { return f + ' ' + l; }
 });
@@ -4562,7 +4562,7 @@ ExpressionSlot can use an object to supply the source slots
 foam.CLASS({ name: 'Person', properties: [ 'f', 'l' ] });
 var p = Person.create({ f:'John', l: 'Smith' });
 // function arguments 'f' and 'l' are treated as property names on obj
-var e = foam.core.ExpressionSlot.create({
+var e = foam.lang.ExpressionSlot.create({
   obj: p,
   code: function(f, l) { return f + ' ' + l; }
 });
@@ -4644,8 +4644,8 @@ Detachables or functions can be registered to be called when an object is detach
 --
 // Detachables are objects with a detach() method, such as FObjects
 // and sub()-returned subscriptions.
-var o = foam.core.FObject.create();
-var o2 = foam.core.FObject.create();
+var o = foam.lang.FObject.create();
+var o2 = foam.lang.FObject.create();
 var detachs = '';
 
 // onDetach adds a function to be called when the object is detached
@@ -4666,7 +4666,7 @@ o.detach();
 ##  Detachables idempotent
 It doesn't hurt to try and detach an object more than once
 --
-var o = foam.core.FObject.create();
+var o = foam.lang.FObject.create();
 o.detach();
 o.detach();
 
@@ -4676,7 +4676,7 @@ o.detach();
 --
 // If an Object is detached, it will unsubscribe from any
 // subscriptions which subsequently try to deliver events.
-var source = foam.core.FObject.create();
+var source = foam.lang.FObject.create();
 var calls = 0;
 foam.CLASS({
   name: 'Sink',

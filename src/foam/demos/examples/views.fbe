@@ -286,7 +286,7 @@ foam.CLASS({
       name: 'temperature',
       value: 1,
       view: {
-        class: 'foam.nanos.pm.TemperatureCView',
+        class: 'foam.core.pm.TemperatureCView',
         width: 300
       }
     },
@@ -463,7 +463,7 @@ foam.CLASS({
       value: '../u2/Dragon.png'
     },
     /*
-    Only works with NANOS
+    Only works with CORE
     {
       class: 'Image',
       name: 'imageView',

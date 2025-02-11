@@ -17,7 +17,7 @@ foam.CLASS({
 
   javaImports: [
     'foam.flow.Document',
-    'foam.nanos.fs.Storage',
+    'foam.core.fs.Storage',
     'java.nio.charset.StandardCharsets',
     'java.util.HashSet',
     'java.util.Set',
@@ -36,10 +36,10 @@ foam.CLASS({
     {
       class: 'Object',
       name: 'storage',
-      javaType: 'foam.nanos.fs.Storage',
+      javaType: 'foam.core.fs.Storage',
       javaFactory: `
-return new foam.nanos.fs.FallbackStorage(
-  new foam.nanos.fs.FileSystemStorage(System.getProperty("DOCUMENT_HOME")) {
+return new foam.core.fs.FallbackStorage(
+  new foam.core.fs.FileSystemStorage(System.getProperty("DOCUMENT_HOME")) {
     @Override
     public OutputStream getOutputStream(String name) {
       var path = getPath(name);
@@ -52,7 +52,7 @@ return new foam.nanos.fs.FallbackStorage(
       }
     }
   },
-  new foam.nanos.fs.ResourceStorage("documents")
+  new foam.core.fs.ResourceStorage("documents")
 );`
     }
   ],
@@ -71,7 +71,7 @@ Set<String> paths = null;
 try {
   paths = storage.getAvailableFiles("", "*.flow");
 } catch (Throwable t) {
-  foam.nanos.logger.Logger logger = (foam.nanos.logger.Logger) x.get("logger");
+  foam.core.logger.Logger logger = (foam.core.logger.Logger) x.get("logger");
   logger.warning(t.getMessage());
   paths = new HashSet<String>();
 }
