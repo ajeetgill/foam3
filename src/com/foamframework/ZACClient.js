@@ -107,7 +107,6 @@ foam.CLASS({
     /* Container for sidebar and content */
     ^container {
       display: flex;
-      height: calc(100vh - 60px); /* subtract header height */
     }
 
     /* ----------------------------
@@ -170,7 +169,6 @@ foam.CLASS({
     ^content {
       flex: 1;
       padding: 1rem;
-      overflow-y: auto;
       background-color: #fff;
     }
     
@@ -220,7 +218,8 @@ foam.CLASS({
           this.start('li')
             .start('a')
             .attrs({
-              href: `#${obj.id}`
+              href: `#${obj.id}`,
+              'data-icon': (obj.title || foam.String.labelize(obj.id))[0]
             })
             .add(obj.title || foam.String.labelize(obj.id))
             .end('a')
