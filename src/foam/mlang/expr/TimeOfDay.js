@@ -51,11 +51,12 @@ foam.CLASS({
           month: 1,
           day:   2
         };
+        // TODO: cache
         var zonetime = new Intl.DateTimeFormat('default', {
           timeZone: this.timezone,
-          year: "numeric",
+          year:  "numeric",
           month: "2-digit",
-          day: "2-digit"
+          day:   "2-digit"
         });
         var formatted = zonetime.formatToParts(new Date());
         var p = {};
@@ -84,17 +85,17 @@ foam.CLASS({
       name: 'toString',
       type: 'String',
       code: function() {
-        return 'TimeOfDay(hour:' + this.hour +
-                        ', minute:' + this.minute +
-                        ', second:' + this.second +
-                        ', country:' + this.country +
+        return 'TimeOfDay(hour:'      + this.hour +
+                        ', minute:'   + this.minute +
+                        ', second:'   + this.second +
+                        ', country:'  + this.country +
                         ', timezone:' + this.timezone + ')';
       },
       javaCode: `
-        return "TimeOfDay(hour:" + getHour() +
-                        ", minute:" + getMinute() +
-                        ", second:" + getSecond() +
-                        ", country:" + getCountry() +
+        return "TimeOfDay(hour:"      + getHour() +
+                        ", minute:"   + getMinute() +
+                        ", second:"   + getSecond() +
+                        ", country:"  + getCountry() +
                         ", timezone:" + getTimezone() + ")";
       `
     }
