@@ -14,7 +14,13 @@ foam.CLASS({
     'foam.lang.Serializable'
   ],
 
-  javaImports: [ 'static foam.mlang.MLang.*' ],
+  javaImports: [
+    'foam.dao.ArraySink',
+    'foam.mlang.sink.GroupBy',
+    'java.util.ArrayList',
+    'java.util.List',
+    'static foam.mlang.MLang.*'
+  ],
 
   properties: [
     {
@@ -25,7 +31,7 @@ foam.CLASS({
     {
       class: 'foam.mlang.SinkProperty',
       name: 'sink',
-      javaFactory: 'return new foam.dao.ArraySink();',
+      javaFactory: 'return new ArraySink();',
       factory: function() { return this.ARRAY(); }
     },
     {
@@ -34,7 +40,7 @@ foam.CLASS({
       hidden: true,
       transient: true,
       factory: function() { return this.GROUP_BY(this.expr, this.ARRAY()); },
-      javaFactory: 'return GROUP_BY(getExpr(), new foam.dao.ArraySink());'
+      javaFactory: 'return GROUP_BY(getExpr(), new ArraySink());'
     }
   ],
 
@@ -45,7 +51,7 @@ foam.CLASS({
         this.groups.put(obj, sub);
       },
       javaCode: `
-        this.getGroups().put(obj, sub);
+        getGroups().put(obj, sub);
       `
     },
 
@@ -54,15 +60,21 @@ foam.CLASS({
       code: function() {
         for ( var key in this.groups.groups ) {
           var a = this.groups.groups[key].array;
-          console.log('***', key, a.length);
-          if ( a.length > 1 ) {
+          if ( a.length > 1 )
             a.forEach(e => this.sink.put(e));
-          }
         }
         this.sink.eof();
       },
       javaCode: `
+        GroupBy gb = (GroupBy) getGroups();
 
+        for ( Object obj : gb.getGroups().values() ) {
+          ArraySink s = (ArraySink) obj;
+          List      l = s.getArray();
+          if ( l.size() > 1 )
+            for ( Object o : l ) getSink().put(o, null);
+        }
+        getSink().eof();
       `
     },
 
