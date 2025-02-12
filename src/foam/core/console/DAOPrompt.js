@@ -119,7 +119,7 @@ foam.CLASS({
       view: function(_, X) {
         var choices = [ '--' ];
         X.data.dao.of.getAxiomsByClass(foam.lang.Property).forEach(p => {
-          if ( p.hidden || p.networkTransient ) return;
+          if ( ! p.searchable && ( p.hidden || p.networkTransient ) ) return;
           if ( foam.lang.Boolean.isInstance(p) ) {
             choices.push('is:'  + p.name);
             choices.push('-is:' + p.name);
