@@ -78,6 +78,7 @@ foam.CLASS({
       aliases: [ 'sex' ],
       value: 'Men',
       view: { class: 'foam.u2.view.ChoiceView', choices: [ 'Men', 'Women' ] },
+      colorMap: { Men: 'lightskyblue', Women: 'pink' },
       searchView: {
         class: 'foam.u2.search.GroupBySearchView',
         viewSpec: {
