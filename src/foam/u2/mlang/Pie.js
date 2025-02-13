@@ -5,6 +5,20 @@
  */
 
 foam.CLASS({
+  package: 'foam.core.console',
+  name: 'PropertyRefinement',
+  refines: 'Property',
+
+  properties: [
+    {
+      class: 'Map',
+      name: 'colorMap'
+    }
+  ]
+});
+
+
+foam.CLASS({
   package: 'foam.u2.mlang',
   name: 'Pie',
   extends: 'foam.mlang.sink.GroupBy',
@@ -15,10 +29,7 @@ foam.CLASS({
   ],
 
   properties: [
-    // TODO: When these defaults are no longer necessary, move these args into
-    // their own class and add them as a trait to this model so any new args
-    // used by PieGraph are automatically picked up by this model.
-    [ 'graphColors', [ '#d81e05', '$black', '#59a5d5', '#2cab70' ] ],
+    'graphColors',
     { name: 'width',  factory: function() { return this.radius * 4; }, transient: true },
     { name: 'height', factory: function() { return this.radius * 3.5; }, transient: true },
     [ 'margin', 1.5 ],
@@ -28,9 +39,13 @@ foam.CLASS({
     {
       name: 'graph_',
       expression: function(groups) {
-        var seriesValues = Object.values(groups).map(function(sink) {
-          return sink.value;
+        var keys     = Object.keys(groups);
+        this.graphColors = keys.map((k,i) => {
+          var c = this.arg1?.colorMap[k] ;
+          if ( c ) return c;
+          return this.hsl(i/(l+1)*360, 90, 50);
         });
+        var seriesValues = Object.values(groups).map(sink => sink.value);
         if ( ! seriesValues.length ) seriesValues = [0];
         var p = this.PieGraph.create(this);
         p.seriesValues = seriesValues;
