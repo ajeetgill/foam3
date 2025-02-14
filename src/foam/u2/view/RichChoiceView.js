@@ -108,7 +108,7 @@ foam.CLASS({
 
       {
         class: 'Reference',
-        of: 'foam.nanos.auth.User',
+        of: 'foam.core.auth.User',
         name: 'exampleProperty',
         view: function(_, X) {
           return {
@@ -118,7 +118,7 @@ foam.CLASS({
             sections: [
               {
                 heading: 'Users',
-                dao: X.userDAO.orderBy(foam.nanos.auth.User.LEGAL_NAME)
+                dao: X.userDAO.orderBy(foam.core.auth.User.LEGAL_NAME)
               },
               // Set "disabled: true" to render each object as non-selectable row
               // Set hideIfEmpty: true" to hide headers if not objects are present in dao provided.
@@ -126,7 +126,7 @@ foam.CLASS({
                 disabled: true,
                 heading: 'Disabled users',
                 hideIfEmpty: true,
-                dao: X.userDAO.where(this.EQ(foam.nanos.auth.User.LIFECYCLE_STATE, this.LifecycleState.DISABLED)),
+                dao: X.userDAO.where(this.EQ(foam.core.auth.User.LIFECYCLE_STATE, this.LifecycleState.DISABLED)),
               },
             ]
           };

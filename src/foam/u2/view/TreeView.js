@@ -91,7 +91,7 @@ foam.CLASS({
           height: 0.75em;
         }
 
-        /* copied from foam.nanos.controller.Fonts so that it works without NANOS */
+        /* copied from foam.core.controller.Fonts so that it works without CORE */
         .p-semiBold {
           line-height: 1.78;
           font-size: 1.4rem;
@@ -215,7 +215,7 @@ foam.CLASS({
       var controlledSearchSlot;
 
       if ( this.query ) {
-        controlledSearchSlot = foam.core.SimpleSlot.create();
+        controlledSearchSlot = foam.lang.SimpleSlot.create();
         this.query.sub(function() {
           self.updateThisRoot = true;
           self.showThisRootOnSearch = false;

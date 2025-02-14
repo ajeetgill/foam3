@@ -7,10 +7,10 @@
 foam.CLASS({
   package: 'foam.util',
   name: 'PasswordTest',
-  extends: 'foam.nanos.test.Test',
+  extends: 'foam.core.test.Test',
 
   javaImports: [
-    'foam.core.X'
+    'foam.lang.X'
   ],
 
   methods: [

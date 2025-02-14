@@ -7,17 +7,17 @@
 foam.CLASS({
   package: 'foam.net.ipgeo',
   name: 'UpdateIPGeolocationInfoAgent',
-  implements: [ 'foam.core.ContextAgent' ],
+  implements: [ 'foam.lang.ContextAgent' ],
   documentation: 'Update DAO with new data from Maxmind',
 
   javaImports: [
     'com.maxmind.geoip2.DatabaseReader',
     'com.maxmind.geoip2.exception.GeoIp2Exception',
     'com.maxmind.geoip2.model.CityResponse',
-    'foam.core.ContextAgent',
+    'foam.lang.ContextAgent',
     'foam.dao.ArraySink',
     'foam.dao.DAO',
-    'foam.nanos.logger.Loggers',
+    'foam.core.logger.Loggers',
     'java.io.IOException',
     'java.net.InetAddress',
     'java.net.UnknownHostException',

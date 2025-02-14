@@ -4,8 +4,8 @@
 ##  Built-In Constants
 Where can I find built-in constants?
 ex)
-log("Method CODE property constant:", foam.core.Method.CODE);
-foam.core.Method.CODE.describe;
+log("Method CODE property constant:", foam.lang.Method.CODE);
+foam.lang.Method.CODE.describe;
 
 Answer: Property constants are copied out of the model into to resulting class and prototype.
 Example:
@@ -81,13 +81,13 @@ log(Client.create().createTest());
 ##  FOAM Types
 What are all of the types in FOAM?
 Answer:
-In FOAM, "types" are just sub-classes of foam.core.Property.
-Most of the types in FOAM are defined in foam/core/types.js.
+In FOAM, "types" are just sub-classes of foam.lang.Property.
+Most of the types in FOAM are defined in foam/lang/types.js.
 Types are not hard-coded into FOAM and you can create your own by extending Property.
 The following script will find all of the FOAM "types":
 --
-for ( var v in foam.USED ) { try { if ( foam.core.Property.isSubClass(foam.lookup(v, true)) ) log(v); } catch(x) {} }
-for ( var v in foam.UNUSED ) { try { if ( foam.core.Property.isSubClass(foam.lookup(v, true)) ) log(v); } catch(x) {} }
+for ( var v in foam.USED ) { try { if ( foam.lang.Property.isSubClass(foam.lookup(v, true)) ) log(v); } catch(x) {} }
+for ( var v in foam.UNUSED ) { try { if ( foam.lang.Property.isSubClass(foam.lookup(v, true)) ) log(v); } catch(x) {} }
 
 ##  Flags
 What does this code mean? e.g., flags: [&#39;java&#39;], flags[&#39;web&#39;] , flags: [ &#39;node&#39; ]
@@ -537,7 +537,7 @@ add(E().tag('input'));
 ##  Element.callIf()
 Q. When to use Element.callIf()?
 <p>
-A. call, callIf, callIfElse, and forEach are defined in foam.core.Fluent, and
+A. call, callIf, callIfElse, and forEach are defined in foam.lang.Fluent, and
 are used for creating "fluent interfaces". This is where methods can be chained
 without ever storing intermediate values in variables. U2/U3 are fluent interfaces.
 Ex.:
@@ -625,7 +625,7 @@ Q. How should I understand the two “client:” configurations below?
 1.
 “client”:“”"
  {
-  “class”: “foam.nanos.export.ClientGoogleSheetsExportService”,
+  “class”: “foam.core.export.ClientGoogleSheetsExportService”,
   “delegate”:
    {
     “class”: “foam.box.HTTPBox”,
@@ -635,31 +635,31 @@ Q. How should I understand the two “client:” configurations below?
 “”"
 
 2.
-“client”:“{\“of\“: \“foam.nanos.auth.GroupPermissionJunction\“}”
+“client”:“{\“of\“: \“foam.core.auth.GroupPermissionJunction\“}”
 </pre>
 
 A. For the first example, it's useful to look at the code for ClientGoogleSheetsExportService:
 
 <pre>
 foam.CLASS({
-  package: 'foam.nanos.export',
+  package: 'foam.core.export',
   name: 'ClientGoogleSheetsExportService',
 
   implements: [
-    'foam.nanos.export.GoogleSheetsExport'
+    'foam.core.export.GoogleSheetsExport'
   ],
 
   properties: [
     {
       class: 'Stub',
-      of: 'foam.nanos.export.GoogleSheetsExport',
+      of: 'foam.core.export.GoogleSheetsExport',
       name: 'delegate'
     }
   ]
 });
 </pre>
 
-This class is what's called a 'Client Stub'. It implements the foam.nanos.export.GoogleSheetsExport interface
+This class is what's called a 'Client Stub'. It implements the foam.core.export.GoogleSheetsExport interface
 but it does so by converting any method calls on that interface into Box network calls.
 The Box message will then be sent across the network to handled by the 'Server Skeleton'.
 The Skeleton does the reverse and converts the Box message network call into a local method
@@ -728,7 +728,7 @@ p1.firstName$.set('Kevin');
 
 // However, if you ever need a Slot not bound to a Property, you can use a SimpleSlot:
 
-var slot = foam.core.SimpleSlot.create({value: 'Tala'});
+var slot = foam.lang.SimpleSlot.create({value: 'Tala'});
 log(slot.get());
 slot.set('Janet');
 log(slot.get());
@@ -872,11 +872,11 @@ public CompoundException(String message, java.lang.Exception cause) {
 
 `})],
 
-Which is better, but we could do better still by refining foam.core.Model to add
+Which is better, but we could do better still by refining foam.lang.Model to add
 a javaCode property.
 
 foam.CLASS({
-  refines: 'foam.core.Model',
+  refines: 'foam.lang.Model',
   package: 'foam.java',
   name: 'JavaCodeModelRefine',
 
@@ -932,7 +932,7 @@ When should I use axioms with javaExtras?
 </br>
 Answer:
 Anything you can define on a model is defined as an axiom of that model.
-Better reading of axioms here https://github.com/kgrgreer/foam3/blob/5ceaacfa6abf370cfb08f31cc7c24fc2f44197fe/src/foam/core/Boot.js#L79
+Better reading of axioms here https://github.com/kgrgreer/foam3/blob/5ceaacfa6abf370cfb08f31cc7c24fc2f44197fe/src/foam/lang/Boot.js#L79
 Axioms include methods, properties, listeners, refines, imports, javaExtras …
 <br>
 From above link “Axioms can be added either during the initial creation of a class and prototype, or anytime after.“
@@ -953,7 +953,7 @@ Example 1)
   }
 <br>
 Example 2)
-  public foam.core.FObject freeze() {
+  public foam.lang.FObject freeze() {
     beforeFreeze();
     __frozen__ = true;
     return this;
@@ -966,7 +966,7 @@ Without freezable, a service could still have access to an object and save some 
 So yes, a frozen object means that no modifications to this object are suppose to happen.
 <br>
 We implement this idea with an interface Freezable that is implemented on all FObjects.
-The default implementation of beforeFreeze() is a noop function. https://github.com/kgrgreer/foam3/blob/5ceaacfa6abf370cfb08f31cc7c24fc2f44197fe/src/foam/core/FObject.java#L414
+The default implementation of beforeFreeze() is a noop function. https://github.com/kgrgreer/foam3/blob/5ceaacfa6abf370cfb08f31cc7c24fc2f44197fe/src/foam/lang/FObject.java#L414
 Then have a refinement here https://github.com/kgrgreer/foam3/blob/5ceaacfa6abf370cfb08f31cc7c24fc2f44197fe/src/foam/java/refinements.js#L552
 </br>
 So the idea behind beforeFreeze is that if an object needs to do something before the object is frozen, it can.
@@ -982,32 +982,32 @@ In example 2 you have the default behaviour setting for the freeze function of a
 Defined https://github.com/kgrgreer/foam3/blob/5ceaacfa6abf370cfb08f31cc7c24fc2f44197fe/src/foam/java/refinements.js#L600
 which is what is building the java Object code.
 =======
-##  NSpec Service Initialization
+##  CSpec Service Initialization
 I don’t understand exactly when to use the properties like “service” vs “serviceClass” vs “serviceScript”. What are the differences between those?
 
 Answer:
-When creating NSpec services, there are three methods for defining the service. The methods are attempted in the following order:
+When creating CSpec services, there are three methods for defining the service. The methods are attempted in the following order:
 1. service - if the service property is set, it is an FObject which is the actual service.
 Ex.:
 "service":{
-  "class":"foam.nanos.jetty.HttpServer",
+  "class":"foam.core.jetty.HttpServer",
   "port":8080
 }
-In the above example, the foam.nanos.jetty.HttpServer service is modelled and can be just created and configured in-line.
+In the above example, the foam.core.jetty.HttpServer service is modelled and can be just created and configured in-line.
 This does not work for non-modelled services.
 
-An advantage of this method is that if edited through the GUI, a DetailView for the service will be embedded in the NSpec GUI
+An advantage of this method is that if edited through the GUI, a DetailView for the service will be embedded in the CSpec GUI
 allowing for this service to be easily configured.
 
 2. serviceClass
 If the class of the service is known and it doesn't require any configuration, then you can just provide the serviceClass.
 Ex.:
-"serviceClass":"foam.nanos.http.NanoRouter"
+"serviceClass":"foam.core.http.NanoRouter"
 
 Unlike with the HttpServer example above, the NanoRouter does not require any configuration, so it is okay to just provide the class name.
 Note that doing:
 "service":{
-  "class":"foam.nanos.http.NanoRouter"
+  "class":"foam.core.http.NanoRouter"
 }
 wouldn't work in this case because NanoRouter isn't modelled and therefore isn't an FObject. This is because in needs to extend the Java HttpServlet class.
 
@@ -1015,25 +1015,25 @@ wouldn't work in this case because NanoRouter isn't modelled and therefore isn't
 The third method is to provide a script which creates and initializes the services.
 Ex.:
 "serviceScript": """
-  auth = new foam.nanos.auth.UserAndGroupAuthService(x);
-  auth = new foam.nanos.auth.EnabledCheckAuthService.Builder(x)
+  auth = new foam.core.auth.UserAndGroupAuthService(x);
+  auth = new foam.core.auth.EnabledCheckAuthService.Builder(x)
     .setDelegate(auth)
     .build();
-  auth = new foam.nanos.auth.PasswordExpiryAuthService.Builder(x)
+  auth = new foam.core.auth.PasswordExpiryAuthService.Builder(x)
     .setDelegate(auth)
     .build();
-  auth = new foam.nanos.auth.twofactor.TwoFactorAuthService.Builder(x)
+  auth = new foam.core.auth.twofactor.TwoFactorAuthService.Builder(x)
     .setDelegate(auth)
     .build();
-  auth = new foam.nanos.auth.ResetSpidBeforeLoginAuthService.Builder(x)
+  auth = new foam.core.auth.ResetSpidBeforeLoginAuthService.Builder(x)
     .setDelegate(auth)
     .build();
-  auth = new foam.nanos.auth.CachingAuthService(auth);
-  auth = new foam.nanos.auth.PMAuthService.Builder(x)
+  auth = new foam.core.auth.CachingAuthService(auth);
+  auth = new foam.core.auth.PMAuthService.Builder(x)
     .setLabel("uncached")
     .setDelegate(auth)
     .build();
-  auth = new foam.nanos.auth.SystemAuthService.Builder(x)
+  auth = new foam.core.auth.SystemAuthService.Builder(x)
     .setDelegate(auth)
     .build();
   return auth;
@@ -1058,14 +1058,14 @@ non-local DAO is just an extension of a local one.
 
 Example 1:
 p({
-  "class":"foam.nanos.boot.NSpec",
+  "class":"foam.core.boot.CSpec",
   "name":"userDAO",
   "serve":true,
   "serviceScript":"""
     return new foam.dao.EasyDAO.Builder(x)
       .setPm(true)
       .setInnerDAO(x.get("localUserDAO"))
-      .setOf(foam.nanos.auth.User.getOwnClassInfo())
+      .setOf(foam.core.auth.User.getOwnClassInfo())
       .setPermissioned(true)
 
 If you see .setInnerDAO(x.get("localUserDAO")), it means that when an object goes through

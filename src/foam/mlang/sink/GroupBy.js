@@ -8,7 +8,7 @@ foam.CLASS({
   package: 'foam.mlang.sink',
   name: 'GroupBy',
   extends: 'foam.dao.AbstractSink',
-  implements: [ 'foam.core.Serializable' ],
+  implements: [ 'foam.lang.Serializable' ],
 
   documentation: 'Sink which behaves like the SQL group-by command.',
 
@@ -54,7 +54,7 @@ foam.CLASS({
       documentation: 'If true, each value of an array will be entered into a separate group.',
       factory: function() {
         // TODO: it would be good if it could also detect RelationshipJunction.sourceId/targetId
-        return ! foam.core.MultiPartID.isInstance(this.arg1);
+        return ! foam.lang.MultiPartID.isInstance(this.arg1);
       }
     }
   ],
@@ -65,20 +65,26 @@ foam.CLASS({
       javaType: 'java.util.List',
       args: 'foam.mlang.order.Comparator comparator',
       code: function sortedKeys(opt_comparator) {
-        this.groupKeys.sort(opt_comparator || this.arg1.comparePropertyValues);
+        var a1 = this.arg1;
+        // Use the property as a comparator but adapt to the correct type since number types will be stored as String values
+        this.groupKeys.sort(opt_comparator || ((o1,o2) => a1.comparePropertyValues(a1.adapt(null, o1, a1), a1.adapt(null, o2, a1))));
         return this.groupKeys;
       },
       javaCode:
 `if ( comparator != null ) {
   java.util.Collections.sort(getGroupKeys(), comparator);
 } else {
-  java.util.Collections.sort(getGroupKeys());
+  if ( getArg1() instanceof java.util.Comparator ) {
+    java.util.Collections.sort(getGroupKeys(), (java.util.Comparator) getArg1());
+  } else {
+    java.util.Collections.sort(getGroupKeys());
+  }
 }
 return getGroupKeys();`
     },
     {
       name: 'putInGroup_',
-      args: 'foam.core.Detachable sub, Object key, Object obj',
+      args: 'foam.lang.Detachable sub, Object key, Object obj',
       code: function putInGroup_(sub, key, obj) {
         var group = this.groups.hasOwnProperty(key) && this.groups[key];
         if ( ! group ) {
@@ -93,7 +99,7 @@ return getGroupKeys();`
       javaCode:
 `foam.dao.Sink group = (foam.dao.Sink) getGroups().get(key);
  if ( group == null ) {
-   group = (foam.dao.Sink) (((foam.core.FObject)getArg2()).fclone());
+   group = (foam.dao.Sink) (((foam.lang.FObject)getArg2()).fclone());
    getGroups().put(key, group);
    if ( ! this.getGroupKeys().contains(key) )
      getGroupKeys().add(key);

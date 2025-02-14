@@ -117,12 +117,13 @@ exports.end = function() {
   }
 
   // Remove most Java and Swift Code
-  code = code.replace(/(java|swift)(DefaultValue|Type|Code|Setter|Getter|Factory|PreSet|PostSet|Extends):`(\\`|[^`])*`}/gm, '}');
-  code = code.replace(/(java|swift)(DefaultValue|Type|Code|Setter|Getter|Factory|PreSet|PostSet|Extends):"(\\"|[^"])*"}/gm, '}');
-  code = code.replace(/(java|swift)(DefaultValue|Type|Code|Setter|Getter|Factory|PreSet|PostSet|Extends):'(\\'|[^'])*'}/gm, '}');
-  code = code.replace(/(java|swift)(DefaultValue|Type|Code|Setter|Getter|Factory|PreSet|PostSet|Extends):`(\\`|[^`])*`,/gm, '');
-  code = code.replace(/(java|swift)(DefaultValue|Type|Code|Setter|Getter|Factory|PreSet|PostSet|Extends):"(\\"|[^"])*",/gm, '');
-  code = code.replace(/(java|swift)(DefaultValue|Type|Code|Setter|Getter|Factory|PreSet|PostSet|Extends):'(\\'|[^'])*',/gm, '');
+  // - java only meta properties are from TypeInfo and after eg. javaTypeInfo, javaJSONParser, ... javaValidateObj
+  code = code.replace(/(java|swift)(DefaultValue|Type|Code|Setter|Getter|Factory|PreSet|PostSet|Extends|Value|InfoType|JSONParser|FormatJSON|ToCSV|ToCSVLabel|CSVParser|CloneProperty|Compare|ValidateObj):`(\\`|[^`])*`}/gm, '}');
+  code = code.replace(/(java|swift)(DefaultValue|Type|Code|Setter|Getter|Factory|PreSet|PostSet|Extends|Value|InfoType|JSONParser|FormatJSON|ToCSV|ToCSVLabel|CSVParser|CloneProperty|Compare|ValidateObj):"(\\"|[^"])*"}/gm, '}');
+  code = code.replace(/(java|swift)(DefaultValue|Type|Code|Setter|Getter|Factory|PreSet|PostSet|Extends|Value|InfoType|JSONParser|FormatJSON|ToCSV|ToCSVLabel|CSVParser|CloneProperty|Compare|ValidateObj):'(\\'|[^'])*'}/gm, '}');
+  code = code.replace(/(java|swift)(DefaultValue|Type|Code|Setter|Getter|Factory|PreSet|PostSet|Extends|Value|InfoType|JSONParser|FormatJSON|ToCSV|ToCSVLabel|CSVParser|CloneProperty|Compare|ValidateObj):`(\\`|[^`])*`,/gm, '');
+  code = code.replace(/(java|swift)(DefaultValue|Type|Code|Setter|Getter|Factory|PreSet|PostSet|Extends|Value|InfoType|JSONParser|FormatJSON|ToCSV|ToCSVLabel|CSVParser|CloneProperty|Compare|ValidateObj):"(\\"|[^"])*",/gm, '');
+  code = code.replace(/(java|swift)(DefaultValue|Type|Code|Setter|Getter|Factory|PreSet|PostSet|Extends|Value|InfoType|JSONParser|FormatJSON|ToCSV|ToCSVLabel|CSVParser|CloneProperty|Compare|ValidateObj):'(\\'|[^'])*',/gm, '');
   code = code.replace(/swiftThrows:true,/gm, '');
   code = code.replace(/swiftSynchronized:true,/gm, '');
   code = code.replace(/swiftThrows:true}/gm, '}');

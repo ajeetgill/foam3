@@ -6,14 +6,14 @@
 
 package foam.mlang;
 
-import foam.core.ClassInfo;
-import foam.core.X;
+import foam.lang.ClassInfo;
+import foam.lang.X;
 import foam.dao.Sink;
 import foam.mlang.expr.*;
 import foam.mlang.order.*;
 import foam.mlang.predicate.*;
 import foam.mlang.sink.*;
-import foam.nanos.auth.Authorizer;
+import foam.core.auth.Authorizer;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -237,8 +237,8 @@ public class MLang
 
   // used by AuthorizationDAO
   public static Predicate HAS_PERMISSION(X userContext, Boolean remove, String permissionPrefix) {
-    return remove? IS_AUTHORIZED_TO_DELETE(userContext, new foam.nanos.auth.StandardAuthorizer(permissionPrefix))
-      : IS_AUTHORIZED_TO_READ(userContext, new foam.nanos.auth.StandardAuthorizer(permissionPrefix));
+    return remove? IS_AUTHORIZED_TO_DELETE(userContext, new foam.core.auth.StandardAuthorizer(permissionPrefix))
+      : IS_AUTHORIZED_TO_READ(userContext, new foam.core.auth.StandardAuthorizer(permissionPrefix));
   }
 
   // used by AuthorizationDAO

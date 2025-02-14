@@ -40,6 +40,8 @@ foam.CLASS({
   package: 'foam.demos.olympics',
   name: 'Medal',
 
+  tableColumns: [ 'year', 'color', 'city', 'country', 'discipline', 'sport', 'event', 'gender', 'firstName', 'lastName' ],
+
   properties: [
     { class: 'Int', name: 'id' },
     { class: 'Int', name: 'year', shortName: 'y' },
@@ -76,6 +78,7 @@ foam.CLASS({
       aliases: [ 'sex' ],
       value: 'Men',
       view: { class: 'foam.u2.view.ChoiceView', choices: [ 'Men', 'Women' ] },
+      colorMap: { Men: 'lightskyblue', Women: 'pink' },
       searchView: {
         class: 'foam.u2.search.GroupBySearchView',
         viewSpec: {
@@ -88,6 +91,12 @@ foam.CLASS({
       }
     },
     { class: 'String', name: 'firstName', shortName: 'f', aliases: [ 'fname', 'fn', 'first' ] },
-    { class: 'String', name: 'lastName',  shortName: 'l', aliases: [ 'lname', 'ln', 'last' ] }
+    { class: 'String', name: 'lastName',  shortName: 'l', aliases: [ 'lname', 'ln', 'last' ] },
+    { class: 'String', name: 'name',      shortName: 'n',
+      transient: true,
+      showInPropertyChoice: true,
+      expression: function(firstName, lastName) { return firstName + ' ' + lastName; },
+      javaGetter: 'return getFirstName() + " " + getLastName();'
+    },
   ]
 });

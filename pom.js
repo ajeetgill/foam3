@@ -10,8 +10,8 @@ foam.POM({
     excludes: [ 'node_modules' ],
     projects: [
       { name: 'src/pom' },
-      { name: 'src/foam/nanos/pom' },
-      { name: 'src/foam/nanos/analytics/mixpanel/pom' },
+      { name: 'src/foam/core/pom' },
+      { name: 'src/foam/core/analytics/mixpanel/pom' },
       { name: 'src/foam/net/ipgeo/pom' },
       { name: 'src/foam/u2/wizard/pom' },
       { name: 'src/foam/u2/address/pom' },

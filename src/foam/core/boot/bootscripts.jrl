@@ -1,0 +1,30 @@
+p({
+  "class":"foam.core.script.Script",
+  "id":"main",
+  "clusterable":false,
+  "code":"""
+  /* Set AppConfig version from jar manifest*/
+  import foam.core.app.Mode;
+  import foam.core.app.AppConfig;
+
+  logger = (foam.core.logger.Logger) x.get("logger");
+  version = foam.core.app.AppConfig.class.getPackage().getImplementationVersion();
+  appConfig = x.get("appConfig");
+  if ( ! foam.util.SafetyUtil.isEmpty(version) ) {
+    appConfig.setVersion(version);
+  } else if ( foam.util.SafetyUtil.isEmpty(appConfig.getVersion()) ) {
+    appConfig.setVersion("1.0.0");
+  }
+  mode = System.getProperty("appconfig.mode");
+  if ( ! foam.util.SafetyUtil.isEmpty(mode) ) {
+    mode = mode.substring(0,1).toUpperCase() + mode.substring(1).toLowerCase();
+    m = Mode.forLabel(mode);
+    appConfig.setMode(m);
+  }
+
+  logger.log(new Object[] {"AppConfig", "version", version});
+  print("AppConfig,version,"+version);
+  """
+})
+p({"class": "foam.core.script.TestRunnerScript", "id":"testRunnerScript"})
+p({"class": "foam.core.bench.BenchmarkRunnerScript", "id":"benchmarkRunnerScript"})

@@ -1228,7 +1228,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.parse',
   name: 'ModelGrammarsRefinement',
-  refines: 'foam.core.Model',
+  refines: 'foam.lang.Model',
   properties: [
     {
       class: 'AxiomArray',

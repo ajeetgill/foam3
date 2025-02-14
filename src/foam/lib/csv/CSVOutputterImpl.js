@@ -13,7 +13,7 @@ foam.CLASS({
   ],
 
   javaImports: [
-    'foam.core.*',
+    'foam.lang.*',
     'java.util.List',
     'java.util.Date',
     'java.text.*'
@@ -167,7 +167,7 @@ foam.CLASS({
         this.props
           .map((name) => this.of.getAxiomByName(name))
           .forEach((p) => {
-            if ( foam.core.Property.isInstance(p) ) p.toCSVLabel.call(p, x, this);
+            if ( foam.lang.Property.isInstance(p) ) p.toCSVLabel.call(p, x, this);
           });
         this.newLine_();
         this.isFirstRow = false;
@@ -189,7 +189,7 @@ foam.CLASS({
         this.props
           .map((name) => this.of.getAxiomByName(name))
           .forEach((p) => {
-            if ( foam.core.Property.isInstance(p) ) p.toCSV.call(p, x, obj, this);
+            if ( foam.lang.Property.isInstance(p) ) p.toCSV.call(p, x, obj, this);
           });
         this.newLine_();
       },

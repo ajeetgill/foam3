@@ -22,9 +22,9 @@ foam.CLASS({
   `,
 
   requires: [
-    'foam.core.ArraySlot',
-    'foam.core.ConstantSlot',
-    'foam.core.SimpleSlot',
+    'foam.lang.ArraySlot',
+    'foam.lang.ConstantSlot',
+    'foam.lang.SimpleSlot',
     'foam.u2.borders.ExpandableBorder',
     'foam.u2.DisplayMode',
     'foam.u2.tag.CircleIndicator'
@@ -90,7 +90,7 @@ foam.CLASS({
       // TODO: Required checks on props are ignored if validateObj returns undefined. Bug? - Sarthak
       /* Future Version:
       var errorSlot = prop.validators && prop.validationTextVisible ?
-        foam.core.Validation.orValidators(data, prop.validators) :
+        foam.lang.Validation.orValidators(data, prop.validators) :
         this.ConstantSlot.create({ value: null });
       */
 
@@ -106,7 +106,7 @@ foam.CLASS({
 
           // ???: Would it make more sense to combine these in Property as validateObj_?
           if ( currentProp.validateObj && currentProp.internalValidateObj ) {
-            slot = foam.core.ExpressionSlot.create({
+            slot = foam.lang.ExpressionSlot.create({
               args: [ this.data.slot(currentProp.validateObj), this.data.slot(currentProp.internalValidateObj) ],
               // The commented out version will cause both internal and external errors to be displayed.
               // code: function (e1, e2) { return e1 ? e1 + ' ' + ( e2 || '' ) : e2; }
@@ -190,9 +190,9 @@ foam.CLASS({
       display: flex;
       align-items: center;
       /*
-        Have to use this style here since nanos uses CSS resets to
+        Have to use this style here since core uses CSS resets to
         set 1 rem = 10px instead of the default 16px
-        May cause weird styling outside nanos
+        May cause weird styling outside core
       */
       min-height: 1.25em;
       font-size: small;

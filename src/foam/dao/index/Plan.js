@@ -302,7 +302,7 @@ foam.CLASS({
       // result reading may by async, so define it but don't call it yet
       var resultSink = this.decorateSink_(sink, skip, limit);
 
-      var sub = foam.core.FObject.create();
+      var sub = foam.lang.FObject.create();
       var detached = false;
       sub.onDetach(function() { detached = true; });
 

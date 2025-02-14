@@ -67,7 +67,7 @@ foam.CLASS({
         var dao = this.__context__[daoKey];
         if ( ! dao ) {
           console.error('Missing DAO:', daoKey);
-          dao = foam.dao.NullDAO.create({of: foam.core.FObject});
+          dao = foam.dao.NullDAO.create({of: foam.lang.FObject});
         }
         if ( this.hasOwnProperty('of') ) {
           dao = foam.dao.ProxyDAO.create({
@@ -119,7 +119,7 @@ foam.CLASS({
     },
     {
       class: 'Reference',
-      of: 'foam.nanos.menu.Menu',
+      of: 'foam.core.menu.Menu',
       name: 'primaryMenu',
       documentation: `
         When provided overrides primary action to launch provided menu.
@@ -176,7 +176,7 @@ foam.CLASS({
 
         return tableColumns
           ? tableColumns.columns
-          : of.getAxiomsByClass(foam.core.Property).map(p => p.name);
+          : of.getAxiomsByClass(foam.lang.Property).map(p => p.name);
       }
     },
     {
@@ -345,12 +345,12 @@ foam.CLASS({
     },
     {
       class: 'FObjectArray',
-      of: 'foam.core.Action',
+      of: 'foam.lang.Action',
       name: 'DAOActions',
       documentation: `Array of actions rendered by the DAOBrowserView,
       meant to be used to replace/override export, import and refresh`,
       adaptArrayElement: function(o) {
-        if ( foam.core.Action.isInstance(o) ) return o;
+        if ( foam.lang.Action.isInstance(o) ) return o;
         var lastIndex = o.lastIndexOf('.');
         var classObj = foam.lookup(o.substring(0, lastIndex));
         return classObj[o.substring(lastIndex + 1)];
@@ -371,7 +371,7 @@ foam.CLASS({
     },
     {
       class: 'Reference',
-      of: 'foam.nanos.menu.Menu',
+      of: 'foam.core.menu.Menu',
       name: 'createMenu',
       documentation: 'Used as the menu to create a new object for this DAO',
     },

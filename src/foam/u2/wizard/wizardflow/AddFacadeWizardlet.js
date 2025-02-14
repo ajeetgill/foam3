@@ -160,7 +160,7 @@ foam.CLASS({
         ]
       };
 
-      facadeClass = foam.core.Model.create(facadeModel).buildClass(x);
+      facadeClass = foam.lang.Model.create(facadeModel).buildClass(x);
       foam.register(facadeClass);
       facadeWizardlet.of = facadeClass;
       facadeWizardlet.wizardlets = this.wizardlets_;

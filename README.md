@@ -50,7 +50,7 @@ If using a version less than 21, change the `java: 21` property in the root pom.
 
 `./build.sh [options]`
 
-* visit: http://localhost:8080/src/foam/nanos/controller/index.html
+* visit: http://localhost:8080/src/foam/core/controller/index.html
 
 #### common options:
 
@@ -139,8 +139,8 @@ Launch FOAM
 - [Seven GUIs](http://localhost:8080/foam3/src/foam/demos/sevenguis/index.html)
 - [Other Demos](http://localhost:8080/foam3/src/foam/demos/index.html)
 
-## NANOS
-To run NANOS, the FOAM Java Application Server, run:
+## CORE
+To run CORE, the FOAM Java Application Server, run:
 `./build.sh -Jdemo`
 then connect to http://localhost:8080
 

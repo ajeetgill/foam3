@@ -6,10 +6,10 @@
 
 package foam.lib.html;
 
-import foam.core.ClassInfo;
-import foam.core.Detachable;
-import foam.core.FObject;
-import foam.core.PropertyInfo;
+import foam.lang.ClassInfo;
+import foam.lang.Detachable;
+import foam.lang.FObject;
+import foam.lang.PropertyInfo;
 import foam.dao.AbstractSink;
 import foam.lib.json.OutputterMode;
 import foam.util.SafetyUtil;

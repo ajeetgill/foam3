@@ -6,7 +6,7 @@
 
 package foam.lib.formatter;
 
-import foam.core.*;
+import foam.lang.*;
 import foam.lib.json.OutputJSON;
 import foam.util.SafetyUtil;
 import java.lang.reflect.Array;
@@ -351,7 +351,7 @@ public class JSONFObjectFormatter
 
       // TODO: This isn't safe for all property types (for unknown reason), so just restrict
       // to safe classes for now.
-      if ( prop instanceof foam.core.AbstractStringPropertyInfo || prop instanceof foam.core.AbstractIntPropertyInfo || prop instanceof foam.core.AbstractBooleanPropertyInfo )
+      if ( prop instanceof foam.lang.AbstractStringPropertyInfo || prop instanceof foam.lang.AbstractIntPropertyInfo || prop instanceof foam.lang.AbstractBooleanPropertyInfo )
         if ( prop.isDefaultValue(fo) ) return false;
     }
 

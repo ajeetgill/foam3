@@ -15,7 +15,7 @@ foam.CLASS({
     'foam.lib.parse.ParserContextImpl',
     'foam.lib.parse.StringPStream',
     'foam.parse.FScriptParser',
-    'foam.core.PropertyInfo'
+    'foam.lang.PropertyInfo'
   ],
 
   properties: [
@@ -42,7 +42,7 @@ foam.CLASS({
       if ( getProp() != null ) {
         parser = FScriptParser.create(getProp());
       } else {
-        parser = FScriptParser.create(((foam.core.FObject) obj).getClassInfo());
+        parser = FScriptParser.create(((foam.lang.FObject) obj).getClassInfo());
       }
       StringPStream sps = new StringPStream();
       sps.setString(getQuery());

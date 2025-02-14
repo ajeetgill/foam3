@@ -13,7 +13,7 @@ foam.CLASS({
     'foam.mlang.IdentityExpr',
   ],
   implements: [
-    'foam.core.Serializable',
+    'foam.lang.Serializable',
     'foam.mlang.order.Comparator',
   ],
   properties: [

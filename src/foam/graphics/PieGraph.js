@@ -17,10 +17,10 @@ foam.CLASS({
   properties: [
     [ 'align', 'center' ],
     [ 'fontValue', '16px Roboto' ],
-    [ 'graphColors', 'black' ],
+    'graphColors',
     [ 'h' ],
     [ 'height', 500 ],
-    [ 'lineColor', '#555' ],
+    [ 'lineColor', 'white' ],
     [ 'lineWidth', 2 ],
     [ 'margin', 0 ],
     [ 'radius', 4 ],
@@ -32,6 +32,11 @@ foam.CLASS({
   ],
 
   methods: [
+    function assignColor(i) {
+      var l = this.seriesValues.length;
+      return this.graphColors[i % l];
+    },
+
     function initCView( x, y, seriesValues, radius, margin, graphColors, symbol, lineColor, w, h, lineWidth, fontValue, align ) {
       var total = this.seriesValues.reduce( ( prev, curr ) => prev + curr );
       var startAng = 0;
@@ -57,7 +62,7 @@ foam.CLASS({
           end: ( 2 * Math.PI * this.seriesValues[i] / total ) + startAng,
           border: this.lineColor,
           //           color: this.graphColors[i % this.graphColors.length] || '#FFFFFF'
-          color: this.hsl(i/(this.seriesValues.length+1)*360, 90, 50)
+          color: this.assignColor(i)
         });
 
         rayLine = foam.graphics.Line.create({

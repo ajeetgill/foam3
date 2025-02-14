@@ -264,7 +264,7 @@ foam.CLASS({
       class: 'Int',
       name: 'intWithTemperatureView',
       view: {
-        class: 'foam.nanos.pm.TemperatureCView'
+        class: 'foam.core.pm.TemperatureCView'
       }
     },
     {
@@ -775,8 +775,8 @@ foam.CLASS({
         class: 'foam.u2.view.FObjectView',
         choices: [
           [ 'foam.util.Timer',         'Timer' ],
-          [ 'foam.core.Property',      'Property' ],
-          [ 'foam.nanos.menu.DAOMenu', 'DAO' ]
+          [ 'foam.lang.Property',      'Property' ],
+          [ 'foam.core.menu.DAOMenu', 'DAO' ]
         ]
       }
     },
@@ -790,10 +790,10 @@ foam.CLASS({
         classIsFinal: true,
         choices: [
           [ 'foam.util.Timer', 'Timer' ],
-          [ 'foam.core.Property', 'Property' ],
-          [ 'foam.nanos.menu.DAOMenu',  'DAO'     ],
-          [ 'foam.nanos.menu.SubMenu',  'SubMenu' ],
-          [ 'foam.nanos.menu.TabsMenu', 'Tabs'    ]
+          [ 'foam.lang.Property', 'Property' ],
+          [ 'foam.core.menu.DAOMenu',  'DAO'     ],
+          [ 'foam.core.menu.SubMenu',  'SubMenu' ],
+          [ 'foam.core.menu.TabsMenu', 'Tabs'    ]
         ]
       }
     },
@@ -816,11 +816,11 @@ foam.CLASS({
       view: {
         class: 'foam.u2.view.FObjectView',
         choices: [
-          [ 'foam.core.Property',       'Property' ],
+          [ 'foam.lang.Property',       'Property' ],
           [ 'foam.util.Timer',          'Timer' ],
-          [ 'foam.nanos.menu.DAOMenu',  'DAO'     ],
-          [ 'foam.nanos.menu.SubMenu',  'SubMenu' ],
-          [ 'foam.nanos.menu.TabsMenu', 'Tabs'    ]
+          [ 'foam.core.menu.DAOMenu',  'DAO'     ],
+          [ 'foam.core.menu.SubMenu',  'SubMenu' ],
+          [ 'foam.core.menu.TabsMenu', 'Tabs'    ]
         ]
       }
     },
@@ -833,10 +833,10 @@ foam.CLASS({
         allowCustom: true,
         choices: [
           [ 'foam.util.Timer',          'Timer' ],
-          [ 'foam.core.Property',       'Property' ],
-          [ 'foam.nanos.menu.DAOMenu',  'DAO'     ],
-          [ 'foam.nanos.menu.SubMenu',  'SubMenu' ],
-          [ 'foam.nanos.menu.TabsMenu', 'Tabs'    ]
+          [ 'foam.lang.Property',       'Property' ],
+          [ 'foam.core.menu.DAOMenu',  'DAO'     ],
+          [ 'foam.core.menu.SubMenu',  'SubMenu' ],
+          [ 'foam.core.menu.TabsMenu', 'Tabs'    ]
         ]
       }
     }

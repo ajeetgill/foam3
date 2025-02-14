@@ -221,7 +221,7 @@ function manifest() {
       .replaceAll(`${BUILD_DIR}/lib/`, '  ').trim();
   var m = `
 Manifest-Version: 1.0
-Main-Class: foam.nanos.boot.Boot
+Main-Class: foam.core.boot.Boot
 Class-Path: ${jars}
 Implementation-Title: ${APP_NAME}
 Implementation-Version: ${foamBinVersion()}
@@ -464,7 +464,7 @@ task('Copy deployment files to APP_HOME deployment directory.', [], function dep
 });
 
 
-task('Start NANOS application server.', [ 'setenv', 'deployData', 'deployApp' ], function startNanos() {
+task('Start CORE application server.', [ 'setenv', 'deployData', 'deployApp' ], function startNanos() {
   setenv();
   deployData();
 
@@ -495,7 +495,7 @@ task('Start NANOS application server.', [ 'setenv', 'deployData', 'deployApp' ],
       JAVA_OPTS += ` -Dhttp.port=${WEB_PORT}`;
     }
 
-    JAVA_OPTS += ` -Dnanos.webroot=${PROJECT_HOME}`;
+    JAVA_OPTS += ` -Dcore.webroot=${PROJECT_HOME}`;
 
     CLASSPATH = `${BUILD_DIR}/lib/\*:${BUILD_DIR}/classes`;
 
@@ -506,7 +506,7 @@ task('Start NANOS application server.', [ 'setenv', 'deployData', 'deployApp' ],
     }
     JAVA_OPTS = ` -Dorg.slf4j.simpleLogger.defaultLogLevel=${logLevelLower} ${JAVA_OPTS}`;
 
-    MESSAGE = `Starting NANOS ${APP_NAME}`;
+    MESSAGE = `Starting CORE ${APP_NAME}`;
     if ( TEST || BENCHMARK ) {
       // TODO: move to pom task
       JAVA_OPTS += ' -Dresource.journals.dir=journals';
@@ -537,7 +537,7 @@ task('Start NANOS application server.', [ 'setenv', 'deployData', 'deployApp' ],
       exec(`java -jar ${JAR_OUT}`);
     } else {
       // Acquires environment variables via JAVA_TOOL_OPTIONS (JAVA_OPTS)
-      exec(`java -cp "${CLASSPATH}" foam.nanos.boot.Boot`);
+      exec(`java -cp "${CLASSPATH}" foam.core.boot.Boot`);
     }
   }
 });
@@ -602,13 +602,13 @@ task('Create empty build and deployment directory structures if required.', [], 
 
 
 function writeToPidFile(pid) {
-  fs.writeFileSync(NANOS_PIDFILE, pid.toString());
+  fs.writeFileSync(CORE_PIDFILE, pid.toString());
 }
 
 
 function readFromPidFile() {
-  if ( fs.existsSync(NANOS_PIDFILE) )
-    return fs.readFileSync(NANOS_PIDFILE).toString().trim();
+  if ( fs.existsSync(CORE_PIDFILE) )
+    return fs.readFileSync(CORE_PIDFILE).toString().trim();
 }
 
 
@@ -632,7 +632,7 @@ buildEnv({
   JAVA_OPTS:         '',
   JAVA_TOOL_OPTIONS: () => JAVA_OPTS,
   JAR_INCLUDES:      '',
-  NANOS_PIDFILE:     '/tmp/nanos.pid'
+  CORE_PIDFILE:     '/tmp/core.pid'
 });
 
 
@@ -710,12 +710,12 @@ const ARGS = {
   m: [ 'Run as medusa mediator',
        () => CLUSTER = true ],
   N: [ `NAME : start another instance with given instance name. Deployed to /opt/NAME.`,
-       args => { APP_NAME = args; NANOS_PIDFILE=`/tmp/nanos_${APP_NAME}.pid`; info('APP_NAME=' + args); } ],
-  o: [ "Build only - don't start nanos.",
+       args => { APP_NAME = args; CORE_PIDFILE=`/tmp/core_${APP_NAME}.pid`; info('APP_NAME=' + args); } ],
+  o: [ "Build only - don't start core.",
     () => BUILD_ONLY = true ],
   P: [ "pom file : name and path of the root pom file. Defaults to 'pom' at the root of the project.",
      args => { POM = args; info('POM=' + POM); } ],
-  r: [ 'Run NANOS with whatever was last built. (restart)',
+  r: [ 'Run CORE with whatever was last built. (restart)',
     () => RESTART_ONLY = true ],
   R: [ 'Set app deployment root directory',
        args => APP_ROOT = args ],
@@ -772,14 +772,14 @@ const ARGS = {
     } ]
 };
 
-task('Stop running NANOS server.', [], function stopNanos() {
+task('Stop running CORE server.', [], function stopNanos() {
   console.log('Stopping Nanos server...');
 
   var pid = readFromPidFile();
   try {
     if ( pid ) {
       execSync(`kill -9 ${pid} &>/dev/null`);
-      rmfile(NANOS_PIDFILE);
+      rmfile(CORE_PIDFILE);
     }
     console.log('Nanos server stopped successfully.');
   } catch (e) {

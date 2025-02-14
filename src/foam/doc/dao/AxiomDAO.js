@@ -10,8 +10,8 @@ foam.CLASS({
   extends: 'foam.dao.PromisedDAO',
 
   requires: [
-    'foam.core.Method',
-    'foam.core.Property',
+    'foam.lang.Method',
+    'foam.lang.Property',
     'foam.dao.ArrayDAO',
     'foam.doc.MethodAxiom',
     'foam.doc.PropertyAxiom',
@@ -65,7 +65,7 @@ foam.CLASS({
             parentId: m.id
           })));
         });
-        if ( m.id == 'foam.core.FObject' ) break;
+        if ( m.id == 'foam.lang.FObject' ) break;
         m = foam.lookup(m.model_.extends);
       }
       return Promise.all(ps);

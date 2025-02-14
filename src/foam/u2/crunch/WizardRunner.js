@@ -28,7 +28,7 @@ foam.CLASS({
       name: 'source',
       adapt: function(o, n) {
         if ( foam.String.isInstance(n) ) return n;
-        if ( foam.core.FObject.isInstance(n) ) return n;
+        if ( foam.lang.FObject.isInstance(n) ) return n;
         return foam.json.parse(n);
       },
       documentation: `
@@ -77,7 +77,7 @@ foam.CLASS({
       const seq = this.sequence;
 
       let returnPromise = null;
-      let promise$ = foam.core.SimpleSlot.create({ value: false }, this);
+      let promise$ = foam.lang.SimpleSlot.create({ value: false }, this);
 
       if ( this.isInline ) {
         if ( this.options.returnCompletionPromise ) {

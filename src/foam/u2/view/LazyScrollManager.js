@@ -14,7 +14,7 @@ foam.CLASS({
 
   requires: [
     'foam.dao.FnSink',
-    'foam.core.Latch',
+    'foam.lang.Latch',
     'foam.dao.ProxyDAO',
     'foam.mlang.sink.Count'
   ],
@@ -195,7 +195,7 @@ foam.CLASS({
     },
     {
       class: 'FObjectProperty',
-      of: 'foam.core.Latch',
+      of: 'foam.lang.Latch',
       name: 'dataLatch',
       documentation: 'A latch used to wait for table data load.',
       factory: function () {

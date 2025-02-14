@@ -7,18 +7,18 @@
 foam.CLASS({
   package: 'foam.flow',
   name: 'DocumentMenu',
-  extends: 'foam.nanos.menu.Menu',
+  extends: 'foam.core.menu.Menu',
 
   documentation: 'Psedo-menu to display all documents as sub-menus.',
 
   implements: [ 'foam.mlang.Expressions' ],
 
   requires: [
-    'foam.nanos.menu.DocumentFileMenu',
+    'foam.core.menu.DocumentFileMenu',
     'foam.dao.ArrayDAO',
     'foam.dao.PromisedDAO',
-    'foam.nanos.controller.Memento',
-    'foam.nanos.menu.Menu'
+    'foam.core.controller.Memento',
+    'foam.core.menu.Menu'
   ],
 
   imports: [ 'documentDAO' ],

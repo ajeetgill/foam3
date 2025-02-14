@@ -35,7 +35,7 @@
         this.outputDAO.put(this.cloneOnPut ? o.clone() : o);
       },
       javaCode: `
-      var fobj = (foam.core.FObject) obj;
+      var fobj = (foam.lang.FObject) obj;
       getOutputDAO().put(getCloneOnPut() ? fobj.fclone() : fobj);`
     }
   ]
