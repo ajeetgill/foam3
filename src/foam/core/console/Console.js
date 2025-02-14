@@ -4,6 +4,7 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
+
 foam.CLASS({
   package: 'foam.core.console',
   name: 'AxiomInf',
@@ -134,16 +135,26 @@ foam.CLASS({
   mixins: [ 'foam.core.console.Flowable' ],
 
   exports: [
-    'output'
+    'log',
+    'out'
   ],
 
   css: `
     ^ {
-      border: 1px solid blue;
+      padding: 4px;
     }
     ^output {
-      border: 1px solid pink;
     }
+    ^:hover {
+      border: 1px solid red;
+    }
+    ^prompt {
+      font-weight: bold;
+      padding-top: 5px;
+      padding-right: 4px;
+    }
+    ^ span .property-cmd { width: inherit; }
+    ^ .foam-u2-ActionView-del { border: none; }
   `,
 
   properties: [
@@ -151,23 +162,37 @@ foam.CLASS({
       class: 'String',
       name: 'cmd'
     },
-    'output'
+    'out'
   ],
 
   methods: [
     function render() {
       this.
         addClass().
-        add('>', this.CMD, this.DEL).
-        start('div', {}, this.output$).
+        start('span').
+          style({display: 'flex', width: '100%'}).
+          start().addClass(this.myClass('prompt')).add('> ').end().
+          add(this.CMD, this.DEL).
+        end().
+        start('div', {}, this.out$).
           addClass(this.myClass('output')).
         end();
+    },
+
+    function log(...args) {
+      if ( args.length == 0 ) return;
+      this.out.tag('br');
+      this.out.add(args.join(' '));
     }
   ],
 
   actions: [
-    function del() {
-      this.flowParent && this.flowParent.removeFlowChild(this);
+    {
+      name: 'del',
+      label: 'X',
+      code: function() {
+        this.flowParent && this.flowParent.removeFlowChild(this);
+      }
     }
   ]
 });
@@ -287,7 +312,7 @@ foam.CLASS({
     },
     'input_',
     {
-      name: 'outputDiv'
+      name: 'out'
     },
     {
       class: 'Boolean',
@@ -322,12 +347,12 @@ foam.CLASS({
         // TODO: include MLang's from foam.mlang.Expressions in scope
         // TODO: add 'doc'
         return {
-          '#':      this.h1.bind(this),
-          '##':     this.h2.bind(this),
-          '###':    this.h3.bind(this),
-          '**':     this.bold.bind(this),
-          '*':      this.italic.bind(this),
-          '>':      this.blockquote.bind(this),
+          'h1':     this.h1.bind(this),
+          'h2':     this.h2.bind(this),
+          'h3':     this.h3.bind(this),
+          'bold':   this.bold.bind(this),
+          'italic': this.italic.bind(this),
+          'quote':  this.blockquote.bind(this),
           models:   this.models.bind(this),
           cells:    this.cells.bind(this),
           describe: this.describeClass.bind(this),
@@ -343,7 +368,7 @@ foam.CLASS({
           cls:      this.cls.bind(this),
           daos:     this.services.bind(this, this.CSpec.SERVED_DAOS),
           services: this.services.bind(this, this.CSpec.SERVED_SERVICES),
-          output:   this.outputDiv
+          output:   this.out
         };
       }
     }
@@ -368,7 +393,7 @@ foam.CLASS({
     function renderSelf(self) {
       this.
         addClass(self.myClass()).
-        start('div', null, self.outputDiv$)
+        start('div', null, self.out$)
         .addClass(self.myClass('output')).end().
         start('span').
           addClass(self.myClass('input-field')).
@@ -405,7 +430,7 @@ foam.CLASS({
         });
         var config = { attributes: true, childList: true, characterData: true };
 
-        observer.observe(this.outputDiv.element_, config);
+        observer.observe(this.out.element_, config);
         this.onDetach(() => observer.disconnect());
         this.setTimeout(this.focusInput.bind(this), 500)
         */
@@ -413,41 +438,41 @@ foam.CLASS({
 
     function log(...args) {
       if ( args.length == 0 ) return;
-      this.outputDiv.tag('br');
-      this.outputDiv.add(args.join(' '));
+      this.out.tag('br');
+      this.out.add(args.join(' '));
     },
 
     function scrollToBottom() {
       if ( this.U3 ) {
-        this.outputDiv.element_.scrollTop = this.outputDiv.element_.scrollHeight;
+        this.out.element_.scrollTop = this.out.element_.scrollHeight;
       }
     },
 
-    function h1(h) { this.outputDiv.start('h1').add(h).end(); },
-    function h2(h) { this.outputDiv.start('h2').add(h).end(); },
-    function h3(h) { this.outputDiv.start('h3').add(h).end(); },
-    function bold(h) { this.outputDiv.start('b').add(h).end(); },
-    function italic(h) { this.outputDiv.start('i').add(h).end(); },
-    function blockquote(h) { this.outputDiv.start('blockquote').add(h).end(); },
+    function h1(h) { this.out.start('h1').add(h).end(); },
+    function h2(h) { this.out.start('h2').add(h).end(); },
+    function h3(h) { this.out.start('h3').add(h).end(); },
+    function bold(h) { this.out.start('b').add(h).end(); },
+    function italic(h) { this.out.start('i').add(h).end(); },
+    function blockquote(h) { this.out.start('blockquote').add(h).end(); },
 
     function models() {
-      this.outputDiv.tag(foam.doc.DocBrowser);
+      this.out.tag(foam.doc.DocBrowser);
     },
 
     function cells(rows, cols) {
-      this.outputDiv.tag(this.Cells, rows && cols && { rows: rows, columns: cols});
+      this.out.tag(this.Cells, rows && cols && { rows: rows, columns: cols});
     },
 
     function doc() {
-      this.outputDiv.tag(this.DocumentReadWriteView.create({data: '<i>insert text here</i>'}));
+      this.out.tag(this.DocumentReadWriteView.create({data: '<i>insert text here</i>'}));
     },
 
     function dao(daoKey) {
-      this.outputDiv.tag(this.DAOPrompt.create({daoKey: daoKey}));
+      this.out.tag(this.DAOPrompt.create({daoKey: daoKey}));
     },
 
     function daoCreate(daoKey) {
-      this.outputDiv.tag(this.DAOCreate.create({daoKey: daoKey}));
+      this.out.tag(this.DAOCreate.create({daoKey: daoKey}));
     },
 
     function describeClass(cls) {
@@ -459,11 +484,11 @@ foam.CLASS({
         }
       }
       // TODO: add ability to specify how SimpleClassView writes links so it can hyperlink back to this command
-      this.outputDiv.startContext({conventionalUML: true}).tag(foam.doc.SimpleClassView, {data: cls, showUML: true});
+      this.out.startContext({conventionalUML: true}).tag(foam.doc.SimpleClassView, {data: cls, showUML: true});
       return;
       /*
-      this.outputDiv.br().add('CLASS:  ', cls.name, ' extends: ');
-      this.outputLink(cls.__proto__.id, () => this.eval_('describe(' + cls.__proto__.id + ')'), this.outputDiv);
+      this.out.br().add('CLASS:  ', cls.name, ' extends: ');
+      this.outputLink(cls.__proto__.id, () => this.eval_('describe(' + cls.__proto__.id + ')'), this.out);
       var dao = foam.dao.ArrayDAO.create({of: foam.core.console.AxiomInfo});
 
       for ( var key in cls.axiomMap_ ) {
@@ -477,20 +502,20 @@ foam.CLASS({
       }
       dao.select(console);
 
-      this.outputDiv.tag({class: 'foam.u2.table.TableView', data: dao});
+      this.out.tag({class: 'foam.u2.table.TableView', data: dao});
       */
     },
 
     function cls() {
       // TODO: add optional parameter to control number of commands to clear?
-      this.outputDiv.removeAllChildren();
+      this.out.removeAllChildren();
     },
 
     function history(q) {
       if ( q ) q = q.toLowerCase();
       this.history_.forEach(h => {
         if ( q != undefined && h.toLowerCase().indexOf(q) == -1 ) return;
-        this.outputDiv.tag('br');
+        this.out.tag('br');
         this.outputLink(h, () => this.eval_(h));
       });
     },
@@ -506,7 +531,7 @@ foam.CLASS({
 
     // TODO: Just make be a View class
     function outputLink(text, action, self) {
-      self = self || this.outputDiv;
+      self = self || this.out;
       self.start('a').style({
         color: '-webkit-link',
         cursor: 'pointer',
@@ -518,7 +543,7 @@ foam.CLASS({
     function listFlows() {
       return this.flowDAO.select({
         put: o => {
-          this.outputDiv.tag('br');
+          this.out.tag('br');
           // TODO: fix since load() isn't in scope anymore
           this.outputLink(o.name, () => this.scope.load(o.name));
         }
@@ -526,7 +551,7 @@ foam.CLASS({
     },
 
     function mqlHelp() {
-      this.outputDiv.start('pre').style({'font-family': 'monospace'}).add(`
+      this.out.start('pre').style({'font-family': 'monospace'}).add(`
 key:value                  key contains "value"
 key=value                  key exactly matches "value"
 key:value1,value2          key contains "value1" OR "value2"
@@ -561,8 +586,10 @@ YYYY-MM-DDTHH:MM
     },
 
     function help() {
+      foam.core.console.cmd.Help.create({}, this.flowChildren[this.flowChildren.length-1]).execute();
+      return;
       var self = this;
-      this.outputDiv.tag('br');
+      this.out.tag('br');
       // TODO: store commands in a DAO
       var cmds = [
         [ 'help',     'Display help' ],
@@ -572,7 +599,7 @@ YYYY-MM-DDTHH:MM
         [ '##',       'Heading 3' ],
         [ '**',       'Bold' ],
         [ '*',        'Italic' ],
-        [ '>',        'Blockquote' ],
+        [ '>',        'Blocquote' ],
         [ 'models',   'Browse Models', true ],
         [ 'cells',    'Embed spreadsheet', true ],
         [ 'describe', 'Describe a Class' ],
@@ -595,7 +622,7 @@ YYYY-MM-DDTHH:MM
         [ 'CMD + k / CTRL + k',  'Clear console' ],
         [ 'CTRL + `', 'Focus input' ]
       ];
-      this.outputDiv.start('h3').add('Commands').end().
+      this.out.start('h3').add('Commands').end().
       start('table').style({width: 'max-content'}).
         forEach(cmds, function(c) {
           this.start('tr').
@@ -629,8 +656,8 @@ YYYY-MM-DDTHH:MM
         ));
       var self = this;
       var sdao;
-      this.outputDiv.tag('br');
-      this.outputDiv.start('table').attr('width', '100%').
+      this.out.tag('br');
+      this.out.start('table').attr('width', '100%').
         select(dao, function(n) {
           this.start('tr').
             start('th').attr('align', 'left').call(function() {
@@ -666,40 +693,39 @@ YYYY-MM-DDTHH:MM
       this.addHistory(cmd);
 
 
-      this.outputDiv.tag('br').start().show(self.showPrompts$).start('b').add('> ').end().add(cmd);
-      this.addFlowChild(this.Block.create({flowName: 'prompt1', cmd: cmd, flowParent: this}));
+      this.out.tag('br').start().show(self.showPrompts$).start('b').add('> ').end().add(cmd);
+      var block = this.Block.create({flowName: 'prompt1', cmd: cmd, flowParent: this});
+      this.addFlowChild(block);
 
-      with ( this.scope || {} ) {
-        with ( this.localScope ) {
-          let scope = { ...(this.scope || {} ), ...this.localScope };
-          var r, arg
-          try {
-            r = eval(cmd);
-          } catch (x) {
-            var i = cmd.indexOf(' ');
-            if ( i != -1 ) {
-              arg = cmd.substring(i+1);
-              cmd = cmd.substring(0,i);
-              r = scope[cmd];
-            } else {
-              r = scope[cmd];
-            }
-          }
-          if ( typeof r === 'function' ) {
-            r = arg ? r(arg) : r();
-          }
-          if ( r instanceof Promise ) {
-            r = await r;
+      with ( this.scope || {} ) { with ( this.localScope ) { with ( { log: block.log.bind(block), out: block.out } ) {
+        let scope = { ...(this.scope || {} ), ...this.localScope };
+        var r, arg
+        try {
+          r = eval(cmd);
+        } catch (x) {
+          var i = cmd.indexOf(' ');
+          if ( i != -1 ) {
+            arg = cmd.substring(i+1);
+            cmd = cmd.substring(0,i);
+            r = scope[cmd];
+          } else {
+            r = scope[cmd];
           }
         }
-      }
+        if ( typeof r === 'function' ) {
+          r = arg ? r(arg) : r();
+        }
+        if ( r instanceof Promise ) {
+          r = await r;
+        }
+      }}}
 
       this.log(r);
       this.input_.focus();
     },
 
     function addFlowChild_(c) {
-      this.outputDiv.add(c);
+      this.out.add(c);
     },
 
     function removeFlowChild_(c) {

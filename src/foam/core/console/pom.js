@@ -20,6 +20,7 @@ foam.POM({
     { name: "DAOPrompt",               flags: "js" },
     { name: "ModelDAO",                flags: "js" },
     { name: "DocumentReadWriteView",   flags: "js" },
-    { name: 'ConsoleZACClient',        flags: 'js' }
+    { name: 'ConsoleZACClient',        flags: 'js' },
+    { name: "cmd/Commands",            flags: "js|java" },
   ]
 });
