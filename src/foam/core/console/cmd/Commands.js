@@ -6,13 +6,29 @@
 
 foam.CLASS({
   package: 'foam.core.console.cmd',
-  name: 'Help',
+  name: 'Command',
 
   imports: [ 'log' ],
 
   properties: [
-    { class: 'String', name: 'name',        value: 'help' },
-    { class: 'String', name: 'description', value: 'Show help text' }
+    { class: 'String', name: 'id' },
+    { class: 'String', name: 'description' }
+  ],
+
+  methods: [
+    function execute() {}
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.core.console.cmd',
+  name: 'Help',
+  extends: 'foam.core.console.cmd.Command',
+
+  properties: [
+    { name: 'id',          value: 'help' },
+    { name: 'description', value: 'Show help text' }
   ],
 
   methods: [
