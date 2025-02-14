@@ -6,7 +6,7 @@
 
 foam.CLASS({
   package: 'foam.core.console',
-  name: 'AxiomInfo',
+  name: 'AxiomInf',
 
   ids: [ 'name' ],
 
@@ -53,9 +53,11 @@ foam.CLASS({
   methods: [
     function addFlowChild(f) {
       this.flowChildren = this.flowChildren.concat([f]);
+      this.addFlowChild_ && this.addFlowChild_(f);
     },
     function removeFlowChild(f) {
-      console.log('**** remove:', f);
+      this.flowChildren = this.flowChildren.filter(c => c != f);
+      this.removeFlowChild_ && this.removeFlowChild_(f);
     }
   ]
 });
@@ -147,7 +149,7 @@ foam.CLASS({
   properties: [
     {
       class: 'String',
-      name: 'prompt'
+      name: 'cmd'
     },
     'output'
   ],
@@ -156,7 +158,7 @@ foam.CLASS({
     function render() {
       this.
         addClass().
-        add(this.PROMPT, this.DEL).
+        add('>', this.CMD, this.DEL).
         start('div', {}, this.output$).
           addClass(this.myClass('output')).
         end();
@@ -165,6 +167,7 @@ foam.CLASS({
 
   actions: [
     function del() {
+      this.flowParent && this.flowParent.removeFlowChild(this);
     }
   ]
 });
@@ -317,6 +320,7 @@ foam.CLASS({
       factory: function() {
         // TODO: include DAOs in scope
         // TODO: include MLang's from foam.mlang.Expressions in scope
+        // TODO: add 'doc'
         return {
           '#':      this.h1.bind(this),
           '##':     this.h2.bind(this),
@@ -354,7 +358,6 @@ foam.CLASS({
       this.SUPER();
 
       this.flowName = 'Unnamed';
-      this.addFlowChild(this.Block.create({flowName: 'Prompt 1', flowParent: this}));
 
       var layout = this.start(this.Layout);
 
@@ -661,7 +664,10 @@ YYYY-MM-DDTHH:MM
       this.clearProperty('historyPosition');
       if ( ! cmd ) return;
       this.addHistory(cmd);
+
+
       this.outputDiv.tag('br').start().show(self.showPrompts$).start('b').add('> ').end().add(cmd);
+      this.addFlowChild(this.Block.create({flowName: 'prompt1', cmd: cmd, flowParent: this}));
 
       with ( this.scope || {} ) {
         with ( this.localScope ) {
@@ -690,6 +696,14 @@ YYYY-MM-DDTHH:MM
 
       this.log(r);
       this.input_.focus();
+    },
+
+    function addFlowChild_(c) {
+      this.outputDiv.add(c);
+    },
+
+    function removeFlowChild_(c) {
+      c.remove();
     }
   ],
 
