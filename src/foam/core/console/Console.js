@@ -182,7 +182,6 @@ foam.CLASS({
     }
     ^l {
       box-shadow: 3px 3px 6px 0 gray;
-      height: 100%;
       width: 400px;
       padding: 4px;
     }
