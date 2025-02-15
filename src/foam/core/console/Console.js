@@ -430,13 +430,6 @@ foam.CLASS({
       }
     },
 
-    function h1(h) { this.out.start('h1').add(h).end(); },
-    function h2(h) { this.out.start('h2').add(h).end(); },
-    function h3(h) { this.out.start('h3').add(h).end(); },
-    function bold(h) { this.out.start('b').add(h).end(); },
-    function italic(h) { this.out.start('i').add(h).end(); },
-    function blockquote(h) { this.out.start('blockquote').add(h).end(); },
-
     function models() {
       this.out.tag(foam.doc.DocBrowser);
     },
@@ -486,11 +479,6 @@ foam.CLASS({
 
       this.out.tag({class: 'foam.u2.table.TableView', data: dao});
       */
-    },
-
-    function cls() {
-      // TODO: add optional parameter to control number of commands to clear?
-      this.out.removeAllChildren();
     },
 
     function history(q) {
@@ -706,7 +694,7 @@ YYYY-MM-DDTHH:MM
     {
       name: 'clear',
       code: function() {
-        this.cls();
+        this.localScope.clear();
         this.focusInput();
       },
       keyboardShortcuts: [ 'meta-k', 'ctrl-k' ]

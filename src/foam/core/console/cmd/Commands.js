@@ -30,7 +30,7 @@ foam.CLASS({
   imports: [ 'commandDAO', 'outputLink' ],
 
   properties: [
-    { name: 'id',          value: 'help' },
+    { name: 'id', value: 'help' },
     [ 'description', 'Display help' ]
   ],
 
@@ -64,7 +64,9 @@ foam.CLASS({
         start('h3').add('Keyboard Shortcuts').end().
         start('table').style({width: 'max-content'}).
           forEach(shortcuts, function(c) {
-            this.start('tr').start('th').attr('width', '250').attr('align', 'left').add(c[0]).end().start('td').add(c[1]);
+            this.start('tr').
+              start('th').attr('width', '250').attr('align', 'left').add(c[0]).end().
+              start('td').add(c[1]);
           }).
         end();
     }
@@ -84,8 +86,7 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute() {
-    }
+    function execute(t) { this.out.start('b').add(t); }
   ]
 });
 
@@ -121,6 +122,8 @@ foam.CLASS({
 
   methods: [
     function execute() {
+      // TODO: also clear flowChildren
+      this.out.removeAllChildren();
     }
   ]
 });
@@ -246,9 +249,7 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute(t) {
-      this.out.start('h1').add(t);
-    }
+    function execute(t) { this.out.start('h1').add(t); }
   ]
 });
 
@@ -265,8 +266,7 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute() {
-    }
+    function execute(t) { this.out.start('h2').add(t); }
   ]
 });
 
@@ -283,8 +283,7 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute() {
-    }
+    function execute(t) { this.out.start('h3').add(t); }
   ]
 });
 
@@ -319,8 +318,7 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute() {
-    }
+    function execute(t) { this.out.start('i').add(t); }
   ]
 });
 
@@ -391,8 +389,7 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute() {
-    }
+    function execute(t) { this.out.start('blockquote').add(t); }
   ]
 });
 
