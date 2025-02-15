@@ -251,11 +251,9 @@ foam.CLASS({
     'foam.core.console.Link',
     'foam.core.console.DAOCreate',
     'foam.core.console.DAOPrompt',
-    'foam.core.console.DocumentReadWriteView',
     'foam.core.console.FlowableTree',
     'foam.core.console.Block',
     'foam.dao.ArrayDAO',
-    'foam.demos.sevenguis.Cells',
     'foam.flow.Document',
     'foam.core.boot.CSpec'
   ],
@@ -428,22 +426,6 @@ foam.CLASS({
       if ( this.U3 ) {
         this.out.element_.scrollTop = this.out.element_.scrollHeight;
       }
-    },
-
-    function models() {
-      this.out.tag(foam.doc.DocBrowser);
-    },
-
-    function cells(rows, cols) {
-      this.out.tag(this.Cells, rows && cols && { rows: rows, columns: cols});
-    },
-
-    function doc() {
-      this.out.tag(this.DocumentReadWriteView.create({data: '<i>insert text here</i>'}));
-    },
-
-    function dao(daoKey) {
-      this.out.tag(this.DAOPrompt.create({daoKey: daoKey}));
     },
 
     function daoCreate(daoKey) {

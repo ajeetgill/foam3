@@ -10,6 +10,8 @@ foam.CLASS({
 
   imports: [ 'log', 'out' ],
 
+  tableColumns: [ 'id', 'description' /*, 'execute_' */ ],
+
   properties: [
     { class: 'String',  name: 'id' },
     { class: 'String',  name: 'description' },
@@ -18,6 +20,15 @@ foam.CLASS({
 
   methods: [
     function execute() {}
+  ],
+
+  actions: [
+    {
+      name: 'execute_',
+      label: 'execute',
+      isAvailable: function() { return this.linkable; },
+      code: function() { this.execute(); }
+    }
   ]
 });
 
@@ -96,6 +107,10 @@ foam.CLASS({
   name: 'Cells',
   extends: 'foam.core.console.cmd.Command',
 
+  requires: [
+    'foam.demos.sevenguis.Cells'
+  ],
+
   imports: [ ],
 
   properties: [
@@ -103,7 +118,8 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute() {
+    function execute(rows, cols) {
+      this.out.tag(this.Cells, rows && cols && { rows: rows, columns: cols});
     }
   ]
 });
@@ -134,6 +150,10 @@ foam.CLASS({
   name: 'DAO',
   extends: 'foam.core.console.cmd.Command',
 
+  requires: [
+    'foam.core.console.DAOPrompt'
+  ],
+
   imports: [ ],
 
   properties: [
@@ -141,7 +161,8 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute() {
+    function execute(daoKey) {
+      this.out.tag(this.DAOPrompt.create({daoKey: daoKey}));
     }
   ]
 });
@@ -206,6 +227,10 @@ foam.CLASS({
   name: 'Doc',
   extends: 'foam.core.console.cmd.Command',
 
+  requires: [
+    'foam.core.console.DocumentReadWriteView',
+  ],
+
   imports: [ ],
 
   properties: [
@@ -214,6 +239,7 @@ foam.CLASS({
 
   methods: [
     function execute() {
+      this.out.tag(this.DocumentReadWriteView.create({data: '<i>insert text here</i>'}));
     }
   ]
 });
@@ -364,6 +390,10 @@ foam.CLASS({
   name: 'Models',
   extends: 'foam.core.console.cmd.Command',
 
+  requires: [
+    'foam.demos.sevenguis.Cells'
+  ],
+
   imports: [ ],
 
   properties: [
@@ -372,6 +402,7 @@ foam.CLASS({
 
   methods: [
     function execute() {
+      this.out.tag(foam.doc.DocBrowser);
     }
   ]
 });
