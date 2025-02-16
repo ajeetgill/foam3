@@ -306,8 +306,6 @@ foam.CLASS({
     'foam.core.console.DocumentReadWriteView',
   ],
 
-  imports: [ ],
-
   properties: [
     [ 'description', 'Embed document text' ]
   ],
@@ -349,8 +347,6 @@ foam.CLASS({
   name: 'H1',
   extends: 'foam.core.console.cmd.Command',
 
-  imports: [ ],
-
   properties: [
     [ 'description', 'Header 1' ]
   ],
@@ -366,8 +362,6 @@ foam.CLASS({
   name: 'H2',
   extends: 'foam.core.console.cmd.Command',
 
-  imports: [ ],
-
   properties: [
     [ 'description', 'Header 2' ]
   ],
@@ -382,8 +376,6 @@ foam.CLASS({
   package: 'foam.core.console.cmd',
   name: 'H3',
   extends: 'foam.core.console.cmd.Command',
-
-  imports: [ ],
 
   properties: [
     [ 'description', 'Header 3' ]
@@ -424,8 +416,6 @@ foam.CLASS({
   name: 'Italic',
   extends: 'foam.core.console.cmd.Command',
 
-  imports: [ ],
-
   properties: [
     [ 'description', 'Italic' ]
   ],
@@ -440,8 +430,6 @@ foam.CLASS({
   package: 'foam.core.console.cmd',
   name: 'Load',
   extends: 'foam.core.console.cmd.Command',
-
-  imports: [ ],
 
   properties: [
     [ 'description', 'Load a specified flow' ]

@@ -165,6 +165,7 @@ foam.CLASS({
     },
 
     function log(...args) {
+      debugger;
       if ( args.length == 0 ) return;
       if ( this.seen ) this.out.tag('br');
       this.seen = true;
@@ -348,8 +349,8 @@ foam.CLASS({
 
       var cmds = await this.commandDAO.select();
       cmds.array.forEach(c => {
-        this.localScope[c.id] = () => {
-          c.clone(this.currentBlock).execute.apply(this, arguments);
+        this.localScope[c.id] = (...args) => {
+          c.clone(this.currentBlock).execute.apply(this, args);
         }
       });
 
@@ -477,7 +478,7 @@ foam.CLASS({
         }
       }}}
 
-      this.log(r);
+      if ( r ) this.log(r);
       this.input_.focus();
     },
 
