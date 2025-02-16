@@ -197,6 +197,8 @@ return new LimitedDAO(this.getX(), count, this);
     {
       name: 'pipe',
       code: function(sink) {//, skip, limit, order, predicate) {
+        sink = this.prepareSink_(sink);
+
         this.pipe_(this.__context__, sink, undefined);
       },
       swiftCode: 'return try pipe_(__context__, sink)',
@@ -213,7 +215,7 @@ return new LimitedDAO(this.getX(), count, this);
           dao: this
         });
 
-        var sub = this.listen(sink); //, skip, limit, order, predicate);
+        var sub = this.listen_(x, sink, predicate); //, skip, limit, order, predicate);
         sink.reset();
 
         return sub;
@@ -228,6 +230,8 @@ throw new UnsupportedOperationException();
       code: function(sink) {
         if ( ! sink ) return;
 
+        // TODO: This should just be prepareSink_(sink). but we should make sure nobody is relying on the FnSink behaviour
+        // before changing.
         sink = foam.Function.isInstance(sink) ?
           foam.dao.FnSink.create({fn: sink}) :
           this.prepareSink_(sink) ;
