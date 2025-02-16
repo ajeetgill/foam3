@@ -165,7 +165,6 @@ foam.CLASS({
     },
 
     function log(...args) {
-      debugger;
       if ( args.length == 0 ) return;
       if ( this.seen ) this.out.tag('br');
       this.seen = true;
@@ -350,7 +349,8 @@ foam.CLASS({
       var cmds = await this.commandDAO.select();
       cmds.array.forEach(c => {
         this.localScope[c.id] = (...args) => {
-          c.clone(this.currentBlock).execute.apply(this, args);
+          var cmd = c.clone(this.currentBlock);
+          cmd.execute.apply(cmd, args);
         }
       });
 
@@ -370,8 +370,8 @@ foam.CLASS({
         start('span').
           addClass(self.myClass('input-field')).
           start('b').style({ display: 'flex', 'white-space': 'pre'}).
-            start(self.Link).add('help').on('click',    () => self.eval_('help'),    this).end().add(', ').
-            start(self.Link).add('history').on('click', () => self.eval_('history'), this).end().add(' >').
+            start(self.Link).add('help').on('click',    () => self.eval_('help'),    this).end()./*add(', ').
+            start(self.Link).add('history').on('click', () => self.eval_('history'), this).end().*/add(' >').
           end().
           start(self.INPUT, null, self.input_$).
           addClass(self.myClass('input')).
