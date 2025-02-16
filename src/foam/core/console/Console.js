@@ -427,37 +427,6 @@ foam.CLASS({
       }
     },
 
-    function describeClass(cls) {
-      if ( foam.String.isInstance(cls) ) {
-        cls = foam.lookup(cls);
-        if ( cls == null ) {
-          log('Unknown class');
-          return;
-        }
-      }
-      // TODO: add ability to specify how SimpleClassView writes links so it can hyperlink back to this command
-      this.out.startContext({conventionalUML: true}).tag(foam.doc.SimpleClassView, {data: cls, showUML: true});
-      return;
-      /*
-      this.out.br().add('CLASS:  ', cls.name, ' extends: ');
-      this.outputLink(cls.__proto__.id, () => this.eval_('describe(' + cls.__proto__.id + ')'), this.out);
-      var dao = foam.dao.ArrayDAO.create({of: foam.core.console.AxiomInfo});
-
-      for ( var key in cls.axiomMap_ ) {
-        var a = cls.axiomMap_[key];
-        dao.put(foam.core.console.AxiomInfo.create({
-          type: a.cls_ ? a.cls_.name : 'anonymous',
-          source: (a.sourceCls_ && a.sourceCls_.name) || 'unknown',
-          name: a.name,
-          path: a.source || ''
-        }));
-      }
-      dao.select(console);
-
-      this.out.tag({class: 'foam.u2.table.TableView', data: dao});
-      */
-    },
-
     function history(q) {
       if ( q ) q = q.toLowerCase();
       this.history_.forEach(h => {

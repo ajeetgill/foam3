@@ -8,7 +8,7 @@ foam.CLASS({
   package: 'foam.core.console.cmd',
   name: 'Command',
 
-  imports: [ 'log', 'out', 'outputLink' ],
+  imports: [ 'log', 'out', 'outputLink', 'eval_' ],
 
   tableColumns: [ 'id', 'description' /*, 'execute_' */ ],
 
@@ -38,7 +38,7 @@ foam.CLASS({
   name: 'Help',
   extends: 'foam.core.console.cmd.Command',
 
-  imports: [ 'commandDAO', 'eval_' ],
+  imports: [ 'commandDAO' ],
 
   properties: [
     { name: 'id', value: 'help' },
@@ -90,8 +90,6 @@ foam.CLASS({
   name: 'Bold',
   extends: 'foam.core.console.cmd.Command',
 
-  imports: [ ],
-
   properties: [
     [ 'description', 'Bold' ]
   ],
@@ -107,11 +105,7 @@ foam.CLASS({
   name: 'Cells',
   extends: 'foam.core.console.cmd.Command',
 
-  requires: [
-    'foam.demos.sevenguis.Cells'
-  ],
-
-  imports: [ ],
+  requires: [ 'foam.demos.sevenguis.Cells' ],
 
   properties: [
     [ 'description', 'Embed spreadsheet' ]
@@ -129,8 +123,6 @@ foam.CLASS({
   package: 'foam.core.console.cmd',
   name: 'Clear',
   extends: 'foam.core.console.cmd.Command',
-
-  imports: [ ],
 
   properties: [
     [ 'description', 'Clear console output' ]
@@ -150,11 +142,7 @@ foam.CLASS({
   name: 'DAO',
   extends: 'foam.core.console.cmd.Command',
 
-  requires: [
-    'foam.core.console.DAOPrompt'
-  ],
-
-  imports: [ ],
+  requires: [ 'foam.core.console.DAOPrompt' ],
 
   properties: [
     [ 'description', 'Perform DAO operation' ]
@@ -192,6 +180,8 @@ foam.CLASS({
   name: 'DAOS',
   extends: 'foam.core.console.cmd.Command',
 
+  mixins: [ 'foam.mlang.Expressions' ],
+
   requires: [ 'foam.core.boot.CSpec' ],
 
   imports: [ 'cSpecDAO' ],
@@ -201,10 +191,9 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute(opt_query, opt_nameQuery) {
+    function execute(opt_nameQuery) {
       var self = this;
       var dao  = this.cSpecDAO.where(this.CSpec.SERVED_DAOS);
-      if ( opt_query ) dao = dao.where(opt_query);
       if ( opt_nameQuery ) dao = dao.where(
         this.OR(
           this.CONTAINS_IC(this.CSpec.NAME,     opt_nameQuery),
@@ -214,16 +203,16 @@ foam.CLASS({
       this.out.start('table').attr('width', '100%').
         select(dao, function(n) {
           var sdao = self.__context__[n.name];
+          var of   = sdao.of;
+
           this.start('tr').
             start('th').attr('align', 'left').call(function() {
               self.outputLink(n.name, () => self.eval_('dao("' + n.name + '")'), this);
             }).end().
             start('td').attr('align', 'left').call(function() {
-              var of = sdao.of;
               self.outputLink('create', () => self.eval_('daoCreate("' + n.name + '")'), this);
             }).end().
             start('td').attr('align', 'left').call(function() {
-              var of = sdao.of;
               self.outputLink(of.id, () => self.eval_('describe(' + of.id + ')'), this);
             }).end().
             start('td').attr('align', 'left').add(n.description);
@@ -238,14 +227,40 @@ foam.CLASS({
   name: 'Describe',
   extends: 'foam.core.console.cmd.Command',
 
-  imports: [ ],
-
   properties: [
     [ 'description', 'Describe a class' ]
   ],
 
   methods: [
-    function execute() {
+    function execute(cls) {
+      if ( foam.String.isInstance(cls) ) {
+        cls = foam.lookup(cls);
+        if ( cls == null ) {
+          log('Unknown class');
+          return;
+        }
+      }
+      // TODO: add ability to specify how SimpleClassView writes links so it can hyperlink back to this command
+      this.out.startContext({conventionalUML: true}).
+        tag(foam.doc.SimpleClassView, {data: cls, showUML: true});
+      /*
+      this.out.br().add('CLASS:  ', cls.name, ' extends: ');
+      this.outputLink(cls.__proto__.id, () => this.eval_('describe(' + cls.__proto__.id + ')'), this.out);
+      var dao = foam.dao.ArrayDAO.create({of: foam.core.console.AxiomInfo});
+
+      for ( var key in cls.axiomMap_ ) {
+        var a = cls.axiomMap_[key];
+        dao.put(foam.core.console.AxiomInfo.create({
+          type: a.cls_ ? a.cls_.name : 'anonymous',
+          source: (a.sourceCls_ && a.sourceCls_.name) || 'unknown',
+          name: a.name,
+          path: a.source || ''
+        }));
+      }
+      dao.select(console);
+
+      this.out.tag({class: 'foam.u2.table.TableView', data: dao});
+      */
     }
   ]
 });
@@ -507,20 +522,20 @@ foam.CLASS({
   name: 'Services',
   extends: 'foam.core.console.cmd.Command',
 
+  mixins: [ 'foam.mlang.Expressions' ],
+
   requires: [ 'foam.core.boot.CSpec' ],
 
   imports: [ 'cSpecDAO' ],
-
 
   properties: [
     [ 'description', 'Display available services' ]
   ],
 
   methods: [
-    function execute(opt_query, opt_nameQuery) {
+    function execute(opt_nameQuery) {
       var self = this;
       var dao  = this.cSpecDAO.where(this.CSpec.SERVED_SERVICES);
-      if ( opt_query ) dao = dao.where(opt_query);
       if ( opt_nameQuery ) dao = dao.where(
         this.OR(
           this.CONTAINS_IC(this.CSpec.NAME,     opt_nameQuery),
