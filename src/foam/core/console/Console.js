@@ -131,11 +131,14 @@ foam.CLASS({
     }
     ^prompt {
       font-weight: bold;
-      padding-top: 5px;
+      padding-top: 0;
+      margin-top: -2px;
       padding-right: 4px;
+      height: 20px;
     }
     ^ span .property-cmd { width: inherit; }
-    ^ .foam-u2-ActionView-del { border: none; background: transparent; }
+    ^ .foam-u2-ActionView-del { font-size: smaller; border: none; background: transparent; height: 20px; }
+    ^ .foam-u2-TextField-cmd { border: none; height: 20px; }
   `,
 
   properties: [
@@ -152,7 +155,7 @@ foam.CLASS({
         addClass().
         start('span').
           show(this.showPrompts$).
-          style({display: 'flex', width: '100%'}).
+        style({display: 'flex', width: '100%', fontWeight: 'bold'}).
           start().addClass(this.myClass('prompt')).add('> ').end().
           add(this.CMD, this.DEL).
         end().
@@ -163,7 +166,7 @@ foam.CLASS({
 
     function log(...args) {
       if ( args.length == 0 ) return;
-      if ( ! this.seen ) this.out.tag('br');
+      if ( this.seen ) this.out.tag('br');
       this.seen = true;
       this.out.add(args.join(' '));
     }
