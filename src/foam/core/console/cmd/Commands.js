@@ -15,11 +15,16 @@ foam.CLASS({
   properties: [
     { class: 'String',  name: 'id' },
     { class: 'String',  name: 'description' },
+    { class: 'Code',    name: 'script' },
     { class: 'Boolean', name: 'linkable', value: true }
   ],
 
   methods: [
-    function execute() {}
+    function execute() {
+      with ( this ) {
+        eval(this.script);
+      }
+    }
   ],
 
   actions: [
