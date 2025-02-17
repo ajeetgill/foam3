@@ -98,7 +98,7 @@ foam.CLASS({
           end().
           start('td').
             callIf(data.flowParent, function() {
-              this.start().on('click', () => data.flowParent.removeFlowChild(data)).add('X');
+              this.start().style({fontSize: '10px'}).on('click', () => data.flowParent.removeFlowChild(data)).add('X');
             }).
           end();
       }));

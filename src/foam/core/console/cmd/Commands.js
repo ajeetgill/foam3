@@ -4,6 +4,8 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
+// TODO: replace uses of outputLink with Link
+
 foam.CLASS({
   package: 'foam.core.console.cmd',
   name: 'Command',
