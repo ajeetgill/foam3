@@ -8,6 +8,8 @@ foam.CLASS({
   package: 'foam.core.console.cmd',
   name: 'Command',
 
+  requires: [ 'foam.core.console.Link' ],
+
   imports: [ 'log', 'out', 'outputLink', 'eval_' ],
 
   tableColumns: [ 'id', 'description' /*, 'execute_' */ ],
@@ -68,7 +70,7 @@ foam.CLASS({
           this.start('tr').
             start('th').attr('width', '250').attr('align', 'left').call(function() {
               if ( c.linkable ) {
-                self.outputLink(c.id, () => self.eval_(c.id), this);
+                this.start(self.Link).add(c.id).on('click', () => self.eval_(c.id));
               } else {
                 this.add(c.id);
               }
@@ -216,7 +218,7 @@ foam.CLASS({
               self.outputLink(n.name, () => self.eval_('dao("' + n.name + '")'), this);
             }).end().
             start('td').attr('align', 'left').call(function() {
-              self.outputLink('create', () => self.eval_('add("' + n.name + '")'), this);
+              self.outputLink('add', () => self.eval_('add("' + n.name + '")'), this);
             }).end().
             start('td').attr('align', 'left').call(function() {
               self.outputLink(of.id, () => self.eval_('describe(' + of.id + ')'), this);
@@ -334,14 +336,15 @@ foam.CLASS({
     [ 'description', 'Display saved flows' ]
   ],
 
+  // TODO: add search and description
   methods: [
     function execute() {
       return this.flowDAO.select({
         put: o => {
           this.out.tag('br');
-          this.outputLink(o.name, () => this.eval_('load(' + o.name + ')'));
+          this.out.start(this.Link).add(o.name).on('click', () => this.eval_('load(' + o.name + ')'));
         }
-      }).then(function() { return undefined; });
+      });
     }
   ]
 });
@@ -409,7 +412,7 @@ foam.CLASS({
       this.history_.forEach(h => {
         if ( q != undefined && h.toLowerCase().indexOf(q) == -1 ) return;
         this.out.tag('br');
-        this.outputLink(h, () => this.eval_(h));
+        this.out.start(this.Link).add(h).on('click', () => this.eval_(h));
       });
     }
   ]
