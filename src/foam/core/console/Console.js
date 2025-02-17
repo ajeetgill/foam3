@@ -293,7 +293,7 @@ foam.CLASS({
       view: {
         class: 'foam.u2.TextField', // Avoids ModeAltView focus() issue
         autocomplete: 'off',
-        onKey: true
+        onKey: false
       },
     },
     'input_', // Element pointer
@@ -349,6 +349,8 @@ foam.CLASS({
 
     async function render() {
       this.SUPER();
+
+      this.input$.sub(this.onInput.bind(this));
 
       var cmds = await this.commandDAO.select();
       cmds.array.forEach(c => {
@@ -538,7 +540,9 @@ foam.CLASS({
         this.input = '';
         this.eval_(input);
       },
-      keyboardShortcuts: [ 'enter' ]
+      // Using 'enter' keyboard shortcut doesn't work because it prevents newlines in
+      // text areas on the screen.
+      // keyboardShortcuts: [ 'enter' ]
     },
     {
       name: 'clear',
