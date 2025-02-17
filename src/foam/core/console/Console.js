@@ -34,6 +34,15 @@ foam.CLASS({
   ],
 
   methods: [
+    function createFlowChildName(prefix) {
+      for ( var i = 2, name = prefix ; ; name = prefix + i++ ) {
+        if ( ! this.findFlowChildByName(name) ) return name;
+        name = prefix + i;
+      }
+    },
+    function findFlowChildByName(n) {
+      return this.flowChildren.find(c => c.flowName === n);
+    },
     function addFlowChild(f) {
       this.flowChildren = this.flowChildren.concat([f]);
       this.addFlowChild_ && this.addFlowChild_(f);
@@ -460,9 +469,10 @@ foam.CLASS({
       this.addHistory(cmd);
 
 //      this.out.tag('br').start().show(self.showPrompts$).start('b').add('> ').end().add(cmd);
-      var block = this.currentBlock = this.Block.create({flowName: 'prompt1', cmd: cmd, flowParent: this});
+      var block = this.currentBlock = this.Block.create({flowName: this.createFlowChildName('a'), cmd: cmd, flowParent: this});
       this.addFlowChild(block);
 
+      // TODO: move into Block
       with ( this.scope || {} ) { with ( this.localScope ) { with ( { log: block.log.bind(block), out: block.out } ) {
         let scope = { ...(this.scope || {} ), ...this.localScope };
         var r, arg
@@ -477,8 +487,10 @@ foam.CLASS({
           } else {
             r = scope[cmd];
           }
+          block.flowName = this.createFlowChildName(cmd);
         }
         if ( typeof r === 'function' ) {
+          block.flowName = this.createFlowChildName(cmd);
           r = arg ? r(arg) : r();
         }
         if ( r instanceof Promise ) {
