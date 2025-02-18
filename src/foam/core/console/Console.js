@@ -231,6 +231,8 @@ foam.CLASS({
   `,
 
   properties: [
+    'showLeft',
+    'showRight',
     'left',
     'middle',
     'right'
@@ -240,9 +242,9 @@ foam.CLASS({
     function render() {
       this.
         addClass().
-        start('div', {}, this.left$  ).addClass(this.myClass('l')).end().
+        start('div', {}, this.left$  ).addClass(this.myClass('l')).show(this.showLeft$).end().
         start('div', {}, this.middle$).addClass(this.myClass('m')).end().
-        start('div', {}, this.right$ ).addClass(this.myClass('r')).end();
+        start('div', {}, this.right$ ).addClass(this.myClass('r')).show(this.showRight$).end();
     }
   ]
 });
@@ -384,6 +386,7 @@ foam.CLASS({
 
       this.selectedValue$.follow(this.selected$.dot('value'));
 
+      // Add commands to localScope
       var cmds = await this.commandDAO.select();
       cmds.array.forEach(c => {
         this.localScope[c.id] = (...args) => {
@@ -395,6 +398,9 @@ foam.CLASS({
       this.flowName$ = this.value.name$;
 
       var layout = this.start(this.Layout);
+
+      layout.showLeft$  = this.showPrompts$;
+      layout.showRight$ = this.showPrompts$;
 
       layout.left.tag(this.FlowableTree, {data: this, selected$: this.selected$});
       layout.middle.call(this.renderSelf, [this]);
@@ -495,8 +501,13 @@ foam.CLASS({
       var block = this.currentBlock = this.Block.create({flowName: this.createFlowChildName('a'), cmd: cmd, flowParent: this});
       this.addFlowChild(block);
 
+      var innerScope = { log: block.log.bind(block), out: block.out };
+      this.flowChildren.forEach(c => {
+        if ( c.value )
+          innerScope[c.flowName] = c.value;
+      });
       // TODO: move into Block
-      with ( this.scope || {} ) { with ( this.localScope ) { with ( { log: block.log.bind(block), out: block.out } ) {
+      with ( this.scope || {} ) { with ( this.localScope ) { with ( innerScope ) {
         let scope = { ...(this.scope || {} ), ...this.localScope };
         var r, arg
         try {
