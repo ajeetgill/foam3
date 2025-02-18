@@ -179,6 +179,7 @@ foam.CLASS({
    ^title input { font-size: large; }
    ^title { font-size: large; }
    ^collapsePropertyViews .com-google-flow-PropertyBorder-propHolder { width: auto; display: inline-flex; }
+   ^ .foam-core-console-PropertyBorder-propHolder > :first-child { width: auto; }
   `,
 
   properties: [
