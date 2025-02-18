@@ -270,7 +270,18 @@ foam.CLASS({
 
   imports: [ 'commandDAO', 'scope?', 'window', 'setTimeout' ],
 
-  exports: [ 'currentBlock', 'clearFlow', 'out', 'log', 'eval_', 'scrollToBottom', 'showPrompts', 'outputLink', 'history_' ],
+  exports: [
+    'clearFlow',
+    'currentBlock',
+    'eval_',
+    'flowScope as scope',
+    'history_',
+    'log',
+    'out',
+    'outputLink', // TODO: replace with Link
+    'scrollToBottom',
+    'showPrompts'
+  ],
 
   css: `
     ^ {
@@ -350,19 +361,34 @@ foam.CLASS({
     },
     {
       name: 'localScope',
+      // TODO: contains commands, so maybe commandScope would be a better name
       factory: function() {
         return {
           this:   this,
-          output: this.out
+          output: this.out // TODO: used?
         };
       }
+    },
+    {
+      name: 'flowScope',
+      factory: function() { return {}; }
     },
     'currentBlock',
     {
       name: 'selected'
     },
     {
-      name: 'selectedValue'
+      name: 'selectedValue',
+      postSet: function(_, n) {
+        var s = this.flowScope;
+        for ( var x in s )
+          if ( s.hasOwnProperty(x) )
+            delete s[x];
+
+        this.flowChildren.forEach(c => {
+          if ( c.value ) s[c.flowName] = c.value;
+        });
+      }
     },
     {
       name: 'value',
@@ -456,10 +482,12 @@ foam.CLASS({
 
     function log(...args) {
       this.currentBlock.log.apply(this.currentBlock, args);
+      /*
       return;
       if ( args.length == 0 ) return;
       this.out.tag('br');
       this.out.add(args.join(' '));
+      */
     },
 
     function scrollToBottom() {
@@ -502,14 +530,11 @@ foam.CLASS({
       this.addFlowChild(block);
 
       var innerScope = { log: block.log.bind(block), out: block.out };
-      this.flowChildren.forEach(c => {
-        if ( c.value )
-          innerScope[c.flowName] = c.value;
-      });
+
       // TODO: move into Block
-      with ( this.scope || {} ) { with ( this.localScope ) { with ( innerScope ) {
+      with ( this.scope || {} ) { with ( this.localScope ) { with ( innerScope ) { with ( this.flowScope ) {
         let scope = { ...(this.scope || {} ), ...this.localScope };
-        var r, arg
+        var r, arg;
         try {
           r = eval(cmd);
         } catch (x) {
@@ -534,7 +559,7 @@ foam.CLASS({
         if ( r instanceof Promise ) {
           r = await r;
         }
-      }}}
+      }}}}
 
       this.selected = block;
 
