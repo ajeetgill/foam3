@@ -137,7 +137,7 @@ foam.CLASS({
               addClass(self.myClass('formulaInput')).
               on('blur', function() { self.reactive = !! self.formula; }).
               focus().
-            end();
+            end().add(self.data.slot(self.prop.name));
           } else {
             this.add(viewSlot);
           }
