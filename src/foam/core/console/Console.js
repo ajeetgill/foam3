@@ -126,7 +126,6 @@ foam.CLASS({
 });
 
 
-// Would 'Block' be a better name?
 foam.CLASS({
   package: 'foam.core.console',
   name: 'Block',
@@ -149,6 +148,7 @@ foam.CLASS({
       background: #f6f6f6;
     }
     ^prompt {
+      display: flex;
       font-weight: bold;
       padding-top: 0;
       margin-top: -2px;
@@ -159,6 +159,9 @@ foam.CLASS({
     ^ .foam-u2-ActionView-del { font-weight: lighter; font-size: smaller; border: none; background: transparent; height: 20px; }
     ^ .foam-u2-TextField-cmd { border: none; height: 20px; }
     ^:hover .foam-u2-TextField-cmd { background: #f6f6f6; }
+    ^ .foam-u2-ReadWriteView { padding-right: 8px; }
+    ^ .foam-u2-ReadWriteView .foam-u2-TextField { height: 20px; }
+
   `,
 
   properties: [
@@ -175,8 +178,8 @@ foam.CLASS({
         addClass().
         start('span').
           show(this.showPrompts$).
-        style({display: 'flex', width: '100%', fontWeight: 'bold'}).
-          start().addClass(this.myClass('prompt')).add('> ').end().
+          style({display: 'flex', width: '100%', fontWeight: 'bold'}).
+          start('span').addClass(this.myClass('prompt')).start(foam.u2.ReadWriteView, {data$: this.flowName$}).end().add(' = ').end().
           add(this.CMD, this.DEL).
         end().
         start('div', {}, this.out$).
