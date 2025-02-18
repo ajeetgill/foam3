@@ -82,6 +82,9 @@ foam.CLASS({
     ^selected {
       outline: 2px solid #ccc;
     }
+    ^error {
+      color: red;
+    }
   `,
 
   properties: [
@@ -103,6 +106,7 @@ foam.CLASS({
           enableClass(self.myClass('selected'), self.selected$.map(s => s === data)).
           on('click', () => self.selected = data).
           start('td').
+            enableClass(self.myClass('error'), flowName.startsWith('error')).
             style({'paddingLeft': (4 + depth * 12) + 'px'}).
             add(flowName).
           end().
@@ -506,7 +510,11 @@ foam.CLASS({
           } else {
             r = scope[cmd];
           }
-          block.flowName = this.createFlowChildName(cmd);
+          if ( r ) {
+            block.flowName = this.createFlowChildName(cmd);
+          } else {
+            block.flowName = this.createFlowChildName('error');
+          }
         }
         if ( typeof r === 'function' ) {
           block.flowName = this.createFlowChildName(cmd);
