@@ -42,9 +42,14 @@ foam.CLASS({
     },
     {
       class: 'String',
+      name: 'status',
+      width: 20
+    },
+    {
+      class: 'String',
       name: 'notes',
       width: 80,
-      view: { class: 'foam.u2.tag.TextArea', rows: 8, cols: 78 }
+      view: { class: 'foam.u2.tag.TextArea', rows: 12, cols: 78 }
     },
     {
       class: 'Boolean',
