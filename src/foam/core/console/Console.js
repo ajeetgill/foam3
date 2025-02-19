@@ -577,6 +577,12 @@ foam.CLASS({
         } else if ( foam.Number.isInstance(r) ) {
           block.value = foam.lang.FloatHolder.create({value: r});
           block.out.add(block.value.value$);
+        } else if ( foam.Boolean.isInstance(r) ) {
+          block.value = foam.lang.BooleanHolder.create({value: r});
+          block.out.add(block.value.value$);
+        } else if ( foam.Date.isInstance(r) ) {
+          block.value = foam.lang.DateTimeHolder.create({value: r});
+          block.out.add(block.value.value$);
         } else {
           this.log(r);
         }
