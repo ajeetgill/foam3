@@ -10,8 +10,21 @@ foam.CLASS({
 
   properties: [
     {
-      name: 'value',
-      class: 'Int'
+      class: 'Int',
+      name: 'value'
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.lang',
+  name: 'FloatHolder',
+
+  properties: [
+    {
+      class: 'Float',
+      name: 'value'
     }
   ]
 });
@@ -91,6 +104,7 @@ foam.CLASS({
   ]
 });
 
+
 foam.CLASS({
   package: 'foam.lang',
   name: 'RawMapHolder',
@@ -108,6 +122,7 @@ foam.CLASS({
     }
   ]
 });
+
 
 foam.CLASS({
   package: 'foam.lang',
