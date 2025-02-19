@@ -6,13 +6,11 @@
 
 // Bugs:
 //  - Command.execute_ Action doesn't work in TableView because it has the wrong Context
-//  - eval_ doesn't execute in correct context because localScope is pre-built
-//  - clear doesn't clear children
-//  - no flowDAO or working flows/save/load
 //  - shows extra line between blocks
 
 // Features:
-//  - ability to create script Commands
+//  - put current user in Context, use in Signature
+//  - load/save Flows
 //  ? how are Commands different than flows?
 
 
