@@ -30,6 +30,8 @@ foam.CLASS({
     }
   ],
 
+  tableColumns: [ 'name', 'description', 'status', 'isPublic', 'readOnly' ],
+
   properties: [
     {
       class: 'String',
