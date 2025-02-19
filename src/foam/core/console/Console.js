@@ -161,7 +161,6 @@ foam.CLASS({
     ^:hover .foam-u2-TextField-cmd { background: #f6f6f6; }
     ^ .foam-u2-ReadWriteView { padding-right: 8px; }
     ^ .foam-u2-ReadWriteView .foam-u2-TextField { height: 20px; }
-
   `,
 
   properties: [
@@ -383,17 +382,7 @@ foam.CLASS({
       name: 'selected'
     },
     {
-      name: 'selectedValue',
-      postSet: function(_, n) {
-        var s = this.flowScope;
-        for ( var x in s )
-          if ( s.hasOwnProperty(x) )
-            delete s[x];
-
-        this.flowChildren.forEach(c => {
-          if ( c.value ) s[c.flowName] = c.value;
-        });
-      }
+      name: 'selectedValue'
     },
     {
       name: 'value',
@@ -487,6 +476,8 @@ foam.CLASS({
     },
 
     function log(...args) {
+      console.log('******************** log', args);
+      debugger;
       this.currentBlock.log.apply(this.currentBlock, args);
       /*
       return;
@@ -522,20 +513,33 @@ foam.CLASS({
       return this;
     },
 
-    // TODO: better to add newlines after
+    function refreshFlowScope() {
+      var s = this.flowScope;
+      for ( var x in s )
+        if ( s.hasOwnProperty(x) )
+          delete s[x];
+
+      this.flowChildren.forEach(c => {
+        if ( c.value ) s[c.flowName] = c.value;
+      });
+    },
 
     async function eval_(cmd) {
       var self = this;
+
       cmd = cmd.trim();
+
       this.clearProperty('historyPosition');
       if ( ! cmd ) return;
       this.addHistory(cmd);
+
+      this.refreshFlowScope();
 
 //      this.out.tag('br').start().show(self.showPrompts$).start('b').add('> ').end().add(cmd);
       var block = this.currentBlock = this.Block.create({flowName: this.createFlowChildName('a'), cmd: cmd, flowParent: this});
       this.addFlowChild(block);
 
-      var innerScope = { log: block.log.bind(block), out: block.out };
+      var innerScope = { log: block.log.bind(block), out: block.out, start: block.out.start.bind(block.out), tag: block.out.tag.bind(block.out) };
 
       // TODO: move into Block
       with ( this.scope || {} ) { with ( this.localScope ) { with ( innerScope ) { with ( this.flowScope ) {
