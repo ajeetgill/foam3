@@ -229,7 +229,7 @@ foam.CLASS({
           source: 'net.nanopay.auth.VerifyEmailByCode',
           options: { inline: false }
         }, ctx);
-
+        wizardRunner.sequence.remove('ReturnToLaunchPointAgent');
         await wizardRunner.launch();
         return wizardRunner.controller.wizardController.status;
       }
