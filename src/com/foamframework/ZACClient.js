@@ -117,7 +117,6 @@ foam.CLASS({
       background-color: var(--primary-color);
       color: var(--secondary-color);
       transition: width var(--transition-duration);
-      overflow: hidden;
     }
 
     ^sidebar ul {
