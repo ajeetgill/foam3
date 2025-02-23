@@ -1,50 +1,50 @@
 foam.CLASS({
-    package: "foam.core.auth.oidc",
-    name: "OIDCProvider",
-    ids: [
-        "clientId"
-    ],
-    properties: [
-        {
-            class: 'String',
-            name: 'description'
-        },
-        {
-            class: 'String',
-            name: 'icon'
-        },
-        {
-            class: 'String',
-            name: 'clientId',
-            documentation: 'oauth client id of this provider'
-        },
-        {
-            class: 'String',
-            name: 'clientSecret',
-            readPermissionRequired: true,
-            writePermissionRequired: true
-        },
-        {
-            class: 'URL',
-            name: 'authURL',
-            documentation: 'URL to open the browser to do complete sign in'
-        },
-        {
-            class: 'URL',
-            name: 'tokenURL',
-            documentation: 'URL to fetch JWTs from using authorization code'
-        },
-    ],
-    methods: [
-        {
-            name: 'getTokenForCode',
-            type: 'String',
-            args: [
-                { name: 'x', type: 'Context' },
-                { name: 'code', type: 'String' },
-                { name: 'redirectURI', type: 'String' }
-            ],
-            javaCode: `
+  package: "foam.core.oauth",
+  name: "OAuthProvider",
+  ids: [
+    "clientId"
+  ],
+  properties: [
+    {
+      class: 'String',
+      name: 'description'
+    },
+    {
+      class: 'String',
+      name: 'icon'
+    },
+    {
+      class: 'String',
+      name: 'clientId',
+      documentation: 'oauth client id of this provider'
+    },
+    {
+      class: 'String',
+      name: 'clientSecret',
+      readPermissionRequired: true,
+      writePermissionRequired: true
+    },
+    {
+      class: 'URL',
+      name: 'authURL',
+      documentation: 'URL to open the browser to do complete sign in'
+    },
+    {
+      class: 'URL',
+      name: 'tokenURL',
+      documentation: 'URL to fetch JWTs from using authorization code'
+    },
+  ],
+  methods: [
+    {
+      name: 'getTokenForCode',
+      type: 'String',
+      args: [
+        { name: 'x', type: 'Context' },
+        { name: 'code', type: 'String' },
+        { name: 'redirectURI', type: 'String' }
+      ],
+      javaCode: `
             foam.core.logger.Logger logger = (foam.core.logger.Logger) x.get("logger");
             try {
                 java.net.URL url = new java.net.URL(getTokenURL());
@@ -76,16 +76,16 @@ foam.CLASS({
                 return null;
             }
         `
-        },
-        {
-            name: 'refreshAccessToken',
-            args: [
-                { name: 'x', type: "Context" },
-                { name: 'refreshToken', type: 'String' },
-            ],
-            type: 'String',
-            throws: [ 'java.io.IOException' ],
-            javaCode: `
+    },
+    {
+      name: 'refreshAccessToken',
+      args: [
+        { name: 'x', type: "Context" },
+        { name: 'refreshToken', type: 'String' },
+      ],
+      type: 'String',
+      throws: [ 'java.io.IOException' ],
+      javaCode: `
 try {
 java.net.URL url = new java.net.URL(getTokenURL());
 java.net.HttpURLConnection connection = (java.net.HttpURLConnection) url.openConnection();
@@ -119,6 +119,6 @@ return responseJson.getString("access_token");
     throw new RuntimeException("Failed to refresh token", e);
 }
         `
-        }
-    ]
+    }
+  ]
 });
