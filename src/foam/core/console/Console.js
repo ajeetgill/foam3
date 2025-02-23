@@ -133,7 +133,7 @@ foam.CLASS({
 
   imports: [ 'showPrompts' ],
 
-  exports: [ 'log', 'out' ],
+  exports: [ 'log', 'out', 'addValue' ],
 
   css: `
     ^ {
@@ -183,6 +183,11 @@ foam.CLASS({
         start('div', {}, this.out$).
           addClass(this.myClass('output')).
         end();
+    },
+
+    function addValue(o) {
+      this.out.add(o);
+      this.value = o;
     },
 
     function log(...args) {
@@ -539,7 +544,12 @@ foam.CLASS({
       var block = this.currentBlock = this.Block.create({flowName: this.createFlowChildName('a'), cmd: cmd, flowParent: this});
       this.addFlowChild(block);
 
-      var innerScope = { log: block.log.bind(block), out: block.out, start: block.out.start.bind(block.out), tag: block.out.tag.bind(block.out) };
+      var innerScope = {
+        addValue: block.addValue.bind(block),
+        log: block.log.bind(block),
+        out: block.out, start: block.out.start.bind(block.out),
+        tag: block.out.tag.bind(block.out)
+      };
 
       // TODO: move into Block
       with ( this.scope || {} ) { with ( this.localScope ) { with ( innerScope ) { with ( this.flowScope ) {

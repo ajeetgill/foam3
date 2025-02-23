@@ -1,4 +1,3 @@
-p({"class":"foam.core.console.cmd.Bold", "id": "bold", linkable: false})
 p({"class":"foam.core.console.cmd.Cells", "id": "cells"})
 p({"class":"foam.core.console.cmd.Clear", "id": "clear"})
 p({"class":"foam.core.console.cmd.DAO", "id": "dao"})
@@ -7,12 +6,8 @@ p({"class":"foam.core.console.cmd.DAOS", "id": "daos"})
 p({"class":"foam.core.console.cmd.Describe", "id": "describe"})
 p({"class":"foam.core.console.cmd.Doc", "id": "doc"})
 p({"class":"foam.core.console.cmd.Flows", "id": "flows"})
-p({"class":"foam.core.console.cmd.H1", "id": "h1", linkable: false})
-p({"class":"foam.core.console.cmd.H2", "id": "h2", linkable: false})
-p({"class":"foam.core.console.cmd.H3", "id": "h3", linkable: false})
 p({"class":"foam.core.console.cmd.Help", "id": "help"})
 p({"class":"foam.core.console.cmd.History", "id": "history"})
-p({"class":"foam.core.console.cmd.Italic", "id": "italic", linkable: false})
 p({"class":"foam.core.console.cmd.Load", "id": "load", linkable: false})
 p({"class":"foam.core.console.cmd.MQLHelp", "id": "mqlhelp"})
 p({"class":"foam.core.console.cmd.Models", "id": "models"})
@@ -34,11 +29,49 @@ p({"class":"foam.core.console.cmd.Command", "id": "check", "description": "Inser
 p({"class":"foam.core.console.cmd.Command", "id": "now", "description": "Insert a timestamp",  "script": """var d = new Date(); var holder = foam.lang.DateTimeHolder.create({value: d}); this.currentBlock.value = holder; this.out.add(holder.value$);"""})
 p({
   "class":"foam.core.console.cmd.Command",
-  "id": "header",
+  "id": "h",
   "description": "Insert a Header",
-  "script": """
-    var h = foam.core.console.Header.create({text: args[0] || ''}, this);
-    this.out.add(h);
-    this.currentBlock.value = h;
-  """
+  "script": """addValue(foam.core.console.Header.create({text: args.join(' ')}, this));"""
+})
+p({
+  "class":"foam.core.console.cmd.Command",
+  "id": "h1",
+  "description": "Header 1",
+  "script": "addValue(foam.core.console.Header.create({type:'h1', text: args.join(' ')}, this));"
+})
+p({
+  "class":"foam.core.console.cmd.Command",
+  "id": "h1",
+  "description": "Header 1",
+  "script": "addValue(foam.core.console.Header.create({type:'h1', text: args.join(' ')}, this));"
+})
+p({
+  "class":"foam.core.console.cmd.Command",
+  "id": "h2",
+  "description": "Header 2",
+  "script": "addValue(foam.core.console.Header.create({type:'h2', text: args.join(' ')}, this));"
+})
+p({
+  "class":"foam.core.console.cmd.Command",
+  "id": "h3",
+  "description": "Header 3",
+  "script": "addValue(foam.core.console.Header.create({type:'h3', text: args.join(' ')}, this));"
+})
+p({
+  "class":"foam.core.console.cmd.Command",
+  "id": "h4",
+  "description": "Header 4",
+  "script": "addValue(foam.core.console.Header.create({type:'h4', text: args.join(' ')}, this));"
+})
+p({
+  "class":"foam.core.console.cmd.Command",
+  "id": "b",
+  "description": "Bold",
+  "script": "addValue(foam.core.console.Header.create({type:'b', text: args.join(' ')}, this));"
+})
+p({
+  "class":"foam.core.console.cmd.Command",
+  "id": "i",
+  "description": "Italic",
+  "script": "addValue(foam.core.console.Header.create({type:'i', text: args.join(' ')}, this));"
 })

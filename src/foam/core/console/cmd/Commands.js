@@ -26,8 +26,12 @@ foam.CLASS({
   methods: [
     function execute(...args) {
       with ( this ) {
-        with ( { args: args } ) {
-          eval(this.script);
+        with ( { args: args, addValue: this.currentBlock.addValue.bind(this.currentBlock) } ) {
+          try {
+            eval(this.script);
+          } catch (x) {
+            console.log('Error:', x, 'in:', this.script);
+          }
         }
       }
     }
@@ -92,21 +96,6 @@ foam.CLASS({
           }).
         end();
     }
-  ]
-});
-
-
-foam.CLASS({
-  package: 'foam.core.console.cmd',
-  name: 'Bold',
-  extends: 'foam.core.console.cmd.Command',
-
-  properties: [
-    [ 'description', 'Bold' ]
-  ],
-
-  methods: [
-    function execute(t) { this.out.start('b').add(t); }
   ]
 });
 
@@ -356,51 +345,6 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.core.console.cmd',
-  name: 'H1',
-  extends: 'foam.core.console.cmd.Command',
-
-  properties: [
-    [ 'description', 'Header 1' ]
-  ],
-
-  methods: [
-    function execute(t) { this.out.start('h1').add(t); }
-  ]
-});
-
-
-foam.CLASS({
-  package: 'foam.core.console.cmd',
-  name: 'H2',
-  extends: 'foam.core.console.cmd.Command',
-
-  properties: [
-    [ 'description', 'Header 2' ]
-  ],
-
-  methods: [
-    function execute(t) { this.out.start('h2').add(t); }
-  ]
-});
-
-
-foam.CLASS({
-  package: 'foam.core.console.cmd',
-  name: 'H3',
-  extends: 'foam.core.console.cmd.Command',
-
-  properties: [
-    [ 'description', 'Header 3' ]
-  ],
-
-  methods: [
-    function execute(t) { this.out.start('h3').add(t); }
-  ]
-});
-
-
-foam.CLASS({
-  package: 'foam.core.console.cmd',
   name: 'History',
   extends: 'foam.core.console.cmd.Command',
 
@@ -419,21 +363,6 @@ foam.CLASS({
         this.out.start(this.Link).add(h).on('click', () => this.eval_(h));
       });
     }
-  ]
-});
-
-
-foam.CLASS({
-  package: 'foam.core.console.cmd',
-  name: 'Italic',
-  extends: 'foam.core.console.cmd.Command',
-
-  properties: [
-    [ 'description', 'Italic' ]
-  ],
-
-  methods: [
-    function execute(t) { this.out.start('i').add(t); }
   ]
 });
 

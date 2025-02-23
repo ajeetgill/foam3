@@ -25,6 +25,7 @@ foam.POM({
     { name: 'ReactiveDetailView',      flags: 'js' },
     { name: 'Check',                   flags: 'js' },
     { name: 'Signature',               flags: 'js' },
+    { name: 'Header',                  flags: 'js' },
     { name: "cmd/Commands",            flags: "js|java" }
   ]
 });

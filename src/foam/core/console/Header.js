@@ -17,8 +17,8 @@ foam.CLASS({
     function render() {
       this.
         addClass().
-        add(this.data.dynamic(function(type, visible, text) {
-          if ( visible ) this.start(type).add(text).end();
+        add(this.data.dynamic(function(color, type, visible, text) {
+          if ( visible ) this.start(type).style({color: color}).add(text).end();
         }));
     }
   ]
@@ -34,16 +34,24 @@ foam.CLASS({
       class: 'String',
       name: 'type',
       value: 'h1',
+      displayWidth: 10,
       view: { class: 'foam.u2.TextField', choices: [ 'H1', 'H2', 'H3', 'H4', 'B', 'I' ] }
     },
     {
       class: 'String',
-      name: 'text'
+      name: 'text',
+      onKey: true,
+      displayWidth: 60
     },
     {
       class: 'Boolean',
       name: 'visible',
       value: true
+    },
+    {
+      class: 'Color',
+      name: 'color',
+      value: '#333'
     }
   ],
 

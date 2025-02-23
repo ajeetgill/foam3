@@ -101,7 +101,12 @@ foam.CLASS({
           if ( ! this.data ) return;
           // Re-find current prop when data changes since data might be a subclass of old data which might have different validation
           // requirements
-          let currentProp = this.data.cls_.getAxiomByName(prop.name).clone();
+          let currentProp = this.data.cls_.getAxiomByName(prop.name);
+          if ( ! currentProp ) {
+            console.log('**** PropertyBorder:', prop.name, 'not found in', this.data.cls_.id);
+            return;
+          }
+          currentProp = currentProp.clone();
           var slot;
 
           // ???: Would it make more sense to combine these in Property as validateObj_?
