@@ -69,15 +69,18 @@ foam.CLASS({
     },
 
     function render() {
-      var self = this;
+      var self    = this;
       var oldProp = this.prop;
-      var prop = this.prop = this.prop.clone(this.__subContext__).copyFrom(this.config);
+      var prop    = this.prop = this.prop.clone(this.__subContext__).copyFrom(this.config);
+
       if ( ! prop.name ) {
         // Needed because some properties aren't bootstrapped properly and don't nave
         // 'name' in instance_.
         // Ex.: package, flags, extends, refines, javaExtends, order
         prop.name = oldProp.name;
       }
+
+      this.addClass(this.myClass(prop.name));
 
       this.SUPER();
 
@@ -137,11 +140,9 @@ foam.CLASS({
         this.controllerMode$);
 
       // Boolean version of modeSlot for use with show()
-      var visibilitySlot = modeSlot.map(m => m != foam.u2.DisplayMode.HIDDEN)
-
-      var colorSlot = this.data$.dot(prop.name).map(v => !! v);
-
-      var labelSlot = this.slot(function(prop$reserveLabelSpace, prop$label){
+      var visibilitySlot = modeSlot.map(m => m != foam.u2.DisplayMode.HIDDEN);
+      var colorSlot      = this.data$.dot(prop.name).map(v => !! v);
+      var labelSlot      = this.slot(function(prop$reserveLabelSpace, prop$label) {
         let el = this.E().addClass(this.myClass('label'), this.myClass('label' + '-' + prop.name), 'p-light');
         return prop$label ?
           el.call(prop.labelFormatter, [data, prop]) :
