@@ -32,7 +32,7 @@ foam.CLASS({
       actions: [
         {
           name: 'generate',
-          label: 'Generate and Send Report',
+          label: 'Generate and Send',
           code: function(X) {
             var self = this;
             let user = this.subject.user;
