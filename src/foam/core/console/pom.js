@@ -18,6 +18,7 @@ foam.POM({
     { name: "DuplicateSink",           flags: "js|java" },
     { name: "SinkView",                flags: "js" },
     { name: "DAOPrompt",               flags: "js" },
+    { name: "Upload",                  flags: "js" },
     { name: "ModelDAO",                flags: "js" },
     { name: "DocumentReadWriteView",   flags: "js" },
     { name: 'ConsoleZACClient',        flags: 'js' },
