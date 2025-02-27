@@ -87,10 +87,10 @@ foam.CLASS({
       s.trim().split(',').forEach(c => {
         var prop = parser.parseString(c, 'fieldname');
         if ( prop ) {
-          this.output += `mapping ${c} to ${prop.name}\n`;
+          this.output += `<span style="color:green">Mapping</span> <b>${c}</b> to <b>${prop.name}</b>\n`;
           props.push(prop);
         } else {
-          throw `Unknown property '${c}'.`;
+          throw `Unknown property <b>'${c}'</b>`;
         }
       });
 
@@ -138,7 +138,7 @@ foam.CLASS({
         }
         this.progress = 100;
       } catch (x) {
-        this.output += 'ERROR: ' + x;
+        this.output += '<span style="color:red">ERROR: ' + x + '</span>';
       }
     }
   ],
