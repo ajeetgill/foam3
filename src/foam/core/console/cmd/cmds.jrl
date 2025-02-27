@@ -90,5 +90,7 @@ p({
   "class":"foam.core.console.cmd.Command",
   "id": "upload",
   "description": "Upload Data",
-  "script": "addValue(foam.core.console.Upload.create({daoKey: args[0]}, this));"
+  "script": """
+    this.out.add(foam.core.console.Upload.create({daoKey: args[0]}, this));
+  """
 })
