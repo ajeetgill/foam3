@@ -657,6 +657,8 @@ foam.CLASS({
     },
 
     function render() {
+      // TODO: maybe a better approach would be to add a customizer() function which
+      // could call style() or anything else? KGR
       if ( this.extraStyle ) this.style(this.extraStyle);
     },
 
