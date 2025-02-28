@@ -108,6 +108,7 @@ foam.CLASS({
       if ( ! a ) { this.rows = 0; return; }
       this.rows = a.length-1;
 
+      console.time('upload');
       try {
         var props = this.parseColumns(a[0]);
 
@@ -146,6 +147,7 @@ foam.CLASS({
       } catch (x) {
         this.output += '<span style="color:red">ERROR: ' + x + '</span>';
       }
+      console.timeEnd('upload');
     }
   ],
 
