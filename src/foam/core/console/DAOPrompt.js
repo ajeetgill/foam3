@@ -4,7 +4,6 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-
 foam.CLASS({
   package: 'foam.core.console',
   name: 'DAOPrompt',
@@ -134,7 +133,7 @@ foam.CLASS({
         if ( n == '--' ) return;
         if ( this.where ) this.where += ' ';
         this.where += n;
-        return o;
+        return n;
       }
     },
     {
@@ -149,6 +148,16 @@ foam.CLASS({
           choices.push([ q.predicate, q.label ]);
         });
         return { class: 'foam.u2.view.ChoiceView', choices: choices };
+      }
+    },
+    {
+      class: 'String',
+      name: 'columns',
+      view: function(_, X) {
+        return {
+          class: 'foam.core.console.PropertyListView',
+          of: X.data.dao.of
+        };
       }
     },
     {
@@ -188,7 +197,8 @@ foam.CLASS({
         start(this.CircleIndicator, {glyph: 'helpIcon', icon: '/images/question-icon.svg', size:20}).addClass(this.myClass('helper-icon')).on('click', () => this.eval_('mqlhelp')).end().
         br().
         add('orderBy(', this.ORDER, ' ').start(this.ORDER_CHOICE).style({'display': 'inline-flex'}).end().add(').').br().
-        add('select(').add(this.SELECT, ')').
+        add('select(').add(this.SELECT, ')').br().
+        add('columns: ', this.COLUMNS).
       end().
       add(this.RUN, ' ', this.CLEAR).br().
       start().
