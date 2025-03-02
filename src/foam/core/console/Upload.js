@@ -13,7 +13,8 @@ foam.CLASS({
 
   requires: [
     'foam.lib.csv.CSVParser',
-    'foam.parse.QueryParser'
+    'foam.parse.QueryParser',
+    'foam.core.console.UploadAgent'
   ],
 
   properties: [
@@ -115,8 +116,11 @@ foam.CLASS({
         this.rows = a.length-1;
 
         var parser = this.CSVParser.create({});
-
-        for ( var i = 1 ; i < a.length && ( this.limit == 0 || i <= this.limit ) ; i++ ) {
+        var limit = a.length;
+        if ( this.limit ) limit = Math.min(end, this.limit);
+        var agent;
+        for ( var i = 1 ; i < limit ; i++ ) {
+          if ( ! agent ) agent = this.UploadAgent.create();
           var row = a[i];
           var obj = this.dao.of.create();
           this.processing = Math.max(this.processing, i);
@@ -129,6 +133,17 @@ foam.CLASS({
             }
           }
           if ( real ) {
+            agent.data.push(obj);
+            if ( i && i % 1000 === 0 ) {
+              var oldAgent = agent;
+              agent = undefined;
+              if ( i && i % 100000 === 0 ) {
+                await this.dao.cmd(oldAgent);
+              } else {
+                this.dao.cmd(oldAgent);
+              }
+            }
+            /*
             try {
               if ( i % 250 == 1 ) {
                 await this.dao.put(obj);
@@ -137,14 +152,18 @@ foam.CLASS({
               }
             } catch (x) {
               throw `Unable to put row ${row} with response "${x}"`
-            }
+              }
+              */
           } else if ( this.limit < 100 ) {
             this.output += 'created ' + obj + '\n';
             console.log(obj);
           }
         }
+        if ( agent ) this.dao.cmd(agent);
+
         this.progress = 100;
       } catch (x) {
+        debugger;
         this.output += '<span style="color:red">ERROR: ' + x + '</span>';
       }
       console.timeEnd('upload');
