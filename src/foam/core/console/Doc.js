@@ -13,14 +13,15 @@ foam.CLASS({
   requires: [ 'foam.u2.HTMLView' ],
 
   css: `
+    ^ { margin-right: 10px; }
   `,
 
   methods: [
     function render() {
       this.
         addClass().
-        show(this.visible$).
-        tag(this.HTMLView, {data$: this.data.text$});
+        show(this.data.visible$).
+        tag(this.HTMLView, {data$: this.data.richText$});
     }
   ]
 });
@@ -38,7 +39,7 @@ foam.CLASS({
     },
     {
       class: 'String',
-      name: 'text',
+      name: 'richText',
       label: '',
       view: 'foam.u2.view.RichTextView'
     }

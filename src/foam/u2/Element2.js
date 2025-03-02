@@ -502,6 +502,9 @@ foam.CLASS({
       }
     },
     {
+      name: 'extraStyle'
+    },
+    {
       name: 'parentNode',
       transient: true,
       postSet: function(o, n) { n.onDetach(this); }
@@ -654,6 +657,9 @@ foam.CLASS({
     },
 
     function render() {
+      // TODO: maybe a better approach would be to add a customizer() function which
+      // could call style() or anything else? KGR
+      if ( this.extraStyle ) this.style(this.extraStyle);
     },
 
     async function observeScrollHeight() {
