@@ -185,8 +185,8 @@ foam.CLASS({
         end();
     },
 
-    function addValue(o) {
-      this.out.add(o);
+    function addValue(o, skipOutput) {
+      if ( ! skipOutput ) this.out.add(o);
       this.value = o;
     },
 
