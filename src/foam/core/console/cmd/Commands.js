@@ -150,8 +150,12 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute(daoKey) {
-      this.out.tag(this.DAOPrompt.create({daoKey: daoKey}));
+    function execute(dao, opt_label) {
+      if ( foam.String.isInstance(dao) ) {
+        this.out.tag(this.DAOPrompt.create({daoKey: dao}));
+      } else {
+        this.out.tag(this.DAOPrompt.create({dao: dao, daoKey: opt_label || dao.of.model_.plural}));
+      }
     }
   ]
 });
