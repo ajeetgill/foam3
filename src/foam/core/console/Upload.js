@@ -21,6 +21,7 @@ foam.CLASS({
     {
       class: 'String',
       name: 'daoKey',
+      label: 'DAO',
       adapt: function(o, n) {
         if ( this.__context__[n] ) return n;
         if ( this.__context__[n + 'DAO'] ) return n + 'DAO';
@@ -45,6 +46,10 @@ foam.CLASS({
       class: 'String',
       name: 'delimiter',
       value: ',',
+      visibility: function(format) { return format === 'CSV' ?
+        foam.u2.DisplayMode.RW :
+        foam.u2.DisplayMode.HIDDEN ;
+      },
       width: 1
     },
     {
