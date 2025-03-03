@@ -8,12 +8,72 @@
 
 foam.CLASS({
   package: 'foam.core.console',
+  name: 'UploadMapping',
+
+  properties: [
+    {
+      class: 'String',
+      name: 'id'
+    },
+    {
+      name: 'handler',
+      view: function(_, X) {
+       return { class: 'foam.core.console.PropertyChoiceView', of: X.data.of };
+      }
+    },
+    {
+      name: 'of',
+      hidden: true
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.core.console',
+  name: 'UploadMappingsView',
+  extends: 'foam.u2.Controller',
+
+  properties: [ 'data' ],
+
+  css: `
+    ^ .foam-u2-tag-Select { height: 20px; }
+    ^ td { padding: 2px 10px; }
+  `,
+
+  methods: [
+    function render() {
+      this.SUPER();
+
+      this.addClass().
+      start('table').start('tr').
+        start('td').style({fontWeight: 'bold'}).add('Column').end().
+        start('td').style({fontWeight: 'bold'}).add('Mapping').end().
+        start('td').style({fontWeight: 'bold'}).add('Type').end().
+      end().
+      add(function(data) {
+        this.forEach(data, function(d) {
+          this.
+            startContext({data: d}).
+            start('tr').
+              start('td').add(d.id).end().
+              start('td').add(d.HANDLER).end().
+              start('td').add(d.handler.cls_.name).end();
+        });
+      });
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.core.console',
   name: 'Upload',
-//  extends: 'foam.u2.Controller',
 
   requires: [
     'foam.lib.csv.CSVParser',
     'foam.parse.QueryParser',
+    'foam.core.console.UploadMapping',
     'foam.core.console.UploadAgent'
   ],
 
@@ -80,6 +140,13 @@ foam.CLASS({
       view: { class: 'foam.u2.tag.TextArea', rows: 20, cols: 90 }
     },
     {
+      class: 'FObjectArray',
+      of: 'foam.core.console.UploadMapping',
+      name: 'mappings',
+      view: 'foam.core.console.UploadMappingsView',
+      factory: function() { return []; }
+    },
+    {
       class: 'String',
       name: 'output',
       view: {
@@ -92,18 +159,22 @@ foam.CLASS({
 
   methods: [
     function parseColumns(s) {
-      var parser = this.QueryParser.create({of: this.dao.of});
-      var props  = [];
+      var parser   = this.QueryParser.create({of: this.dao.of});
+      var props    = [];
+      var mappings = [];
 
       s.trim().split(',').forEach(c => {
         var prop = parser.parseString(c, 'fieldname');
         if ( prop ) {
-          this.output += `<span style="color:green">Mapping</span> <b>${c}</b> to <b>${prop.name}</b>\n`;
+          mappings.push(this.UploadMapping.create({id: c, handler: prop, of: this.dao.of}));
+//          this.output += `<span style="color:green">Mapping</span> <b>${c}</b> to <b>${prop.name}</b>\n`;
           props.push(prop);
         } else {
           throw `Unknown property <b>'${c}'</b>`;
         }
       });
+
+      this.mappings = mappings;
 
       return props;
     },
