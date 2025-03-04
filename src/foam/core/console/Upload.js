@@ -289,7 +289,7 @@ foam.CLASS({
         setTimeout(() => {
           // Needed because it is the SinkView which creates the 'select' object
           block2.obj.run();
-        }, 32);
+        }, 100);
       }
     }
   ],
