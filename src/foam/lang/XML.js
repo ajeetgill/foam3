@@ -150,15 +150,15 @@ foam.CLASS({
 
     function escape(str) {
         return str && str.toString()
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
     },
 
     function maybeEscapeKey(str) {
       return this.alwaysQuoteKeys || ! /^[a-zA-Z\$_][0-9a-zA-Z$_]*$/.test(str) ?
-          '"' + str + '"' :
-          str ;
+        '"' + str + '"' :
+        str ;
     },
 
     function escapeAttr(str) {
@@ -396,7 +396,7 @@ foam.CLASS({
     },
 
     function objectify(doc, cls) {
-      var obj = cls.create();
+      var obj      = cls.create();
       var children = doc.children;
 
       for ( var i = 0 ; i < children.length ; i++ ) {
@@ -410,7 +410,6 @@ foam.CLASS({
         } else if ( foam.lang.FObjectArray.isInstance(prop) ) {
           // parse array property
           prop.get(obj).push(this.objectify(node, foam.lookup(prop.of)));
-
         } else if ( foam.lang.StringArray.isInstance(prop) ) {
           // parse string array
           prop.get(obj).push(node.firstChild ? node.firstChild.nodeValue : null);
@@ -445,8 +444,8 @@ foam.CLASS({
     function parseString(str, opt_class) {
       // create DOM
       var parser = new DOMParser();
-      var doc = parser.parseFromString(str, 'text/xml');
-      var root = doc.firstChild;
+      var doc    = parser.parseFromString(str, 'text/xml');
+      var root   = doc.firstChild;
 
       var rootClass = root.getAttribute('class');
       if ( rootClass )
