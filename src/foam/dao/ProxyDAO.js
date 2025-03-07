@@ -52,15 +52,8 @@ if let oldValue = oldValue as? foam_dao_AbstractDAO {
         return this.delegate.cmd_(x, obj);
       },
       javaCode: `
-        if ( obj != null && obj instanceof String ) {
-          String s = (String) obj;
-          if ( s.startsWith("CLASS? ") ) {
-            try {
-              if ( Class.forName(s.substring(7)).isAssignableFrom(getClass()) ) return true;
-            } catch (ClassNotFoundException e) {
-            }
-          }
-        }
+        Object ret = super.cmd_(x, obj);
+        if ( ret != null ) return ret;
         return getDelegate().cmd_(x, obj);
       `
     },
