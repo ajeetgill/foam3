@@ -424,6 +424,8 @@ task('Get Maven java sources.', [], function mavenGetSources(value) {
 });
 
 task('Generate and compile java source.', [ 'genJava' ], function buildJava() {
+  // remove previous app jar in build directory to fix classes resolution for non-jar run
+  execSync(`rm -f ${BUILD_DIR}/lib/${APP_NAME}-*.jar >/dev/null 2>&1`);
   genJava();
 });
 
@@ -431,7 +433,6 @@ task('Generate and compile java source.', [ 'genJava' ], function buildJava() {
 task('Build Java JAR file.', [ 'versions', 'jarWebroot', 'jarImages' ], function buildJar() {
   // remove any previous timestamped versions
   execSync(`rm -f ${JAR_LIB_DIR}/${APP_NAME}-*.jar >/dev/null 2>&1`);
-  execSync(`rm -f ${BUILD_DIR}/lib/${APP_NAME}-*.jar >/dev/null 2>&1`);
 
   versions();
   jarWebroot();
