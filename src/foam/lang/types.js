@@ -201,9 +201,16 @@ foam.CLASS({
           var ret = new Date(d);
 
           if ( isNaN(ret.getTime()) ) {
-            ret = foam.Date.MAX_DATE;
-            console.warn("Invalid date: " + d + "; assuming " + ret.toISOString() + ".");
-            return ret;
+            if ( d.length >= 8 ) {
+              debugger;
+              ret = new Date(d.substring(0,4) + '-' + d.substring(4,6) + '-' + d.substring(6,8));
+            }
+
+            if ( isNaN(ret.getTime()) ) {
+              ret = foam.Date.MAX_DATE;
+              console.warn("Invalid date: " + d + "; assuming " + ret.toISOString() + ".");
+              return ret;
+            }
           }
 
           d = ret;
