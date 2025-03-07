@@ -18,7 +18,7 @@ foam.CLASS({
       class: 'String',
       name: 'code',
       documentation: `[ISO 3166](https://www.iso.org/iso-3166-country-codes.html)
-        -1 alpha-2 Country codes.`,
+        -1 alpha-2 Country codes.`
     },
     {
       class: 'String',
@@ -26,7 +26,7 @@ foam.CLASS({
       shortName: 'isoNum',
       label: 'ISO Numeric Code',
       documentation: `[ISO 3166](https://www.iso.org/iso-3166-country-codes.html)
-        -1 numeric country codes.`,
+        -1 numeric country codes.`
     },
     {
       class: 'String',
@@ -34,7 +34,7 @@ foam.CLASS({
       shortName: 'iso',
       label: 'ISO Code',
       documentation: `[ISO 3166](https://www.iso.org/iso-3166-country-codes.html)
-        -1 alpha-3 country codes.`,
+        -1 alpha-3 country codes.`
     },
     {
       class: 'String',
@@ -44,7 +44,7 @@ foam.CLASS({
     {
       class: 'String',
       name: 'longName',
-      documentation: 'The full name of the country.',
+      documentation: 'The full name of the country.'
     },
     {
       class: 'String',
@@ -58,12 +58,12 @@ foam.CLASS({
       class: 'StringArray',
       name: 'alternativeNames',
       shortName: 'alt',
-      documentation: `A list of known alternative country names.`,
+      documentation: `A list of known alternative country names.`
     },
     {
       class: 'String',
       name: 'region',
-      documentation: "The country's region",
+      documentation: "The country's region"
     },
   ],
 
