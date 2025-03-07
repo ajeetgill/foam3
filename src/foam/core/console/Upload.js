@@ -204,7 +204,7 @@ foam.CLASS({
 
         mappings.push(this.UploadMapping.create({id: c, handler: prop || foam.core.console.UploadMapping.UNKNOWN, of: this.dao.of}));
         if ( ! prop ) {
-          this.output += '<span style="color:red">Unknown property: ' + c + '</span>';
+          this.output += '<span style="color:red">Unknown property: ' + c + '</span><br>';
         }
       });
 
