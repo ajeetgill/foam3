@@ -28,7 +28,7 @@ foam.CLASS({
     [ 'adapt', function adaptBoolean(_, v) { return !! v; } ],
     [ 'fromString', function(s) {
       s = s.trim().toLowerCase();
-      return s === 'true' || s === 't' || s === '1' || s === 'yes' || s === 'on';      }
+      return s === 'true' || s === 't' || s === '1' || s == 'y' || s === 'yes' || s === 'on';      }
     ]
   ]
 });
