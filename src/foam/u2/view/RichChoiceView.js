@@ -544,6 +544,7 @@ foam.CLASS({
             return Promise.all(promiseArray).then(resp => {
               var index = 0;
               return this.E().forEach(sections, function(section) {
+                section.refineInput_ = resp[index].value > section.choicesLimit;
                 this.addClass(self.myClass('setAbove'))
                   .start().hide(!! section.hideIfEmpty && resp[index].value <= 0 || ! section.heading)
                     .addClass('p', 'bolder', self.myClass('heading'))
