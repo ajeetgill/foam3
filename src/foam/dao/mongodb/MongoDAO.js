@@ -296,15 +296,13 @@ see: https://javadoc.io/doc/org.mongodb/mongo-java-driver/latest/org/bson/BsonDo
       PM pm = PM.create(x, getCollectionName(), "buildIDFilter");
       BsonDocument filter = null;
       for ( PropertyInfo pInfo : getIDPInfos() ) {
-        String val = null;
+        Object val = obj;
         if ( obj instanceof FObject ) {
           // Perform PropertyInfo.get with PropertyInfo from argument
           // FObject to handle MultipartIDs.
           // Alternatively, have to determine if FObject is MultipartID
           // which presently is not possible.
-          val = String.valueOf(((PropertyInfo)((FObject) obj).getClassInfo().getAxiomByName(pInfo.getName())).get((FObject) obj));
-        } else {
-          val = String.valueOf(obj);
+          val = ((PropertyInfo)((FObject) obj).getClassInfo().getAxiomByName(pInfo.getName())).get((FObject) obj);
         }
         BsonDocument bson = Filters.eq(pInfo.getName(), val).toBsonDocument(BsonDocument.class, MongoClientSettings.getDefaultCodecRegistry());
         if ( filter == null ) {
