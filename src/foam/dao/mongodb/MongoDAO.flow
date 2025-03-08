@@ -1,0 +1,32 @@
+<title>MongoDAO</title>
+<h1>MongoDAO (incomplete)</h1>
+<p>A DAO backed by MongoDB</p>
+
+<h2>Requirements</h2>
+<p>Obviously, a MongoDB must be accessible.</p>
+
+<h2>Configuration</h2>
+<p>Connection settings are managed via the MongoDBService, found through CSpec service <b>mongoDBService</b>.<br/>
+Edit the <b>url</b> property to add <b>username</b> and <b>password</b>.<br/>
+See <code>deployment/mongodb/services.jrl</code>
+</p>
+
+<h2>Testing</h2>
+<p>Run MongoDAO specific tets cases with:<br/>
+<code>deployment/mongodb-test/test.sh</code>
+</p>
+
+<h2>Inclusion in Project</h2>
+<p>The pom is isolated and must be explicitly referenced:<br/>
+<b>-Jmongodb</b><br/>
+See <code>deployment/mongodb/run.sh</code>
+The MongoDAO installs itself via refinement to EasyDAO.<br/>
+A MongoDAO will be installed for each EasyDAO setup which satisfies the following:<br/>
+<ol>
+<li>does not define an InnerDAO</li>
+<li>is not ReadOnly</li>
+<li>is not WriteOnly</li>
+</ol>
+The MongoDAO is installed with an OrDAO which decorates a JDAO configured to only read the .0 (dot zero) build generated jourals files.<br/>
+The dot zero journals are read to an MDAO. The OrDAO queries first on the MongoDAO and falls back to the OrDAO. This maintains the normal FOAM behaviour of runtime data superseding shipped journal data.
+</p>
