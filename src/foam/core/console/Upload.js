@@ -120,7 +120,8 @@ foam.CLASS({
     {
       class: 'String',
       name: 'format',
-      value: 'CSV',
+      // value: 'CSV',
+      value: 'XML',
       view: { class: 'foam.u2.view.ChoiceView', choices: [ 'CSV', 'JSON', 'XML' ] }
     },
     {
@@ -151,7 +152,7 @@ foam.CLASS({
     {
       class: 'String',
       name: 'input',
-      view: { class: 'foam.u2.tag.TextArea', rows: 20, cols: 90 }
+      view: { class: 'foam.u2.tag.TextArea', rows: 10, cols: 100 }
     },
     {
       class: 'FObjectArray',
@@ -241,7 +242,7 @@ foam.CLASS({
     },
 
     async function processXML(real) {
-
+      foam.xml.Pretty.parseString2(this.input, this.dao.of);
     },
 
     async function processCSV(real) {
@@ -267,6 +268,7 @@ foam.CLASS({
           for ( var j = 0 ; j < csv.length && j < props.length ; j++ ) {
             var prop  = props[j].handler;
             var value = csv[j];
+            if ( foam.String.isInstance(value) ) value = value.trim();
             if ( value !== '' ) { // TODO: this line is probably wrong
               prop.set(obj, value.value);
             }
