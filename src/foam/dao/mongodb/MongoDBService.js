@@ -8,7 +8,16 @@ foam.CLASS({
   package: 'foam.dao.mongodb',
   name: 'MongoDBService',
 
-  documentation: '',
+  documentation: 'Context service for MongoDAOs to acquire connection specs.',
+
+  // Future: MongoDB supports change notification.  A listener can be
+  // notified of database or collection chaanges.  This can be used
+  // in a cluster setting to update the MDAOs when an change is
+  // reported.  
+  // see: https://www.mongodb.com/docs/drivers/java/sync/current/usage-examples/watch/
+  // When the MongoDAOs startup they could register themselves with this
+  // service which could in turn issue the appropriate find and put
+  // operations with the updated data. 
   
   implements: [
     'foam.core.COREService'
@@ -44,11 +53,6 @@ foam.CLASS({
       name: 'url',
       class: 'String',
       value: 'mongodb://localhost:27017/'
-    },
-    {
-      name: 'cluster',
-      class: 'Boolean',
-      value: false
     }
   ],
 
