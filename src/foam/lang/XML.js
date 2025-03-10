@@ -478,7 +478,7 @@ foam.CLASS({
       return obj;
     },
 
-    function parseString2(str, cls) {
+    function parseString2(str, cls, tagName) {
       var parser   = new DOMParser();
       var doc      = parser.parseFromString(str, 'text/xml');
       var root     = doc.firstChild;
@@ -491,6 +491,7 @@ foam.CLASS({
 
       for ( var i = 0 ; i < children.length ; i++ ) {
         var node = children[i];
+        if ( tagName && node.tagName !== tagName ) continue;
         console.log('***', i, node);
         objs.push(this.objectify2(node, cls));
       }

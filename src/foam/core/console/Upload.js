@@ -19,7 +19,7 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.core.console',
-  name: 'UploadMapping',
+  name: 'Mapping',
 
   constants: {
     UNKNOWN: { name: '--', set: function() {}, cls_: { name: '--' } }
@@ -46,7 +46,7 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.core.console',
-  name: 'UploadMappingsView',
+  name: 'MappingsView',
   extends: 'foam.u2.Controller',
 
   properties: [ 'data' ],
@@ -92,7 +92,7 @@ foam.CLASS({
     'foam.lib.csv.CSVParser',
     'foam.parse.QueryParser',
     'foam.core.console.DAOHolder',
-    'foam.core.console.UploadMapping',
+    'foam.core.console.Mapping',
     'foam.core.console.UploadAgent'
   ],
 
@@ -135,6 +135,15 @@ foam.CLASS({
       width: 1
     },
     {
+      class: 'String',
+      name: 'tagName',
+      value: 'CardFinancial',
+      visibility: function(format) { return format === 'XML' ?
+        foam.u2.DisplayMode.RW :
+        foam.u2.DisplayMode.HIDDEN ;
+      }
+    },
+    {
       class: 'Int',
       name: 'processing',
       visibility: 'RO'
@@ -156,9 +165,9 @@ foam.CLASS({
     },
     {
       class: 'FObjectArray',
-      of: 'foam.core.console.UploadMapping',
+      of: 'foam.core.console.Mapping',
       name: 'mappings',
-      view: 'foam.core.console.UploadMappingsView',
+      view: 'foam.core.console.MappingsView',
       factory: function() { return []; }
     },
     {
@@ -203,7 +212,7 @@ foam.CLASS({
           prop = parser.parseString(c, 'fieldname');
         }
 
-        mappings.push(this.UploadMapping.create({id: c, handler: prop || foam.core.console.UploadMapping.UNKNOWN, of: this.dao.of}));
+        mappings.push(this.Mapping.create({id: c, handler: prop || this.Mapping.UNKNOWN, of: this.dao.of}));
         if ( ! prop ) {
           this.output += '<span style="color:red">Unknown property: ' + c + '</span><br>';
         }
@@ -242,7 +251,7 @@ foam.CLASS({
     },
 
     async function processXML(real) {
-      foam.xml.Pretty.parseString2(this.input, this.dao.of);
+      foam.xml.Pretty.parseString2(this.input, this.dao.of, this.tagName);
     },
 
     async function processCSV(real) {
