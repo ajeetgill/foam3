@@ -202,7 +202,6 @@ foam.CLASS({
 
           if ( isNaN(ret.getTime()) ) {
             if ( d.length >= 8 ) {
-              debugger;
               ret = new Date(d.substring(0,4) + '-' + d.substring(4,6) + '-' + d.substring(6,8));
             }
 
