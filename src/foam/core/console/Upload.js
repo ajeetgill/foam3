@@ -40,6 +40,15 @@ foam.CLASS({
       name: 'of',
       hidden: true
     }
+  ],
+
+  methods: [
+    function process(obj, value) {
+      if ( foam.String.isInstance(value) ) value = value.trim();
+      if ( value !== '' ) {
+        this.handler.set(obj, value);
+      }
+    }
   ]
 });
 
@@ -62,7 +71,7 @@ foam.CLASS({
 
       this.addClass().
       start('table').start('tr').
-        start('td').style({fontWeight: 'bold'}).add('Column').end().
+        start('td').style({fontWeight: 'bold'}).add('Property').end().
         start('td').style({fontWeight: 'bold'}).add('Handler').end().
         start('td').style({fontWeight: 'bold'}).add('Type').end().
         start('td').style({fontWeight: 'bold'}).add('Required').end().
@@ -188,7 +197,21 @@ foam.CLASS({
       },
       hidden: true
     },
-    { name: 'block', hidden: true, postSet: function(o, n) { if ( ! n ) debugger; } }
+    { name: 'block', hidden: true, postSet: function(o, n) { if ( ! n ) debugger; } },
+    {
+      name: 'of',
+      transient: true,
+      hidden: true,
+      expression: function (dao) { return dao.of; }
+    },
+    {
+      name: 'columnParser',
+      transient: true,
+      hidden: true,
+      expression: function (of) {
+        return this.QueryParser.create({of: of});
+      }
+    },
   ],
 
   methods: [
@@ -201,7 +224,7 @@ foam.CLASS({
 
     function parseColumns(s) {
       if ( s === this.lastColumns ) return this.mappings;
-      var parser   = this.QueryParser.create({of: this.dao.of});
+      var parser   = this.columnParser;
       var mappings = [];
 
       s.trim().split(',').forEach(c => {
@@ -212,7 +235,7 @@ foam.CLASS({
           prop = parser.parseString(c, 'fieldname');
         }
 
-        mappings.push(this.Mapping.create({id: c, handler: prop || this.Mapping.UNKNOWN, of: this.dao.of}));
+        mappings.push(this.Mapping.create({id: c, handler: prop || this.Mapping.UNKNOWN, of: this.of}));
         if ( ! prop ) {
           this.output += '<span style="color:red">Unknown property: ' + c + '</span><br>';
         }
@@ -225,14 +248,51 @@ foam.CLASS({
     },
 
     async function process(real) {
+      var self = this;
       await this.data.removeAll();
+      this.processing = 0;
       this.clear();
       console.time('upload');
+      var i = 1;
+      var agent;
+
+      var sink = {
+        put: async function(o) {
+          self.processing = Math.max(self.processing, i);
+          self.progress   = Math.max(self.progress, Math.floor(100 * i / this.rows));
+
+          if ( o.errors_ ) {
+            self.output += '<span style="color:red">' + o.errors_ + ', row: ' + i + '<br>' + row + '</span>';
+          }
+
+          if ( ! real ) {
+            try { o.id = i; } catch(x) {}
+            self.data.put(o);
+          } else {
+            if ( ! agent ) agent = self.UploadAgent.create();
+            agent.data.push(o);
+            if ( i && i % 1000 === 0 ) {
+              var oldAgent = agent;
+              agent = undefined;
+              if ( i && i % 10000 === 0 ) {
+                await self.dao.cmd(oldAgent);
+              } else {
+                self.dao.cmd(oldAgent);
+              }
+            }
+          }
+          i++;
+        },
+        eof: async function() {
+          if ( agent ) await self.dao.cmd(agent);
+          self.progress = 100;
+        }
+      };
 
       if ( this.format === 'CSV' ) {
-        this.processCSV(real);
+        this.processCSV(sink);
       } else if ( this.format === 'XML' ) {
-        this.processXML(real);
+        this.processXML(sink);
       }
 
       console.timeEnd('upload');
@@ -250,46 +310,92 @@ foam.CLASS({
       }
     },
 
-    function objectifyXML(doc, cls) {
-      var obj      = cls.create();
+    function getXMLMapping(tag, attr) {
+      var key = attr ? tag + '.' + attr : tag;
+
+      if ( ! this.mappings_[key] ) {
+        if ( attr ) {
+          var prop = this.columnParser.parseString(tag + attr, 'fieldname');
+          this.mappings_[key] = this.Mapping.create({
+            id: key,
+            handler: prop || this.Mapping.UNKNOWN,
+            of: this.of
+          });
+        } else {
+          var prop = this.columnParser.parseString(tag, 'fieldname');
+          this.mappings_[key] = this.Mapping.create({
+            id: key,
+            handler: prop || this.Mapping.UNKNOWN,
+            of: this.of
+          });
+        }
+      }
+
+      return this.mappings_[key];
+    },
+
+
+    function objectifyXML(doc) {
+      var parser   = this.columnParser;
+      var obj      = this.of.create();
       var children = doc.children;
       var nodes    = {};
 
       for ( var i = 0 ; i < children.length ; i++ ) {
         // fetch property based on xml tag name since they may not be in order
-        var node = children[i];
-        console.log('***********', node.tagName, node);
-//        nodes[node.tagName] = node;
-      }
+        var node  = children[i];
+        var attrs = node.getAttributeNames();
 
-//      console.log('*****XML', nodes);
+        if ( node.firstChild ) {
+          var value = node.firstChild.nodeValue;
+          this.getXMLMapping(node.tagName).process(obj, value);
+        }
+        for ( var j = 0 ; j < attrs.length ; j++ ) {
+          var attrName = attrs[j];
+          var value    = node.getAttribute(attrName);
+          this.getXMLMapping(node.tagName, attrName).process(obj, value);
+        }
+      }
 
       return obj;
     },
 
-    async function processXML(real) {
-//      foam.xml.Pretty.parseString2(this.input, this.dao.of, this.tagName);
+    async function processXML(sink) {
+      this.mappings_ = {};
+      this.mappings.forEach(m => this.mappings_[m.id] = m);
+
       var parser   = new DOMParser();
       var doc      = parser.parseFromString(this.input, 'text/xml');
       var root     = doc.firstChild;
       var children = root.children;
-      var objs     = [];
-      var cls      = this.dao.of;
+      var cls      = this.of;
 
+      this.rows = 0;
+
+      // Just count matched rows so that this.rows is set
       for ( var i = 0 ; i < children.length ; i++ ) {
         var node = children[i];
         if ( this.tagName && node.tagName !== this.tagName ) continue;
-        console.log('***', i, node);
-        objs.push(this.objectifyXML(node, cls));
+        this.rows++;
       }
 
-      return objs;
+      // Process matched rows
+      for ( var i = 0 ; i < children.length ; i++ ) {
+        var node = children[i];
+        if ( this.tagName && node.tagName !== this.tagName ) continue;
+        await sink.put(this.objectifyXML(node));
+      }
+
+      sink.eof();
+      this.mappings = Object.values(this.mappings_);
     },
 
-    async function processCSV(real) {
+    async function processCSV(sink) {
       var ids = {};
-      var a = this.input.trim().split('\n');
+      var a   = this.input.trim().split('\n');
+
       if ( ! a ) { this.rows = 0; return; }
+
       this.rows = a.length-1;
 
       try {
@@ -302,56 +408,21 @@ foam.CLASS({
         for ( var i = 1 ; i < a.length ; i++ ) {
           if ( ! agent ) agent = this.UploadAgent.create();
           var row = a[i];
-          var obj = this.dao.of.create();
-          this.processing = Math.max(this.processing, i);
-          this.progress   = Math.max(this.progress, Math.floor(100 * i / a.length));
+          var obj = this.of.create();
           var csv = parser.parseString(row, this.delimiter);
           for ( var j = 0 ; j < csv.length && j < props.length ; j++ ) {
-            var prop  = props[j].handler;
-            var value = csv[j];
-            if ( foam.String.isInstance(value) ) value = value.trim();
-            if ( value !== '' ) { // TODO: this line is probably wrong
-              prop.set(obj, value.value);
-            }
+            props[j].process(obj, csv[j].value);
           }
+          await sink.put(obj);
           /*
           if ( ids[obj.id] ) {
             this.output += '<span style="color:red">Duplicate Records for id "' + obj.id + '":<br>' + ids[obj.id] + '<br>' + row + '</span>';
           }
           ids[obj.id] = row;
           */
-          if ( obj.errors_ ) {
-            this.output += '<span style="color:red">' + obj.errors_ + ', row: ' + i + '<br>' + row + '</span>';
-          }
-          if ( real ) {
-            agent.data.push(obj);
-            if ( i && i % 1000 === 0 ) {
-              var oldAgent = agent;
-              agent = undefined;
-              if ( i && i % 10000 === 0 ) {
-                await this.dao.cmd(oldAgent);
-              } else {
-                this.dao.cmd(oldAgent);
-              }
-            }
-            /*
-            try {
-              if ( i % 250 == 1 ) {
-                await this.dao.put(obj);
-              } else {
-                this.dao.put(obj);
-              }
-            } catch (x) {
-              throw `Unable to put row ${row} with response "${x}"`
-              }
-              */
-          } else {
-            this.data.put(obj);
-          }
         }
-        if ( agent ) this.dao.cmd(agent);
 
-        this.progress = 100;
+        sink.eof();
       } catch (x) {
         this.output += '<span style="color:red">ERROR: ' + x + '</span>';
       }
@@ -372,6 +443,13 @@ foam.CLASS({
       code: function() {
         this.output   = '';
         this.progress = 0;
+      }
+    },
+    {
+      name: 'resetMappings',
+      isAvailable: function(mappings) { return mappings.length; },
+      code: function() {
+        this.mappings = [];
       }
     }
   ]
