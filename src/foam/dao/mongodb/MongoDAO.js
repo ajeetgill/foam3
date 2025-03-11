@@ -96,7 +96,7 @@ foam.CLASS({
       setX(x);
       setOf(of);
       setCollectionName(collectionName);
-      addIDIndex(x);
+      initialize(getX());
     }
 
     public static ReplaceOptions UPSERT =  new ReplaceOptions().upsert(true);
@@ -106,7 +106,6 @@ foam.CLASS({
       protected JSONFObjectFormatter initialValue() {
         JSONFObjectFormatter b = new JSONFObjectFormatter();
         b.setPropertyPredicate(new StoragePropertyPredicate());
-        b.setOutputShortNames(true);
         b.setQuoteKeys(true);
         return b;
       }
@@ -133,6 +132,14 @@ foam.CLASS({
   `,
 
   methods: [
+    {
+      name: 'initialize',
+      args: 'X x',
+      javaCode: `
+      addIDIndex(x);
+      ((MongoDBService) x.get(getMongoDBServiceName())).register(getCollectionName(), this);
+      `
+    },
     {
       name: 'getDatabase',
       args: 'X x',
