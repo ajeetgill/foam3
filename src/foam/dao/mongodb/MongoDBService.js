@@ -58,6 +58,9 @@ foam.CLASS({
 
   methods: [
     {
+      documentation: `Acquire a database connection.
+collectionName is optional, and intended for systems which may
+route particular collections to different databases.`,
       name: 'getDatabase',
       args: 'X x, String collectionName',
       javaType: 'MongoDatabase',
