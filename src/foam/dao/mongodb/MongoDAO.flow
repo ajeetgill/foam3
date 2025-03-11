@@ -54,7 +54,7 @@ On startup .0 journals are read into the MDAO, and then the DB is read into the 
 
 <h2>Cluster / Replica Sets</h2>
 <p>MongoDB supports change notification.  A listener can be
-notified of database or collection chaanges in a <b>Replica Set</b></p>
+notified of database or collection changes in a <b>Replica Set</b></p>
 see: https://www.mongodb.com/docs/drivers/java/sync/current/usage-examples/watch/
 <p>What is unknown is if the event carries information to
 distinguish each host, else we'll get events from ourselves.
