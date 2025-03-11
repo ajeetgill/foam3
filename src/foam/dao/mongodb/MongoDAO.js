@@ -33,7 +33,6 @@ foam.CLASS({
     'foam.dao.Subscription',
     'foam.dao.index.AddIndexCommand',
     'foam.lang.ClassInfo',
-    'foam.lang.Detachable',
     'foam.lang.FObject',
     'foam.lang.PropertyInfo',
     'foam.lang.X',
@@ -42,11 +41,8 @@ foam.CLASS({
     'foam.lib.json.JSONParser',
     'foam.lib.StoragePropertyPredicate',
     'static foam.mlang.MLang.*',
-    'foam.mlang.order.Comparator',
-    'foam.mlang.predicate.Predicate',
     'foam.util.SafetyUtil',
     'java.util.ArrayList',
-    'java.util.Arrays',
     'java.util.List',
 
     'com.mongodb.*',
@@ -57,9 +53,6 @@ foam.CLASS({
     'com.mongodb.client.MongoDatabase',
     'org.bson.BsonDocument',
     'org.bson.BsonDocumentReader',
-    'org.bson.BsonInt64',
-    'org.bson.BsonType',
-    'org.bson.Document',
     'org.bson.conversions.Bson'
   ],
 
