@@ -119,7 +119,11 @@ Use of COREService retains lazy loading until first context request.
       name: 'cmd_',
       javaCode: `
       initialize();
-      getDb().cmd_(x, obj);
+      try {
+        getDb().cmd_(x, obj);
+      } catch ( Exception e ) {
+        Loggers.logger(x, this).warning(getDatabaseTableName(), "cmd_", e.getMessage());
+      }
       return getDelegate().cmd_(x, obj);
       `
     },
