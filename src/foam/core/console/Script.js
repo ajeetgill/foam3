@@ -1,0 +1,52 @@
+/**
+ * @license
+ * Copyright 2025 The FOAM Authors. All Rights Reserved.
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
+foam.CLASS({
+  package: 'foam.core.console',
+  name: 'Script',
+
+  imports: [
+    'data',
+    'scope'
+  ],
+
+  properties: [
+    {
+      class: 'String',
+      name: 'code',
+      view: { class: 'foam.u2.tag.TextArea', rows: 16 },
+      displayWidth: 60
+    },
+    {
+      class: 'String',
+      name: 'output',
+      transient: true,
+      view: { class: 'foam.u2.tag.TextArea', rows: 16 },
+      displayWidth: 60
+    }
+  ],
+
+  methods: [
+    function log() {
+      this.output += Array.from(arguments).join(' ') + '\n';
+    }
+  ],
+
+  actions: [
+    function run() {
+      with ( this.scope ) {
+        with ( { log: this.log.bind(this) } ) {
+          this.log('>', this.code);
+          this.log(eval('(function() {' + this.code + '})').call(this.data));
+        }
+      }
+    },
+
+    function clearOutput() {
+      this.output = '';
+    }
+  ]
+});
