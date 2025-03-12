@@ -9,7 +9,6 @@ fi
 
 set -e
 DOMAIN=$1
-# nanopay
 ALIAS=$2
 SECRET=$3
 PASSWORD=$DOMAIN
@@ -18,9 +17,9 @@ echo $SECRET > /tmp/sk
 
 # Set Name variables
 DNAME="
-CN=nanopay.net
+CN=$DOMAIN
 OU=R&D
-O=nanopay
+O=$DOMAIN
 L=Toronto
 S=ON
 C=CA

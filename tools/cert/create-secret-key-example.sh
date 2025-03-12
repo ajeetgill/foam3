@@ -26,7 +26,7 @@ C=CA
 echo "keytool generate secret key for encryption"
 
 keytool -genseckey \
- -alias net.nanopay.security.PrivateKeyDAO \
+ -alias foam.core.security.PrivateKeyDAO \
  -keyalg PBEWithHmacSHA256AndAES_256 \
  -keypass "$PASSWORD" \
  -keystore "$DOMAIN.jks" \
@@ -34,7 +34,7 @@ keytool -genseckey \
  -storetype PKCS12
 
 keytool -list -v \
-        -alias net.nanopay.security.PrivateKeyDAO \
+        -alias foam.core.security.PrivateKeyDAO \
         -keyalg PBEWithHmacSHA256AndAES_256 \
         -keypass "$PASSWORD" \
         -keystore "$DOMAIN.jks" \
