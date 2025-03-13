@@ -14,7 +14,7 @@ To enable HTTPS during local development:
 </li>
 <li>include the following build directive
 
-<code>-J../foam-https/deployment/https</code>
+<code>-a -J../foam-https/deployment/https</code>
 </li>
 <li>Build clean</li>
 </ol>
