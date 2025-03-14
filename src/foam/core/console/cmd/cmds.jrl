@@ -94,3 +94,19 @@ p({
     this.out.add(foam.core.console.Upload.create({daoKey: args[0]}, this));
   """
 })
+p({
+  "class":"foam.core.console.cmd.Command",
+  "id": "script",
+  "description": "Create a Script",
+  "script": """
+    addValue(foam.core.console.Script.create({}, this));
+  """
+})
+p({
+  "class":"foam.core.console.cmd.Command",
+  "id": "fetch",
+  "description": "Fetch a file from a URL",
+  "script": """
+    addValue(foam.core.console.XHR.create({url: args[0]}, this));
+  """
+})

@@ -30,7 +30,7 @@ foam.CLASS({
 //      type: 'Void',
 //      args: 'Context x',
       javaCode: `
-        DAO dao = ((DAO) x.get("DAO")).inX(x);
+        DAO dao = ((DAO) x.get("AGENTDAO"));
         foam.lang.FObject[] data = getData();
         for ( int i = 0 ; i < data.length ; i++ ) {
           var d = data[i];
