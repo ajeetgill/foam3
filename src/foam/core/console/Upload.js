@@ -289,6 +289,7 @@ foam.CLASS({
         eof: async function() {
           if ( agent ) await self.dao.cmd(agent);
           self.progress = 100;
+          console.timeEnd('upload');
           latch.resolve('eof');
         }
       };
@@ -298,8 +299,6 @@ foam.CLASS({
       } else if ( this.format === 'XML' ) {
         this.processXML(sink);
       }
-
-      console.timeEnd('upload');
 
       if ( ! real ) {
         var block = this.block;
