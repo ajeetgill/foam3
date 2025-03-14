@@ -82,6 +82,11 @@ foam.CLASS({
       name: 'me'
     },
     {
+      class: 'Boolean',
+      name: 'allowShortNames',
+      value: true
+    },
+    {
       // The core query parser. Needs a fieldname symbol added to function
       // properly.
       name: 'baseGrammar_',
@@ -242,7 +247,7 @@ foam.CLASS({
             s: prop.name,
             value: prop
           }));
-          if ( prop.shortName ) {
+          if ( this.allowShortNames && prop.shortName ) {
             fields.push(this.LiteralIC.create({
               s: prop.shortName,
               value: prop
