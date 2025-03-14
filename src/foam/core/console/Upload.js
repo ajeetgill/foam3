@@ -160,7 +160,7 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'progress',
-      view: { class: 'foam.u2.ProgressView' }
+//      view: { class: 'foam.u2.ProgressView' }
     },
     {
       class: 'Int',
@@ -218,8 +218,10 @@ foam.CLASS({
     function init() {
       this.SUPER();
 
-      this.block = this.currentBlock;
-      this.block.value = this.DAOHolder.create({preview: this.data});
+      if ( this.currentBlock ) {
+        this.block = this.currentBlock;
+        this.block.value = this.DAOHolder.create({preview: this.data});
+      }
     },
 
     function parseColumns(s) {
@@ -248,7 +250,8 @@ foam.CLASS({
     },
 
     async function process(real) {
-      var self = this;
+      var self  = this;
+      var latch = foam.lang.Latch.create();
       await this.data.removeAll();
       this.processing = 0;
       this.clear();
@@ -266,7 +269,7 @@ foam.CLASS({
           }
 
           if ( ! real ) {
-            try { o.id = i; } catch(x) {}
+            if ( foam.lang.Long.isInstance(o.ID) ) o.id = i;
             self.data.put(o);
           } else {
             if ( ! agent ) agent = self.UploadAgent.create();
@@ -286,6 +289,7 @@ foam.CLASS({
         eof: async function() {
           if ( agent ) await self.dao.cmd(agent);
           self.progress = 100;
+          latch.resolve('eof');
         }
       };
 
@@ -308,6 +312,8 @@ foam.CLASS({
           block2.obj.run();
         }, 100);
       }
+
+      return latch;
     },
 
     function getXMLMapping(tag, attr) {
