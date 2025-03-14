@@ -130,8 +130,8 @@ foam.CLASS({
       class: 'String',
       name: 'format',
       // value: 'CSV',
-      value: 'XML',
-      view: { class: 'foam.u2.view.ChoiceView', choices: [ 'CSV', 'JSON', 'XML' ] }
+      value: 'AUTO',
+      view: { class: 'foam.u2.view.ChoiceView', choices: [ 'AUTO', 'CSV', 'JSON', 'XML' ] }
     },
     {
       class: 'String',
@@ -291,25 +291,41 @@ foam.CLASS({
           self.progress = 100;
           console.timeEnd('upload');
           latch.resolve('eof');
+
+          if ( ! real ) {
+            var block = self.block;
+            self.eval_(`dao(${block.flowName}.preview, '${block.flowName}.preview')`);
+            var block2 = self.currentBlock;
+            block2.flowName = block.flowName + 'data';
+            block2.obj.limit = 10;
+            setTimeout(() => {
+              // Needed because it is the SinkView which creates the 'select' object
+              block2.obj.run();
+            }, 100);
+          }
         }
       };
+
+      this.input = this.input.trim();
+
+      if ( this.format === 'AUTO' ) {
+        this.input = this.input
+        if ( this.input.startsWith('<?xml') ) {
+          this.format = 'XML';
+        } else if ( this.input.startsWith('{') ) {
+          this.format = 'JSON';
+        } else {
+          this.format = 'CSV';
+        }
+      }
 
       if ( this.format === 'CSV' ) {
         this.processCSV(sink);
       } else if ( this.format === 'XML' ) {
         this.processXML(sink);
-      }
-
-      if ( ! real ) {
-        var block = this.block;
-        this.eval_(`dao(${block.flowName}.preview, '${block.flowName}.preview')`);
-        var block2 = this.currentBlock;
-        block2.flowName = block.flowName + 'data';
-        block2.obj.limit = 10;
-        setTimeout(() => {
-          // Needed because it is the SinkView which creates the 'select' object
-          block2.obj.run();
-        }, 100);
+      } else if ( this.format === 'JSON' ) {
+        // TODO:
+        // this.processJSON(sink);
       }
 
       return latch;
@@ -397,7 +413,7 @@ foam.CLASS({
 
     async function processCSV(sink) {
       var ids = {};
-      var a   = this.input.trim().split('\n');
+      var a   = this.input.split('\n');
 
       if ( ! a ) { this.rows = 0; return; }
 
