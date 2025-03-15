@@ -10,6 +10,13 @@ foam.CLASS({
   extends: 'foam.dao.ProxyDAO',
   flags: ['java'],
 
+  documentation: `
+    A DAO for recursively looking up all the files under its root directory on select.
+    For each file found, a FSFile is created with its file name, absolute path, parent directory
+    and stored by the DAO.
+    FSFile has a reference to FSFileContent. See FSFileContentDAO for file content lookup
+  `,
+
   javaImports: [
     'foam.core.fs.AbstractStorage',
     'foam.dao.Sink',
@@ -21,7 +28,7 @@ foam.CLASS({
     {
       class: 'String',
       name: 'root',
-      value: "/Users/noodlemoodle/ptv3/src"
+      value: "."
     },
     {
       class: 'Boolean',

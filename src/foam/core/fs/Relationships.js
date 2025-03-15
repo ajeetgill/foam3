@@ -1,5 +1,13 @@
-// dir - file/sub-dir
+/**
+ * @license
+ * Copyright 2025 The FOAM Authors. All Rights Reserved.
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 foam.RELATIONSHIP({
+  documentation: `
+    Relationship between a parent directory and its files
+  `,
   cardinality: '1:*',
   sourceModel: 'foam.core.fs.FSFile',
   forwardName: 'files',

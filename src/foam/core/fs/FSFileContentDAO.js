@@ -9,6 +9,12 @@ foam.CLASS({
     name: 'FSFileContentDAO',
     extends: 'foam.dao.ProxyDAO',
     flags: ['java'],
+
+    documentation: `
+      A DAO which returns the content of a file stored in FSFileDAO.
+      On find, given a reference to a FSFile, return corresponding FSFileContent with matching reference.
+      If no entry is found, try to create a new FSFileContent entry by which stores the file content in a string.
+    `,
   
     javaImports: [
       'foam.core.logger.Loggers',
