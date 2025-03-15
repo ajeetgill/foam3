@@ -14,7 +14,9 @@ foam.CLASS({
     A DAO for recursively looking up all the files under its root directory on select.
     For each file found, a FSFile is created with its file name, absolute path, parent directory
     and stored by the DAO.
-    FSFile has a reference to FSFileContent. See FSFileContentDAO for file content lookup
+    FSFile has a reference to FSFileContent. See FSFileContentDAO for file content lookup.
+    Unlike FileDAO, which is meant for storing Files from clients, this type of DAO is intended to
+    make existing server file access possible from the client.
   `,
 
   javaImports: [
@@ -41,7 +43,7 @@ foam.CLASS({
       name: 'select_',
       javaCode: `
         if ( ! getInitialized() ) {
-          File dir = new File(getRoot()); 
+          File dir = new File(getRoot());
           listFiles(x, dir, sink);
           setInitialized(true);
           return sink;
