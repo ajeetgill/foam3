@@ -321,6 +321,7 @@ foam.CLASS({
     ^ .foam-u2-view-ValueView {
       min-width: 220px;
     }
+    .foam-core-console-Layout-l { overflow-y: auto; }
     .foam-core-console-Layout-r .foam-core-console-PropertyBorder-richText .foam-core-console-PropertyBorder-propHolder { margin-left: -85px; }
     ^ .foam-u2-ProgressView { width: 600px; }
   `,
@@ -544,6 +545,8 @@ foam.CLASS({
       this.addFlowChild(block);
 
       var innerScope = {
+        // shell: this,
+        eval_: this.eval_.bind(this),
         addValue: block.addValue.bind(block),
         log: block.log.bind(block),
         out: block.out, start: block.out.start.bind(block.out),
@@ -560,6 +563,7 @@ foam.CLASS({
           var m = cmd.match(/^\s*([a-zA-Z][a-zA-Z0-9_\$]*)\(/);
           if ( m ) block.flowName = this.createFlowChildName(m[1]);
         } catch (x) {
+          console.log(x);
           var i = cmd.indexOf(' ');
           if ( i != -1 ) {
             arg = cmd.substring(i+1);
@@ -610,6 +614,8 @@ foam.CLASS({
       this.setTimeout(() => this.scrollToBottom(), 32);
       this.setTimeout(() => this.scrollToBottom(), 64);
       this.setTimeout(() => this.scrollToBottom(), 96);
+
+      return block;
     },
 
     function addFlowChild_(c) {

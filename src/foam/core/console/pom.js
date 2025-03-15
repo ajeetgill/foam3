@@ -26,6 +26,8 @@ foam.POM({
     { name: 'ConsoleZACClient',        flags: 'js' },
     { name: 'Flow',                    flags: 'js|java' },
     { name: 'ReactiveDetailView',      flags: 'js' },
+    { name: 'Script',                  flags: 'js' },
+    { name: 'XHR',                     flags: 'js' },
     { name: 'Check',                   flags: 'js' },
     { name: 'Signature',               flags: 'js' },
     { name: 'Header',                  flags: 'js' },

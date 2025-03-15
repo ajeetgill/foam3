@@ -19,7 +19,7 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.core.console',
-  name: 'UploadMapping',
+  name: 'Mapping',
 
   constants: {
     UNKNOWN: { name: '--', set: function() {}, cls_: { name: '--' } }
@@ -40,13 +40,22 @@ foam.CLASS({
       name: 'of',
       hidden: true
     }
+  ],
+
+  methods: [
+    function process(obj, value) {
+      if ( foam.String.isInstance(value) ) value = value.trim();
+      if ( value !== '' ) {
+        this.handler.set(obj, value);
+      }
+    }
   ]
 });
 
 
 foam.CLASS({
   package: 'foam.core.console',
-  name: 'UploadMappingsView',
+  name: 'MappingsView',
   extends: 'foam.u2.Controller',
 
   properties: [ 'data' ],
@@ -62,7 +71,7 @@ foam.CLASS({
 
       this.addClass().
       start('table').start('tr').
-        start('td').style({fontWeight: 'bold'}).add('Column').end().
+        start('td').style({fontWeight: 'bold'}).add('Property').end().
         start('td').style({fontWeight: 'bold'}).add('Handler').end().
         start('td').style({fontWeight: 'bold'}).add('Type').end().
         start('td').style({fontWeight: 'bold'}).add('Required').end().
@@ -92,7 +101,7 @@ foam.CLASS({
     'foam.lib.csv.CSVParser',
     'foam.parse.QueryParser',
     'foam.core.console.DAOHolder',
-    'foam.core.console.UploadMapping',
+    'foam.core.console.Mapping',
     'foam.core.console.UploadAgent'
   ],
 
@@ -120,8 +129,9 @@ foam.CLASS({
     {
       class: 'String',
       name: 'format',
-      value: 'CSV',
-      view: { class: 'foam.u2.view.ChoiceView', choices: [ 'CSV', 'JSON', 'XML' ] }
+      // value: 'CSV',
+      value: 'AUTO',
+      view: { class: 'foam.u2.view.ChoiceView', choices: [ 'AUTO', 'CSV', 'JSON', 'XML' ] }
     },
     {
       class: 'String',
@@ -132,6 +142,15 @@ foam.CLASS({
         foam.u2.DisplayMode.HIDDEN ;
       },
       width: 1
+    },
+    {
+      class: 'String',
+      name: 'tagName',
+      value: 'CardFinancial',
+      visibility: function(format) { return format === 'XML' ?
+        foam.u2.DisplayMode.RW :
+        foam.u2.DisplayMode.HIDDEN ;
+      }
     },
     {
       class: 'Int',
@@ -151,13 +170,13 @@ foam.CLASS({
     {
       class: 'String',
       name: 'input',
-      view: { class: 'foam.u2.tag.TextArea', rows: 20, cols: 90 }
+      view: { class: 'foam.u2.tag.TextArea', rows: 10, cols: 100 }
     },
     {
       class: 'FObjectArray',
-      of: 'foam.core.console.UploadMapping',
+      of: 'foam.core.console.Mapping',
       name: 'mappings',
-      view: 'foam.core.console.UploadMappingsView',
+      view: 'foam.core.console.MappingsView',
       factory: function() { return []; }
     },
     {
@@ -178,31 +197,47 @@ foam.CLASS({
       },
       hidden: true
     },
-    { name: 'block', hidden: true, postSet: function(o, n) { if ( ! n ) debugger; } }
+    { name: 'block', hidden: true, postSet: function(o, n) { if ( ! n ) debugger; } },
+    {
+      name: 'of',
+      transient: true,
+      hidden: true,
+      expression: function (dao) { return dao.of; }
+    },
+    {
+      name: 'columnParser',
+      transient: true,
+      hidden: true,
+      expression: function (of) {
+        return this.QueryParser.create({of: of, allowShortNames: false});
+      }
+    },
   ],
 
   methods: [
     function init() {
       this.SUPER();
 
-      this.block = this.currentBlock;
-      this.block.value = this.DAOHolder.create({preview: this.data});
+      if ( this.currentBlock ) {
+        this.block        = this.currentBlock;
+        this.block.upload = this;
+        this.block.value  = this.DAOHolder.create({preview: this.data});
+      }
     },
 
     function parseColumns(s) {
       if ( s === this.lastColumns ) return this.mappings;
-      var parser   = this.QueryParser.create({of: this.dao.of});
+      var parser   = this.columnParser;
       var mappings = [];
 
       s.trim().split(',').forEach(c => {
-        var prop = parser.parseString(c, 'fieldname');
-
-        if ( ! prop ) {
+        if ( c.indexOf(' ') != -1 ) {
           c = c.split(' ').map((n, i) => { n = n.toLowerCase(); if ( i ) n = foam.String.capitalize(n); return n; }).join('');
-          prop = parser.parseString(c, 'fieldname');
         }
 
-        mappings.push(this.UploadMapping.create({id: c, handler: prop || foam.core.console.UploadMapping.UNKNOWN, of: this.dao.of}));
+        var prop = parser.parseString(c, 'fieldname');
+
+        mappings.push(this.Mapping.create({id: c, handler: prop || this.Mapping.UNKNOWN, of: this.of}));
         if ( ! prop ) {
           this.output += '<span style="color:red">Unknown property: ' + c + '</span><br>';
         }
@@ -215,39 +250,173 @@ foam.CLASS({
     },
 
     async function process(real) {
+      var self  = this;
+      var latch = foam.lang.Latch.create();
       await this.data.removeAll();
+      this.processing = 0;
       this.clear();
       console.time('upload');
+      var i = 1;
+      var agent;
+
+      var sink = {
+        put: async function(o) {
+          self.processing = Math.max(self.processing, i);
+          self.progress   = this.rows ? Math.max(self.progress, Math.floor(100 * i / this.rows)) : 0;
+
+          if ( o.errors_ ) {
+            self.output += '<span style="color:red">' + o.errors_ + ', row: ' + i + '<br>' + row + '</span>';
+          }
+
+          if ( ! real ) {
+            if ( foam.lang.Long.isInstance(o.ID) ) o.id = i;
+            self.data.put(o);
+          } else {
+            if ( ! agent ) agent = self.UploadAgent.create();
+            agent.data.push(o);
+            if ( i && i % 1000 === 0 ) {
+              var oldAgent = agent;
+              agent = undefined;
+              if ( i && i % 10000 === 0 ) {
+                await self.dao.cmd(oldAgent);
+              } else {
+                self.dao.cmd(oldAgent);
+              }
+            }
+          }
+          i++;
+        },
+        eof: async function() {
+          if ( agent ) await self.dao.cmd(agent);
+          self.progress = 100;
+          console.timeEnd('upload');
+          latch.resolve('eof');
+
+          if ( ! real ) {
+            var block = self.block;
+            self.eval_(`dao(${block.flowName}.preview, '${block.flowName}.preview')`);
+            var block2 = self.currentBlock;
+            block2.flowName = block.flowName + 'data';
+            block2.obj.limit = 10;
+            setTimeout(() => {
+              // Needed because it is the SinkView which creates the 'select' object
+              block2.obj.run();
+            }, 100);
+          }
+        }
+      };
+
+      this.input = this.input.trim();
+
+      if ( this.format === 'AUTO' ) {
+        this.input = this.input
+        if ( this.input.startsWith('<?xml') ) {
+          this.format = 'XML';
+        } else if ( this.input.startsWith('{') ) {
+          this.format = 'JSON';
+        } else {
+          this.format = 'CSV';
+        }
+      }
 
       if ( this.format === 'CSV' ) {
-        this.processCSV(real);
+        this.processCSV(sink);
       } else if ( this.format === 'XML' ) {
-        this.processXML(real);
+        this.processXML(sink);
+      } else if ( this.format === 'JSON' ) {
+        // TODO:
+        // this.processJSON(sink);
       }
 
-      console.timeEnd('upload');
+      return latch;
+    },
 
-      if ( ! real ) {
-        var block = this.block;
-        this.eval_(`dao(${block.flowName}.preview, '${block.flowName}.preview')`);
-        var block2 = this.currentBlock;
-        block2.flowName = block.flowName + 'data';
-        block2.obj.limit = 10;
-        setTimeout(() => {
-          // Needed because it is the SinkView which creates the 'select' object
-          block2.obj.run();
-        }, 100);
+    function getXMLMapping(tag, attr) {
+      var key = attr ? tag + '.' + attr : tag;
+
+      if ( ! this.mappings_[key] ) {
+        if ( attr ) {
+          var prop = this.columnParser.parseString(tag + attr, 'fieldname');
+          this.mappings_[key] = this.Mapping.create({
+            id: key,
+            handler: prop || this.Mapping.UNKNOWN,
+            of: this.of
+          });
+        } else {
+          var prop = this.columnParser.parseString(tag, 'fieldname');
+          this.mappings_[key] = this.Mapping.create({
+            id: key,
+            handler: prop || this.Mapping.UNKNOWN,
+            of: this.of
+          });
+        }
       }
+
+      return this.mappings_[key];
     },
 
-    async function processXML(real) {
 
+    function objectifyXML(doc) {
+      var parser   = this.columnParser;
+      var obj      = this.of.create();
+      var children = doc.children;
+      var nodes    = {};
+
+      for ( var i = 0 ; i < children.length ; i++ ) {
+        // fetch property based on xml tag name since they may not be in order
+        var node  = children[i];
+        var attrs = node.getAttributeNames();
+
+        if ( node.firstChild ) {
+          var value = node.firstChild.nodeValue;
+          this.getXMLMapping(node.tagName).process(obj, value);
+        }
+        for ( var j = 0 ; j < attrs.length ; j++ ) {
+          var attrName = attrs[j];
+          var value    = node.getAttribute(attrName);
+          this.getXMLMapping(node.tagName, attrName).process(obj, value);
+        }
+      }
+
+      return obj;
     },
 
-    async function processCSV(real) {
+    async function processXML(sink) {
+      this.mappings_ = {};
+      this.mappings.forEach(m => this.mappings_[m.id] = m);
+
+      var parser   = new DOMParser();
+      var doc      = parser.parseFromString(this.input, 'text/xml');
+      var root     = doc.firstChild;
+      var children = root.children;
+      var cls      = this.of;
+
+      this.rows = 0;
+
+      // Just count matched rows so that this.rows is set
+      for ( var i = 0 ; i < children.length ; i++ ) {
+        var node = children[i];
+        if ( this.tagName && node.tagName !== this.tagName ) continue;
+        this.rows++;
+      }
+
+      // Process matched rows
+      for ( var i = 0 ; i < children.length ; i++ ) {
+        var node = children[i];
+        if ( this.tagName && node.tagName !== this.tagName ) continue;
+        await sink.put(this.objectifyXML(node));
+      }
+
+      sink.eof();
+      this.mappings = Object.values(this.mappings_);
+    },
+
+    async function processCSV(sink) {
       var ids = {};
-      var a = this.input.trim().split('\n');
+      var a   = this.input.split('\n');
+
       if ( ! a ) { this.rows = 0; return; }
+
       this.rows = a.length-1;
 
       try {
@@ -260,55 +429,21 @@ foam.CLASS({
         for ( var i = 1 ; i < a.length ; i++ ) {
           if ( ! agent ) agent = this.UploadAgent.create();
           var row = a[i];
-          var obj = this.dao.of.create();
-          this.processing = Math.max(this.processing, i);
-          this.progress   = Math.max(this.progress, Math.floor(100 * i / a.length));
+          var obj = this.of.create();
           var csv = parser.parseString(row, this.delimiter);
           for ( var j = 0 ; j < csv.length && j < props.length ; j++ ) {
-            var prop  = props[j].handler;
-            var value = csv[j];
-            if ( value !== '' ) { // TODO: this line is probably wrong
-              prop.set(obj, value.value);
-            }
+            props[j].process(obj, csv[j].value);
           }
+          await sink.put(obj);
           /*
           if ( ids[obj.id] ) {
             this.output += '<span style="color:red">Duplicate Records for id "' + obj.id + '":<br>' + ids[obj.id] + '<br>' + row + '</span>';
           }
           ids[obj.id] = row;
           */
-          if ( obj.errors_ ) {
-            this.output += '<span style="color:red">' + obj.errors_ + ', row: ' + i + '<br>' + row + '</span>';
-          }
-          if ( real ) {
-            agent.data.push(obj);
-            if ( i && i % 1000 === 0 ) {
-              var oldAgent = agent;
-              agent = undefined;
-              if ( i && i % 10000 === 0 ) {
-                await this.dao.cmd(oldAgent);
-              } else {
-                this.dao.cmd(oldAgent);
-              }
-            }
-            /*
-            try {
-              if ( i % 250 == 1 ) {
-                await this.dao.put(obj);
-              } else {
-                this.dao.put(obj);
-              }
-            } catch (x) {
-              throw `Unable to put row ${row} with response "${x}"`
-              }
-              */
-          } else {
-            this.data.put(obj);
-          }
         }
-        if ( agent ) this.dao.cmd(agent);
 
-        this.progress = 100;
+        sink.eof();
       } catch (x) {
         this.output += '<span style="color:red">ERROR: ' + x + '</span>';
       }
@@ -329,6 +464,13 @@ foam.CLASS({
       code: function() {
         this.output   = '';
         this.progress = 0;
+      }
+    },
+    {
+      name: 'resetMappings',
+      isAvailable: function(mappings) { return mappings.length; },
+      code: function() {
+        this.mappings = [];
       }
     }
   ]
