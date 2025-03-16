@@ -5,13 +5,15 @@
  */
 
 foam.CLASS({
-    package: 'foam.core.boot',
-    name: 'CSpecCitationView',
-    extends: 'foam.u2.CitationView',
-  
-    imports: [ 'outputLink', 'eval_' ],
-  
-    css: `
+  package: 'foam.core.boot',
+  name: 'CSpecCitationView',
+  extends: 'foam.u2.CitationView',
+
+  requires: [ 'foam.core.console.Link' ],
+
+  imports: [ 'eval_' ],
+
+  css: `
       ^ {
         height: fit-content;
         background-color: white;
@@ -36,62 +38,64 @@ foam.CLASS({
         width: 80%;
         overflow-x: scroll;
       }
-    `,
-  
-    properties: [
-      {
-        class: 'FObjectProperty',
-        of: 'foam.core.boot.CSpec',
-        name: 'data',
-        documentation: ''
-      }
-    ],
-  
-    methods: [
-      function render() {
-        var cspec = this.__context__[this.data.name];
-        if ( ! cspec || ! cspec.of ) {
-          // non-dao services and server side daos
-          this.addClass(this.myClass())
-            .start().addClass(this.myClass('card'))
-              .start('b').addClass(this.myClass('left')).add('cSpec not available: ').end()
-              .start().addClass(this.myClass('right')).add(this.data.name).end()
-            .end();
-          return;
-        }
-  
-        var of = cspec.of;
-        var self = this;
-  
-        this
-          .start()
-          .addClass(this.myClass())
-            .start().addClass(this.myClass('card'))
-              .start('b').addClass(this.myClass('left')).add('cSpec').end()
-              .start().addClass(this.myClass('right'))
-                .call(function() { self.outputLink(self.data.name, () => self.eval_('dao("' + self.data.name + '")'), this); })
-              .end()
-            .end()
-            .start().addClass(this.myClass('card'))
-              .start('b').addClass(this.myClass('left')).add('add').end()
-              .start().addClass(this.myClass('right'))
-                .call(function() { self.outputLink('add', () => self.eval_('add("' + self.data.name + '")'), this); })
-              .end()
-            .end()
-            .start().addClass(this.myClass('card'))
-              .start('b').addClass(this.myClass('left')).add('of').end()
-              .start().addClass(this.myClass('right'))
-                .call(function() { self.outputLink(of.id, () => self.eval_('describe(' + of.id + ')'), this); })
-              .end()
-            .end()
-            .start().addClass(this.myClass('card'))
-              .start('b').addClass(this.myClass('left')).add('description').end()
-              .start().addClass(this.myClass('right'))
-                .add(this.data.description || this.data.name)
-              .end()
-            .end()
+  `,
+
+  properties: [
+    {
+      class: 'FObjectProperty',
+      of: 'foam.core.boot.CSpec',
+      name: 'data',
+      documentation: ''
+    }
+  ],
+
+  methods: [
+    function render() {
+      var cspec = this.__context__[this.data.name];
+      if ( ! cspec || ! cspec.of ) {
+        // non-dao services and server side daos
+        this.addClass(this.myClass())
+          .start().addClass(this.myClass('card'))
+          .start('b').addClass(this.myClass('left')).add('cSpec not available: ').end()
+          .start().addClass(this.myClass('right')).add(this.data.name).end()
           .end();
+        return;
       }
-    ]
-  });
-  
+
+      var of   = cspec.of;
+      var self = this;
+
+      var daoFn = () => self.eval_('dao("' + self.data.name + '")');
+      var addFn = () => self.eval_('add("' + self.data.name + '")');
+      var desFn = () => self.eval_('describe(' + of.id + ')');
+      this
+        .start()
+          .addClass(this.myClass())
+          .start().addClass(this.myClass('card'))
+            .start('b').addClass(this.myClass('left')).add('cSpec').end()
+            .start().addClass(this.myClass('right'))
+              .start(this.Link).add(self.data.name).on('click', daoFn).end()
+            .end()
+          .end()
+          .start().addClass(this.myClass('card'))
+            .start('b').addClass(this.myClass('left')).add('add').end()
+            .start().addClass(this.myClass('right'))
+              .start(this.Link).add('add').on('click', addFn).end()
+            .end()
+          .end()
+          .start().addClass(this.myClass('card'))
+            .start('b').addClass(this.myClass('left')).add('of').end()
+            .start().addClass(this.myClass('right'))
+              .start(this.Link).add(of.id).on('click', desFn).end()
+            .end()
+          .end()
+          .start().addClass(this.myClass('card'))
+            .start('b').addClass(this.myClass('left')).add('description').end()
+            .start().addClass(this.myClass('right'))
+              .add(this.data.description || this.data.name)
+            .end()
+          .end()
+        .end();
+    }
+  ]
+});
