@@ -5,8 +5,8 @@
  */
 
 foam.CLASS({
-  name: 'CompoundException',
   package: 'foam.lang',
+  name: 'CompoundException',
   extends: 'foam.lang.FOAMException',
 
   javaImports: [
