@@ -14,9 +14,9 @@ foam.CLASS({
   ],
 
   requires: [
-    'foam.core.console.Link',
     'foam.parse.QueryParser',
     'foam.u2.DetailView',
+    'foam.u2.Link',
     'foam.u2.tag.CircleIndicator'
   ],
 

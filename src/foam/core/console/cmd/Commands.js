@@ -10,9 +10,9 @@ foam.CLASS({
   package: 'foam.core.console.cmd',
   name: 'Command',
 
-  requires: [ 'foam.core.console.Link' ],
+  requires: [ 'foam.u2.Link' ],
 
-  imports: [ 'currentBlock', 'log', 'out', 'outputLink', 'eval_' ],
+  imports: [ 'currentBlock', 'log', 'out', 'eval_' ],
 
   tableColumns: [ 'id', 'description' /*, 'execute_' */ ],
 
@@ -208,22 +208,26 @@ foam.CLASS({
       this.out.tag('br');
       this.out.start('table').attr('width', '100%').
         select(dao, function(n) {
-          var sdao = self.__context__[n.name];
-          var of   = sdao.of;
+          var sdao  = self.__context__[n.name];
+          var of    = sdao.of;
+          var daoFn = () => self.eval_('dao("' + n.name + '")');
+          var addFn = () => self.eval_('add("' + n.name + '")');
+          var uplFn = () => self.eval_('upload("' + n.name + '")');
+          var desFn = () => self.eval_('describe(' + of.id + ')');
 
           this.start('tr').
-            start('th').attr('align', 'left').call(function() {
-              self.outputLink(n.name, () => self.eval_('dao("' + n.name + '")'), this);
-            }).end().
-            start('td').attr('align', 'left').call(function() {
-              self.outputLink('add', () => self.eval_('add("' + n.name + '")'), this);
-            }).end().
-            start('td').attr('align', 'left').call(function() {
-              self.outputLink('upload', () => self.eval_('upload("' + n.name + '")'), this);
-            }).end().
-            start('td').attr('align', 'left').call(function() {
-              self.outputLink(of.id, () => self.eval_('describe(' + of.id + ')'), this);
-            }).end().
+            start('th').attr('align', 'left').
+              start(self.Link).add(n.name).on('click', daoFn).end().
+            end().
+            start('td').attr('align', 'left').
+              start(self.Link).add('add').on('click', addFn).end().
+            end().
+            start('td').attr('align', 'left').
+              start(self.Link).add('upload').on('click', uplFn).end().
+            end().
+            start('td').attr('align', 'left').
+              start(self.Link).add(of.id).on('click', desFn).end().
+            end().
             start('td').attr('align', 'left').add(n.description);
         });
     }

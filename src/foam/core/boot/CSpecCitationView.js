@@ -9,7 +9,7 @@ foam.CLASS({
   name: 'CSpecCitationView',
   extends: 'foam.u2.CitationView',
 
-  requires: [ 'foam.core.console.Link' ],
+  requires: [ 'foam.u2.Link' ],
 
   imports: [ 'eval_' ],
 
@@ -68,6 +68,7 @@ foam.CLASS({
       var daoFn = () => self.eval_('dao("' + self.data.name + '")');
       var addFn = () => self.eval_('add("' + self.data.name + '")');
       var desFn = () => self.eval_('describe(' + of.id + ')');
+
       this
         .start()
           .addClass(this.myClass())

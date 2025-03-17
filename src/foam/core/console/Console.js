@@ -266,10 +266,10 @@ foam.CLASS({
     'foam.core.console.Flow',
     'foam.core.console.FlowableTree',
     'foam.core.console.Layout',
-    'foam.core.console.Link',
     'foam.core.console.ReactiveDetailView',
     'foam.dao.ArrayDAO',
-    'foam.flow.Document'
+    'foam.flow.Document',
+    'foam.u2.Link'
   ],
 
   imports: [ 'commandDAO', 'scope?', 'window', 'setTimeout' ],
@@ -282,7 +282,6 @@ foam.CLASS({
     'history_',
     'log',
     'out',
-    'outputLink', // TODO: replace with Link
     'scrollToBottom',
     'showPrompts'
   ],
@@ -501,17 +500,6 @@ foam.CLASS({
       this.history_.push(cmd);
       while ( this.history_.length > this.historyLength ) this.history_.shift();
       this.window.localStorage[this.historyKey()] = foam.json.stringify(this.history_);
-    },
-
-    // TODO: Just make be a View class
-    function outputLink(text, action, self) {
-      self = self || this.out;
-      self.start('a').style({
-        color: '-webkit-link',
-        cursor: 'pointer',
-        'text-decoration': 'underline'
-      }).on('click', action).add(text).end();
-      return this;
     },
 
     function refreshFlowScope() {

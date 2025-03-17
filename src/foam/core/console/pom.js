@@ -3,7 +3,6 @@ foam.POM({
   files: [
     { name: '../../u2/mlang/Table',    flags: 'js|java' },
     { name: 'SinkView',                flags: 'js' },
-    { name: 'Link',                    flags: 'js' },
     { name: 'PropertyChoiceView',      flags: 'js' },
     { name: 'PropertyListView',        flags: 'js' },
     { name: 'PropertyOrderChoiceView', flags: 'js' },

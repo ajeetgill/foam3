@@ -5,9 +5,9 @@
  */
 
 foam.CLASS({
-  package: 'foam.core.console',
+  package: 'foam.u2',
   name: 'Link',
-  extends: 'foam.u2.View',
+  extends: 'foam.u2.Element',
 
   css: `^ {
     color: -webkit-link;
