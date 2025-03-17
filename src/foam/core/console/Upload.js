@@ -262,7 +262,7 @@ foam.CLASS({
       var sink = {
         put: async function(o) {
           self.processing = Math.max(self.processing, i);
-          self.progress   = this.rows ? Math.max(self.progress, Math.floor(100 * i / this.rows)) : 0;
+          self.progress   = self.rows ? Math.max(self.progress, Math.floor(100 * i / self.rows)) : 0;
 
           if ( o.errors_ ) {
             self.output += '<span style="color:red">' + o.errors_ + ', row: ' + i + '<br>' + row + '</span>';
