@@ -21,3 +21,56 @@ day MDAOs.</li>
 <h2>EasyDAO Support</h2>
 <p>This DAO will be used as the Journal if EasyDAO.journalType is set to <b>TIME_SEGMENTED_JOURNAL</b>.</p>
 <p>Defaults for date PropertyInfo and Filename will be used.</p>
+
+<p>EasyDAO configuration example using JournalType</p>
+<code>
+p({
+  "class":"foam.core.boot.CSpec",
+  "name":"eventDAO",
+  "lazy":false,
+  "serve":true,
+  "authenticate": false,
+  "serviceScript":"""
+    return new foam.dao.EasyDAO.Builder(x)
+      .setOf(some.domain.Event.getOwnClassInfo())
+      .setFuid(true)
+      .setJournalType(foam.dao.JournalType.TIME_SEGMENTED_JOURNAL)
+      .build();
+  """,
+  "client":"""
+    {
+      "of":"some.domain.Event",
+    }
+  """
+})
+</code>
+
+<p>EasyDAO configuration example with explicit DAO creation, which allows setting of additional parameters.</p>
+<code>
+p({
+  "class":"foam.core.boot.CSpec",
+  "name":"eventDAO",
+  "lazy":false,
+  "serve":true,
+  "authenticate": false,
+  "serviceScript":"""
+    dao = new foam.dao.TimeSegmentedJournalDAO(x);
+    dao.setOf(some.domain.Event.getOwnClassInfo())
+    dao.setFilename("event");
+    dao.setPInfo(some.domain.Event.CREATED);
+    return new foam.dao.EasyDAO.Builder(x)
+      .setOf(some.domain.Event.getOwnClassInfo())
+      .setFuid(true)
+      .setInnerDAO(dao);
+      .build();
+  """,
+  "client":"""
+    {
+      "of":"some.domain.Event",
+    }
+  """
+})
+</code>
+
+<h2>Data Migration</h2>
+<p>See script TimeSegmentedJournalDAOLoader, for loading a flat (normal) journal into a TimeSegmentedJournalDAO.</p>
