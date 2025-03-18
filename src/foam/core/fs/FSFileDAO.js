@@ -51,7 +51,7 @@ foam.CLASS({
       name: 'select_',
       javaCode: `
         if ( ! getInitialized() ) {
-          File dir = new File(getRoot()); 
+          File dir = new File(getRoot());
           listFiles(x, dir, sink);
           setInitialized(true);
           return sink;
