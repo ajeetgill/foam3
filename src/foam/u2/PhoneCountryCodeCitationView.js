@@ -8,18 +8,6 @@ foam.CLASS({
    package: 'foam.u2',
    name: 'PhoneCountryCodeCitationView',
    extends: 'foam.u2.CitationView',
-
-   css: `
-   ^rw {
-      padding: 3px 6px;
-      color: $black;
-   }
-
-   ^rw:hover {
-      background: $grey50;
-      cursor: pointer;
-   }
-   `,
    
    methods: [
       function getSummary(data) {
