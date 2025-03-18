@@ -103,14 +103,14 @@ In this current implementation setDelegate must be called last.`,
                 setJournal(new ReadOnlyF3FileJournal.Builder(runtimeStorageX)
                   .setDao(delegate)
                   .setFilename(getFilename())
-                  .setCreateFile(true)
+                  .setCreateFile(false)
                   .setSyncReplay(getSyncReplay())
                   .build());
               } else {
                 setJournal(new F3FileJournal.Builder(runtimeStorageX)
                   .setDao(delegate)
                   .setFilename(getFilename())
-                  .setCreateFile(false)
+                  .setCreateFile(true)
                   .setSyncReplay(getSyncReplay())
                   .build());
               }

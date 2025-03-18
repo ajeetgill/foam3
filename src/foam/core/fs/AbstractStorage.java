@@ -7,6 +7,7 @@
 package foam.core.fs;
 
 import foam.util.SafetyUtil;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -62,6 +63,9 @@ public abstract class AbstractStorage
     if ( path == null ) return null;
 
     try {
+      if ( name.contains(File.separator) ) {
+        Files.createDirectories(path.getParent());
+      }
       return Files.newOutputStream(path, CREATE, APPEND);
     } catch (IOException e) {
       return null;

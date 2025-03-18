@@ -914,18 +914,27 @@ foam.CLASS({
           ddao.setWaitReplay(getWaitReplay());
           ddao.setDelegate(delegate);
           delegate = ddao;
-        } else if ( getJournalType().equals(JournalType.SINGLE_JOURNAL) ) {
-          if ( getWriteOnly() ) {
-            delegate = new foam.dao.WriteOnlyJDAO(x, delegate, getOf(), getJournalName());
-          } else {
-            foam.dao.java.JDAO jdao = new foam.dao.java.JDAO();
-            jdao.setX(x);
-            jdao.setFilename(getJournalName());
-            jdao.setCluster(getCluster() && !getSAF());
-            jdao.setWaitReplay(getWaitReplay());
-            // Setting of delegate must be last as it triggers replay
-            jdao.setDelegate(delegate);
-            delegate = jdao;
+        } else if ( ! getJournalType().equals(JournalType.NO_JOURNAL) ) {
+          if ( getJournalType().equals(JournalType.SINGLE_JOURNAL) ) {
+            if ( getWriteOnly() ) {
+              delegate = new foam.dao.WriteOnlyJDAO(x, delegate, getOf(), getJournalName());
+            } else {
+              foam.dao.java.JDAO jdao = new foam.dao.java.JDAO();
+              jdao.setX(x);
+              jdao.setFilename(getJournalName());
+              jdao.setCluster(getCluster() && !getSAF());
+              jdao.setWaitReplay(getWaitReplay());
+              // Setting of delegate must be last as it triggers replay
+              jdao.setDelegate(delegate);
+              delegate = jdao;
+            }
+          } else if ( getJournalType().equals(JournalType.TIME_SEGMENTED_JOURNAL) ) {
+            foam.dao.TimeSegmentedJournalDAO dao = new foam.dao.TimeSegmentedJournalDAO(x);
+            dao.setOf(getOf());
+            if ( ! SafetyUtil.isEmpty(getJournalName()) ) {
+              dao.setFilename(getJournalName());
+            }
+            delegate = dao;
           }
         }
         return delegate;

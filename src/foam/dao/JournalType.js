@@ -31,8 +31,8 @@ foam.ENUM({
       label: 'Single'
     },
     {
-      name: 'SHARED_JOURNAL',
-      label: 'Shared journal'
-    },
+      name: 'TIME_SEGMENTED_JOURNAL',
+      label: 'Time Segmented'
+    }
   ]
 });

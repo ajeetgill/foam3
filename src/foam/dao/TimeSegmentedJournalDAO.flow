@@ -1,0 +1,23 @@
+<title>Time Segmented Journal DAO</title>
+<h1>Time Segmented Journal DAO</h1>
+<p>The Time Segmented Journal DAO is a DAO which keeps data for each day in a separate MDAO and Journal.</p>
+<p>Directory structure under journals/: year/month/day (yyyy/mm/dd).<br/>Month and Day are not padded, so January is 1 rather than 01.</p>
+<p>Date used for segmentation is taken from the argument object.<br/>
+The date property defaults to <b>created</b> (CreatedAware Interface).</p>
+<p>Each day data is loaded into it's own MDAO.</p>
+
+<h2>CRUD Behaviour</h2>
+<p>
+<ul>
+<li><b>put (create and update)</b>: apply to the original FObject date (when provided).</li>
+<li><b>select</b>: if no predicate, then 'today' is used, otherwise date range from
+predicate is used to calculate 'days' of interest. Appropriate day journals
+are loaded (if not cached). And finally an OR is applied across selected
+day MDAOs.</li>
+<li><b>find</b>: attempt to find the id in current cache of MDAOs</li>
+</ul>
+</p>
+
+<h2>EasyDAO Support</h2>
+<p>This DAO will be used as the Journal if EasyDAO.journalType is set to <b>TIME_SEGMENTED_JOURNAL</b>.</p>
+<p>Defaults for date PropertyInfo and Filename will be used.</p>
