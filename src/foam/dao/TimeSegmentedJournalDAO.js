@@ -152,14 +152,14 @@ When null, no timezone shifting will occur`,
       if ( arg2 instanceof List ) {
         for ( Object obj : (List) arg2 ) {
           Binary b = (Binary) MLang.EQ(getPInfo(), obj);
-          Loggers.logger(getX(), this).info("traverse,add",b);
+          Loggers.logger(getX(), this).debug("traverse,add",b);
           list.add(b);
         }
       }
       if ( arg2 instanceof Object[] ) {
         for ( Object obj : (Object[]) arg2 ) {
           Binary b = (Binary) MLang.EQ(getPInfo(), obj);
-          Loggers.logger(getX(), this).info("traverse,add",b);
+          Loggers.logger(getX(), this).debug("traverse,add",b);
           list.add(b);
         }
       }
@@ -171,7 +171,7 @@ When null, no timezone shifting will occur`,
   public List traverse(Binary binary, List list) {
     PropertyInfo pInfo = (PropertyInfo) binary.getArg1();
     if ( pInfo == getPInfo() ) {
-      Loggers.logger(getX(), this).info("traverse,add", binary);
+      Loggers.logger(getX(), this).debug("traverse,add", binary);
       list.add(binary);
     }
     return list;
@@ -187,7 +187,7 @@ When null, no timezone shifting will occur`,
     if ( obj instanceof Nary ) {
       return traverse((Nary) obj, list);
     }
-    Loggers.logger(getX(), this).info("traverse,ignore", obj);
+    Loggers.logger(getX(), this).debug("traverse,ignore", obj);
     return list;
   }
   `,
@@ -406,7 +406,7 @@ just occured and user is finding from a table view.`,
       for ( Entry<LocalDate, LocalDate> entry : ((Map<LocalDate, LocalDate>) getLrus()).entrySet() ) {
         if ( ChronoUnit.MILLIS.between(entry.getValue(), now) > getTtl() ) {
           synchronized ( this ) {
-            Loggers.logger(getX(), this).info("execute,clearing",entry.getKey());
+            Loggers.logger(getX(), this).debug("execute,clearing",entry.getKey());
             getDaos().remove(entry.getKey());
             getLrus().remove(entry.getKey());
           }

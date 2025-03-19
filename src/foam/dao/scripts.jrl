@@ -3,7 +3,7 @@ p({"class":"foam.core.script.Script","id":"Show decorators","description":"Helpe
 p({
   class:"foam.core.script.Script",
   id:"TimeSegmentedJournalDAOLoader",
-  description: "Load a single journal into a time segmented jouranl",
+  description: "Load a single journal into a time segmented journal",
   code:"""
 import foam.dao.TimeSegmentedJournalDAO;
 
