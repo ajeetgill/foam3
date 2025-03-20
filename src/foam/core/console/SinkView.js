@@ -35,6 +35,7 @@ foam.CLASS({
       [ 'Sum', 'SUM', true ],
       [ 'Controller', 'Controller', false ],
       [ 'ScrollTable', 'ScrollTable', false ],
+      [ 'Script', 'Script', true ],
       [ 'All', 'All', false ]
     ]
         /*
