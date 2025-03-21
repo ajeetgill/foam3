@@ -141,7 +141,7 @@ foam.CLASS({
 
       // Boolean version of modeSlot for use with show()
       var visibilitySlot = modeSlot.map(m => m != foam.u2.DisplayMode.HIDDEN);
-      var colorSlot      = this.data$.dot(prop.name).map(v => !! v);
+      var colorSlot      = this.data$.dot(prop.name).map(v => ! prop.isDefaultValue(v));
       var labelSlot      = this.slot(function(prop$reserveLabelSpace, prop$label) {
         let el = this.E().addClass(this.myClass('label'), this.myClass('label' + '-' + prop.name), 'p-light');
         return prop$label ?
