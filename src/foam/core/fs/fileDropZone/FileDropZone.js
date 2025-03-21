@@ -255,10 +255,8 @@ foam.CLASS({
       .on('dragover', e => { this.isDragged_ = true; e.preventDefault(); } )
       .on('dragenter', e => { this.isDragged_ = true; e.preventDefault(); })
       .on('dragleave', e => { this.isDragged_ = false; e.preventDefault(); })
-        .add(this.slot(function(files, visibility) {
+        .add(this.slot(function(files) {
         var e = this.E().addClass(self.myClass('fileCards'));
-        if ( ! files.length && ! visibility )
-          return e.add(self.NO_FILES);
         for ( var i = 0; i < files.length; i++ ) {
           e.tag({
             class: 'foam.core.fs.fileDropZone.FileCard',
