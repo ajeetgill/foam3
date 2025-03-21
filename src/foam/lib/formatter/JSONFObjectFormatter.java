@@ -147,6 +147,8 @@ public class JSONFObjectFormatter
   public void output(String[] arr) { output((Object[]) arr); }
 
   public void output(Object[] array) {
+    if ( array == null ) return;
+
     append('[');
     for ( int i = 0 ; i < array.length ; i++ ) {
       output(array[i]);
@@ -156,10 +158,14 @@ public class JSONFObjectFormatter
   }
 
   public void output(byte[][] array) {
+    if ( array == null ) return;
+
     append('[');
-    for ( int i = 0 ; i < array.length ; i++ ) {
-      output(array[i]);
-      if ( i < array.length - 1 ) append(',');
+    if ( array != null ) {
+      for ( int i = 0 ; i < array.length ; i++ ) {
+        output(array[i]);
+        if ( i < array.length - 1 ) append(',');
+      }
     }
     append(']');
   }
@@ -169,6 +175,8 @@ public class JSONFObjectFormatter
   }
 
   public void output(Map map) {
+    if ( map == null ) return;
+
     append('{');
     Iterator keys = map.keySet().iterator();
     while ( keys.hasNext() ) {
@@ -183,6 +191,8 @@ public class JSONFObjectFormatter
   }
 
   public void output(List list) {
+    if ( list == null ) return;
+
     append('[');
     Iterator iter = list.iterator();
     while ( iter.hasNext() ) {
@@ -194,14 +204,14 @@ public class JSONFObjectFormatter
 
   protected void outputProperty(FObject o, PropertyInfo p) {
     try {
-    outputKey(getPropertyName(p));
-    append(':');
-    p.formatJSON(this, o);
-  } catch (Throwable t) {
-    System.err.println("***************************************************** error outputting " + getPropertyName(p));
-    System.err.println("" + p.get(o));
-    t.printStackTrace();
-  }
+      outputKey(getPropertyName(p));
+      append(':');
+      p.formatJSON(this, o);
+    } catch (Throwable t) {
+      System.err.println("***************************************************** error outputting " + getPropertyName(p));
+      System.err.println("" + p.get(o));
+      t.printStackTrace();
+    }
   }
 
 
