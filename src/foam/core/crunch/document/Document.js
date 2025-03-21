@@ -48,11 +48,7 @@ foam.CLASS({
           files$: X.data.documents$
         };
       },
-      validateObj: function(documents, isRequired) {
-        if ( isRequired && documents.length === 0 ) {
-          return this.IMAGE_REQUIRED;
-        }
-      }
+      required: true
     },
     {
       class: 'FObjectProperty',
