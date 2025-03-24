@@ -263,6 +263,12 @@ foam.CLASS({
           }
         }
 
+        // Remove duplicate names causes by aliases which are the same but with
+        // a different case
+        var dedup = {};
+        fields.forEach(f => dedup[f.lower] = f);
+        fields = Object.values(dedup);
+
         fields.sort(function(a, b) {
           var d = b.lower.length - a.lower.length;
           if ( d !== 0 ) return d;
