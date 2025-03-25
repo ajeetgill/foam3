@@ -853,8 +853,6 @@ foam.CLASS({
       ],
       javaThrows: ['AuthorizationException'],
       javaCode: `
-        checkLifecyclePermission(x);
-
         Subject subject = (Subject) x.get("subject");
         User user = subject.getUser();
         User agent = subject.getRealUser();
@@ -869,18 +867,6 @@ foam.CLASS({
              ! auth.check(x, "user.read." + this.getId()) &&
              ! auth.check(x, "user.readByGroup." + this.getGroup())
         ) {
-          throw new AuthorizationException();
-        }
-      `
-    },
-    {
-      name: 'checkLifecyclePermission',
-      args: 'Context x',
-      javaThrows: ['AuthorizationException'],
-      javaCode: `
-        AuthService auth = (AuthService) x.get("auth");
-        String permission = "lifecyclestate." + getLifecycleState().getName().toLowerCase() + ".user";
-        if ( getLifecycleState() != LifecycleState.ACTIVE && ! auth.check(x, permission) ) {
           throw new AuthorizationException();
         }
       `
