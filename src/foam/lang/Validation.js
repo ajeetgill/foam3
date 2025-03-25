@@ -146,6 +146,7 @@ foam.CLASS({
     },
     {
       name: 'internalValidateObj',
+      shallowCloneable: false,
       factory: function(prop) {
         var name     = this.name;
         var label    = this.label;

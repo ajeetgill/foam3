@@ -163,6 +163,16 @@ foam.CLASS({
       }
     ],
 
+    {
+      class: 'Boolean',
+      name: 'shallowCloneable',
+      value: true,
+      documentation: `If true, then the property can be shallow cloned. 
+      Useful for properties that need to be set per class but values should not persist cloning as
+      they might be specific to that class and invalid for any child classes.
+      See internalValidationPredicates in Validation.js for use case.`
+    },
+
     /**
       A final Property can only be set once.
       After being set, its value is final (read-only).

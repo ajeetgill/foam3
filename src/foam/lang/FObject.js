@@ -948,7 +948,7 @@ foam.CLASS({
       /** Create a shallow copy of this object. **/
       var m = {};
       for ( var key in this.instance_ ) {
-        if ( this.instance_[key] === undefined ) continue; // Skip previously cleared keys.
+        if ( this.instance_[key] === undefined || ! this.cls_.getAxiomByName(key).shallowCloneable ) continue; // Skip previously cleared keys.
 
         var value = this.instance_[key];
         m[key] = value;
