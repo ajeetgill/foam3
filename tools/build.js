@@ -59,10 +59,10 @@ const fs       = require('fs');
 const { join } = require('path');
 const { buildEnv, comma, copyDir, copyFile, emptyDir, ensureDir, exec, execSync, exportEnvs, processSingleCharArgs, rmdir, rmfile, spawn } = require('./buildlib');
 
-var PWD                       = process.cwd();
+const PWD      = process.cwd();
 
-// Root POM tasks and exports
-var POM_TASKS, EXPORTS;
+// Build variables which will be exported to pom tasks.
+var EXPORTS;
 
 globalThis.foam = {
   POM: function (pom) {
@@ -150,17 +150,18 @@ function quit(code) {
   process.exit(code);
 }
 
-function info(msg) {
+function info(...args) {
+  let msg = args.join(' ');
   console.log('\x1b[0;34mINFO ::', msg, '\x1b[0;0m');
 }
 
-
-function warning(msg) {
+function warning(...args) {
+  let msg = args.join(' ');
   console.log('\x1b[0;33mWARNING ::', msg, '\x1b[0;0m');
 }
 
-
-function error(msg) {
+function error(...args) {
+  let msg = args.join(' ');
   console.log('\x1b[0;31mERROR ::', msg, '\x1b[0;0m');
   quit(1);
 }
@@ -253,18 +254,12 @@ task('Install npm tools that foam and the build use.', [], function install() {
 
 
 task('Deploy documents from DOCUMENT_OUT to DOCUMENT_HOME.', [], function deployDocuments() {
-  console.log('DOCUMENT_OUT: ', DOCUMENT_OUT);
-  console.log('DOCUMENT_HOME:', DOCUMENT_HOME);
-
   copyDir(DOCUMENT_OUT, DOCUMENT_HOME);
 });
 
 
 task('Deploy journal files from JOURNAL_OUT to JOURNAL_HOME.', [], function deployJournals() {
   if ( DELETE_RUNTIME_JOURNALS ) deleteRuntimeJournals();
-
-  console.log('JOURNAL_OUT: ', JOURNAL_OUT);
-  console.log('JOURNAL_HOME:', JOURNAL_HOME);
 
   ensureDir(JOURNAL_HOME);
   copyDir(JOURNAL_OUT, JOURNAL_HOME);
@@ -549,8 +544,7 @@ task('Create empty build and deployment directory structures if required.', [], 
     ensureDir(JOURNAL_OUT);
     ensureDir(DOCUMENT_OUT);
   } catch ( e ) {
-    console.log(e);
-    error(`Directory is not writable! Please run 'sudo chown -R $USER ${APP_ROOT}' first.`);
+    error(`Directory is not writable! Please run 'sudo chown -R $USER ${APP_ROOT}' first.`, e);
   }
 });
 
@@ -580,7 +574,7 @@ function foamBinVersion() {
 }
 
 task('Stop running CORE server.', [], function stopCORE() {
-  console.log('Stopping CORE server...');
+  info('Stopping CORE server...');
 
   var pid = readFromPidFile();
   try {
@@ -588,9 +582,9 @@ task('Stop running CORE server.', [], function stopCORE() {
       execSync(`kill -9 ${pid} &>/dev/null`);
       rmfile(CORE_PIDFILE);
     }
-    console.log('CORE server stopped successfully.');
+    info('CORE server stopped successfully.');
   } catch (e) {
-    console.log('CORE server not running, or failed to stop');
+    warning('CORE server not running, or failed to stop');
   }
 });
 
@@ -678,8 +672,8 @@ const ARGS = {
        args => {
          args.split(',').forEach(b => {
            var c = b.split('=');
-           if ( ! c[0] in globalThis ) {
-             console.log('Unknown environment variable:', c[0]);
+           if ( ! ( c[0] in globalThis ) ) {
+             error('Unknown environment variable:', c[0]);
            } else if ( c.length == 2 ) {
              globalThis[c[0]] = c[1];
            }
@@ -849,8 +843,7 @@ TASKS.split(',').forEach(t => {
   if ( f ) {
     f(...s.slice(1));
   } else {
-    console.log('Unknown Command:', t);
-    quit(1);
+    error('Unknown task:', t);
   }
 });
 
