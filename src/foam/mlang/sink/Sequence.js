@@ -48,6 +48,10 @@ foam.CLASS({
     },
     function toString() {
       return 'SEQ(' + this.args.map(function(a) { return a.toString(); }).join(',') + ')';
+    },
+    function addToE(e) {
+      // Without the .start('span') it displays vertically, with horizontally
+      e.start('span').add.apply(e, this.args);
     }
   ]
 });
