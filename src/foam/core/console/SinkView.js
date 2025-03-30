@@ -79,6 +79,7 @@ foam.CLASS({
   methods: [
     function render() {
       var self = this;
+      if ( ! this.data ) { this.data = undefined; }
 
       this.
         addClass().

@@ -319,21 +319,30 @@ foam.CLASS({
   requires: [ 'foam.mlang.sink.Sequence' ],
 
   properties: [
-    { name: 'sink1', view: 'foam.core.console.SinkView' },
-    { name: 'sink2', view: 'foam.core.console.SinkView' }
+    {
+      name: 'sinks',
+      factory: function() { return []; },
+      view: {
+        class: 'foam.u2.view.ArrayView',
+        valueView: {
+          class: 'foam.core.console.SinkView',
+          sinksOnly: true
+        }
+      }
+    }
   ],
 
   methods: [
     function createSink() {
       return this.Sequence.create({
-        args: [ this.sink1.createSink(), this.sink2.createSink() ]
+        args: this.sinks.map(s => s.createSink())
       });
     },
     function addToE(e) {
       e.startContext({data: this}).
         start().
           style({display: 'flex'}).
-          add(this.SINK1, ', ', this.SINK2);
+          add(this.SINKS);
     }
   ]
 });

@@ -22,7 +22,9 @@ foam.CLASS({
     {
       name: 'put',
       code: function(obj, s) {
-        this.args.forEach(function(a) { a.put(obj, s); });
+        this.args.forEach(function(a) {
+          a.put(obj, s);
+        });
       },
       javaCode: `for ( int i = 0 ; i < getArgs().length ; i++ ) {
   getArgs()[i].put(obj, sub);
