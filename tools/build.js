@@ -61,8 +61,8 @@ const { buildEnv, comma, copyDir, copyFile, emptyDir, ensureDir, exec, execSync,
 
 const PWD      = process.cwd();
 
-// Build variables which will be exported to pom tasks.
-var EXPORTS;
+var EXPORTS; // Build variables which will be exported to pom tasks.
+var POM_TASKS; // NOTE: not working as an environment variable.
 
 globalThis.foam = {
   POM: function (pom) {
@@ -431,11 +431,11 @@ task('Start CORE application server.', [ 'setJavaEnv', 'deployData', 'deployApp'
   } else {
 
     if ( HOST_NAME ) {
-      JAVA_OPTS = ` -Dhostname=${HOST_NAME} ${JAVA_OPTS}`;
+      JAVA_OPTS += ` -Dhostname=${HOST_NAME}`;
     }
 
     if ( DEBUG ) {
-      JAVA_OPTS = `-agentlib:jdwp=transport=dt_socket,server=y,suspend=${DEBUG_SUSPEND ? 'y' : 'n'},address=127.0.0.1:${DEBUG_PORT} ${JAVA_OPTS}`;
+      JAVA_OPTS += ` -agentlib:jdwp=transport=dt_socket,server=y,suspend=${DEBUG_SUSPEND ? 'y' : 'n'},address=127.0.0.1:${DEBUG_PORT}`;
     }
 
     if ( WEB_PORT ) {
@@ -448,10 +448,10 @@ task('Start CORE application server.', [ 'setJavaEnv', 'deployData', 'deployApp'
 
     logLevelLower = 'info';
     if ( LOG_LEVEL ) {
-      JAVA_OPTS = ` -Dlog.level=${LOG_LEVEL} ${JAVA_OPTS}`;
+      JAVA_OPTS += ` -Dlog.level=${LOG_LEVEL}`;
       logLevelLower = `${LOG_LEVEL}`.toLowerCase();
     }
-    JAVA_OPTS = ` -Dorg.slf4j.simpleLogger.defaultLogLevel=${logLevelLower} ${JAVA_OPTS}`;
+    JAVA_OPTS += ` -Dorg.slf4j.simpleLogger.defaultLogLevel=${logLevelLower}`;
 
     MESSAGE = `Starting CORE ${APP_NAME}`;
     if ( TEST || BENCHMARK ) {
@@ -470,8 +470,6 @@ task('Start CORE application server.', [ 'setJavaEnv', 'deployData', 'deployApp'
       }
     }
 
-    // Increase memory here, should be a command-line option:
-    // JAVA_OPTS += ' -Xms12000m -Xmx12000m ';
     info('JAVA_OPTS:' + JAVA_OPTS);
     info(MESSAGE);
 
@@ -562,7 +560,7 @@ function readFromPidFile() {
 task('Set Java environmental variables.', [], function setJavaEnv() {
   if ( TEST || BENCHMARK ) {
     rmdir(APP_HOME);
-    JAVA_OPTS = '-enableassertions ' + JAVA_OPTS;
+    JAVA_OPTS += ' -enableassertions';
   }
 
   JAVA_OPTS += ` -DJOURNAL_HOME=${JOURNAL_HOME}`;
@@ -626,7 +624,7 @@ const ENVS = {
   LOG_HOME:          ['Application logs directory',() => `${APP_HOME}/logs`],
   LOG_LEVEL:         ['Set JVM Log level for TEST cases. Defaults to ERROR. example: -LINFO',null],
   POMS:              ['CSV list of pom files to process,minus any suffix','pom'],
-  POM_TASKS:         ['CSV list of tasks from the root pom'],
+  // POM_TASKS:         ['CSV list of tasks from the root pom'],
   PROFILER:          ['Enable JVM profiling',false],
   PROFILER_PORT:     ['Port JVM will listen on for profiler to connect',8849],
   PROJECT:           ['Top-Level Loaded POM Object, not be be confused with POMS, which is the name of POM(s) to be loaded'],
@@ -668,10 +666,10 @@ const ARGS = {
     () => CLEAN = true ],
   d: [ 'Run with JDPA debugging enabled on port 8000.',
     () => DEBUG = true ],
-  E: [ 'Set environment variables. Example: -EJAVA_OPTS=-Xmx8g,APP_NAME=demo',
+  E: [ 'Set environment variables. Example: -EJAVA_OPTS:-Xmx8g,APP_NAME:demo',
        args => {
          args.split(',').forEach(b => {
-           var c = b.split('=');
+           var c = b.split(':');
            if ( ! ( c[0] in globalThis ) ) {
              error('Unknown environment variable:', c[0]);
            } else if ( c.length == 2 ) {
@@ -766,7 +764,7 @@ function moreUsage() {
 
 task(
 'Build everything specified by flags.',
-  [ 'clean', 'cleanAll', 'setBuildEnv', 'setJavaEnv', 'deleteRuntimeLogs', 'setupDirs', 'packageFOAM', 'buildJava', 'deleteRuntimeJournals', 'deployData', 'deployApp', 'buildJar', 'buildTar', 'startCORE', 'stopCORE' ],
+  [ 'clean', 'cleanAll', 'setJavaEnv', 'deleteRuntimeLogs', 'setupDirs', 'packageFOAM', 'buildJava', 'deleteRuntimeJournals', 'deployData', 'deployApp', 'buildJar', 'buildTar', 'startCORE', 'stopCORE' ],
   function all() {
     setJavaEnv();
 
@@ -816,7 +814,7 @@ task(
 setBuildEnv();
 processSingleCharArgs(ARGS, moreUsage);
 
-// execute POM tasks
+// Install POM tasks
 if ( POM_TASKS ) {
   POM_TASKS.forEach(f => task(f));
 
@@ -825,6 +823,7 @@ if ( POM_TASKS ) {
   EXPORTS = {
     APP_NAME,
     BUILD_DIR,
+    JAVA_OPTS,
     JOURNALS,
     PROJECT,
     VERSION,
