@@ -59,7 +59,7 @@ foam.CLASS({
       var self = this;
       if ( this.horizontal ) {
         e.start('span').style({display:'flex'}).call(function() {
-          self.args.forEach(a => this.add(a));
+          self.args.forEach(a => e.start('span').style({padding: '8px'}).add(a));
         });
       } else {
         this.args.forEach(a => e.start('div').add(a));
