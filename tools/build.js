@@ -215,8 +215,6 @@ task('Build web root directory for inclusion in JAR.', [], function jarWebroot()
   var webroot = BUILD_DIR + '/webroot';
   ensureDir(webroot);
 
-  execSync(__dirname + `/pmake.js -makers=Webroot -pom=${pom()} -builddir=${BUILD_DIR}`, {stdio: 'inherit'});
-
   if ( TAR || JAR ) {
     execSync(`cp ${BUILD_DIR}/js/foam-bin-* ${webroot + '/'}`, {stdio: 'inherit'});
   }
