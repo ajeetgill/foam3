@@ -56,8 +56,11 @@ foam.CLASS({
       return 'SEQ(' + this.args.map(function(a) { return a.toString(); }).join(',') + ')';
     },
     function addToE(e) {
+      var self = this;
       if ( this.horizontal ) {
-        e.start('span').add.apply(e, this.args);
+        e.start('span').style({display:'flex'}).call(function() {
+          self.args.forEach(a => this.add(a));
+        });
       } else {
         this.args.forEach(a => e.start('div').add(a));
       }
