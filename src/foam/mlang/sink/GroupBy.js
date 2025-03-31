@@ -12,6 +12,8 @@ foam.CLASS({
 
   documentation: 'Sink which behaves like the SQL group-by command.',
 
+  requires: [ 'foam.mlang.sink.GroupByView' ],
+
   // TODO: it makes no sense to name the arguments arg1 and arg2
   // because this isn't an expression, so they should be more meaningful
   properties: [
@@ -166,13 +168,7 @@ if ( getGroupLimit() == getGroups().size() && sub != null ) sub.detach();
     },
 
     function addToE(e) {
-      var groups = this.groups;
-      e.start('table').start('tbody').
-        forEach(this.sortedKeys(), function(g) {
-          this.start('tr').
-            start('td').add(g.toString()).end().
-            start('td').add(groups[g]);
-        });
+      e.tag(this.GroupByView, {data: this});
     }
   ]
 });
