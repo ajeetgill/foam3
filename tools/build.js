@@ -364,7 +364,15 @@ const ARGS = {
 };
 
 function moreUsage() {
-  console.log('\nTasks:');
+  console.log('\n');
+  info('Usage: build.js [OPTIONS] (see -Xusage for examples)');
+  console.log('\nOptions are:');
+  Object.keys(ARGS).forEach(a => {
+    console.log('  -' + a + ': ' + ARGS[a][0]);
+  });
+
+  console.log('\n');
+  info('Tasks: (set with -X)');
   var ts = { ...tasks };
   var depth = 1;
   function printTask(t) {
@@ -382,7 +390,8 @@ function moreUsage() {
     printTask(t);
   });
 
-  console.log('\nEnvironment variables:');
+  console.log('\n');
+  info('Environment variables: (set with -E)');
   depth = 1;
   Object.keys(ENVS).sort().forEach(k => {
     var [ desc, val ] = ENVS[k];
@@ -392,12 +401,32 @@ function moreUsage() {
     v = v && v + ' ' || 'undefined';
     console.log(''.padStart(1), k+':', ''.padStart(22-k.length), v, ''.padStart(22-v.length), desc);
   });
+  console.log('\n');
+  info('Execute \'./build.sh -Xusage\' for examples)');
 }
 
 
 // ############################
 // # Build tasks
 // ############################
+task('Build usage examples', [], function usage() {
+  info('Build usage examples');
+  console.log('All builds will still start a Java web server (CORE), unless directed otherwise.');
+  console.log('./build.sh -c');
+  console.log('    Remove previously generated code, before rebuilding.');
+  console.log('./build.sh -cj');
+  console.log('    Remove previously generated code and runtime journals, before rebuilding.');
+  console.log('./build.sh -aJhttps -EJAVA_OPTS=-Xmx8g');
+  console.log('    Start CORE with additional memory, launch from JAR file, and suppor HTTPS support.');
+  console.log('./build.sh -Ndemo -W8300');
+  console.log('    Build into a unique path \'demo\', and start web server on port \'8300\'.');
+  console.log('./build.sh -EAPP_NAME:demo,WEB_PORT:8300');
+  console.log('    Build into a unique path \'demo\', and start web server on port \'8300\'.');
+  console.log('./build.sh -XcleanAll,all');
+  console.log('    Perform an extra deep clean before building normally.');
+  console.log('./build.sh -Htopic');
+  console.log('    Print usage for \'topic\'. Ex: ./build.sh -HcleanAll  or  ./build.sh -Ha');
+});
 
 task('Copy foam-bin into webroot for inclusion in JAR.', ['setupDirs'], function jarWebroot() {
   JAR_INCLUDES += ` -C ${BUILD_DIR} webroot `;
