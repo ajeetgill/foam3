@@ -66,8 +66,6 @@ process.on('unhandledRejection', e => {
   process.exit(1);
 });
 
-// var EXPORTS; // Build variables which will be exported to pom tasks.
-
 var summary = [];
 var depth   = 1;
 var tasks   = [];
@@ -632,11 +630,6 @@ task('Show version information.', [ 'getProjectGitHash', 'getFOAMGitHash'], func
   console.log(`${APP_NAME} revision: ${PROJECT_REVISION}`);
   console.log(`FOAM revision:       ${FOAM_REVISION}`);
 });
-
-// task('Show application information.', [], function appName() {
-//   console.log(`Application Name: ${APP_NAME}`);
-//   console.log(`Application VendorId: ${PROJECT.vendorId}`);
-// });
 
 task('Create empty build and deployment directory structures if required.', [], function setupDirs() {
   try {
