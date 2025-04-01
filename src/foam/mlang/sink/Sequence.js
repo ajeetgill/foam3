@@ -12,6 +12,10 @@ foam.CLASS({
 
   properties: [
     {
+      class: 'Boolean',
+      name: 'horizontal'
+    },
+    {
       class: 'Array',
       type: 'foam.dao.Sink[]',
       name: 'args'
@@ -52,8 +56,14 @@ foam.CLASS({
       return 'SEQ(' + this.args.map(function(a) { return a.toString(); }).join(',') + ')';
     },
     function addToE(e) {
-      // Without the .start('span') it displays vertically, with horizontally
-      e.start('span').add.apply(e, this.args);
+      var self = this;
+      if ( this.horizontal ) {
+        e.start('span').style({display:'flex'}).call(function() {
+          self.args.forEach(a => e.start('span').style({padding: '8px'}).add(a));
+        });
+      } else {
+        this.args.forEach(a => e.start('div').add(a));
+      }
     }
   ]
 });
