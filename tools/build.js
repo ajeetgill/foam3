@@ -401,7 +401,7 @@ function moreUsage() {
 
 task('Copy foam-bin into webroot for inclusion in JAR.', ['setupDirs'], function jarWebroot() {
   JAR_INCLUDES += ` -C ${BUILD_DIR} webroot `;
-  execSync(`cp ${BUILD_DIR}/js/foam-bin-* ${BUILD_DIR}/webroot/}`, {stdio: 'inherit'});
+  execSync(`cp ${BUILD_DIR}/js/foam-bin-* ${BUILD_DIR}/webroot/`, {stdio: 'inherit'});
 });
 
 task('Run pom copy[] tasks for inclusion in JAR.', [], function copy() {
@@ -555,7 +555,7 @@ task('Remove previously generated JAR.', [], function cleanJava() {
 task('Generate and compile java source.', [ 'cleanJava', 'genJava' ], function buildJava() {
 });
 
-task('Copy foam-bin files for inclusion in JAR file.', [ 'cleanJava', 'genJava' ], function jarFOAM() {
+task('Copy foam-bin files for inclusion in JAR file.', ['setupDirs', 'cleanJava', 'genJava'], function jarFOAM() {
   execSync(`cp ${BUILD_DIR}/js/foam-bin-* ${BUILD_DIR}/webroot/`, {stdio: 'inherit'});
 });
 
