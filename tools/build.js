@@ -80,12 +80,6 @@ function task(desc, dep, f) {
     dep  = [];
   }
 
-  if ( ! f ) {
-    // TODO: who is caller?
-    warning("task undefined", f);
-    return;
-  }
-
   if ( ! tasks[f.name] ) {
     tasks[f.name] = [desc, dep];
   }
@@ -122,8 +116,7 @@ function task(desc, dep, f) {
 }
 
 // Execute task dependecies, then task itself
-//function executeTask(t) {
-function x(t) {
+function execute(t) {
   let task = tasks[t];
   if ( ! task ) {
     error('Task not found', t);
@@ -134,8 +127,7 @@ function x(t) {
     if ( d instanceof Function ) {
       d();
     } else {
-      // executeTask(d);
-      x(d);
+      execute(d);
     }
   });
 
@@ -681,7 +673,6 @@ task('Start CORE server (JAR).', [ 'setJavaEnv', 'stopCORE', 'deployData', 'depl
 
 // TODO: split out
 task('Start CORE server (CLASSPATH).', [ 'setJavaEnv', 'stopCORE', 'deployData' ], function startCORE() {
-  info("executeTask,task", t, task);
   if ( HOST_NAME ) {
     JAVA_OPTS += ` -Dhostname=${HOST_NAME}`;
   }
@@ -742,7 +733,6 @@ task('Start CORE server (CLASSPATH).', [ 'setJavaEnv', 'stopCORE', 'deployData' 
   }
 });
 
-
 task('Stop CORE server.', [], function stopCORE() {
   info('Stopping CORE server...');
 
@@ -763,31 +753,31 @@ task('Stop CORE server.', [], function stopCORE() {
 // ############################
 
 task('Build everything specified by flags.', [], function all() {
-  x('stopCORE');
+  execute('stopCORE');
   if ( ! RESTART ) {
     if ( CLEAN_ALL ) {
-      x('cleanAll');
+      execute('cleanAll');
     } else if ( CLEAN ) {
-      x('clean');
+      execute('clean');
     }
 
     if ( TAR ) {
-      x('buildTar');
+      execute('buildTar');
     } else if ( JAR || TEST || BENCHMARK ) {
       // Tests and benchmarks run from a deployed jar
-      x('buildJar');
+      execute('buildJar');
     } else {
-      x('buildJava');
+      execute('buildJava');
     }
   }
   if ( ! ( TAR || BUILD_ONLY ) ) {
     if ( DELETE_RUNTIME_JOURNALS )
-      x('deleteRuntimeJournals');
+      execute('deleteRuntimeJournals');
 
     if ( JAR ) {
-      x('startCOREJar');
+      execute('startCOREJar');
     } else {
-      x('startCORE');
+      execute('startCORE');
     }
   }
 });
@@ -819,8 +809,7 @@ if ( POM_TASKS ) {
 
 TASKS.split(',').forEach(t => {
   var s = t.split(':');
-  // executeTask(s[0]);
-  x(s[0]);
+  execute(s[0]);
 });
 
 quit(0);
