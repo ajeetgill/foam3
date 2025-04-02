@@ -123,8 +123,10 @@ function execute(t) {
   let dep = task[1];
   dep.forEach(d => {
     if ( d instanceof Function ) {
+      // info(`Invoking Dependent Task :: ${t} - ${d}`);
       d();
     } else {
+      // info(`Executing Dependent Task :: ${t} - ${d}`);
       execute(d);
     }
   });
@@ -646,9 +648,8 @@ task('Create empty build and deployment directory structures if required.', [], 
 });
 
 
-task('Set Java environmental variables specific to running test cases.', [], function setTestEnv() {
+task('Set Java environmental variables specific to running test cases.', [], function cleanTest() {
   rmdir(APP_HOME);
-  JAVA_OPTS += ' -enableassertions';
 });
 
 task('Set Java environmental variables.', [], function setJavaEnv() {
@@ -682,8 +683,8 @@ task('Start CORE server (JAR).', [ 'setJavaEnv', 'setRunArgs', 'stopCORE', 'depl
 });
 
 // TODO: split out
-task('Start CORE server (CLASSPATH).', [ 'setJavaEnv', 'stopCORE', 'deployData' ], function startCORE() {
-  if ( HOST_NAME ) {
+task('Start CORE server (CLASSPATH).', [ 'setJavaEnv', 'stopCORE', 'deployData', 'deployLib' ], function startCORE() {
+  if ( HOST_NAME && HOST_NAME !== 'localhost' ) {
     JAVA_OPTS += ` -Dhostname=${HOST_NAME}`;
   }
 
@@ -708,9 +709,7 @@ task('Start CORE server (CLASSPATH).', [ 'setJavaEnv', 'stopCORE', 'deployData' 
 
   MESSAGE = `Starting CORE ${APP_NAME}`;
   if ( TEST || BENCHMARK ) {
-    setTestEnv();
-
-    // TODO: move to pom task
+    JAVA_OPTS += ' -enableassertions';
     JAVA_OPTS += ' -Dresource.journals.dir=journals';
     JAVA_OPTS += ' -DRES_JAR_HOME=' + JAR_OUT;
 
@@ -770,24 +769,27 @@ task('Build everything specified by flags.', [], function all() {
     } else if ( CLEAN ) {
       execute('clean');
     }
+    if ( TEST || BENCHMARK ) {
+      execute('cleanTest');
+    } else if ( DELETE_RUNTIME_JOURNALS ) {
+      execute('deleteRuntimeJournals');
+    }
 
     if ( TAR ) {
       execute('buildTar');
     } else if ( JAR || TEST || BENCHMARK ) {
-      // Tests and benchmarks run from a deployed jar
+      // Tests and benchmarks run from an application jar
       execute('buildJar');
     } else {
       execute('buildJava');
     }
   }
-  if ( ! ( TAR || BUILD_ONLY ) ) {
-    if ( DELETE_RUNTIME_JOURNALS )
-      execute('deleteRuntimeJournals');
 
-    if ( JAR ) {
-      execute('startCOREJar');
-    } else {
+  if ( ! ( TAR || BUILD_ONLY ) ) {
+    if ( TEST || BENCHMARK ) {
       execute('startCORE');
+    } else {
+      execute('startCOREJar');
     }
   }
 });
