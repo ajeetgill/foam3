@@ -512,7 +512,7 @@ task('Remove foam-bin files.', [], function cleanFOAM() {
   execSync(`rm -f ${BUILD_DIR}/js/foam-bin-* >/dev/null 2>&1`);
 });
 
-task("Call pmake with JS Maker to build 'foam-bin.js'.", ['cleanFOAM', 'genFoamBinVersion'], function genJS() {
+task("Call pmake with JS Maker to build 'foam-bin.js'.", ['cleanFOAM', 'genFoamBinVersion', 'setupDirs'], function genJS() {
   let version = FOAM_BIN_VERSION;
   if ( STAGE_JS ) {
     execSync(__dirname + `/pmake.js -flags=web,-java -makers=JS -version=${version} -pom=${pom()} -builddir=${BUILD_DIR} -stage=0`, { stdio: 'inherit' });
@@ -526,7 +526,7 @@ task("Call pmake with JS Maker to build 'foam-bin.js'.", ['cleanFOAM', 'genFoamB
 task('Generate Java and JS packages.', ['genJS'], function packageFOAM() {
 });
 
-task('Call pmake to generate & compile java (via Maven).', ['cleanJava'], function genJava() {
+task('Call pmake to generate & compile java (via Maven).', ['cleanJava', 'setupDirs'], function genJava() {
   //   commandLine 'bash', './gen.sh', "${project.genJavaDir}", "${project.findProperty("pom")?:"pom" }"
   var flags = VERBOSE ? 'verbose' : '';
   var makers = VERBOSE ? 'Verbose,' : '';
@@ -568,10 +568,10 @@ task('Remove previously generated JAR.', [], function cleanJava() {
   execSync(`rm -f ${BUILD_DIR}/lib/${APP_NAME}-*.jar >/dev/null 2>&1`);
 });
 
-task('Generate and compile java source.', [ 'cleanJava', 'genJava' ], function buildJava() {
+task('Generate and compile java source.', [ 'genJava' ], function buildJava() {
 });
 
-task('Copy foam-bin files for inclusion in JAR file.', ['setupDirs', 'cleanJava', 'genJava'], function jarFOAM() {
+task('Copy foam-bin files for inclusion in JAR file.', ['genJava'], function jarFOAM() {
   execSync(`cp ${BUILD_DIR}/js/foam-bin-* ${BUILD_DIR}/webroot/`, {stdio: 'inherit'});
 });
 
@@ -580,7 +580,7 @@ task('Build Java JAR file.', [()=>JAR=true, 'setupDirs', 'packageFOAM', 'buildJa
 });
 
 
-task('Package files into a TAR archive', ['setupDirs', 'buildJar'], function buildTar() {
+task('Package files into a TAR archive', ['buildJar'], function buildTar() {
   // Notice that the argument to the second -C is relative to the directory from the first -C, since -C
   execSync(`tar -a -cf ${BUILD_DIR}/package/${APP_NAME}-deploy-${VERSION}.tar.gz -C ./foam3/tools/deploy bin etc -C${require('path').resolve(BUILD_DIR)} lib`);
 });
