@@ -793,9 +793,6 @@ task('Build everything specified by flags.', [], function all() {
   }
 });
 
-// Process command line arguments
-processSingleCharArgs(ARGS, moreUsage);
-
 globalThis.foam = {
   POM: function (pom) {
     PROJECT   = pom;
@@ -835,6 +832,9 @@ if ( POM_TASKS ) {
     poms
   };
 };
+
+// Process command line arguments
+processSingleCharArgs(ARGS, moreUsage);
 
 // start the build
 TASKS.split(',').forEach(t => {
