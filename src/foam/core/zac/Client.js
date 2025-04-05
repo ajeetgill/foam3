@@ -35,7 +35,6 @@ foam.CLASS({
 
   methods: [
     function requestLogin() {
-      debugger;
     }
   ]
 });
