@@ -631,6 +631,7 @@ foam.CLASS({
     },
     {
       name: 'togglePrompts',
+      // You can do this.showPrompts = true|false; from flow scripts
       code: function() { this.showPrompts = ! this.showPrompts; },
       keyboardShortcuts: [ 'escape' ]
     },
