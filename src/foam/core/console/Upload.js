@@ -233,6 +233,11 @@ foam.CLASS({
         return this.QueryParser.create({of: of, allowShortNames: false});
       }
     },
+    {
+      class: 'Boolean',
+      name: 'bulkUpload',
+      value: true
+    }
   ],
 
   methods: [
@@ -280,7 +285,7 @@ foam.CLASS({
       var i = 1;
       var agent;
 
-      var sink = {
+      var sink = this.bulkUpload ? {
         put: async function(o) {
           self.processing = Math.max(self.processing, i);
           self.progress   = self.rows ? Math.max(self.progress, Math.floor(100 * i / self.rows)) : 0;
@@ -324,6 +329,12 @@ foam.CLASS({
               block2.obj.run();
             }, 100);
           }
+        }
+      } : {
+        put: self.dao.put.bind(self.dao),
+        eof: function() {
+          console.timeEnd('upload');
+          latch.resolve('eof');
         }
       };
 
