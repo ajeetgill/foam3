@@ -203,7 +203,7 @@ function pom() {
   // pom will most likely be set to a deployment pom via -J. The build
   // will fail if the foam pom is not specified.
   if ( ! root ) {
-    addPom('pom', 'pom');
+    poms.unshift('pom');
     POMS = comma('pom', POMS);
     warning('Added /pom');
   }
