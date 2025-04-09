@@ -9,14 +9,15 @@ foam.CLASS({
   name: 'Router',
   extends: 'foam.u2.Controller',
   implements: [ 'foam.u2.Routable' ],
+
   mixins: [ 'foam.u2.memento.Memorable' ],
 
   documentation: `A special type of controller class that simplifies handling of breadcrumbs, stacks and mementos.
     Routers must instantiate using the addCrumb() (usually in the init()).
   `,
 
-  exports: [ 'route' ],
   imports: ['breadcrumbs?', 'stack?'],
+  exports: [ 'route' ],
 
   // topics: ['routedTo'],
   properties: [
@@ -62,6 +63,7 @@ foam.CLASS({
     }
   ]
 });
+
 
 // Used to test if classes mixing in Router are routeable
 foam.INTERFACE({
