@@ -244,7 +244,7 @@
 
         // Check user permission to access authenticated menu
         AuthService auth = (AuthService) x.get("auth");
-        if ( getAuthorizationStatus() === AuthorizationStatus.AUTHENTICATED
+        if ( getAuthorizationStatus() == AuthorizationStatus.AUTHENTICATED
           && ! auth.check(x, "menu.read." + getId())
         ) {
           throw ACCESS_DENIED;
@@ -252,7 +252,7 @@
 
         // Check subject to access unauthenticated menu
         var subject = auth.getCurrentSubject(x);
-        if ( getAuthorizationStatus() === AuthorizationStatus.UNAUTHENTICATED
+        if ( getAuthorizationStatus() == AuthorizationStatus.UNAUTHENTICATED
           && subject != null && ! auth.isUserAnonymous(x, subject.getUser().getId())
         ) {
           throw ACCESS_DENIED;
