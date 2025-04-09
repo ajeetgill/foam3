@@ -39,10 +39,11 @@ foam.CLASS({
         
     }
     ^title {
-      left: 6px;
       padding: 3px;
       font-size: 1.1em;
       cursor: default;
+      display: flex;
+      align-items: center;
     }
     ^content {
       background: white;
@@ -57,8 +58,13 @@ foam.CLASS({
       padding: 5px;
       opacity: 1;
     }
+    ^ .foam-u2-ActionView-toggle svg {
+      width: 12px;
+      height: 12px;
+      color: black;
+    }
     ^ .foam-u2-ActionView-toggle {
-      transform: rotate(-90deg);
+      transform: rotate(90deg);
       transition: transform 0.3s;
       background: transparent;
       border-radius: 50%;
@@ -73,7 +79,7 @@ foam.CLASS({
       background: transparent !important;
     }
     ^.expanded .foam-u2-ActionView-toggle {
-      transform: rotate(0deg);
+      transform: rotate(180deg);
       transition: transform 0.3s;
     }
   `,
@@ -81,13 +87,29 @@ foam.CLASS({
   properties: [
     'title',
     {
+      name: 'icon',
+      documentation: `
+        An icon that appears before the title in the Accordion toolbar.
+
+        Example:
+          this.start(foam.u2.Accordion, {
+            title: 'Action Accordion',
+            icon: {
+              class: 'foam.u2.tag.Image',
+              data: 'images/my-icon.svg'
+            },
+          })
+            .add('This is hidden content...');
+      `,
+    },
+    {
       name: 'actions',
       documentation: `
         A list of actions that appear in the accordion toolbar.
 
         Example:
           this.start(foam.u2.Accordion, {
-            title: "Action Accordion",
+            title: 'Action Accordion',
             actions: [
               {
                 label: 'Action 1',
@@ -99,7 +121,7 @@ foam.CLASS({
               }
             ]
           })
-            .add("This is hidden content...");
+            .add('This is hidden content...');
       `,
       value: []
     },
@@ -117,11 +139,21 @@ foam.CLASS({
         .enableClass('expanded', this.expanded$)
         .start('div')
           .addClass(this.myClass('toolbar'))
-          .on('click', _ => this.toggle())
-          .start('span')
-            .addClass(this.myClass('title'))
-            .add(this.title$)
-          .end();
+          .on('click', _ => this.toggle());
+      
+      let titleSection = toolbar
+        .start('div')
+          .addClass(this.myClass('title'));
+
+      if ( this.icon !== undefined ) {
+        titleSection.tag(this.icon);
+      }
+      
+      titleSection
+        .start('span')
+          .addClass(this.myClass('title'))
+          .add(this.title$)
+        .end();
 
       let actionsSection = toolbar
         .start()
@@ -131,7 +163,8 @@ foam.CLASS({
         // Add actions to the accordion.
       }
 
-      actionsSection.tag(this.ActionView, {action: this.TOGGLE, data: this, label: '\u25BD'})
+      //actionsSection.tag(this.ActionView, {action: this.TOGGLE, data: this, label: '\u25BD'})
+      actionsSection.tag(this.ActionView, {action: this.TOGGLE, data: this, icon: 'images/triangle.svg', label: ''})
 
       this.start('div', null, this.content$)
         //.show(this.expanded$)
