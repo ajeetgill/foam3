@@ -41,6 +41,7 @@ foam.CLASS({
       align-items: stretch;
       text-align: center;
       justify-content:flex-start;
+      display: flex;
     }
     ^flexer > * {
       padding: 4px;
@@ -226,9 +227,9 @@ foam.CLASS({
       this.onDAOUpdate();
 
       this
-        .start()
-          .add(this.slot(function(showMinMaxHelper, helpText_) {
-            return self.E().callIf(showMinMaxHelper, function() {
+        // .start()
+          .add(function(showMinMaxHelper, helpText_) {
+            self.callIf(showMinMaxHelper, function() {
               this
               .start(foam.u2.layout.Rows)
                 .start()
@@ -237,15 +238,17 @@ foam.CLASS({
                 .end()
               .end();
             });
-          }))
-        .end()
-        .start(this.isVertical ? foam.u2.layout.Rows : foam.u2.layout.Cols)
+          })
+        // .end()
+        // .start(this.isVertical ? foam.u2.layout.Rows : foam.u2.layout.Cols)
           .addClass(this.myClass('flexer'))
           .add( // TODO isDoaFetched and simpSlot0 aren't used should be clean up
-            this.isDaoFetched$.map(isDaoFetched => {
-              var toRender = this.choices.map((choice, index) => {
-                var valueSimpSlot = this.mustSlot(choice[0]);
-                var labelSimpSlot = this.mustSlot(choice[1]);
+            function(isDaoFetched) {
+
+              self.start(this.isVertical ? foam.u2.layout.Rows : foam.u2.layout.Cols).add(
+               self.choices.map((choice, index) => {
+                var valueSimpSlot = self.mustSlot(choice[0]);
+                var labelSimpSlot = self.mustSlot(choice[1]);
 
                 var isFinal = choice[2];
 
@@ -278,11 +281,9 @@ foam.CLASS({
 
                 var selfE = self.E();
 
-                return selfE
+                var cardWidth = self.isVertical ? '100%' : (100 / self.numberColumns) + '13%';
+                self
                   // NOTE: This should not be the way we implement columns.
-                  .style({
-                    'width': self.isVertical ? '100%' : `${100 / self.numberColumns}%`
-                  })
                   .start(self.choiceView, {
                     data$: valueSimpSlot,
                     label$: labelSimpSlot,
@@ -290,6 +291,7 @@ foam.CLASS({
                     isDisabled$: isDisabledSlot,
                     of: cls
                   })
+                  // .style({ width: cardWidth })
                     .call(function () {
                       selfE.onDetach(
                         this.clicked.sub(() => {
@@ -317,11 +319,12 @@ foam.CLASS({
                     })
                   .end()
 
-              });
-              return toRender;
-            })
+              })
+            ).end()
+              // return toRender;
+            }
           )
-        .end();
+        // .end();
     },
 
     function mustSlot(v) {
