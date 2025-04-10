@@ -22,7 +22,7 @@
 //   VerboseMaker : print out information about POMs and files visited
 //   CopyMaker    : copy from source to target directory. source/* -> target/
 
-console.log('[RMAKE] Starting...');
+// console.log('[RMAKE] Starting...');
 
 const startTime = Date.now();
 
@@ -31,9 +31,9 @@ const path_ = require('path');
 const b_    = require('./buildlib');
 
 require('../src/foam_node.js');
-  
-var make = function(...args) {
 
+var pmake = function(...args) {
+  
   // TODO: new version of processArgs which takes a map
   var [argv, X, flags] = require('./processArgs')( 
     args,
@@ -70,46 +70,40 @@ var make = function(...args) {
       }
     }
   );
-// console.log('rmake,argv', argv);
-// console.log('rmake,x', X);
 
+
+  var SUPER_X        = Object.assign({}, globalThis.X);
   globalThis.X       = X;
+  var SUPER_FLAGS    = Object.assign({}, globalThis.flags);
   globalThis.flags   = flags;
   globalThis.verbose = function verbose() { if ( flags.verbose ) console.log.apply(console, arguments); };
 
   /** 'makers' format: task1,task2,task3(args),... where args are optional **/
-  console.log('rmake','X.makers', X.makers);
   const MAKERS = X.makers.split(',').map(m => {
     var task;
     var [_, taskName, _, taskArgs] = m.match(/([a-zA-Z0-9]*)(\((.*)\))?/);
 
     var loc = path_.join(__dirname, X.path, taskName + "Maker.js");
-    // console.log('rmake','loc', loc);
 
     if (!fs_.existsSync(loc)) {
       loc = path_.join(process.cwd(), x.path, taskName + "Maker.js");
     }
     task = require(loc);
-    // console.log('rmake','task', task);
 
     if ( task && task.init ) task.init(taskArgs);
 
     return task;
   });
 
-
   function processDir(pom, location, skipIfHasPOM) {
-    console.log('\trmake,processsDir', location);
     // verbose('\tdirectory:', location);
     var files = fs_.readdirSync(location, {withFileTypes: true});
 
     if ( skipIfHasPOM && files.find(f => f.name.endsWith('pom.js')) ) {
-      console.log('\trmake,processDir,skip');
       return;
     }
 
     files.forEach(f => {
-      // console.log('\t\trmake,processDir,forEach', f);
       var fn = location + '/' + f.name;
       if ( f.isDirectory() ) {
         if ( ! f.name.startsWith('.') ) {
@@ -118,61 +112,69 @@ var make = function(...args) {
           if ( f.name.indexOf('examples') != -1 ) return;
           if ( ! b_.isExcluded(pom, fn) ) processDir(pom, fn, true);
         }
-        console.log('\t\trmake,processDir,visitDir');
         MAKERS.forEach(v => v.visitDir && v.visitDir(pom, f, fn));
       } else {
-        console.log('\t\trmake,processDir,visitFile');
         MAKERS.forEach(v => v.visitFile && v.visitFile(pom, f, fn));
       }
     });
   }
+  // console.log('rmake,super,foam.POM', foam.POM);
+  var SUPER_POM = foam.POM;
+  var SUPER_LOAD_FILES = foam.loadFiles;
 
-  var SUPER = foam.POM;
-  console.log('rmake,foam.POM,SUPER', SUPER.toString()); // , pom);
-  var seen  = {};
+  try {
+    var seen  = {};
 
-  foam.POM = function(pom) {
-    console.log('rmake,foam.POM'); // , pom);
-    if ( seen[foam.sourceFile] ) { //console.log('seen'); return; }
-      console.log('rmake,foam.POM,seen[foam.sourceFile]', foam.sourceFile);
-      return;
-    }
-    seen[foam.sourceFile] = true;
+    foam.POM = function(pom) {
+      if ( seen[foam.sourceFile] ) {
+        return;
+      }
+      seen[foam.sourceFile] = true;
 
-    pom.location = foam.cwd;
-    pom.path     = foam.sourceFile;
-    MAKERS.forEach(v => {
-      console.log('rmake,foam.POM,visitPOM', v);
-      v.visitPOM && v.visitPOM(pom);
+      pom.location = foam.cwd;
+      pom.path     = foam.sourceFile;
+
+      MAKERS.forEach(v => {
+        v.visitPOM && v.visitPOM(pom);
+      });
+      if ( ! seen[foam.cwd] ) {
+        processDir(pom, foam.cwd, false);
+        seen[foam.cwd] = true;
+      }
+
+      SUPER_POM(pom);
+      MAKERS.forEach(v => v.endVisitPOM && v.endVisitPOM(pom));
+    };
+
+    // Speeds up Makers like Verbose and JS which don't need to load .js model files.
+    if ( ! flags.loadFiles ) foam.loadFiles = function() {};
+
+    X.pom.split(',').forEach(pom => {
+      try {
+        var path = path_.resolve(foam.cwd, pom) + '.js';
+        foam.require(pom, false, true);
+        // REVIEW: delete not working from here, see foam_node.js
+        // delete require.cache[require.resolve(path)];
+        // console.error('ERROR:', X);
+      } catch (e) {
+        console.error(e);
+        console.error('Unable to load POM: ' + pom);
+        process.exit(-1);
+      }
     });
-    if ( ! seen[foam.cwd] ) {
-      processDir(pom, foam.cwd, false);
-    } else {
-      console.log('rmake,foam.POM,seen[foam.cwd]', foam.cwd);
-    }
-    seen[foam.cwd] = true;
-    SUPER(pom);
-    MAKERS.forEach(v => v.endVisitPOM && v.endVisitPOM(pom));
-  };
 
-  // Speeds up Makers like Verbose and JS which don't need to load .js model files.
-  if ( ! flags.loadFiles ) foam.loadFiles = function() {};
-  console.log('rmake,loadFiles', flags.loadFiles, foam.loadFiles);
-  X.pom.split(',').forEach(pom => {
-    console.log('rmake,X.pom.split,pom', pom);
-    try {
-      foam.require(pom, false, true);
-    } catch (x) {
-      console.log('ERROR:', x);
-      console.error('Unable to load POM: ' + pom);
-      process.exit(-1);
-    }
-  });
+    MAKERS.forEach(v => v.end && v.end());
 
+  } finally {
+    // reset global variables for next run
+    foam.POM = SUPER_POM;
+    foam.loadFiles = SUPER_LOAD_FILES;
 
-  MAKERS.forEach(v => v.end && v.end());
+    globalThis.X       = Object.assign(globalThis.X, SUPER_X);
+    globalThis.flags   = Object.assign(globalThis.flags, SUPER_FLAGS);
+  }
 
-  console.log(`[RMAKE] Finished in ${Math.round((Date.now()-startTime)/1000)}s.`);
-} 
+  // console.log(`[RMAKE] Finished in ${Math.round((Date.now()-startTime)/1000)}s.`);
+}
 
-module.exports = make;
+module.exports = pmake;

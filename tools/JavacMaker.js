@@ -6,6 +6,9 @@
 
 // JavacMaker
 
+// NOTE: JavaMaker and JavacMaker shared data through X, they must
+// be run in the same pmake call.
+
 exports.description = 'create /build/javacfiles file containing list of modified or static .java files, call javac';
 
 exports.args = [
@@ -13,6 +16,11 @@ exports.args = [
     name: 'javacParams',
     description: 'parameters to pass to javac',
     value: '-proc:none'
+  },
+  {
+    name: 'libdir',
+    description: 'location to write generated .java files, default: {builddir}/lib',
+    factory: () => path_.resolve(path_.normalize(X.libdir || (X.builddir + '/lib')))
   }
 ];
 
@@ -21,6 +29,7 @@ const fs_                                         = require('fs');
 const { execSync, isExcluded, adaptOrCreateArgs } = require('./buildlib');
 
 exports.init = function() {
+  console.log('[Javac] init');
   adaptOrCreateArgs(X, exports.args);
 
   X.javaFiles = [];

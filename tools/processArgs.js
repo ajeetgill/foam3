@@ -4,14 +4,11 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-function processArgs(usage, x, defaultFlags, cmds) {
+function processArgs(args, x, defaultFlags, cmds) {
 
-  var flags = globalThis.foam.flags || {};
-  var argv = usage && usage[0].split(' ') || process.argv.slice(2);
-
-//  console.log('before');
-//  console.log('processArgs argv', argv);
-//  console.log('processArgs argv.length', argv.length);
+  var flags = {}; // globalThis.foam.flags || {};
+  // Support calling directly or via exec_ (where args are passed via process)
+  var argv = args && args[0].split(' ') || process.argv.slice(2);
 
   if ( defaultFlags ) for ( var key in defaultFlags ) {
     flags[key] = defaultFlags[key];
@@ -31,7 +28,7 @@ function processArgs(usage, x, defaultFlags, cmds) {
       if ( flagKeys.length ) {
         flagList = '[ -flags=' + flagKeys.map(k => (defaultFlags[k] ? '-' : '') + k).join(',') + ' ]';
       }
-      console.log('USAGE:', process.argv[1], flagList + cmdList + argList); //, usage);
+      console.log('USAGE:', process.argv[1], flagList + cmdList + argList);
 
       // If a 'usage' method is supplied in cmds, then call it to provide extra usage information.
       cmds && cmds.usage && cmds.usage();
@@ -59,13 +56,17 @@ function processArgs(usage, x, defaultFlags, cmds) {
           }
         });
       } else {
+        if ( value.startsWith("'") ) {
+          while ( ! value.endsWith("'") ) {
+            value += ' ';
+            value += argv.shift();
+          }
+          value = value.substring(1, value.length-1);
+        }
         x[key] = value;
       }
     }
   }
-//  console.log('after');
-//  console.log('processArgs x', x);
-//  console.log('processArgs flags', flags);
 
   return [argv, x, flags];
 }

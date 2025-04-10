@@ -6,6 +6,9 @@
 
 // JavaMaker
 
+// NOTE: JavaMaker and JavacMaker shared data through X, they must
+// be run in the same pmake call.
+
 const fs_   = require('fs');
 const path_ = require('path');
 const { adaptOrCreateArgs } = require('./buildlib');
@@ -23,6 +26,7 @@ exports.args = [
 
 
 exports.init = function() {
+  console.log('[Java] init');
   adaptOrCreateArgs(X, exports.args);
   // Turns on loading of foam/java/* models needed for java code generation.
   flags.genjava   = true;
@@ -39,7 +43,7 @@ exports.end = function() {
 
   var mCount = 0, jCount = 0;
 
-  // Build Java Classes
+  // Generate Java Source files
   for ( var key in foam.USED ) try {
     mCount++;
     if ( foam.maybeLookup(key)?.model_.targetJava(X) ) {

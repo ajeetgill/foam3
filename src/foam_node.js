@@ -35,18 +35,26 @@ globalThis.foam = {
   },
   */
   require: function (fn, batch, isProject, webFoam) {
-    // console.log('foam_node', 'require', fn);
     if ( ! fn ) return;
 
     // ???: foam.resolve()?
     var cwd = foam.cwd;
     try {
       var path = path_.resolve(foam.cwd, fn) + '.js';
-      if ( ! isProject && globalThis.foam.seen(path) ) { console.log('foam_node,require,return'); return; }
+      if ( ! isProject && foam.seen(path) ) return;
       foam.cwd = path_.dirname(path);
       foam.sourceFile = path;
-      console.log('foam_node,require,path', path);
       require(path);
+
+      // REVIEW: Would prefer this in pmake, but the same call there, after
+      // foam.require does not work or have the same effect.
+
+      // 'require' is used in place of load and eval.
+      // More straightfoward. But it is important to clear it's cache
+      // after use as we rely on rqeuire loading to invoke foam.POM
+      // for pom processing for each call we make.
+      delete require.cache[require.resolve(path)];
+      // foam.loaded[path] = false;
     } finally {
       foam.cwd = cwd;
     }
