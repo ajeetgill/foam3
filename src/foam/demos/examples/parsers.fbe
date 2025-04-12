@@ -108,3 +108,15 @@ The notChars() parser will parse any single character which is NOT included as p
 supplied string. However, it will not parse EOF.
 --
 testP(log, P.notChars('abc'), [ 'abc', 'bbc', 'cbc', 'xbc', '' ]);
+
+## Range Parser
+The range() parser is similar to chars(), except that it lets you more easily specify a range of characters.
+--
+testP(log, P.range('0', '9'), [ 'a', '1', '2', '3', '9', 'z' ]);
+// Is short form for:
+testP(log, P.chars('0123456789'), [ 'a', '1', '2', '3', '9', 'z' ]);
+// It is often used to detect numbers (like above) or lettters, like:
+testP(log, P.range('a','z'), [ 'a', '1', '2', '3', '9', 'z' ]);
+
+// Notice that it still only matches a single character
+testP(log, P.range('a','z'), [ 'abc', '123' ]);
