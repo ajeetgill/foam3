@@ -4,6 +4,8 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
+const { warning } = require('./buildlib');
+
 exports.description = 'Capture POM specified environment variables.';
 
 exports.init = function() {
@@ -12,7 +14,7 @@ exports.init = function() {
   X.pomenvs = {};
 
   X.envs && X.envs.split(',').forEach(e => {
-    var kv = e.split(':');
+    var kv = e.split('=');
     // ['name'] = 'APP_NAME'
     verbose(`[Env] init ${kv[1]} = ${kv[0]}`);
     X.pomenvs[kv[1]] = kv[0];
@@ -37,9 +39,9 @@ exports.visitPOM = function(pom) {
 exports.end = function() {
   // clean up and report any variables not set
   X.envs && X.envs.split(',').forEach(e => {
-    var kv = e.split(':');
+    var kv = e.split('=');
     if ( ! X.pomenvs[kv[0]] ) {
-      console.warn(`[Env] END ${kv[0]} not set`);
+      warning(`[Env] ${kv[0]} not set`);
       delete X.pomenvs[kv[1]];
     }
   });

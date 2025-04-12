@@ -31,7 +31,7 @@ const path_ = require('path');
 const b_    = require('./buildlib');
 
 var pmake = function(...args) {
-  console.log('rmake,foam', Object.keys(foam.loaded).length);
+  // console.log('rmake,foam', Object.keys(foam.loaded).length);
   // TODO: new version of processArgs which takes a map
   var [argv, X, flags] = require('./processArgs')( 
     args,

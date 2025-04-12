@@ -174,6 +174,25 @@ function comma(list, value) {
   return list ? list + ',' + value : value;
 }
 
+function info(...args) {
+  let msg = args.join(' ');
+  console.log('\x1b[0;32mINFO ::', msg, '\x1b[0;0m');
+  // green: 32m
+  // blue: 34m - too dark on black background
+  // magenta: 35m
+  // cyan: 36m - may be too light on white background
+}
+
+function warning(...args) {
+  let msg = args.join(' ');
+  console.log('\x1b[0;33mWARNING ::', msg, '\x1b[0;0m');
+}
+
+function error(...args) {
+  let msg = args.join(' ');
+  console.log('\x1b[0;31mERROR ::', msg, '\x1b[0;0m');
+  process.exit(1);
+}
 
 function processSingleCharArgs(ARGS, moreUsage) {
   function usage() {
@@ -220,4 +239,7 @@ exports.processSingleCharArgs = processSingleCharArgs;
 exports.rmdir                 = rmdir;
 exports.rmfile                = rmfile;
 exports.spawn                 = spawn;
+exports.info                  = info;
+exports.warning               = warning;
+exports.error                 = error;
 exports.writeFileIfUpdated    = writeFileIfUpdated;

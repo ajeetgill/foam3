@@ -63,7 +63,7 @@ ln -s /Volumes/RamDisk/build ~/foam3/build
 const fs       = require('fs');
 const os       = require('os');
 const { join } = require('path');
-const { buildEnv, comma, copyDir, copyFile, emptyDir, ensureDir, exec, execSync, exportEnvs, processSingleCharArgs, rmdir, rmfile, spawn } = require('./buildlib');
+const { buildEnv, comma, copyDir, copyFile, emptyDir, ensureDir, exec, execSync, exportEnvs, info, processSingleCharArgs, rmdir, rmfile, spawn, warning } = require('./buildlib');
 const PWD      = process.cwd();
 const pmake    = require('./rmake.js');
 require('../src/foam_node.js');
@@ -171,20 +171,6 @@ function quit(code) {
   process.exit(code);
 }
 
-function info(...args) {
-  let msg = args.join(' ');
-  console.log('\x1b[0;32mINFO ::', msg, '\x1b[0;0m');
-  // green: 32m
-  // blue: 34m - too dark on black background
-  // magenta: 35m
-  // cyan: 36m - may be too light on white background
-}
-
-function warning(...args) {
-  let msg = args.join(' ');
-  console.log('\x1b[0;33mWARNING ::', msg, '\x1b[0;0m');
-}
-
 function error(...args) {
   let msg = args.join(' ');
   console.log('\x1b[0;31mERROR ::', msg, '\x1b[0;0m');
@@ -280,7 +266,7 @@ const ENVS = {
   LOG_LEVEL:         ['Set JVM Log level for TEST cases. Defaults to ERROR. example: -ELOG_LEVEL=INFO',null],
   POMS:              ['CSV list of pom files to process,minus any suffix. Defaults to the pom at the root of the project.'],
   POM_TASKS:         ['CSV list of tasks from the root pom'],
-  POM_ENVS:          ['Environment variables expected to be set from POMs', 'APP_NAME:name,JAVA_RELEASE:java,VERSION:version,VENDOR:vendor,VENDOR_ID:vendorId'],
+  POM_ENVS:          ['Environment variables expected to be set from POMs', 'APP_NAME=name,JAVA_RELEASE=java,VERSION=version,VENDOR=vendor,VENDOR_ID=vendorId'],
   PROFILER:          ['Enable JVM profiling',false],
   PROFILER_PORT:     ['Port JVM will listen on for profiler to connect',8849],
   PROJECT:           ['Top-Level Loaded POM Object, not be be confused with POMS, which is the name of POM(s) to be loaded'],
@@ -457,6 +443,7 @@ task('Build usage examples', [], function usage() {
 });
 
 task('Capture POM specified environment values and register POM tasks for later execution that the corresponding build tasks is executed.', [], function pomEnvs() {
+  info('POM_ENVS', POM_ENVS);
   pmake(`-makers=Env,Task -flags=${flag()} -pom=${pom()} -builddir=${BUILD_DIR} -envs=${POM_ENVS}`);
   Object.keys(X.pomenvs).forEach(k => {
     globalThis[k] = X.pomenvs[k];
