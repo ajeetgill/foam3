@@ -57,7 +57,27 @@ log(P.literal('def').parse(ps).toString());
 // Since the parser only parses the literal 'abc', it will fail if given something else:
 log(typeof p.parse(P.stringPStream('xyzdef')));
 
-## String Parser
-blah blah
+## Parser Tester
+Before continuing, let's write a simple helper function to make testing parsers easier:
 --
-log('tada');
+const P = foam.parse.Parsers.create();
+
+function testP(log, parser, strs) {
+  log(`Parser: ${parser}`);
+  strs.forEach(s => {
+    var ps = P.stringPStream(s);
+    ps = parser.parse(ps);
+    log(`----  input "${s}" -> ${ps ? ps.toString() : 'undefined'}`);
+  });
+}
+
+testP(log, P.literal('abc'), [ 'abc', 'abcdef', 'abC', 'xyz' ]);
+
+globalThis.P = P;
+globalThis.testP = testP;
+
+## Chars Parser
+The chars() parser will parse any single character which is included as part of the
+supplied string.
+--
+testP(log, P.chars('abc'), [ 'abc', 'bbc', 'cbc', 'xbc' ]);
