@@ -35,6 +35,10 @@ parser combinators are defined in foam/parse/parse.js
 
 --
 
+## Simple Parsers
+First we'll start off by explaining the "simple" parsers:
+--
+
 ## Literal Parser
 The simplest parser is a literal parser, which only parses the supplied string.
 --
@@ -120,3 +124,112 @@ testP(log, P.range('a','z'), [ 'a', '1', '2', '3', '9', 'z' ]);
 
 // Notice that it still only matches a single character
 testP(log, P.range('a','z'), [ 'abc', '123' ]);
+
+## Combinators
+The above parsers are all simple parsers. They all parse a single character or a literal string.
+But this is a "parser combinator" library, which means that it lets you combine simple
+parsers to create more complex ones.
+--
+
+## Sequence Parser
+The most common parse combinator is the sequence parser, which combines multiple parsers
+into a single parser which only parses if each of the composed parsers successfully parses
+in sequence. Each parser picks up where the previous parser left off in the input stream,
+and the sequence parser will fail if any of the composed parsers fails to parse.
+On a successful parse, the returned value is an array of the parsed values of each
+composed parser.
+--
+testP(log, P.seq(P.range('a','z'), P.range('0','9')), [ 'r2', 'd2', '3p', 'xy' ]);
+// You can combine any number of parsers in a sequnce:
+testP(log, P.seq(P.literal('a'), P.literal('b'), P.literal('c')), [ 'axxx', 'abxxx', 'abcxxx' ]);
+
+## String Parser
+Notice that in the sequence parser, when we parsed 'r2' our value was [ 'r', '2' ], an array.
+Often we want to result of our parsers to be string values, not the arrays of characters or
+substrings that were parsed by the individual parsers passed to the sequence parser.
+To fix this, we use the str() parser, which is a very simple combinator because it only
+combines a single parser. Instead of changing that delegate parser's behaviour, it just
+changes its resulting value, so that if it returns an array, it converts into a single
+string value with the array values concatenated.
+--
+// Notice unlike above, our results are strings, not arrays
+testP(log, P.str(P.seq(P.range('a','z'), P.range('0','9'))), [ 'r2', 'd2', '3p', 'xy' ]);
+
+## Alternate Parser
+The next most common parse combinator after the sequence parser, is the alt() parser.
+It's job is to take multiple delgate parsers, just like seq(), but to succeed if any of them
+succeed. It tries parsing with each composed parser in turn, and returns the result of the
+first one that suceeds.
+--
+testP(log, P.alt(P.literal('A'), P.literal('B')), [ 'A', 'B', 'C' ]);
+
+## Repeat
+The repeat() parser takes a single delegate parser and repeatedly uses it to parse
+the input stream until it fails. The result of all delegate parses are combined in an array.
+
+--
+testP(log, P.str(P.repeat(P.range('0','9'))), [ '1', '1x', '123xyz', 'abc' ]);
+
+## Plus
+You might have noticed and been surprised that in the above example, repeat(0-9) succeeded in parsing the string 'abc' and provided an empty string result "". This is because repeat() parses zero or more occurences of the delegate parser, so failure is an option. However, it's often the
+case that you want to consider a repeated parser to have succeeded when it parses one or more
+times. For this, there's the plus() parser, which behaves just like repeat(), but fails in
+the case where the delegate parses 0 times.
+--
+testP(log, P.str(P.plus(P.range('0','9'))), [ '1', '1x', '123xyz', 'abc' ]);
+
+## Delimited Repeat
+It's common to want to use repeat() to parse some pattern where each entry is separated
+by some other pattern. Examples include a comman separated list or semi-colon separated
+program statements. While you could do this by including the delimiter with seq() in the
+delegate parser, this is so common an operation that repeat supports it directly.
+--
+// First lets' look how we would parse a comma delimited list of letters without using this feature:
+testP(
+  log,
+  P.repeat(P.seq(P.range('a','z'), P.literal(','))),
+  [ 'a', 'a,b', 'a,b,c', 'a,b,c,'
+]);
+// Notice that the above never parsed the last letter, except for the last case: 'a,b,c,'
+// because there's a bug in our parser. We only want the comma between letters, not after,
+// which prevents the last 'c' from being parse.
+// To fix this, we need to make our parser more complicated:
+testP(
+  log,
+  P.seq(P.repeat(P.seq(P.range('a','z'), P.literal(','))), P.range('a', 'z')),
+  [ 'a', 'a,b', 'a,b,c', 'a,b,c,'
+]);
+// This fixes that problem, but our parser is getting more complicated. Also,
+// notice that it is including the commas in the parsed output, but we probably
+// just want the letters.
+// The solution is to specify the delimiter to repeat():
+testP(
+  log,
+  P.repeat(P.range('a','z'), P.literal(',')),
+  [ '', 'a', 'a,b', 'a,b,c', 'a,b,c,'
+]);
+// By supplying the delimiter parser as the second argument to repeat(), it knows that we
+// only want to skip delimiters between values and it excludes them from the output.
+// It is also shorter and easier to understand that our first attempt.
+
+// You can also specify a delimiter parser with plus(), in cases where you only want
+// the parse to succeed when you have one or more parses.
+testP(
+  log,
+  P.plus(P.range('a','z'), P.literal(',')),
+  [ '', 'a', 'a,b', 'a,b,c', 'a,b,c,'
+]);
+
+## Repeat with a Number of Repetitions
+repeat() parsers zero or more times and plus() repeats one or more times, but sometimes
+you want to parse with some minimum number of repeats other than zero or 1.
+Luckily, the third optional argument of repeat() let's you specify the minimum number
+of repetitions. Since the second argument is the delimiter parser, if you don't want
+to have a delimiter, just pass 'undefined'.
+The below parser checks passwords to ensure that they're at least five characters long:
+--
+testP(
+  log,
+  P.str(P.repeat(P.alt(P.range('a','z'), P.range('A', 'Z'), P.range('0', '9'), P.anyChar('!@#$%^&*')), undefined, 5)),
+  [ 's', 's@', 's@c', 's@C&', 's@C&t', 's@C&t1' ]
+);
