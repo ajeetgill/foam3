@@ -233,3 +233,12 @@ testP(
   P.str(P.repeat(P.alt(P.range('a','z'), P.range('A', 'Z'), P.range('0', '9'), P.anyChar('!@#$%^&*')), undefined, 5)),
   [ 's', 's@', 's@c', 's@C&', 's@C&t', 's@C&t1' ]
 );
+
+## Optional
+The optional() parser composes a single delegate parser and if that parser parses, then it returns
+its result, otherwise it returns the PStream as is, without failing. This lets parsing
+continue from the same point.
+--
+testP(log, P.seq(P.optional(P.literal('header')), P.literal('body')),
+  [ 'headerbody', 'body', 'header' ]
+);
