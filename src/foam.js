@@ -196,7 +196,6 @@
       pom.location = foam.cwd;
       pom.path     = foam.sourceFile;
       foam.poms.push(pom);
-
       function loadFiles(files, isProjects) {
         files && files.forEach(f => {
           var name = f.name;
@@ -208,6 +207,7 @@
 
           foam.currentFlags = f.flags || [];
           if ( ! isProjects ) {
+//            console.log('*** FILES', name);
             foam.CUR_FILES.push(name);
           }
           foam.require(name, ! isProjects, isProjects);
