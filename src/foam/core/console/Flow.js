@@ -69,28 +69,29 @@ foam.CLASS({
     {
       name: 'createdByAgent',
       hidden: true
-    }
-    /*
+    },
     {
-      class: 'FObjectArray',
-      of: 'com.google.flow.Property',
+//      class: 'FObjectArray',
+//      of: 'com.google.flow.Property',
       name: 'memento',
       hidden: true,
       transient: true,
       postSet: function(o, n) {
         if ( this.feedback_ ) return;
         this.feedback_ = true;
+        console.log('******************** memento change: ', n);
         try {
           // TODO: should still not output empty reactions_: or children:
           var json = foam.json.Outputter.create({
-            pretty: false,
+            pretty: true,
             strict: false,
             formatDatesAsNumbers: true,
             outputDefaultValues: false,
-            useShortNames: true
+            useShortNames: false,
+            propertyPredicate: function(o, p) { return ! p.externalTransient && ! p.networkTransient; }
           });
-//          this.memento_ = foam.json.Short.stringify(n);
-          this.memento_ = json.stringify(n);
+//          this.mementoStr = foam.json.Short.stringify(n);
+          this.mementoStr = json.stringify(n);
         } finally {
           this.feedback_ = false;
         }
@@ -98,16 +99,18 @@ foam.CLASS({
     },
     {
       class: 'String',
-      name: 'memento_',
+      name: 'mementoStr',
+      label: 'Source',
       postSet: function(o, n) {
         if ( this.feedback_ ) return;
         this.feedback_ = true;
         try {
-        this.memento = foam.json.parseString(n, this.__context__);
+          this.memento = foam.json.parseString(n, this.__context__);
         } finally {
           this.feedback_ = false;
         }
-      }
-    }*/
+      },
+      view: { class: 'foam.u2.tag.TextArea', rows: 20, cols: 78 }
+    }
   ]
 });
