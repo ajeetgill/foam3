@@ -191,6 +191,7 @@ function warning(...args) {
 function error(...args) {
   let msg = args.join(' ');
   console.log('\x1b[0;31mERROR ::', msg, '\x1b[0;0m');
+  console.trace();
   process.exit(1);
 }
 
