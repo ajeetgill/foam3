@@ -20,14 +20,18 @@ foam.CLASS({
   name: 'Flowable',
 
   properties: [
-    'flowParent',
+    {
+      name: 'flowParent',
+      transient: true
+    },
     {
       class: 'String',
       name: 'flowName'
     },
     {
       class: 'List',
-      name: 'flowChildren'
+      name: 'flowChildren',
+      transient: true
     },
     { name: 'value' }
   ],
@@ -192,6 +196,10 @@ foam.CLASS({
       if ( this.seen ) this.out.tag('br');
       this.seen = true;
       this.out.add(args.join(' '));
+    },
+
+    function outputJSON(json) {
+      json.outputFObject_(this, this.cls_, [ this.FLOW_NAME, this.CMD, this.VALUE ]);
     }
   ],
 
@@ -389,9 +397,7 @@ foam.CLASS({
     {
       name: 'value',
       // The Console's Flow Value, which is the Flow object it is saved as
-      factory: function() {
-        return this.Flow.create({name: 'Unnamed'});
-      }
+      factory: function() { return this.Flow.create({name: 'Unnamed'}); }
     }
   ],
 
@@ -424,6 +430,11 @@ foam.CLASS({
       });
 
       this.flowName$ = this.value.name$;
+      this.flowChildren$.sub(() => {
+        console.log('***** update');
+        this.value.memento = this.flowChildren;
+      });
+//      this.value.memento$.follow(this.flowChildren$);
 
       var layout = this.start(this.Layout);
 
