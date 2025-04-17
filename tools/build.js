@@ -627,7 +627,7 @@ task('Copy foam-bin files for inclusion in JAR file.', ['genJava'], function jar
   execSync(`cp ${BUILD_DIR}/js/foam-bin-* ${BUILD_DIR}/webroot/`, {stdio: 'inherit'});
 });
 
-task('Build Java JAR file.', [()=>JAR=true, 'setupDirs', 'genJS', 'genJava', 'versions', 'copy', /*'jarWebroot',*/ 'genImages', /*'jarDocuments', 'jarJournal',*/ 'genManifest', 'jarFOAM' ], function buildJar() {
+task('Build Java JAR file.', [()=>JAR=true, 'setupDirs', 'genJS', 'genJava', 'versions', 'copy', 'genImages', 'genManifest', 'jarFOAM' ], function buildJar() {
   JAR_INCLUDES += ` -C ${BUILD_DIR} webroot `;
   execSync(`jar cfm ${BUILD_DIR}/lib/${JAR_NAME} ${BUILD_DIR}/MANIFEST.MF ${JAR_INCLUDES}`);
 });
