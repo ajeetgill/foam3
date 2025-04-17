@@ -218,7 +218,9 @@ function pom() {
   if ( JOURNALS )
     JOURNALS.split(',').forEach(c => addPom(c && `${PROJECT_HOME}/deployment/${c}/pom`));
 
-  return poms.join(',');
+  POMS = poms.join(',');
+  info('poms', POMS);
+  return POMS;
 }
 
 // Build flag string with global and argument flags
@@ -452,7 +454,7 @@ task('Build usage examples', [], function usage() {
 });
 
 task('Capture POM specified environment values and register POM tasks for later execution that the corresponding build tasks is executed.', [], function pomEnvs() {
-  pmake(`-makers=Env,Task -flags=${flag()} -pom=${pom()} -builddir=${BUILD_DIR} -envs=${POM_ENVS}`);
+  pmake(`-makers=Env,Task -flags=${flag()} -pom=${POMS} -builddir=${BUILD_DIR} -envs=${POM_ENVS}`);
   Object.keys(X.pomenvs).forEach(k => {
     globalThis[k] = X.pomenvs[k];
     // info(`[pomEnvs] globalThis[${k}] ${globalThis[k]}`);
@@ -460,22 +462,14 @@ task('Capture POM specified environment values and register POM tasks for later 
   POM_TASKS = X.pomTasks;
 });
 
-task('Run pom copy[] tasks for inclusion in JAR.', ['setupDirs'], function copy() {
-  pmake(`-makers=Copy -flags=${flag()} -pom=${pom()} -builddir=${BUILD_DIR}`);
+task('Run pom copy[] tasks.', [], function copy() {
+  pmake(`-makers=Copy -flags=${flag()} -pom=${POMS} -builddir=${BUILD_DIR}`);
 });
 
-task('Copy foam-bin into webroot for inclusion in JAR.', ['setupDirs'], function jarWebroot() {
-  JAR_INCLUDES += ` -C ${BUILD_DIR} webroot `;
-});
-
-task('Copy images from src sub directories to BUILD_DIR/images.', [], function jarImages() {
+task('Prepare images from inclusion in jar.', [], function genImages() {
   JAR_INCLUDES += ` -C ${BUILD_DIR} images `;
 
-  pmake(`-makers=Image -flags=${flag()} -pom=${pom()} -builddir=${BUILD_DIR}`);
-});
-
-task('Include journals in jar.', [], function jarJournals() {
-  JAR_INCLUDES += ` -C ${BUILD_DIR} journals `;
+  pmake(`-makers=Image -flags=${flag()} -pom=${POMS} -builddir=${BUILD_DIR}`);
 });
 
 task('Generate JVM Manifest', ['versions', 'genFoamBinVersion'], function genManifest() {
@@ -507,20 +501,21 @@ task('Display generated JAR manifest file.', ['genManifest'], function showManif
 });
 
 task('Show POM structure.', [], function showPOMs() {
-  pmake(`-makers=Verbose -flags=${flag('web,java')} -pom=${pom()} -builddir=${BUILD_DIR}`);
+  pmake(`-makers=Verbose -flags=${flag('web,java')} -pom=${POMS} -builddir=${BUILD_DIR}`);
 });
 
 task('Install npm tools that foam and the build use.', [], function install() {
   process.chdir(PROJECT_HOME);
   execSync('npm install');
-  ensureDir(join(APP_HOME, 'logs'));
 });
 
 task('Deploy documents from DOCUMENT_OUT to DOCUMENT_HOME.', ['setupDirs'], function deployDocuments() {
+  ensureDir(DOCUMENT_HOME);
   copyDir(DOCUMENT_OUT, DOCUMENT_HOME);
 });
 
 task('Deploy journal files from JOURNAL_OUT to JOURNAL_HOME.', ['setupDirs'], function deployJournals() {
+  ensureDir(JOURNAL_HOME);
   copyDir(JOURNAL_OUT, JOURNAL_HOME);
 });
 
@@ -563,16 +558,16 @@ task("Build 'foam-bin.js'.", ['cleanFOAM', 'genFoamBinVersion'], function genJS(
   let flags = flag();
   let outdir = BUILD_DIR+'/js';
   if ( STAGE_JS ) {
-    pmake(`-flags=${flags} -makers=JS -version=${version} -pom=${pom()} -builddir=${BUILD_DIR} -outdir=${outdir} -stage=0`);
-    pmake(`-flags=${flags} -makers=JS -version=${version} -pom=${pom()} -builddir=${BUILD_DIR} -outdir=${outdir} -stage=1`);
-    pmake(`-flags=${flags} -makers=JS -version=${version} -pom=${pom()} -builddir=${BUILD_DIR} -outdir=${outdir} -stage=2`);
+    pmake(`-flags=${flags} -makers=JS -version=${version} -pom=${POMS} -builddir=${BUILD_DIR} -outdir=${outdir} -stage=0`);
+    pmake(`-flags=${flags} -makers=JS -version=${version} -pom=${POMS} -builddir=${BUILD_DIR} -outdir=${outdir} -stage=1`);
+    pmake(`-flags=${flags} -makers=JS -version=${version} -pom=${POMS} -builddir=${BUILD_DIR} -outdir=${outdir} -stage=2`);
   } else {
-    pmake(`-flags=${flags} -makers=JS -version=${version} -pom=${pom()} -builddir=${BUILD_DIR} -outdir=${outdir}`);
+    pmake(`-flags=${flags} -makers=JS -version=${version} -pom=${POMS} -builddir=${BUILD_DIR} -outdir=${outdir}`);
   }
 });
 
 task('Run Maven', [], function maven() {
-  pmake(`-makers=Maven -flags=${flag()} -pom=${pom()} -libdir=${BUILD_DIR}/lib`);
+  pmake(`-makers=Maven -flags=${flag()} -pom=${POMS} -libdir=${BUILD_DIR}/lib`);
 });
 
 task('Remove previously generated JAR.', [], function cleanJava() {
@@ -581,19 +576,25 @@ task('Remove previously generated JAR.', [], function cleanJava() {
 });
 
 task('Concatenate repository journal files into .0 files', [], function genJournals() {
-  pmake(`-makers=Journal -flags=${flag()} -pom=${pom()} -builddir=${BUILD_DIR} -journaldir=${JOURNAL_OUT}`);
+  JAR_INCLUDES += ` -C ${BUILD_DIR} journals `;
+  pmake(`-makers=Journal -flags=${flag()} -pom=${POMS} -builddir=${BUILD_DIR} -journaldir=${JOURNAL_OUT}`);
 });
 
 task('Capture repository documentation - flow docs', [], function genDocuments() {
-  pmake(`-makers=Doc -flags=${flag()} -pom=${pom()} -builddir=${BUILD_DIR} -documentdir=${DOCUMENT_OUT}`);
+  JAR_INCLUDES += ` -C ${BUILD_DIR} documents `;
+  pmake(`-makers=Doc -flags=${flag()} -pom=${POMS} -builddir=${BUILD_DIR} -documentdir=${DOCUMENT_OUT}`);
 });
 
 task('Generate Java source from models and complile', ['cleanJava'], function genJava() {
+  JAR_INCLUDES += ` -C ${BUILD_DIR} journals `;
+  JAR_INCLUDES += ` -C ${BUILD_DIR} documents `;
+  JAR_INCLUDES += ` -C ${BUILD_DIR}/classes .`;
+
   var makers = VERBOSE ? 'Verbose,' : '';
   // NOTE: Java and Javac Maker must be run together as they share data through X
   makers += 'Java,Maven,Javac';
   makers += ',Journal,Doc';
-  pmake(`-makers=${makers} -flags=${flag()} -pom=${pom()} -builddir=${BUILD_DIR} -d=${BUILD_DIR}/classes -journaldir=${JOURNAL_OUT} -documentdir=${DOCUMENT_OUT} outdir=${BUILD_DIR}/src/java -libdir=${BUILD_DIR}/lib -javacParams='${JAVAC_PARAMS || JAVAC_PARAMS_DEFAULT}'`);
+  pmake(`-makers=${makers} -flags=${flag()} -pom=${POMS} -builddir=${BUILD_DIR} -d=${BUILD_DIR}/classes -journaldir=${JOURNAL_OUT} -documentdir=${DOCUMENT_OUT} outdir=${BUILD_DIR}/src/java -libdir=${BUILD_DIR}/lib -javacParams='${JAVAC_PARAMS || JAVAC_PARAMS_DEFAULT}'`);
 });
 
 task('Check Java dependencies for known vulnerabilities (via Maven). -XcheckDeps:score where score in range [0..11].  CVSS score (LOW:0..5 ,MEDIUM:5..7 ,HIGH:7..9 ,CRITICAL:9..10,IGNORE:11)', ['maven'], function checkDeps(score) {
@@ -622,27 +623,30 @@ task('Get Maven java sources.', ['maven'], function mavenGetSources(value) {
 });
 
 task('Copy foam-bin files for inclusion in JAR file.', ['genJava'], function jarFOAM() {
+  ensureDir(join(BUILD_DIR, 'webroot'));
   execSync(`cp ${BUILD_DIR}/js/foam-bin-* ${BUILD_DIR}/webroot/`, {stdio: 'inherit'});
 });
 
-task('Build Java JAR file.', [()=>JAR=true, 'setupDirs', 'genJS', 'genJava', 'versions', 'jarWebroot', 'jarImages', 'jarJournals', 'copy', 'genManifest', 'jarFOAM' ], function buildJar() {
-  execSync(`jar cfm ${BUILD_DIR}/lib/${JAR_NAME} ${BUILD_DIR}/MANIFEST.MF -C ${BUILD_DIR} documents ${JAR_INCLUDES} -C ${BUILD_DIR}/classes .`);
+task('Build Java JAR file.', [()=>JAR=true, 'setupDirs', 'genJS', 'genJava', 'versions', 'copy', /*'jarWebroot',*/ 'genImages', /*'jarDocuments', 'jarJournal',*/ 'genManifest', 'jarFOAM' ], function buildJar() {
+  JAR_INCLUDES += ` -C ${BUILD_DIR} webroot `;
+  execSync(`jar cfm ${BUILD_DIR}/lib/${JAR_NAME} ${BUILD_DIR}/MANIFEST.MF ${JAR_INCLUDES}`);
 });
 
 task('Package files into a TAR archive', ['buildJar'], function buildTar() {
+  ensureDir(join(BUILD_DIR, 'package'));
   // Notice that the argument to the second -C is relative to the directory from the first -C, since -C
   execSync(`tar -a -cf ${BUILD_DIR}/package/${APP_NAME}-deploy-${VERSION}.tar.gz -C ./foam3/tools/deploy bin etc -C${require('path').resolve(BUILD_DIR)} lib`);
 });
 
-task('Copy runtime data to deployment', ['deployJournals', 'deployDocuments', 'copy'], function deployData() {
-});
-
 task('Copy library files to deployment', [], function deployLib() {
+  ensureDir(join(APP_HOME, 'lib'));
   copyDir(BUILD_DIR + '/lib', join(APP_HOME, 'lib'));
 });
 
 task('Copy bash files to deployment', [], function deployBin() {
+  ensureDir(join(APP_HOME, 'bin'));
   copyDir('./foam3/tools/deploy/bin', join(APP_HOME, 'bin'));
+  ensureDir(join(APP_HOME, 'etc'));
   copyDir('./foam3/tools/deploy/etc', join(APP_HOME, 'etc'));
 });
 
@@ -676,14 +680,7 @@ task('Create empty build and deployment directory structures if required.', [], 
   try {
     if ( ! BUILD_ONLY ) {
       ensureDir(APP_HOME);
-      ensureDir(`${APP_HOME}/lib`);
-      ensureDir(`${APP_HOME}/bin`);
-      ensureDir(`${APP_HOME}/etc`);
       ensureDir(LOG_HOME);
-      ensureDir(JOURNAL_HOME);
-      ensureDir(DOCUMENT_HOME);
-      ensureDir(BUILD_DIR + '/webroot');
-      ensureDir(BUILD_DIR + '/package');
     }
   } catch ( e ) {
     error(`Directory is not writable! Please run 'sudo chown -R $USER ${APP_ROOT}' first.`, e);
@@ -720,12 +717,12 @@ task('Set arguments which will be passed to run.sh to start CORE server', [], fu
   if ( HOST_NAME && HOST_NAME !== 'localhost' ) RUN_ARGS += ` -H${HOST_NAME}`;
 });
 
-task('Start CORE server (JAR).', [ 'setJavaEnv', 'setRunArgs', 'stopCORE', 'deployData', 'deployBin', 'deployLib' ], function startCOREJar() {
+task('Start CORE server (JAR).', [ 'setJavaEnv', 'setRunArgs', 'stopCORE', 'deployBin', 'deployLib'], function startCOREJar() {
   showSummary();
   exec(`${APP_HOME}/bin/run.sh -N${APP_NAME} -V${VERSION} ${RUN_ARGS}`);
 });
 
-task('Start CORE server (CLASSPATH).', [ 'setJavaEnv', 'stopCORE', 'deployData', 'deployLib' ], function startCORE() {
+task('Start CORE server (CLASSPATH).', [ 'setJavaEnv', 'stopCORE', 'deployJournals', 'deployDocuments', 'deployLib' ], function startCORE() {
   if ( HOST_NAME && HOST_NAME !== 'localhost' ) {
     JAVA_OPTS += ` -Dhostname=${HOST_NAME}`;
   }
@@ -844,13 +841,15 @@ task('Build everything specified by flags.', ['pomEnvs'], function all() {
 processSingleCharArgs(ARGS, moreUsage);
 
 // build pom map for POM_TASKS, and ensure POMS list is viable
-var poms = pom();
+pom();
+
 // Exports local variables and functions for POM tasks
 EXPORTS = {
   APP_NAME,
   BUILD_DIR,
   JAVA_OPTS,
   JOURNALS,
+  POMS,
   PROJECT,
   RUN_ARGS,
   VERSION,
@@ -858,8 +857,7 @@ EXPORTS = {
   copyFile,
   ensureDir,
   exec,
-  execSync,
-  pom
+  execSync
 };
 
 // start the build
