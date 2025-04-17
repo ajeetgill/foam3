@@ -105,6 +105,20 @@ function task(desc, dep, f) {
       depth++;
     }
 
+    // execute task dependencies
+    let task = tasks[f.name];
+    let dep = task[1];
+    dep.forEach(d => {
+      if ( d instanceof Function ) {
+        d();
+      } else {
+        var f = globalThis[d];
+        if ( f )
+          f(...d.slice(1));
+      }
+    });
+
+    // execute same named pom tasks
     let pomTask = POM_TASKS && POM_TASKS[f.name];
     if ( pomTask ) {
       info(`POM Tasks :: ${f.name}`);
@@ -113,6 +127,7 @@ function task(desc, dep, f) {
       });
     }
 
+    // execute tasks
     if ( ! DRY_RUN || f.name == 'pomEvns' || f.name == 'all' ) {
       f.bind(Object.assign({ SUPER }, EXPORTS))(...args);
     }
@@ -128,22 +143,11 @@ function task(desc, dep, f) {
   };
 }
 
-// Execute task dependecies, then task itself
+// Execute task by name
+// future - presently the selection of tasks is restricted to those
+// explicitly defined in this file.  But potentially, a pom could
+// define additional tasks and also overide a tasks dependecy list.
 function execute(t) {
-  let task = tasks[t];
-  if ( ! task ) {
-    error('Task not found', t);
-  }
-
-  let dep = task[1];
-  dep.forEach(d => {
-    if ( d instanceof Function ) {
-      d();
-    } else {
-      execute(d);
-    }
-  });
-
   var f = globalThis[t];
   if ( f ) {
     f(...t.slice(1));
