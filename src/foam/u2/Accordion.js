@@ -103,6 +103,7 @@ foam.CLASS({
     'title',
     {
       name: 'icon',
+      value: null,
       documentation: `
         An icon that appears before the title in the Accordion toolbar.
 
@@ -119,6 +120,7 @@ foam.CLASS({
     },
     {
       name: 'actions',
+      value: [],
       documentation: `
         A list of actions that appear in the accordion toolbar.
 
@@ -142,8 +144,7 @@ foam.CLASS({
             ]
           })
             .add('This is hidden content...');
-      `,
-      value: []
+      `
     },
     {
       class: 'String',
@@ -166,72 +167,63 @@ foam.CLASS({
 
       const self = this;
 
-      let toolbar = this
-        .addClass(this.myClass())
+      this
+        .addClass()
         .enableClass('expanded', this.expanded$)
         .start('div')
           .addClass(this.myClass('toolbar'))
-          .on('click', _ => this.toggle());
-      
-      let titleSection = toolbar
-        .start('div')
-          .addClass(this.myClass('title'));
-
-      if ( this.expandIconPosition === 'left' ) {
-        titleSection.tag(
-          this.ActionView, {action: this.TOGGLE, data: this, icon: 'images/cheveron-right.svg', label: ''}
-        ).addClass(this.myClass('toggle'))
-      }
-
-      if ( this.icon !== undefined ) {
-        titleSection.tag(this.icon);
-      }
-      
-      titleSection
-        .start('span')
-          .addClass(this.myClass('title'))
-          .add(this.title$)
-        .end();
-
-      let actionsSection = toolbar
-        .start()
-          .addClass(this.myClass('actions'));
-
-      if ( this.actions.length > 0 ) {
-        for ( let action of this.actions ) {
-          const actionId = `${this.id}-${action.name}`;
-          let actionEl = actionsSection.start(self.ActionView, {
-            id: actionId,
-            action: action.action,
-            data: action.data || self,
-            icon: action.icon || '',
-            label: action.label
-          });
-          
-          actionEl.addClass(self.myClass('action'));
-          if ( action.name ) {
-            actionEl.addClass(self.myClass(action.name));
-          }
-          if ( action.tooltip ) {
-            actionEl.tooltip = action.tooltip;
-          }
-          if ( action.hoverColor ) {
-            const style = self.document.createElement('style');
-            style.id = `${actionId}-hover-style`;
-            style.textContent = `
-              #${actionId}:hover {
-                background-color: ${action.hoverColor} !important;
-              }
-            `;
-            self.document.head.appendChild(style);
-          }
-        }
-      }
-      if ( this.expandIconPosition === 'right' ) {
-        actionsSection.start(
-          this.ActionView, {action: this.TOGGLE, data: this, icon: 'images/cheveron-right.svg', label: ''}
-        ).addClass(this.myClass('toggle'));
-      }
+          .on('click', this.onToggle)
+          .start('div')
+            .addClass(this.myClass('title'))
+            .callIf(this.expandIconPosition === 'left', function() {
+              this.start(
+                self.TOGGLE
+              ).addClass(self.myClass('toggle'))
+              .on('click', self.onToggle);
+            })
+            .callIf(this.icon, function() {
+              this.tag(self.icon);
+            })
+            .start('span')
+              .addClass(this.myClass('title'))
+              .add(this.title$)
+            .end()
+          .end()
+          .start()
+            .addClass(this.myClass('actions'))
+            .forEach(this.actions, function(action) {
+              const actionId = `${self.id}-${action.name}`;
+              this.start(self.ActionView, {
+                id: actionId,
+                action: action.action,
+                data: action.data || self,
+                icon: action.icon || '',
+                label: action.label
+              })
+              .addClass(self.myClass('action'))
+              .callIf(action.name, function() {
+                this.addClass(self.myClass(action.name));
+              })
+              .callIf(action.tooltip, function() {
+                this.tooltip = action.tooltip;
+              })
+              .callIf(action.hoverColor, function() {
+                const style = self.document.createElement('style');
+                style.id = `${actionId}-hover-style`;
+                style.textContent = `
+                  #${actionId}:hover {
+                    background-color: ${action.hoverColor} !important;
+                  }
+                `;
+                self.document.head.appendChild(style);
+              })
+            })
+            .callIf(this.expandIconPosition === 'right', function() {
+              this.start(
+                self.TOGGLE
+              ).addClass(self.myClass('toggle'))
+              .on('click', self.onToggle);
+            });
 
       this.start('div', null, this.content$)
         //.show(this.expanded$)
@@ -241,6 +233,15 @@ foam.CLASS({
   ],
 
   actions: [
-    function toggle() { this.expanded = ! this.expanded; }
+    {
+      name: 'toggle',
+      label: '',
+      icon: 'images/cheveron-right.svg',
+      code: function() { this.expanded = ! this.expanded; }
+    }
+  ],
+
+  listeners: [
+    function onToggle() { this.toggle(); }
   ]
 });
