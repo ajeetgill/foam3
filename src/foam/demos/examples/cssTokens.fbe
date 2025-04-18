@@ -3,7 +3,7 @@
 <p>
 CSSTokens are FOAM's analog to CSS Variables available in common CSS preprocessors like SASS, LESS etc.
 <br><br>
-Unlike native css variables, cssTokens are scoped to the class they are used in automatically. 
+Unlike native css variables, cssTokens are scoped to the class they are used in automatically.
 <br><br>
 TLDR:<br>
 Best practices for styling FOAM Views:<br>
@@ -48,11 +48,11 @@ foam.CLASS({
 tag({class: 'Example'});
 --
 ## How they work
-CSSTokens are processed when an element's css is added to the DOM. foam.u2.CSS.expandCSS() calls foam.CSS.returnTokens on the css property of a class. 
+CSSTokens are processed when an element's css is added to the DOM. foam.u2.CSS.expandCSS() calls foam.CSS.returnTokens on the css property of a class.
 <br><br>
-The returnTokens function finds all tokens and replaces them with the appropriate values given the element being rendered and it's context. 
+The returnTokens function finds all tokens and replaces them with the appropriate values given the element being rendered and its context.
 <br><br>
-For every token, the returnTokenValue method is called. 
+For every token, the returnTokenValue method is called.
 <br><br>
 This code can be found in stdlib.js -> 'foam.CSS' LIB. You can also use this method directly. This is especially useful for slotting tokens.
 <br><br>
@@ -89,7 +89,7 @@ foam.CLASS({
 tag({class: 'ProgramaticTokenValues'});
 --
 ## Inheriting Tokens
-Tokens can be inherited by subclasses and can also be overriden. Here, Example 2 extends Example and overrides the values for it's tokens. These changes do not affect Example
+Tokens can be inherited by subclasses and can also be overriden. Here, Example 2 extends Example and overrides the values for its tokens. These changes do not affect Example
 --
 foam.CLASS({
   name: 'Example2',
@@ -105,7 +105,7 @@ tag({class: 'Example'});
 tag({class: 'Example2'});
 --
 ## Referencing Tokens
-Tokens can point to other tokens to get their values. 
+Tokens can point to other tokens to get their values.
 --
 foam.CLASS({
   name: 'Example3',
@@ -130,7 +130,7 @@ foam.CLASS({
 tag({class: 'Example3'});
 --
 ## Providing Fallbacks
-Tokens that reference other tokens can also provide fallback values in case the referenced token is not found. 
+Tokens that reference other tokens can also provide fallback values in case the referenced token is not found.
 --
 foam.CLASS({
   name: 'Example4',
@@ -164,7 +164,7 @@ FOAM provides some base css tokens that can be used for theming a FOAM app. Thes
 Most FOAM views reference these tokens so just refining this class in MOST cases will re-theme the entire app.
 <br><br>
 Unlike referencing cssTokens from other classes, these tokens can be referneced without providing the full path.
-i.e. you can set value to "$green500" rather than "$foam.u2.CSSTokens.green500" although the later will still work 
+i.e. you can set value to "$green500" rather than "$foam.u2.CSSTokens.green500" although the later will still work
 <br><br>
 This can be done by refining the class or by using DAOs(described later).
 --
@@ -210,8 +210,8 @@ foam.CLASS({
 tag({class: 'Example5'});
 --
 ## Overriding tokens using CSSTokenOverrideService
-As mentioned earlier, tokens can be refined and the simplest way to theme a FOAM app is to 
-refine the CSSTokens class. This should maintain all functionality for FOAM views. However, 
+As mentioned earlier, tokens can be refined and the simplest way to theme a FOAM app is to
+refine the CSSTokens class. This should maintain all functionality for FOAM views. However,
 this method is not ideal for more complex apps, such as ones that have multiple service providers and themes.
 <br><br>
 When using CORE, the preferred theming method is using CSSTokenOverride and CSSTokenOverrideService. This allows
@@ -260,7 +260,7 @@ foam.CLASS({
       of: 'foam.u2.ButtonStyle',
       name: 'style'
     },
-    // The properties below are only for this demo, typically these would be 
+    // The properties below are only for this demo, typically these would be
     // available in the context when using CORE.
     {
       name: 'tokenDAO',
@@ -358,7 +358,7 @@ tag({class: 'Example6'});
 ## Color Tokens
 Color tokens are a subClass of CSSTokens, they are extremely powerful as they add a number of accompanying tokens to the class.
 <br><br>
-Adding a color token adds it's associated hover, active, and disabled tokens. Along with a foreground token for each as well as the base token.
+Adding a color token adds its associated hover, active, and disabled tokens. Along with a foreground token for each as well as the base token.
 <br><br>
 Hover - provides a slightly darker or lighter colour than the one provided based on luminosity of the color provided (usually used for hover states)
 <br>
@@ -433,7 +433,7 @@ foam.CLASS({
       onDark: '$yellow200'
     },
     {
-      // Replace the modifiers for hover, disabled and active modifiers can also be changed similarly 
+      // Replace the modifiers for hover, disabled and active modifiers can also be changed similarly
       class: 'foam.u2.ColorToken',
       name: 'color2',
       value: 'pink',
