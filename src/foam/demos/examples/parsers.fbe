@@ -42,7 +42,7 @@ PStreams have the following interface:
 
 PStreams are immutable, which greatly simplifies backtracking.
 
-A parser has the following interface:
+A Parser has the following interface:
     PStream parse(PStream stream);
 
 It takes a PStream as input, and returns either a PStream
@@ -59,26 +59,39 @@ any other parsers, they do all of their parsing on their own.
 
 ## foam.parse.Parsers
 We use the foam.parse.Parsers Singleton class which provides convenience constructors
-for the various parser types. When writing a Parser class, we would just ' mixins: [ 'foam.parse.Parsers' ] to easily gain access to these functions.
+for the various parser types. When writing a Parser class, we would just add "mixins: [ 'foam.parse.Parsers' ]" to easily gain access to these functions.
 --
 
 ## Literal Parser
 The simplest parser is a literal parser, which only parses the supplied string.
 --
-var P  = foam.parse.Parsers.create(); // Is a Singleton
+// Create a Singleton for accessing Parser library
+var P = foam.parse.Parsers.create();
+
+// Create an input PStream for String
 var ps = foam.parse.StringPStream.create();
+// And assign a value to parse
 ps.setString('abcdef');
+
+// Let's look at our PStream
 log(ps.toString());
+
+// Now create a Literal Parser using the Single object 'P' created above.
+// This parser will only parse the literal 'abc'.
 var p = P.literal('abc');
-ps = p.parse(ps, {});
+
+// Now let's parse the PStream with the Parser
+ps = p.parse(ps);
+
+// Now let's look at the results of our parsing
 log(ps.toString());
 
-// Now that we've parsed the literal 'abc', the ps has consumed the characters 'abc'
-// and we can continue parsing from just beyond that point.
-log(P.literal('def').parse(ps).toString());
+// If we try to parse 'abc' again notice that it will fail because the stream is now
+// at 'def', since 'abc' was consumed.
+log(p.parse(ps));
 
-// Since the parser only parses the literal 'abc', it will fail if given something else:
-log(typeof p.parse(P.stringPStream('xyzdef')));
+// Here we'll create an in-lined literal 'def' parser and then call in directly.
+log(P.literal('def').parse(ps).toString());
 
 ## Parser Tester
 Before continuing, let's write a simple helper function to make testing parsers easier:
