@@ -23,12 +23,9 @@ Parsers can be used for many things, including:
 4. creating languages, from small Domain-Specific-Languages (DSLs) to full-featured ones
 5. source code linters, refactoring tools, or syntax highlighters
 
-Parse combinator library.
+FOAM parsers accept input in the form of objects which implement the PStream interface.
+PStream is short for "Parser Stream".
 
-Create complex parsers by composing simple parsers.
-
-A PStream is a "Parser Stream", the input format accepted by
-FOAM parsers.
 
 PStreams have the following interface:
     get int     pos   - The character position in the input stream.
