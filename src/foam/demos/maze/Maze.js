@@ -144,7 +144,7 @@ foam.CLASS({
       name: 'question',
       label: 'What company was JavaScript invented in?',
       view: {
-        class: 'foam.u2.view.RadioView',
+        class: '',
         choices: [
           'Redknee',
           'Verizon',
