@@ -94,7 +94,7 @@ log(p.parse(ps));
 log(P.literal('def').parse(ps).toString());
 
 ## Parser Tester
-Before continuing, let's write a simple helper function to make testing parsers easier:
+Before continuing, let's write a helper function to make testing parsers easier:
 --
 const P = foam.parse.Parsers.create();
 
