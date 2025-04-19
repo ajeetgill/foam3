@@ -231,6 +231,10 @@ first one that suceeds.
 --
 testP(P.alt(P.literal('A'), P.literal('B')), [ 'A', 'B', 'C' ]);
 
+// Or just:
+
+testP(P.alt('A', 'B'), [ 'A', 'B', 'C' ]);
+
 ## Repeat
 The repeat() parser takes a single delegate parser and repeatedly uses it to parse
 the input stream until it fails. The result of all delegate parses are combined in an array.
@@ -254,7 +258,7 @@ delegate parser, this is so common an operation that repeat supports it directly
 --
 // First lets' look how we would parse a comma delimited list of letters without using this feature:
 testP(
-  P.repeat(P.seq(P.range('a','z'), P.literal(','))),
+  P.repeat(P.seq(P.range('a','z'), ',')),
   [ 'a', 'a,b', 'a,b,c', 'a,b,c,'
 ]);
 // Notice that the above never parsed the last letter, except for the last case: 'a,b,c,'
@@ -262,7 +266,7 @@ testP(
 // which prevents the last 'c' from being parse.
 // To fix this, we need to make our parser more complicated:
 testP(
-  P.seq(P.repeat(P.seq(P.range('a','z'), P.literal(','))), P.range('a', 'z')),
+  P.seq(P.repeat(P.seq(P.range('a','z'), ',')), P.range('a', 'z')),
   [ 'a', 'a,b', 'a,b,c', 'a,b,c,'
 ]);
 // This fixes that problem, but our parser is getting more complicated. Also,
@@ -270,7 +274,7 @@ testP(
 // just want the letters.
 // The solution is to specify the delimiter to repeat():
 testP(
-  P.repeat(P.range('a','z'), P.literal(',')),
+  P.repeat(P.range('a','z'), ','),
   [ '', 'a', 'a,b', 'a,b,c', 'a,b,c,'
 ]);
 // By supplying the delimiter parser as the second argument to repeat(), it knows that we
@@ -280,7 +284,7 @@ testP(
 // You can also specify a delimiter parser with plus(), in cases where you only want
 // the parse to succeed when you have one or more parses.
 testP(
-  P.plus(P.range('a','z'), P.literal(',')),
+  P.plus(P.range('a','z'), ','),
   [ '', 'a', 'a,b', 'a,b,c', 'a,b,c,'
 ]);
 
@@ -326,7 +330,7 @@ The optional() parser composes a single delegate parser and if that parser parse
 its result, otherwise it returns the PStream as is, without failing. This lets parsing
 continue from the same point.
 --
-testP(P.seq(P.optional(P.literal('header')), P.literal('body')),
+testP(P.seq(P.optional('header'), 'body'),
   [ 'headerbody', 'body', 'header' ]
 );
 
@@ -339,18 +343,17 @@ Notice this line: P.optional(P.literal('-'), '-'),
 We can specify a second parameter to optional() that returns the value to be used if the parser
 doesn't parse. In this case, we just want the add '-' if it wasn't present, to standardize
 the output format of the parser.
-
 --
 
 var digit    = P.range('0', '9');
-var areaCode = P.str(P.seq(P.literal('('), digit, digit, digit, P.literal(')')));
+var areaCode = P.str(P.seq('(', digit, digit, digit, ')'));
 var phoneNumber = P.str(P.seq(
-  P.optional(P.literal('1')),
-  P.optional(P.literal(' ')),
+  P.optional('1'),
+  P.optional(' '),
   P.optional(areaCode),
-  P.optional(P.literal(' '), ' '),
+  P.optional(' ', ' '),
   P.str(P.seq(digit, digit, digit)),
-  P.optional(P.literal('-'), '-'),
+  P.optional('-', '-'),
   P.str(P.seq(digit, digit, digit, digit))
 ));
 
@@ -384,7 +387,6 @@ testP(words, [
    on another line
    and more
   `
-
 ]);
 
 ## Seq0
@@ -393,7 +395,7 @@ testP(words, [
 ## Example: Boolean
 Consider the following simple parser which is meant to parse boolean true or false values:
 --
-var booleanParser1 = P.alt(P.literal('true'), P.literal('false'));
+var booleanParser1 = P.alt('true', 'false');
 testP(booleanParser1, [ 'true', 'false' ]);
 
 // The above booleanParser1 works, but isn't ideal because the values it returns are
@@ -457,6 +459,9 @@ foam.CLASS({
 });
 
 var p = PhoneNumberParser.create();
+
+// A good way to test/debug Grammars to to test each symbol individually:
+
 testP(p.getSymParser('countryCode'), [ '', '1', '+1', '+1 ' ]);
 testP(p.getSymParser('areaCode'),    [ '', '555', '(555)', '55' ]);
 testP(p.getSymParser('prefix'),      [ '', '12', '123', '1234' ]);
