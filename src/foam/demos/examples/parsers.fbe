@@ -196,8 +196,20 @@ On a successful parse, the returned value is an array of the parsed values of ea
 composed parser.
 --
 testP(P.seq(P.range('a','z'), P.range('0','9')), [ 'r2', 'd2', '3p', 'xy' ]);
-// You can combine any number of parsers in a sequnce:
-testP(P.seq(P.literal('a'), P.literal('b'), P.literal('c')), [ 'axxx', 'abxxx', 'abcxxx' ]);
+
+## Literal Parser Shortcut
+Notice that in this example we have three calls to P.literal(). Since P.literal() is so
+commonly used when creating parsers, we make it the default when you just pass a String
+to another parse combinator, like seq().
+--
+const TESTS = [ 'axxx', 'abxxx', 'abcxxx' ];
+
+// The longer explicit method:
+testP(P.seq(P.literal('a'), P.literal('b'), P.literal('c')), TESTS);
+
+// A shorter more readable method:
+testP(P.seq('a', 'b', 'c'), TESTS);
+
 
 ## String Parser
 Notice that in the sequence parser, when we parsed 'r2' our value was [ 'r', '2' ], an array.
