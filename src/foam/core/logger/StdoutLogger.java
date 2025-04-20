@@ -8,9 +8,6 @@ package foam.core.logger;
 
 import foam.lang.X;
 import foam.core.logger.Logger;
-import foam.core.COREService;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.logging.*;
 
 public class StdoutLogger
