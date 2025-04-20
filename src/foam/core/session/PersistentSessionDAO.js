@@ -14,18 +14,18 @@ foam.CLASS({
 
   documentation: `The key to 'persistent' sessions is the userId on the
 session. If a user makes a client call with an existing session id and
-a matchin user id, then the system consisders the user logged in.
+a matching user id, then the system consisders the user logged in.
 Sessions are NOT-frozen, for reasons discussed elsewhere.  The
 implication is updates are not persisted to the runtime journal because
 there is never a delta.
 This DAO maintains it's own copy of the session to calculate the delta
 and then makes an explicit journal put call to store the session with
-thie user id.
+the user id.
 
 Additionally, anonymous also adds a complication.  When a user is logged
 out, the client will present anonymous views and the anonymous user
-uses the same session id as it's same client connection. This DAO also
-ensures the session is not saved with the anonymous user id.
+uses the same session id as it is the same client connection. This DAO
+also ensures the session is not saved with the anonymous user id.
 `,
 
   javaImports: [
