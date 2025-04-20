@@ -552,3 +552,6 @@ foam.CLASS({
 var p = EmailAddressParser.create();
 
 testP(p, [ 'John Doe<john@email.com>', 'john@email.com' ]);
+
+// Notice we also added an 'addressList' rule to the grammar, which is useful:
+testP(p.getSymParser('addressList'), [ 'john@email.com', 'john@email.com,jane@email.com' ]);
