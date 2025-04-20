@@ -473,6 +473,7 @@ testP(p, [
 ]);
 
 ## Semantic Actions
+<pre>
 So far all of our parsers have mostly just returned the matched input but haven't actually
 converted the input into anything else. While this is what is commonly done with
 regular-expressions, parsers typically convert the input into something useful.
@@ -490,6 +491,7 @@ to actual JS numbers, rather than being left as Strings.
 
 Semantic Actions are defined by creating a method named <SymbolName>Action. So in this
 example, the 'numberAction' method is applied to results parsed by the 'number' parser.
+</pre>S
 --
 
 foam.CLASS({
@@ -555,3 +557,10 @@ testP(p, [ 'John Doe<john@email.com>', 'john@email.com' ]);
 
 // Notice we also added an 'addressList' rule to the grammar, which is useful:
 testP(p.getSymParser('addressList'), [ 'john@email.com', 'john@email.com,jane@email.com' ]);
+
+## Match and MatchAll
+--
+var p = PhoneNumberParser.create();
+var input = 'blah blah blah (555) 123-4556, +1 (555) 123-1234 blah blah blah 555-1234  blah blah';
+log('One:', p.match(input));
+log('All:', p.matchAll(input).join(', '));
