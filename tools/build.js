@@ -268,7 +268,7 @@ const ENVS = {
   JAVA_RELEASE:      ['Java target version. Can also be set in root pom. ex: java: \'11\''],
   JAVA_RELEASE_DEFAULT: ['Default Java target version.','17'],
   JAVA_TOOL_OPTIONS: ['Internal configuration for JVM with the JAVA_OPTS',() => JAVA_OPTS],
-  JAVAC_PARAMS:      ['Parameters passed to Java Compiler'],
+  JAVAC_PARAMS:      ['Parameters passed to Java Compiler',''],
   JAVAC_PARAMS_DEFAULT:  ['Default parameters for Java Compiler', () => `--release ${JAVA_RELEASE} -proc:none`],
   JOURNALS:          ['Deployment poms to include in build',''],
   JOURNAL_HOME:      ['Application journals directory',() => `${APP_HOME}/journals`],
