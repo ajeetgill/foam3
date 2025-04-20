@@ -368,9 +368,13 @@ foam.CLASS({
           delegate = new foam.dao.PMDAO.Builder(getX()).setCSpec(getCSpec()).setDelegate(delegate).build();
 
         for ( Indexer i : indexes ) {
+          DAO d = getMdao();
+          if ( d == null ) {
+            d = delegate;
+          }
           AddIndexCommand cmd = new AddIndexCommand();
           cmd.setIndexers(new Indexer[] { i });
-          Object result = delegate.cmd_(getX(), cmd);
+          Object result = d.cmd_(getX(), cmd);
           if ( result == null ||
               ! ( result instanceof Boolean ) ||
               ((Boolean) result).booleanValue() != true ) {
