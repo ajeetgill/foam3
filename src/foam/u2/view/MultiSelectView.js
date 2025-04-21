@@ -10,23 +10,15 @@ foam.CLASS({
   package: 'foam.u2.view',
   name: 'MultiSelectView',
   extends: 'foam.u2.View',
-  flags: ['web'],
-
 
   documentation: `
       The choices are in [value, label, isSelected ] quartets.
 
       However the client can simply pass in [value, label] and it will adapt to a [value, label, isSelected, choiceMode ] format
-
-
-      Calling the following methods:
-
-      MultiChoiceView.data will be automatically set to a predicated dao based on the choices selected only if
-      the minSelected, maxSelected criteria is respected, it will be foam.dao.NullDAO othrewise
   `,
 
   css: `
-    .foam-u2-ActionView-options {
+    ^ .foam-u2-ActionView-options {
       padding: 10px;
       border: 1px solid $grey400;
       cursor: pointer;
@@ -39,7 +31,7 @@ foam.CLASS({
       color: $black;
       border-radius: 4px;
   }
-  .foam-u2-ActionView-options:hover {
+  ^ .foam-u2-ActionView-options:hover {
     background-color: $white !important;
     color: $black !important;
   }
@@ -128,7 +120,7 @@ foam.CLASS({
               if ( foam.Object.isInstance(nu) ) {
                   var out = [];
                   for ( var key in nu ) {
-                  if ( nu.hasOwnProperty(key) ) out.push([ key, nu[key] ]);
+                    if ( nu.hasOwnProperty(key) ) out.push([ key, nu[key] ]);
                   }
                   return out;
               }
@@ -138,7 +130,7 @@ foam.CLASS({
               // Upgrade single values to [value, value].
               for ( var i = 0; i < nu.length; i++ ) {
                   if ( ! Array.isArray(nu[i]) ) {
-                  nu[i] = [ nu[i], nu[i] ];
+                    nu[i] = [ nu[i], nu[i] ];
                   }
               }
               return nu;
@@ -187,7 +179,7 @@ foam.CLASS({
                                     .start('span')
                                         .add(choice[0])
                                     .end()
-                            .end()
+                            .end();
                         
                     });
                 }))
