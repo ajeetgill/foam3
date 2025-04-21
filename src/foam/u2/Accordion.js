@@ -16,9 +16,9 @@ foam.CLASS({
     ^ {
       width: 100%;
       overflow: hidden;
-      background-color: #eee;
-      border: 1px solid #eee;
-      border-bottom-color: #ccc;
+      background-color: $grey50;
+      border: 1px solid $grey50;
+      border-bottom-color: $grey100;
     }
     ^:first-child {
       margin-top: 15px;
@@ -27,10 +27,10 @@ foam.CLASS({
     ^:last-child {
       margin-bottom: 15px;
       border-radius: 0 0 5px 5px;
-      border-bottom-color: #eee;
+      border-bottom-color: $grey50;
     }
     ^toolbar {
-      background-color: #eee;
+      background-color: $grey50;
       padding: 5px;
       display: flex;
       justify-content: space-between;
@@ -47,11 +47,12 @@ foam.CLASS({
     ^action {
       padding: 2px 5px;
       border: none;
-      background-color: rgba(255, 255, 255, .7);
+      background-color: $white;
+      color: $grey900;
     }
     ^action:hover {
-      background-color: rgb(74, 170, 135) !important;
-      color: white !important;
+      background-color: $surface-primary-normal!important;
+      color: $white!important;
     }
     ^title {
       padding: 3px;
@@ -76,7 +77,7 @@ foam.CLASS({
     ^ .foam-u2-ActionView-toggle svg {
       width: 12px;
       height: 12px;
-      color: black;
+      color: $black;
     }
     ^ .foam-u2-ActionView-toggle {
       transition: transform 0.3s;
@@ -120,7 +121,7 @@ foam.CLASS({
     },
     {
       name: 'actions',
-      value: [],
+      factory: function() { return []; },
       documentation: `
         A list of actions that appear in the accordion toolbar.
 
