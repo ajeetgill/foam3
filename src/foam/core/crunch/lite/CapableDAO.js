@@ -50,7 +50,6 @@ foam.CLASS({
         if ( capable == null ) {
           return null;
         }
-        capable = (Capable) ((FObject) capable).fclone();
 
         capable = populatePayloads(x, capable);
 
@@ -86,7 +85,12 @@ foam.CLASS({
       javaCode:`
         DAO capablePayloadDAO = capable.getCapablePayloadDAO(x);
         CapabilityJunctionPayload[] payloads = (CapabilityJunctionPayload[]) ((List) ((ArraySink) capablePayloadDAO.select(new ArraySink())).getArray()).toArray(new CapabilityJunctionPayload[0]);
-        capable.setCapablePayloads(payloads);
+        if ( payloads.length > 0 ) {
+          if ( ! ((FObject) capable).isFrozen() ) {
+            capable = (Capable) ((FObject) capable).fclone();
+          }
+          capable.setCapablePayloads(payloads);
+        }
         return capable;
       `
     },
