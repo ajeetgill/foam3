@@ -21,17 +21,17 @@ foam.CLASS({
       border-bottom-color: $grey200;
     }
     ^:first-child {
-      margin-top: 15px;
-      border-radius: 5px 5px 0 0;
+      margin-top: 16px;
+      border-radius: 4px 4px 0 0;
     }
     ^:last-child {
-      margin-bottom: 15px;
-      border-radius: 0 0 5px 5px;
+      margin-bottom: 16px;
+      border-radius: 0 0 4px 4px;
       border-bottom-color: $grey50;
     }
     ^toolbar {
       background-color: $grey50;
-      padding: 5px;
+      padding: 4px;
       display: flex;
       justify-content: space-between;
     }
@@ -39,13 +39,13 @@ foam.CLASS({
       justify-content: center;
       align-items: center;
       display: flex;
-      gap: 5px;
+      gap: 4px;
     }
     ^actions ^toggle {
       margin: 0;
     }
     ^title {
-      padding: 3px;
+      padding: 4px;
       font-size: 1.1em;
       cursor: default;
       display: flex;
@@ -61,7 +61,7 @@ foam.CLASS({
     }
     ^.expanded ^content {
       height: auto;
-      padding: 5px;
+      padding: 4px;
       opacity: 1;
     }
     ^ ^toggle svg {
@@ -76,10 +76,10 @@ foam.CLASS({
       border: none;
       outline: none;
       outline: none;
-      padding: 3px;
-      width: 30px;
-      min-width: 30px;
-      height: 30px;
+      padding: 4px;
+      width: 28px;
+      min-width: 28px;
+      height: 28px;
     }
     ^ .foam-u2-ActionView-toggle:hover {
       background: transparent !important;
@@ -139,7 +139,7 @@ foam.CLASS({
               .start()
                 .addClass(self.myClass('actions'))
                 .add(self.actions$)
-                .callIf(this.expandIconPosition === 'right', function() {
+                .callIf(self.expandIconPosition === 'right', function() {
                   this.start(self.TOGGLE)
                     .addClass(self.myClass('toggle'))
                 });
@@ -158,9 +158,5 @@ foam.CLASS({
       themeIcon: 'next',
       code: function() { this.expanded = ! this.expanded; }
     }
-  ],
-
-  listeners: [
-    function onToggle() { this.toggle(); }
   ]
 });
