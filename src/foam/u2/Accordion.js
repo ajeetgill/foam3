@@ -18,7 +18,7 @@ foam.CLASS({
       overflow: hidden;
       background-color: $grey50;
       border: 1px solid $grey50;
-      border-bottom-color: $grey100;
+      border-bottom-color: $grey200;
     }
     ^:first-child {
       margin-top: 15px;
@@ -132,10 +132,8 @@ foam.CLASS({
               .start('div')
                 .addClass(self.myClass('title'))
                 .callIf(self.expandIconPosition === 'left', function() {
-                  this.start(
-                    self.TOGGLE
-                  ).addClass(self.myClass('toggle'))
-                  .on('click', self.onToggle);
+                  this.start(self.TOGGLE)
+                    .addClass(self.myClass('toggle'))
                 })
                 .start('div')
                   .addClass(self.myClass('title'))
@@ -147,10 +145,8 @@ foam.CLASS({
                   .addClass(self.myClass('actions'))
                   .add(self.actions$)
                   .callIf(this.expandIconPosition === 'right', function() {
-                    this.start(
-                      self.TOGGLE
-                    ).addClass(self.myClass('toggle'))
-                    .on('click', self.onToggle);
+                    this.start(self.TOGGLE)
+                      .addClass(self.myClass('toggle'))
                   });
           })
 
