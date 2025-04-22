@@ -120,7 +120,7 @@ foam.CLASS({
         .enableClass('expanded', this.expanded$)
         .start('div')
           .addClass(self.myClass('toolbar'))
-          .on('click', this.onToggle)
+          .on('click', self.toggle.bind(self))
           .callIfElse(this.toolbar, function() {
             this.add(self.toolbar$)
           }, function() {
