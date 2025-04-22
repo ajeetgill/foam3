@@ -26,6 +26,19 @@ Additionally, anonymous also adds a complication.  When a user is logged
 out, the client will present anonymous views and the anonymous user
 uses the same session id as it is the same client connection. This DAO
 also ensures the session is not saved with the anonymous user id.
+
+Background
+Every single client operation interacts with a session object.
+On each operation the session properties 'uses' and 'lastUsed' are updated.
+To reduce Java object garbage, caused by cloning on put, and, if my memory
+serves, to deal with threading concerns during simultaneous client operations,
+the session is not-frozen.
+
+Other possible solutions
+* Revert to frozen - clone and put as normal. Move uses and lastUsed to
+another non-frozen model.
+* Create a generic persistence model that listens for update and outputs
+accordingly.
 `,
 
   javaImports: [
@@ -40,13 +53,10 @@ also ensures the session is not saved with the anonymous user id.
     'foam.dao.MDAO',
     'foam.dao.NullDAO',
     'foam.dao.ProxyDAO',
-    'foam.lang.ContextAgent',
-    'foam.lang.ContextAgentTimerTask',
     'foam.lang.X',
     'java.util.HashMap',
     'java.util.List',
-    'java.util.Map',
-    'java.util.Timer'
+    'java.util.Map'
   ],
 
   javaCode: `
@@ -58,20 +68,24 @@ also ensures the session is not saved with the anonymous user id.
 
   properties: [
     {
-      name: 'persistentDAO',
-      class: 'foam.dao.DAOProperty',
-      javaFactory: 'return new MDAO(Session.getOwnClassInfo());'
-    },
-    {
+      documentation: 'Reference to Session DAO stack mdao to allow explicit put operations that should side-step the journal',
       name: 'mDAO',
       class: 'foam.dao.DAOProperty'
     },
     {
+      documentation: 'Reference to Session DAO stack journal to allow explicit put operations',
       name: 'journal',
       class: 'FObjectProperty',
       of: 'foam.dao.Journal'
     },
     {
+      documentation: 'Copies of user sessions from which to perform delta against to determine if output to journal should occur.',
+      name: 'sessionCache',
+      class: 'Map',
+      javaFactory: 'return new HashMap();'
+    },
+    {
+      documentation: 'Record anonymous users to avoid irrelevant journal updates with anonymouss user ids.  Also slows replay.',
       name: 'anonymousCache',
       class: 'Map',
       javaFactory: 'return new HashMap();'
@@ -80,12 +94,6 @@ also ensures the session is not saved with the anonymous user id.
       name: 'nullDAO',
       class: 'foam.dao.DAOProperty',
       javaFactory: 'return new NullDAO(getX(), Session.getOwnClassInfo());'
-    },
-    {
-      name: 'timerInterval',
-      class: 'Long',
-      value: 1, // 1000,
-      units: 'ms'
     }
   ],
 
@@ -126,19 +134,21 @@ also ensures the session is not saved with the anonymous user id.
         Session nu = (Session) getMDAO().put_(x, obj);
         if ( nu.getUserId() == 0 ||
              getAnonymousCache().containsKey(nu.getUserId()) ) {
+          // Avoid irrelevant journals updates that will only slow replay
           return nu;
         }
 
         nu = (Session) getDelegate().put_(x, obj);
 
         boolean save = false;
-        Session per = (Session) getPersistentDAO().find(nu.getId());
+        Session per = (Session) getSessionCache().get(nu.getId());
         if ( per == null ) {
           per = new Session();
           per.copyFrom(nu);
           save = true;
         } else {
            Map diff = per.diff(nu);
+           // future - could move these to property for config.
            if ( diff.containsKey(Session.USER_ID.getName()) ||
                 diff.containsKey(Session.AGENT_ID.getName()) ||
                 diff.containsKey(Session.TTL.getName()) ||
@@ -148,7 +158,7 @@ also ensures the session is not saved with the anonymous user id.
            }
         }
         if ( save ) {
-          getPersistentDAO().put(per);
+          getSessionCache().put(per.getId(), per);
           getJournal().put(x, null, getNullDAO(), per);
         }
         return nu;
@@ -157,7 +167,7 @@ also ensures the session is not saved with the anonymous user id.
     {
       name: 'remove_',
       javaCode: `
-      getPersistentDAO().remove_(x, obj);
+      getSessionCache().remove(((Session) obj).getId());
       return getDelegate().remove_(x, obj);
       `
     }
