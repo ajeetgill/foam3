@@ -1,0 +1,10 @@
+// p({
+//   "class": "foam.core.boot.CSpec",
+//   "name": "keyStoreManager",
+//   "serviceScript": """
+//     return new foam.core.security.PKCS12KeyStoreManager.Builder(x)
+//       .setKeyStorePath("foamdev.jks")
+//       .setKeyStorePass("foamdev")
+//       .build();
+//   """
+// })
