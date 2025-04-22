@@ -63,9 +63,8 @@ foam.CLASS({
           ProxySink refinedSink = new ProxySink(x, sink) {
             @Override
             public void put(Object obj, foam.lang.Detachable sub) {
-              Capable capable = (Capable) ((FObject) obj).fclone();
-
-              capable = populatePayloads(x, capable);
+              Capable capable = (Capable) obj;
+                capable = populatePayloads(x, capable);
 
               super.put(capable, sub);
             }
@@ -86,7 +85,7 @@ foam.CLASS({
         DAO capablePayloadDAO = capable.getCapablePayloadDAO(x);
         CapabilityJunctionPayload[] payloads = (CapabilityJunctionPayload[]) ((List) ((ArraySink) capablePayloadDAO.select(new ArraySink())).getArray()).toArray(new CapabilityJunctionPayload[0]);
         if ( payloads.length > 0 ) {
-          if ( ! ((FObject) capable).isFrozen() ) {
+          if ( ((FObject) capable).isFrozen() ) {
             capable = (Capable) ((FObject) capable).fclone();
           }
           capable.setCapablePayloads(payloads);
