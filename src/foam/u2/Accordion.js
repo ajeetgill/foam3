@@ -8,7 +8,7 @@
 foam.CLASS({
   package: 'foam.u2',
   name: 'Accordion',
-  extends: 'foam.u2.Element',
+  extends: 'foam.u2.Controller',
 
   requires: [ 'foam.u2.ActionView' ],
 
@@ -118,22 +118,18 @@ foam.CLASS({
       this
         .addClass()
         .enableClass('expanded', this.expanded$)
-        .callIfElse(this.toolbar, function() {
-          this.start('div')
-            .addClass(self.myClass('toolbar'))
-            .on('click', this.onToggle)
-            .add(self.toolbar$)
-          .end();
-        }, function() {
-          this
-            .start('div')
-              .addClass(self.myClass('toolbar'))
-              .on('click', self.onToggle)
+        .start('div')
+          .addClass(self.myClass('toolbar'))
+          .on('click', this.onToggle)
+          .callIfElse(this.toolbar, function() {
+            this.add(self.toolbar$)
+          }, function() {
+            this
               .start('div')
                 .addClass(self.myClass('title'))
                 .callIf(self.expandIconPosition === 'left', function() {
                   this.start(self.TOGGLE)
-                    .addClass(self.myClass('toggle'))
+                    .addClass(self.myClass('toggle'));
                 })
                 .start('div')
                   .addClass(self.myClass('title'))
@@ -141,21 +137,15 @@ foam.CLASS({
                 .end()
               .end()
               .start()
-                .start('div')
-                  .addClass(self.myClass('actions'))
-                  .add(self.actions$)
-                  .callIf(this.expandIconPosition === 'right', function() {
-                    this.start(self.TOGGLE)
-                      .addClass(self.myClass('toggle'))
-                  });
+                .addClass(self.myClass('actions'))
+                .add(self.actions$)
+                .callIf(this.expandIconPosition === 'right', function() {
+                  this.start(self.TOGGLE)
+                    .addClass(self.myClass('toggle'))
+                });
           })
 
-      this
-        .addClass()
-        .enableClass('expanded', this.expanded$)
-
       this.start('div', null, this.content$)
-        //.show(this.expanded$)
         .addClass(this.myClass('content'))
       .end();
     }
