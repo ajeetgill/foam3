@@ -50,6 +50,9 @@ globalThis.foam = {
       // require() is used to invoke foam.POM for pom processing, for
       // example.  Hence the cache must be cleared after each require.
       delete require.cache[require.resolve(path)];
+    } catch (x) {
+      console.log(x);
+      throw x;
     } finally {
       foam.cwd = cwd;
     }
