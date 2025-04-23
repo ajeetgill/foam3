@@ -22,7 +22,6 @@ foam.CLASS({
       padding: 10px;
       border: 1px solid $grey400;
       cursor: pointer;
-      min-width: 400px;
       display: flex;
       flex-direction: row-reverse;
       align-items: center;
@@ -31,14 +30,10 @@ foam.CLASS({
       color: $black;
       border-radius: 4px;
   }
-  ^ .foam-u2-ActionView-options:hover {
-    background-color: $white !important;
-    color: $black !important;
-  }
   ^choices-holder {
-      background: $white!important;
-      color: $black !important;
-      opacity: 1 !important;
+      background: $white;
+      color: $black;
+      opacity: 1;
       border: 1px solid $grey400;
       border-radius: 4px;
       margin-top: 5px;
@@ -53,33 +48,6 @@ foam.CLASS({
       gap: 1rem;
       color: $black;
       width: 100%;
-  }
-  ^checkbox-input {
-      -webkit-appearance: none;
-      appearance: none;
-      border-radius: 2px;
-      border: solid 1px $grey400;
-      height: 1.275em;
-      margin: 7px 0;
-      padding: 0px;
-      transition: background-color 140ms, border-color 140ms;
-      width: 1.275em;
-      flex-shrink: 0;
-      cursor: pointer;
-  }
-  ^checkbox-input:checked {
-      background-color: $primary500;
-      border-color: $primary500;
-  }
-  ^checkbox-input:checked:disabled {
-      border-color: $grey600;
-      background-color: $grey600;
-      fill: white;
-  }
-  ^checkbox-input:checked:after {
-      position:relative;
-      top: 1px;
-      content: url("/images/checkmark-white.svg");
   }
   `,
 
@@ -138,6 +106,37 @@ foam.CLASS({
             return [];
           }
       },
+      {
+        name: 'overlay',
+        factory: function() {
+          let self = this;
+          return this.OverlayDropdown.create({
+              parentEl: this.parentNode,
+              closeOnLeave: true,
+              lockToParentWidth: true
+            })
+              .addClass(this.myClass('select-modal'))
+              .start().addClass(this.myClass('choices-holder'))
+                  .add(this.dynamic(function(choices, data) {
+                      return choices.map(choice => {
+                          var isSelected = data?.includes(choice[1]);
+                          var inputId = 'u' + choice.$UID;
+                          this
+                              .start().addClass(self.myClass('input-holder'))
+                                .tag(foam.u2.CheckBox, { data: isSelected, label: choice[0] })
+                                .on('change', function (evt) {
+                                          self.onSelect(choice[1]);
+                                      })
+                                  
+                          .end();
+                          
+                      });
+                  }))
+              .end();
+          
+          
+        }
+      }
   ],
 
   actions: [
@@ -145,31 +144,9 @@ foam.CLASS({
       name: 'options',
       themeIcon: 'dropdown',
       code: async function() {
-        self = this;
-        let selectCreateModal = this.OverlayDropdown.create({
-            closeOnLeave: true,
-            lockToParentWidth: true
-          })
-            .addClass(this.myClass('select-modal'))
-            .start().addClass(this.myClass('choices-holder'))
-                .add(this.dynamic(function(choices, data) {
-                    return choices.map(choice => {
-                        var isSelected = data?.includes(choice[1]);
-                        var inputId = 'u' + choice.$UID;
-                        this
-                            .start().addClass(self.myClass('input-holder'))
-                              .tag(foam.u2.CheckBox, { data: isSelected, label: choice[0] })
-                              .on('change', function (evt) {
-                                        self.onSelect(choice[1]);
-                                    })
-                                
-                        .end();
-                        
-                    });
-                }))
-            .end();
+        let self = this;
 
-        this.parentNode.add(selectCreateModal)
+        this.parentNode.add(this.overlay)
     }  
     }
   ],
