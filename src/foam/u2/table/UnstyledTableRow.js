@@ -33,6 +33,7 @@ foam.CLASS({
   properties: [
     'obj',
     'projection',
+    'isEven',
     // Added for scrollTableView support
     {
       name: 'actionDAO',
@@ -52,6 +53,7 @@ foam.CLASS({
       on('mouseover', () => self.hoverSelection = obj).
       call(this.insertClick, [obj]). // TODO: why the bind(), call should apply to this anyway?
       enableClass(this.data.myClass('clickable'), ! this.config?.disableSelection).
+      enableClass(this.data.myClass('even'), this.isEven).
       addClass(this.data.myClass('row')).
       style({ 'min-width': this.data.tableWidth_$ }).
 
