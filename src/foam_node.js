@@ -38,9 +38,9 @@ globalThis.foam = {
     if ( ! fn ) return;
 
     // ???: foam.resolve()?
-    var cwd = foam.cwd;
+    var cwd  = foam.cwd;
+    var path = path_.resolve(foam.cwd, fn) + '.js';
     try {
-      var path = path_.resolve(foam.cwd, fn) + '.js';
       if ( ! isProject && globalThis.foam.seen(path) ) return;
       foam.cwd = path_.dirname(path);
       foam.sourceFile = path;
@@ -51,7 +51,10 @@ globalThis.foam = {
       // example.  Hence the cache must be cleared after each require.
       delete require.cache[require.resolve(path)];
     } catch (x) {
-      console.log(x);
+      if ( ! path.endsWith('pom.js') ) {
+        console.log('Error Loading:', path);
+        console.log(x);
+      }
       throw x;
     } finally {
       foam.cwd = cwd;
