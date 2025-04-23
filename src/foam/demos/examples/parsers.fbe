@@ -110,13 +110,27 @@ function testP(parser, strs) {
       attrs({colspan:2}).add(`Parser: ${parser}`)
     .end().
   end().
-  start('tr').start('th').add('Input').end().start('th').add('Result').end().end().
+  start('tr').
+    start('th').
+      add('Input').
+    end().
+    start('th').
+      add('Result').
+    end().
+  end().
   forEach(strs, function(s) {
     var input  = foam.lang.SimpleSlot.create({value: s});
     var output = input.map(s => parser.parse(P.stringPStream(s)));
     this.start('tr').
-      start('td').style({width:'25%'}).tag({class: 'foam.u2.TextField', size: 10, onKey: true, data$: input}).end().
-      start('td').style({color: output.map(s=> s ? 'green' : 'red')}).add(output.map(s => s ? s.toString() : 'undefined'));
+      start('td').
+        style({width:'25%'}).
+        tag({class: 'foam.u2.TextField', size: 10, onKey: true, data$: input}).
+      end().
+      start('td').
+        style({color: output.map(s=> s ? 'green' : 'red')}).
+        add(output.map(s => s ? s.toString() : 'undefined')).
+      end().
+    end();
   });
 }
 
