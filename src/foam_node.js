@@ -51,10 +51,8 @@ globalThis.foam = {
       // example.  Hence the cache must be cleared after each require.
       delete require.cache[require.resolve(path)];
     } catch (x) {
-      if ( ! path.endsWith('pom.js') ) {
-        console.log('Error Loading:', path);
-        console.log(x);
-      }
+      console.log('Error Loading:', path);
+      console.log(x);
       throw x;
     } finally {
       foam.cwd = cwd;
