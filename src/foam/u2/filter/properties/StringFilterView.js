@@ -89,9 +89,6 @@ foam.CLASS({
       background-color: #406dea;
       border-color: #406dea;
     }
-    ^ .p-label {
-      margin-top: 10px;
-    }
   `,
 
   messages: [
