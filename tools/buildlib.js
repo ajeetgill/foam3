@@ -198,7 +198,10 @@ function error(...args) {
 function processSingleCharArgs(ARGS, moreUsage) {
   function usage(f) {
     moreUsage && moreUsage();
-    f && f();
+    if ( f ) {
+      if ( f instanceof Function ) f();
+      else warning('Unknown argument "'+f+'"');
+    }
     process.exit(0);
   }
 
@@ -210,6 +213,9 @@ function processSingleCharArgs(ARGS, moreUsage) {
   for ( var i = 0 ; i < args.length ; i++ ) {
     var arg = args[i];
     if ( arg.startsWith('-') ) {
+      if ( arg === '-help') {
+        ARGS['h'][1]();
+      }
       for ( var j = 1 ; j < arg.length ; j++ ) {
         var a = arg.charAt(j);
         var d = ARGS[a];
