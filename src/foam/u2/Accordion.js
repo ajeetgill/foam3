@@ -30,8 +30,6 @@ foam.CLASS({
       flex-direction: row;
       justify-content: space-between;
       align-items: center;
-      left: 1.5vmin;
-      top: max(-12px, -2vmin);
       color: $grey900;
       cursor: pointer;
       width: 100%;
