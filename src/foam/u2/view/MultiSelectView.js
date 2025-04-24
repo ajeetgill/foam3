@@ -35,7 +35,6 @@ foam.CLASS({
       opacity: 1;
       border: 1px solid $grey400;
       border-radius: 4px;
-      margin-top: 5px;
       display: flex;
       flex-direction: column;
       gap: 2rem;
@@ -110,27 +109,23 @@ foam.CLASS({
         factory: function() {
           let self = this;
           return this.OverlayDropdown.create({
-              parentEl: this.parentNode,
+              parentEl: this,
               closeOnLeave: true,
               lockToParentWidth: true
             })
               .addClass(this.myClass('select-modal'))
               .start().addClass(this.myClass('choices-holder'))
-                  .add(this.dynamic(function(choices, data) {
-                      return choices.map(choice => {
-                          var isSelected = data?.includes(choice[1]);
-                          var inputId = 'u' + choice.$UID;
-                          this
-                              .start().addClass(self.myClass('input-holder'))
-                                .tag(foam.u2.CheckBox, { data: isSelected, label: choice[0] })
-                                .on('change', function (evt) {
-                                          self.onSelect(choice[1]);
-                                      })
-                                  
-                          .end();
-                          
-                      });
-                  }))
+                  .forEach(this.choices, function(choice) {
+                    var isSelected = self.data?.includes(choice[1]);
+                    this
+                        .start().addClass(self.myClass('input-holder'))
+                          .tag(foam.u2.CheckBox, { data: isSelected, label: choice[0] })
+                          .on('change', function (evt) {
+                                    self.onSelect(choice[1]);
+                                })
+                            
+                    .end();
+                  })
               .end();
           
           
@@ -143,7 +138,7 @@ foam.CLASS({
       name: 'options',
       themeIcon: 'dropdown',
       code: async function() {
-        this.parentNode.add(this.overlay)
+        this.add(this.overlay)
       }  
     }
   ],
