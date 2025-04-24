@@ -178,7 +178,7 @@ foam.CLASS({
       When set to true, the '<model>.ro.<property>' permission is required for a
       user to be able to read this property. If false, any user can read the
       value of this property.
-     */
+    */
     {
       class: 'Boolean',
       name: 'readPermissionRequired',
@@ -189,11 +189,29 @@ foam.CLASS({
       When set to true, the '<model>.rw.<property>' permission is required for a
       user to be able to write this property. If false, any user can set the
       value of this property.
-     */
+    */
     {
       class: 'Boolean',
       name: 'writePermissionRequired',
       value: false
+    },
+
+    /**
+      When set to true, the '<model>.rw.<property>' permission is required for a
+      user to be able to update this property, users will still be able to create properties.
+      If false, any user can set the value of this property.
+
+      NOTE: superceded by writePermissionRequired: true, setting writePermissionRequired to true
+      will negate any impact of this property as permission will also be required for creates.
+    */
+    {
+      class: 'Boolean',
+      name: 'updatePermissionRequired',
+      value: false,
+      preSet: function(_, n) {
+        foam.assert(this.writePermissionRequired && n, 'Redundant updatePermissionRequired on prop', this.toString());
+        return n;
+      }
     },
 
     {
