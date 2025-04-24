@@ -244,7 +244,7 @@ In one of the previous examples, when we demonstrated the sequence parser seq(),
  in the parsed value of [ 'r', '2' ], an array. However, we often
 want the result of our parsers to be string values, not the arrays of characters or
 substrings that were parsed by the individual parsers that comprised the sequence parser.
-To facilate this, we use a very simple combinator parser called str() that decorates a single parser. 
+To facilate this, we use a very simple combinator parser called str() that decorates a single parser.
 Instead of changing that delegate parser's behaviour, it just
 changes its resulting value so that if it returns an array, it converts it into a single
 string value with the array values concatenated.
@@ -332,7 +332,7 @@ The third optional argument of repeat() let's you specify just that.
 Since the second argument is the delimiter parser, if you don't want
 to have a delimiter, pass 'undefined' as its value.
 
-The below example checks passwords to ensure that they're at least five characters long. 
+The below example checks passwords to ensure that they're at least five characters long.
 Notice that the repeat() parser still continues until it fails, hence for the last sample
 it repeated six times, meaning that the specified repeat parametar is the miniumum number
 of repetations not the absolute limit.
@@ -369,7 +369,7 @@ testP(stringParser, [ '""', '"a"', '"abc13234$@#$"', '"abc"asfasdf"' ]);
 ## Until Parser
 The string pattern in the above example combined repeat(), not(), and anyChar() in order to extract the string.
 This pattern is common enough that we have a special parser for that called until().
-It parses input until the delegated parser matches. 
+It parses input until the delegated parser matches.
 We can use it to simplify the above stringParser.
 --
 var quote        = P.literal('"');
@@ -618,7 +618,7 @@ to actual JS numbers, rather than being left as Strings.
 
 Semantic Actions are defined by creating a method named <SymbolName>Action. So in this
 example, the 'numberAction' method is applied to results parsed by the 'number' parser.
-</pre>S
+</pre>
 --
 
 foam.CLASS({
