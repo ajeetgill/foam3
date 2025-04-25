@@ -25,7 +25,8 @@ exports.args = [
 ];
 
 
-const fs_                                                    = require('fs');
+const fs_   = require('fs');
+const path_ = require('path');
 const { execSync, isExcluded, adaptOrCreateArgs, ensureDir, info, warning, error } = require('./buildlib');
 
 exports.init = function() {
@@ -38,9 +39,8 @@ exports.init = function() {
 
 exports.visitPOM = function(pom) {
   foam.processFiles(pom.javaFiles, function(f) {
-    console.log('[Javac] push', f.name);
-    let fn = foam.cwd + '/' + f.name + '.java';
-    X.javaFiles.push(fn);
+    let path = path_.resolve(foam.cwd, f.name + '.java');
+    X.javaFiles.push(path);
   });
 }
 

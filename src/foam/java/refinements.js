@@ -2345,10 +2345,9 @@ foam.CLASS({
     function targetJava(X) {
       var desired = 'java';
       if ( foam.flags && foam.flags.test ) desired += "|java&test";
-      if ( ! this.flags || ! foam.checkForFlag(this.flags, desired) ) {
-        console.log("targetJava", desired, this.id, false);
+      if ( ! this.flags || ! foam.checkForFlag(this.flags, desired) )
         return false;
-      }
+
       var cls = foam.lookup(this.id);
       this.outputJavaClass(X, X.outdir, cls.buildJavaClass());
       return true;

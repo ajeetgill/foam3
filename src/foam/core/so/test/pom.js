@@ -11,9 +11,5 @@ foam.POM({
       flags: "js|java" },
     { name: "SystemOutageSystemNotificationThemeTest",
       flags: "js|java" }
-  // ],
-  // journalFiles: [
-  //   { name: "EventRecordSystemOutageTest", flags: "test" },
-  //   { name: "SystemOutageSystemNotificationThemeTest", flags: "test" }
   ]
 });
