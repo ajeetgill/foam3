@@ -243,7 +243,7 @@ foam.CLASS({
 
   methods: [
     function parse(ps) {
-      return ps.valid ? undefined : ps;
+      return ps.valid ? undefined : ps.setValue('');
     },
 
     function toString() {
