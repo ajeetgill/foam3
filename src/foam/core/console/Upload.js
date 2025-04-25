@@ -99,7 +99,7 @@ foam.CLASS({
   requires: [
     'foam.dao.MDAO',
     'foam.lib.csv.CSVParser',
-    'foam.parse.QueryParser',
+    'foam.core.console.ColumnParser',
     'foam.core.console.DAOHolder',
     'foam.core.console.Mapping',
     'foam.core.console.UploadAgent'
@@ -230,7 +230,7 @@ foam.CLASS({
       transient: true,
       hidden: true,
       expression: function (of) {
-        return this.QueryParser.create({of: of, allowShortNames: false});
+        return this.ColumnParser.create({of: of});
       }
     },
     {
@@ -253,7 +253,6 @@ foam.CLASS({
 
     function parseColumns(s) {
       if ( s === this.lastColumns ) return this.mappings;
-      var parser   = this.columnParser;
       var mappings = [];
 
       s.trim().split(',').forEach(c => {
@@ -261,8 +260,7 @@ foam.CLASS({
           c = c.split(' ').map((n, i) => { n = n.toLowerCase(); if ( i ) n = foam.String.capitalize(n); return n; }).join('');
         }
 
-        var prop = parser.parseString(c, 'fieldname');
-
+        var prop = this.columnParser.parseString(c);
         mappings.push(this.Mapping.create({id: c, handler: prop || this.Mapping.UNKNOWN, of: this.of}));
         if ( ! prop ) {
           this.output += '<span style="color:red">Unknown property: ' + c + '</span><br>';
@@ -291,7 +289,8 @@ foam.CLASS({
           self.progress   = self.rows ? Math.max(self.progress, Math.floor(100 * i / self.rows)) : 0;
 
           if ( o.errors_ ) {
-            self.output += '<span style="color:red">' + o.errors_ + ', row: ' + i + '<br>' + row + '</span>';
+//            self.output += '<span style="color:red">' + o.errors_ + ', row: ' + i + '<br>' + row + '</span>';
+            self.output += '<span style="color:red">' + o.errors_ + '</span>';
           }
 
           if ( ! real ) {
@@ -372,14 +371,14 @@ foam.CLASS({
 
       if ( ! this.mappings_[key] ) {
         if ( attr ) {
-          var prop = this.columnParser.parseString(tag + attr, 'fieldname');
+          var prop = this.columnParser.parseString(tag + attr);
           this.mappings_[key] = this.Mapping.create({
             id: key,
             handler: prop || this.Mapping.UNKNOWN,
             of: this.of
           });
         } else {
-          var prop = this.columnParser.parseString(tag, 'fieldname');
+          var prop = this.columnParser.parseString(tag);
           this.mappings_[key] = this.Mapping.create({
             id: key,
             handler: prop || this.Mapping.UNKNOWN,
@@ -392,7 +391,6 @@ foam.CLASS({
     },
 
     function objectifyXML(doc) {
-      var parser   = this.columnParser;
       var obj      = this.of.create();
       var children = doc.children;
       var nodes    = {};
@@ -472,6 +470,7 @@ foam.CLASS({
         for ( var i = 1 ; i < a.length ; i++ ) {
           if ( ! agent ) agent = this.UploadAgent.create();
           var row = a[i];
+          if ( ! row ) continue;
           var obj = this.of.create();
           var csv = parser.parseString(row, this.delimiter);
           for ( var j = 0 ; j < csv.length && j < props.length ; j++ ) {

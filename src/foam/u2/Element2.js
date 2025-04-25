@@ -1632,25 +1632,25 @@ foam.CLASS({
 
       var vis = this.combineControllerModeAndVisibility_(data$, controllerMode$)
 
-      if ( ! this.readPermissionRequired && ! this.writePermissionRequired ) return vis;
+      if ( ! this.readPermissionRequired && ! this.writePermissionRequired && ! this.updatePermissionRequired ) return vis; 
 
       const DisplayMode = foam.u2.DisplayMode;
 
-      var perm = data$.map((data) => {
+      var perm = this.slot(function(data, controllerMode) {
         if ( ! data || ! data.__subContext__.auth ) return DisplayMode.HIDDEN;
         var auth     = data.__subContext__.auth;
         var propName = this.name.toLowerCase();
         var clsName  = data.cls_.name.toLowerCase();
         var canRead  = this.readPermissionRequired === false;
-
+        var allowCreate = this.writePermissionRequired === false && (this.updatePermissionRequired === false || controllerMode == 'CREATE');
         return auth.check(null, `${clsName}.rw.${propName}`)
           .then(function(rw) {
-            if ( rw      ) return DisplayMode.RW;
-            if ( canRead ) return DisplayMode.RO;
+            if ( rw || allowCreate ) return DisplayMode.RW;
+            if ( canRead           ) return DisplayMode.RO;
             return auth.check(null, `${clsName}.ro.${propName}`)
               .then((ro) => ro ? DisplayMode.RO : DisplayMode.HIDDEN);
           });
-      });
+      }, data$, controllerMode$);
 
       return foam.lang.ArraySlot.create({slots: [vis, perm]}).map((arr) => {
         // The || HIDDEN is required because slot.map() above which returns

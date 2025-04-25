@@ -32,6 +32,7 @@ foam.POM({
     { name: 'ViewSink',                flags: 'js|java' },
     { name: 'XHR',                     flags: 'js' },
     { name: 'XMLSink',                 flags: 'js|java' },
-    { name: 'cmd/Commands',            flags: 'js|java' }
+    { name: 'cmd/Commands',            flags: 'js|java' },
+    { name: 'ColumnParser',            flags: 'js' }
   ]
 });

@@ -50,6 +50,7 @@ foam.INTERFACE({
     'boolean getNetworkTransient() { return false; }',
     'boolean getReadPermissionRequired() { return false; }',
     'boolean getWritePermissionRequired() { return false; }',
+    'boolean getUpdatePermissionRequired() { return false; }',
     'boolean getStorageTransient() { return false; }',
     'boolean getStorageOptional() { return false; }',
     'boolean getClusterTransient() { return false; }',

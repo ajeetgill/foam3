@@ -523,7 +523,7 @@ foam.CLASS({
       List<PropertyInfo> props = getOf().getAxiomsByClass(PropertyInfo.class);
       for ( PropertyInfo info : props ) {
         if ( info.getWritePermissionRequired() ||
-             info.getReadPermissionRequired() ) {
+             info.getReadPermissionRequired() || info.getUpdatePermissionRequired() ) {
           return true;
         }
       }
