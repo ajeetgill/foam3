@@ -2051,9 +2051,11 @@ foam.CLASS({
         if ( evt.type === 'keydown' && ! this.KEYPRESS_CODES[evt.which] ) return;
         var action = this.keyMap_[this.evtToCharCode(evt)];
         if ( action ) {
-          action();
-          evt.preventDefault();
-          evt.stopPropagation();
+          var ret = action();
+          if ( !! ret ) {
+            evt.preventDefault();
+            evt.stopPropagation();
+          }
         }
       }
     }
