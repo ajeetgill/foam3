@@ -52,6 +52,7 @@ globalThis.foam = {
       delete require.cache[require.resolve(path)];
     } catch (x) {
       console.log('Error Loading:', path);
+      console.log(x);
       console.trace();
       throw x;
     } finally {
