@@ -1438,7 +1438,7 @@ foam.CLASS({
         var action = this.keyMap_[this.evtToCharCode(evt)];
         if ( action ) {
           var ret = action();
-          if ( !! ret ) {
+          if ( ret ) {
             evt.preventDefault();
             evt.stopPropagation();
           }
