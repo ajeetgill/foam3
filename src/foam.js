@@ -203,7 +203,7 @@
       m.code();
     },
     poms: [],
-    processFiles: function(files, fnc) {
+    checkFiles: function(files, visitFnc) {
       files && files.forEach(f => {
         f.flags  = foam.adaptFlags(f.flags);
 
@@ -212,7 +212,8 @@
         if ( f.predicate && ! f.predicate() ) return;
 
         foam.currentFlags = f.flags || [];
-        fnc(f);
+        // call visit function for those that pass checkFlags
+        visitFnc(f);
       });
     },
     POM: function(pom) {
@@ -227,7 +228,7 @@
       pom.path     = foam.sourceFile;
       foam.poms.push(pom);
       function loadFiles(files, isProjects) {
-        foam.processFiles(files, function(f) {
+        foam.checkFiles(files, function(f) {
           if ( ! isProjects ) {
 //            console.log('*** FILES', f.name);
             foam.CUR_FILES.push(f.name);
