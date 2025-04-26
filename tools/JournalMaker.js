@@ -29,6 +29,9 @@ exports.init = function() {
 
 exports.visitFile = function(pom, f, fn) {
   if ( f.name.endsWith('.jrl') ) {
+    var i           = fn.lastIndexOf('/');
+    var journalName = fn.substring(i+1, fn.length-4);
+
     // Disallow wildcard matching for excluding .jrl files, excluded entries must be exact match
     // if ( isExcluded(pom, fn, true) ) return;
 
@@ -37,18 +40,16 @@ exports.visitFile = function(pom, f, fn) {
     // If test flag enabled - include if present and flag match
     if ( ! flags.test &&
          pom.journalFiles ) {
-      let name = f.name.substring(0, f.name.lastIndexOf('.'));
+      // journalFiles name is relative to pom
+      var name = f.parentPath.substring(pom.location.length+1);
+      name += (name ? '/' : '') + journalName;
       let jf = pom.journalFiles.find((jf) => jf.name === name);
-      if ( jf && foam.checkForFlag(foam.adaptFlags(jf.flags), 'test') ) {
-        // warning('[Journal] visitFile exclude', f.name, f.parentPath);
+      if ( jf && foam.checkForFlag(foam.adaptFlags(jf.flags), 'test') )
         return;
-      }
     }
+
     verbose('\t\tjournal source:', fn);
     journalFiles.push(fn);
-
-    var i           = fn.lastIndexOf('/');
-    var journalName = fn.substring(i+1, fn.length-4);
 
     addJournalOutput(journalName, {
       fn: fn,
