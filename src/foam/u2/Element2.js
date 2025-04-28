@@ -1437,9 +1437,11 @@ foam.CLASS({
       code: function(evt) {
         var action = this.keyMap_[this.evtToCharCode(evt)];
         if ( action ) {
-          action();
-          evt.preventDefault();
-          evt.stopPropagation();
+          var ret = action();
+          if ( ret ) {
+            evt.preventDefault();
+            evt.stopPropagation();
+          }
         }
       }
     }
