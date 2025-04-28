@@ -134,8 +134,6 @@ foam.CLASS({
 
   imports: [ 'showPrompts' ],
 
-  requires: [ 'foam.u2.ActionView' ],
-
   exports: [ 'log', 'out', 'addValue' ],
 
   css: `
@@ -190,6 +188,8 @@ foam.CLASS({
       position: relative;
       margin: 5px;
       top: -20px;
+      padding: 0 0 5% 5%;
+      text-align: center;
 
       border: 1px solid #999;
       border-radius: 4px;
@@ -201,7 +201,7 @@ foam.CLASS({
       overflow-x: scroll;
       width: 100%;
     }
-    ^ .foam-u2-ActionView-toggle {
+    ^toggle {
       transform: rotate(-90deg);
       transition: transform 0.3s;
       background: transparent;
@@ -211,11 +211,11 @@ foam.CLASS({
       width: 100%;
       height: 100%;
     }
-    ^ .expanded .foam-u2-ActionView-toggle {
+    ^ .expanded ^toggle {
       transform: rotate(0deg);
       transition: transform 0.3s;
     }
-    ^ .foam-u2-ActionView-toggle:hover {
+    ^toggle:hover {
       background: transparent;
     }
   `,
@@ -240,7 +240,10 @@ foam.CLASS({
             enableClass('expanded', this.expanded$).
             start('div').
               addClass(this.myClass('control'), this.myClass('toggle-button')).
-              tag(this.ActionView, {action: this.TOGGLE, data: this, label: '\u25BD'}).
+              on('click', () => this.expanded = ! this.expanded ).
+              start().addClass(this.myClass('toggle')).
+                add('\u25BD').
+              end().
             end().
           end().
           start().
@@ -272,7 +275,6 @@ foam.CLASS({
   ],
 
   actions: [
-    function toggle() { this.expanded = ! this.expanded; },
     {
       name: 'del',
       label: 'X',
