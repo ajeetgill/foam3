@@ -103,6 +103,7 @@ foam.CLASS({
         this.start('tr').
           enableClass(self.myClass('selected'), self.selected$.map(s => s === data)).
           on('click', () => self.selected = data).
+          on('dblclick', () => data.expanded = ! data.expanded).
           start('td').
             enableClass(self.myClass('error'), flowName.startsWith('error')).
             style({'paddingLeft': (4 + depth * 12) + 'px'}).
@@ -141,6 +142,7 @@ foam.CLASS({
     ^ {
       padding: 4px;
       padding-right: 0;
+      border-top: 1px solid #999;
     }
     ^output {
       overflow-x: scroll;
@@ -179,8 +181,6 @@ foam.CLASS({
       display: inline;
       float: left;
       height: 30px;
-      // position: relative;
-      // top: -10px;
       width: 30px;
     }
     ^toggle-button {
@@ -189,15 +189,13 @@ foam.CLASS({
       padding: 3px;
       position: relative;
       margin: 5px;
-      // left: -8px;
       top: -20px;
-      // width: 100%;
 
       border: 1px solid #999;
+      border-radius: 4px;
     }
     ^content {
       background:$white;
-      // display: initial;
       position: relative;
       top: -22px;
       overflow-x: scroll;
@@ -210,8 +208,8 @@ foam.CLASS({
       border: none;
       outline: none;
       padding: 3px;
-      width: 30px;
-      height: 30px;
+      width: 100%;
+      height: 100%;
     }
     ^ .expanded .foam-u2-ActionView-toggle {
       transform: rotate(0deg);
@@ -247,7 +245,7 @@ foam.CLASS({
           end().
           start().
             show(this.showPrompts$).
-            style({display: 'flex', width: '100%', fontWeight: 'bold'}).
+            style({ 'padding-left': '2%', display: 'flex', width: '100%', fontWeight: 'bold'}).
             start('span').addClass(this.myClass('prompt')).start(foam.u2.ReadWriteView, {data$: this.flowName$}).end().add(' = ').end().
             add(this.CMD, this.DEL).
           end().
