@@ -8,8 +8,6 @@ foam.CLASS({
   package: 'foam.core.crunch.lite',
   name: 'BaseCapable',
 
-//  flags: [ 'java' ],
-
   implements: [
     'foam.core.crunch.lite.Capable'
   ],

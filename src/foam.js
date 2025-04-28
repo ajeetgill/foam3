@@ -85,8 +85,7 @@
       });
     },
     checkFlags: function(flags) {
-      if ( ! flags ||
-           flags.length == 0 ) return true;
+      if ( ! flags || flags.length == 0 ) return true;
 
       function and(fs) {
         if ( ! fs ) return true;
@@ -203,7 +202,7 @@
       m.code();
     },
     poms: [],
-    checkFiles: function(files, visitFnc) {
+    checkFiles: function(files, passFnc) {
       files && files.forEach(f => {
         f.flags  = foam.adaptFlags(f.flags);
 
@@ -213,7 +212,7 @@
 
         foam.currentFlags = f.flags || [];
         // call visit function for those that pass checkFlags
-        visitFnc(f);
+        passFnc(f);
       });
     },
     POM: function(pom) {

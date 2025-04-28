@@ -8,19 +8,12 @@ foam.POM({
   name: "test",
 
   files: [
-    { name: "AbstractDIGTest",
-      flags: "js|java" },
-    { name: "ClientEchoService",
-      flags: "js" },
-    { name: "EchoService",
-      flags: "js|java" },
-    { name: "SerializationTestEchoService",
-      flags: "js|java" },
-    { name: "StockSnapshot",
-      flags: "js|java" },
-    { name: "Test",
-      flags: "js|java" },
-    { name: "TestBorder",
-      flags: "js" }
+    { name: "AbstractDIGTest",                                        flags: "js|java" },
+    { name: "ClientEchoService",                                      flags: "js" },
+    { name: "EchoService",                                            flags: "js|java" },
+    { name: "SerializationTestEchoService",                           flags: "js|java" },
+    { name: "StockSnapshot",                                          flags: "js|java" },
+    { name: "Test",                                                   flags: "js|java" },
+    { name: "TestBorder",                                             flags: "js" }
   ]
 });

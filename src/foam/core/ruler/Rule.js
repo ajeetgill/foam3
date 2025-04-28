@@ -316,7 +316,7 @@ foam.CLASS({
       of: 'foam.core.auth.ServiceProvider',
       name: 'spid',
       section: 'basicInfo',
-      value: '*', // foam.core.auth.ServiceProviderAware.GLOBAL_SPID,
+      value: '*', // foam.core.auth.ServiceProviderAware.GLOBAL_SPID, // NOTE: build order issue with using the constant.
       documentation: 'Service Provider Id of the rule. Default to ServiceProviderAware.GLOBAL_SPID for rule applicable to all service providers.'
     },
     {

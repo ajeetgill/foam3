@@ -7,9 +7,7 @@
 foam.POM({
   name: "test",
   files: [
-    { name: "EventRecordSystemOutageTest",
-      flags: "js|java" },
-    { name: "SystemOutageSystemNotificationThemeTest",
-      flags: "js|java" }
+    { name: "EventRecordSystemOutageTest",                            flags: "js|java" },
+    { name: "SystemOutageSystemNotificationThemeTest",                flags: "js|java" }
   ]
 });
