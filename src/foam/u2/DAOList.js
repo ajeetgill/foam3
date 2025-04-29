@@ -47,6 +47,17 @@ foam.CLASS({
     overscroll-behavior-y: contain;
     scroll-behavior: smooth;
   }
+  ^wrapper [data-page] > [data-idx] {
+    padding: 4px 2px;
+  }
+  ^wrapper groupHeader {
+    margin: 8px 0;
+    width: 100%;
+    display: block;
+  }
+  ^wrapper groupHeader:first-of-type {
+    margin-top: 0px;
+  }
   ^nav{
     align-items: center;
     background: $white;
@@ -114,11 +125,13 @@ foam.CLASS({
         ^ {
           min-height: 20px;
           padding: 8px;
-          color: $grey600;
+          border-radius: $inputBorderRadius;
+          background: $grey50;
         }
       `,
 
       properties: [
+        ['nodeName', 'groupHeader'],
         {
           class: 'String',
           name: 'groupLabel'
@@ -197,6 +210,8 @@ foam.CLASS({
         gap: 8px;
         min-height: 20px;
         border-radius: $inputBorderRadius;
+        border: 1.5px solid $grey50;
+        transition: all 0.2s ease;
       }
       ^ > div {
         padding: 0;
@@ -205,7 +220,8 @@ foam.CLASS({
         flex: 1;
       }
       ^clickable:hover {
-        background: $grey50;
+        background: $primary50;
+        border-color: $primary50;
         cursor: pointer;
       }
       ^svg-wrapper{
@@ -216,6 +232,9 @@ foam.CLASS({
         width: 1.1em;
         height: 1.1em;
         fill: black;
+      }
+      ^clickable:hover ^svg-wrapper svg {
+        fill: $primary700;
       }
     `,
 
