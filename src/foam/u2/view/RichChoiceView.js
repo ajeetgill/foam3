@@ -178,9 +178,10 @@ foam.CLASS({
       overflow-y: auto;
       box-sizing: border-box;
       width: 100%;
-      border-radius: 4px;
+      border-radius: $inputBorderRadius;
       box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 2px 8px 0 rgba(0, 0, 0, 0.16);
       z-index: 1000;
+      position: relative;
     }
 
     ^heading {
@@ -201,7 +202,7 @@ foam.CLASS({
       min-width: 120px;
 
       width: 100%;
-      border-radius: 4px;
+      border-radius: $inputBorderRadius;
       -webkit-appearance: none;
       cursor: pointer;
     }
@@ -657,8 +658,9 @@ foam.CLASS({
 
     function addAction(action, actionData) {
       var self = this;
+      let e = this.E().style({ 'display': 'contents' })
       if ( action && actionData ) {
-        return this.E()
+        return e
           .start(self.DefaultActionView, { action: action, data: actionData })
           .on('click', () => {
             self.dropdown_.close();
@@ -667,7 +669,7 @@ foam.CLASS({
           .end();
       }
       if ( action ) {
-        return this.E()
+        return e
           .start(self.DefaultActionView, { action: action })
           .on('click', () => {
                 self.dropdown_.close();
@@ -759,6 +761,12 @@ foam.CLASS({
       ],
 
       css:`
+        ^ {
+          border-radius: $inputBorderRadius;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
         ^paddingWrapper {
           padding-left: $inputHorizontalPadding;
           padding-right: $inputHorizontalPadding;
@@ -791,13 +799,10 @@ foam.CLASS({
         function render() {
           let self = this;
           this.style({
-            'overflow': 'hidden',
-            'white-space': 'nowrap',
-            'text-overflow': 'ellipsis',
-            'border-radius': '4px'
+            
           });
 
-          this.add(this.dynamic(function(fullObject) {
+          this.addClass().add(this.dynamic(function(fullObject) {
             if ( fullObject ) {
               this.start()
                 .addClass(self.myClass('customSelectView'))
@@ -820,25 +825,32 @@ foam.CLASS({
         action is provided.
       `,
 
+      cssTokens: [
+        {
+          name: 'buttonRadius',
+          value: '0 0 4px 4px'
+        }
+      ],
+
+      properties: [
+        {
+          name: 'buttonStyle', 
+          value: foam.u2.ButtonStyle.TEXT
+        }
+      ],
+
       css: `
         ^ {
           border: 0;
-          border-top: 1px solid #f4f4f9;
-          color: $primary400;
-          display: flex;
+          border-top: 1px solid $grey400;
           justify-content: flex-start;
-          text-align: left;
           width: 100%;
+          background: $white;
+          position: sticky;
+          bottom: 0;
         }
 
-        ^:hover {
-          color: $primary500;
-          cursor: pointer;
-        }
 
-        ^ img + span {
-          margin-left: 6px;
-        }
       `
     }
   ]

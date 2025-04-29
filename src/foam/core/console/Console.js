@@ -632,6 +632,7 @@ foam.CLASS({
   actions: [
     {
       name: 'helpKey',
+      isAvailable: function(input_) { return input_.element_ == document.activeElement; },
       code: function() { this.help(); },
       keyboardShortcuts: [ 'f1' ]
     },
@@ -648,6 +649,7 @@ foam.CLASS({
     },
     {
       name: 'stepUpHistory',
+      isAvailable: function(input_) { return input_.element_ == document.activeElement; },
       code: function() {
         this.historyPosition = foam.Number.clamp(0, this.historyPosition+1, this.history_.length);
         this.input = this.history_[this.history_.length - this.historyPosition] ?? '';
@@ -656,6 +658,7 @@ foam.CLASS({
     },
     {
       name: 'stepDownHistory',
+      isAvailable: function(input_) { return input_.element_ == document.activeElement; },
       code: function() {
         this.historyPosition--;
         this.input = this.history_[this.history_.length - this.historyPosition] ?? '';

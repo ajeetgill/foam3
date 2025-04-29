@@ -65,10 +65,10 @@ for the various parser types.
 ## Literal Parser
 The simplest parser is a literal parser, which only parses the supplied string.
 --
-// Create a Singleton for accessing Parser library
+// Create a Singleton for accessing the built-in Parser library
 var P = foam.parse.Parsers.create();
 
-// Create an input PStream for String
+// Create an input PStream for String and assign a value to parse
 var ps = foam.parse.StringPStream.create();
 // And assign a value to parse
 ps.setString('abcdef');
@@ -76,31 +76,36 @@ ps.setString('abcdef');
 // Let's look at our PStream
 log(ps.toString());
 
-// Now create a Literal Parser using the Single object 'P' created above.
+// Now create a Literal Parser using the Singleton instance 'P' created above.
 // This parser will only parse the literal 'abc'.
-var p = P.literal('abc');
+var lp = P.literal('abc');
 
 // Now let's parse the PStream with the Parser
-ps = p.parse(ps);
+ps = lp.parse(ps);
 
 // Now let's look at the results of our parsing
 log(ps.toString());
 
 // If we try to parse 'abc' again notice that it will fail because the stream is now
 // at 'def', since 'abc' was consumed.
-log(p.parse(ps));
+var np = lp.parse(ps);
+log(!np?'undefined':np.toString());
 
 // Here we'll create an in-lined literal 'def' parser and then call in directly.
 log(P.literal('def').parse(ps).toString());
 
 ## Parser Tester
-Before continuing, let's write a helper function to make testing parsers easier.
+Before continuing, let's write a helper function testP() to make demonstrating parser examples easier.
 
-The testP function uses the U2 GUI library to create a table of test output.
-If you're unfamiliar with U2, please view the U2 examples first.
+The testP() function uses the U2 GUI library to create a table of input output pairs.
+For more informantion on the U2 library, please view the U2 examples. For our purpose though,
+you can treat this function as a blackbox that takes a parser and an array of strings to parse as input
+and displays the results in a table
 --
+// Create a Singleton for accessing the built-in Parser library
 const P = foam.parse.Parsers.create();
 
+// Function that invokes the parser for the given array of strs
 function testP(parser, strs) {
   globalThis.scope.br().start('table').
     style({'min-width': '90%'}).
@@ -126,16 +131,18 @@ function testP(parser, strs) {
         style({width:'25%'}).
         tag({class: 'foam.u2.TextField', size: 10, onKey: true, data$: input}).
       end().
-      start('td').
+      start('td').start('pre').
         style({color: output.map(s=> s ? 'green' : 'red')}).
         add(output.map(s => s ? s.toString() : 'undefined')).
-      end().
+      end().end().
     end();
   });
 }
 
+// Demonstrate the testP() function
 testP(P.literal('abc'), [ 'abc', 'abcdef', 'Abc', 'ABC', 'xyz' ]);
 
+// Store the test function and the singleton for the rest of the examples
 globalThis.P = P;
 globalThis.testP = testP;
 
@@ -179,13 +186,13 @@ testP(P.eof(), [ 'abc', 'ABC', '!@#$%', '' ]);
 The chars() parser will parse any single character which is included as part of the
 supplied string.
 --
-testP(P.chars('abc'), [ 'abc', 'bbc', 'cbc', 'xbc', '' ]);
+testP(P.chars('abc'), [ 'ax', 'bx', 'cx', 'xb', '' ]);
 
 ## Not Chars Parser
 The notChars() parser will parse any single character which is NOT included as part of the
 supplied string. However, it will not parse EOF.
 --
-testP(P.notChars('abc'), [ 'abc', 'bbc', 'cbc', 'xbc', '' ]);
+testP(P.notChars('abc'), [ 'ax', 'bx', 'cx', 'xb', '' ]);
 
 ## Range Parser
 The range() parser is similar to chars(), except that it lets you more easily specify a range of characters.
@@ -195,7 +202,7 @@ testP(P.range('0', '9'), [ 'a', '1', '2', '3', '9', 'z' ]);
 // Is short form for:
 testP(P.chars('0123456789'), [ 'a', '1', '2', '3', '9', 'z' ]);
 
-// It is often used to detect numbers (like above) or lettters, like:
+// It is often used to detect numbers (like above) or letters, like:
 testP(P.range('a', 'z'), [ 'a', '1', '2', '3', '9', 'z' ]);
 
 // Notice that it still only matches a single character
@@ -209,16 +216,17 @@ Now we'll look at combining the above simple parsers with parse combinators to c
 ## Sequence Parser
 The most common parse combinator is the sequence parser, which combines multiple parsers
 into a single parser which only parses if each of the composed parsers successfully parses
-in sequence. Each parser picks up where the previous parser left off in the input stream,
-and the sequence parser will fail if any of the composed parsers fails to parse.
+in sequence. Each parser picks up where the previous parser left off in the input stream.
+The sequence parser will fail if any of the composed parsers fails to parse.
 On a successful parse, the returned value is an array of the parsed values of each
 composed parser.
 --
 // The first parser accepts a letter and the second parser accepts a number.
-testP(P.seq(P.range('a','z'), P.range('0','9')), [ 'r2', 'd2', '3p', 'xy' ]);
+var p = P.seq(P.range('a','z'), P.range('0','9'));
+testP(p, [ 'r2', 'd2', '3p', 'xy' ]);
 
 ## Literal Parser Shortcut
-Notice that in this example we have three calls to P.literal(). Since P.literal() is so
+In the example below, notice that we have three calls to P.literal(). Since P.literal() is so
 commonly used when creating parsers, we make it the default when you just pass a String
 to another parse combinator, like seq().
 --
@@ -232,17 +240,59 @@ testP(P.seq('a', 'b', 'c'), TESTS);
 
 
 ## String Parser
-Notice that in the sequence parser, when we parsed 'r2' our value was [ 'r', '2' ], an array.
-Often we want the result of our parsers to be string values, not the arrays of characters or
-substrings that were parsed by the individual parsers passed to the sequence parser.
-To fix this, we use the str() parser decorator, which is a very simple combinator because it only
-combines/decorates a single parser. Instead of changing that delegate parser's behaviour, it just
-changes its resulting value so that if it returns an array, it converts into a single
+In one of the previous examples, when we demonstrated the sequence parser seq(), parsing 'r2' resulted
+ in the parsed value of [ 'r', '2' ], an array. However, we often
+want the result of our parsers to be string values, not the arrays of characters or
+substrings that were parsed by the individual parsers that comprised the sequence parser.
+To facilate this, we use a very simple combinator parser called str() that decorates a single parser.
+Instead of changing that delegate parser's behaviour, it just
+changes its resulting value so that if it returns an array, it converts it into a single
 string value with the array values concatenated.
-TODO: simplify
 --
 // Notice unlike above, our results are strings, not arrays
-testP(P.str(P.seq(P.range('a','z'), P.range('0','9'))), [ 'r2', 'd2', '3p', 'xy' ]);
+var p = P.seq(P.range('a','z'), P.range('0','9'));
+testP(P.str(p), [ 'r2', 'd2', '3p', 'xy' ]);
+
+## Substring Parser
+<pre>
+The String parser shown above takes an array of parsed string values an concatenates them
+into a single string return value. However, it is often the case that this isn't actually
+what you want. Consider two cases where using str() is undesireable:
+1. Sometimes you have multiple levels of string arrays and you would need to insert a str()
+at each level.
+2. You want to preserve input that has been lost, like the delimiters in a repeat().
+
+Consider the following example which parses a sentence, which is a list of words separated
+by whitespace. If you wanted to return the parsed string you would need to add a str()
+around the 'word' parser so that you get strings instead of arrays of characters and then
+you would need to add another str() around the repeat() in 'sentence'. But even this wouldn't
+work because repeat() would have removed the whitespaces.
+
+To solve this problem there is the substring() parse combinator which just returns the input
+string that was parsed, as is, ignoring the return value of the composed parser.
+
+???: perhaps input() would be a better name than substring()
+</pre>
+--
+var   word       = P.str(P.plus(P.range('a','z')));
+const whitespace = P.plus(' ');
+const sentence   = P.repeat(word, whitespace);
+
+const input = [ 'abc', 'abc def', 'abc   def   xyz' ];
+
+// returns an array of words
+testP(sentence, input);
+
+// returns a single sstring of the words concatenated, without spaces
+testP(P.str(sentence), input);
+
+// preserves the original input
+testP(P.substring(sentence), input);
+
+// Notice that the str() on 'word' isn't needed when using substring().
+var   word       = P.plus(P.range('a','z'));
+testP(P.substring(sentence), input);
+
 
 ## Alternate Parser
 The next most common parse combinator after the sequence parser, is the alt() parser.
@@ -261,6 +311,9 @@ The repeat() parser takes a single delegate parser and repeatedly uses it to par
 the input stream until it fails. The result of all delegate parses are combined in an array.
 
 --
+testP(P.repeat(P.range('0','9')), [ '1', '1x', '123xyz', 'abc' ]);
+
+// Same example with the values converted into strings
 testP(P.str(P.repeat(P.range('0','9'))), [ '1', '1x', '123xyz', 'abc' ]);
 
 ## Plus
@@ -279,25 +332,29 @@ delegate parser, this is so common an operation that repeat supports it directly
 --
 // First lets' look how we would parse a comma delimited list of letters without using this feature:
 testP(
-  P.repeat(P.seq(P.range('a','z'), ',')),
+  P.str(P.repeat(P.str(P.seq(P.range('a','z'), P.literal(','))))),
   [ 'a', 'a,b', 'a,b,c', 'a,b,c,'
 ]);
+
+
 // Notice that the above never parsed the last letter, except for the last case: 'a,b,c,'
 // because there's a bug in our parser. We only want the comma between letters, not after,
-// which prevents the last 'c' from being parse.
+// which prevents the last 'c' from being parsed.
 // To fix this, we need to make our parser more complicated:
 testP(
-  P.seq(P.repeat(P.seq(P.range('a','z'), ',')), P.range('a', 'z')),
+  P.str(P.seq(P.str(P.repeat(P.str(P.seq(P.range('a','z'), P.literal(','))))), P.range('a', 'z'))),
   [ 'a', 'a,b', 'a,b,c', 'a,b,c,'
 ]);
+
 // This fixes that problem, but our parser is getting more complicated. Also,
 // notice that it is including the commas in the parsed output, but we probably
 // just want the letters.
 // The solution is to specify the delimiter to repeat():
 testP(
-  P.repeat(P.range('a','z'), ','),
+  P.str(P.repeat(P.range('a','z'), ',')),
   [ '', 'a', 'a,b', 'a,b,c', 'a,b,c,'
 ]);
+
 // By supplying the delimiter parser as the second argument to repeat(), it knows that we
 // only want to skip delimiters between values and it excludes them from the output.
 // It is also shorter and easier to understand than our first attempt.
@@ -305,17 +362,21 @@ testP(
 // You can also specify a delimiter parser with plus(), in cases where you only want
 // the parse to succeed when you have one or more parses.
 testP(
-  P.plus(P.range('a','z'), ','),
+ P.str(P.plus(P.range('a','z'), ',')),
   [ '', 'a', 'a,b', 'a,b,c', 'a,b,c,'
 ]);
 
 ## Repeat with a Number of Repetitions
 The repeat() parses zero or more times and plus() repeats one or more times, but sometimes
-you want to parse with some minimum number of repeats other than zero or 1.
-The third optional argument of repeat() let's you specify the minimum number
-of repetitions. Since the second argument is the delimiter parser, if you don't want
-to have a delimiter, just pass 'undefined'.
-The below parser checks passwords to ensure that they're at least five characters long:
+you want to parse with some minimum number of repeats other than zero or one.
+The third optional argument of repeat() let's you specify just that.
+Since the second argument is the delimiter parser, if you don't want
+to have a delimiter, pass 'undefined' as its value.
+
+The below example checks passwords to ensure that they're at least five characters long.
+Notice that the repeat() parser still continues until it fails, hence for the last sample
+it repeated six times, meaning that the specified repeat parametar is the miniumum number
+of repetations not the absolute limit.
 --
 testP(
   P.str(P.repeat(P.alt(P.range('a','z'), P.range('A', 'Z'), P.range('0', '9'), P.anyChar('!@#$%^&*')), undefined, 5)),
@@ -328,7 +389,7 @@ The Not parser is unusual in that it suceeds only if it's delegate parser fails.
 var quote        = P.literal('"');
 var stringBody   = P.str(P.repeat(P.not(quote, P.anyChar())));
 var stringParser = P.seq(quote, stringBody, quote);
-testP(stringParser, [ '""', '"a"', '"abc13234$@#$"', '"abc"asfasdf"' ]);
+testP(P.str(stringParser), [ '""', '"a"', '"abc13234$@#$"', '"abc"asfasdf"' ]);
 
 ## Seq1 Parser
 Notice that in the previous string parser example, our result value was an array where
@@ -344,6 +405,16 @@ just give us the result of the stringBody parser, which is at location 1 (starti
 var quote        = P.literal('"');
 var stringBody   = P.str(P.repeat(P.not(quote, P.anyChar())));
 var stringParser = P.seq1(1, quote, stringBody, quote);
+testP(stringParser, [ '""', '"a"', '"abc13234$@#$"', '"abc"asfasdf"' ]);
+
+## Until Parser
+The string pattern in the above example combined repeat(), not(), and anyChar() in order to extract the string.
+This pattern is common enough that we have a special parser for that called until().
+It parses input until the delegated parser matches.
+We can use it to simplify the above stringParser.
+--
+var quote        = P.literal('"');
+var stringParser = P.str(P.seq1(1, quote, P.until(quote)));
 testP(stringParser, [ '""', '"a"', '"abc13234$@#$"', '"abc"asfasdf"' ]);
 
 ## Optional Parser
@@ -389,28 +460,41 @@ testP(phoneNumber, [
 
 ## Optimizations
 ## Repeat0
+<pre>
 Some parsers end with the suffix '0'. This means they are specialized to not return any
 value. This may seem unnecessary, and from a strict feature point of view, it is, but
 the advantage of this type of parser is that it is more efficient because it performs
 less work and generates less garbage. Parser performance can be very important because
 it is often the most expensive operation performed by many applications.
 
-The seq0().
+In this example we use the repeat0() parser to parse whitespace. We don't care about
+the whitespace, so we don't really care about the size or formation of the whitespace
+and just want to skip over it efficiently. This is common for programming languages
+where a significant portion of the input may be whitespace, and yet we don't need to extract
+any values from the whitespace. We just want to skip over it as quickly and efficiently
+as possible.
+</pre>
 --
-const whitespace = P.repeat0(P.anyChar(' \t\n'));
+const whitespace = P.repeat0(P.chars(' \t\n'), null, 1);
 const word       = P.str(P.plus(P.range('a', 'z')));
 const words      = P.repeat(word, whitespace);
 
 testP(words, [
   'abc',
-  'word word abc xyz',
-  `word word
+  'word word   abc     xyz',
+  `word    word
    on another line
    and more
   `
 ]);
 
-## Seq0
+## Seq0 and Until0
+Just as repeat0() is the no-value version of repeat(), seq0() is the no-value version of seq() and until0() is the no-value version of until().
+We use both seq0() and until0() in this example to parse C-style /* comments */. For a language compiler we might throw away the contents of
+comments, so this type of parser might make sense.
+--
+const comment = P.seq0('/*', P.until0('*/'));
+testP(comment, [ '/* This is a comment. Ignore the results. */' ]);
 
 
 ## Example: Boolean
@@ -447,14 +531,24 @@ definition of 'parens' makes reference to itself with the sym('parens') parser.
 When making recursive or more complex parsers, it is common to combine the individual
 parsers into what is called a 'Grammar'. A grammar is a collection of mutually recursive
 named parsers which together form a higher-level parser. A grammar is similar to how
-many methods are combined in a single class in OO programming.
+many methods are combined in a single class in OO programming. Because grammars and OO
+classes are so similar, FOAM uses classes to represent grammars.
 
 To create a Grammar, you create a foam.CLASS which extends 'foam.parse.Grammar' and then
-create a 'grammar' method which returns the grammar as JS map.
+create a 'grammar' method which returns the grammar as JS map. The name you give each
+parser in the map you return is called its symbol name. In the example below these are 'START' and 'parens'.
+You reference a named parser using the sym() parser, like sym('parens'), in the example.
+In that case, it is referencing itself. The symbol named 'START' is special because it
+represents the default top-level parser for your grammar. When we use the MatchedParensParser,
+it is the START parser which is used.
 
 Notice that any of the parsers described previously are made available to the grammar
 method as parameters. This is done to minimize syntax and make the resulting grammar easier
 to read.
+
+Parser grammars are normally defined in <a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form">Extended Backus–Naur form (EBNF)</a>, which is similar
+enough to FOAM Grammars to make conversion easy.
+
 </pre>
 --
 foam.CLASS({
@@ -462,12 +556,13 @@ foam.CLASS({
   extends: 'foam.parse.Grammar',
 
   methods: [
-    function grammar(alt, sym, eof, repeat, seq, seq1) {
+    function grammar(str, sym, eof, repeat, seq, seq1) {
       return {
         START: seq1(0, sym('parens'), eof()),
 
-        parens: repeat(alt(
-          seq('(', sym('parens'), ')'),
+        // The 'repeat' allows for ()'s to be side-by-side, like ()() or (()())
+        parens: str(repeat(
+          str(seq('(', sym('parens'), ')')),
         ))
       };
     }
@@ -565,7 +660,7 @@ to actual JS numbers, rather than being left as Strings.
 
 Semantic Actions are defined by creating a method named <SymbolName>Action. So in this
 example, the 'numberAction' method is applied to results parsed by the 'number' parser.
-</pre>S
+</pre>
 --
 
 foam.CLASS({

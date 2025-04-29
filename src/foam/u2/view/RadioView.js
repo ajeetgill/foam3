@@ -92,14 +92,16 @@ foam.CLASS({
           var isChecked = self.slot(function (data) {
             return data == c[0];
           });
+          var id = c.$UID;
           self
             .addClass('p-md', 'choice')
             .callIf(this.columns != -1, function () {
-              this.style({'flex-basis': (100 / self.columns) + '%'})
+              this.style({'flex-basis': (100 / self.columns) + '%'});
             })
-            .start('input')
+            .start('input', { id: id })
               .attrs({
                 type:     'radio',
+                name:     self.getAttribute('name') + self.$UID,
                 value:    c[1],
                 checked:  isChecked,
                 disabled: self.isDisabled$
@@ -107,6 +109,7 @@ foam.CLASS({
               .on('change', function (evt) { self.data = c[0]; })
             .end()
             .start('label')
+            .attrs({for: id})
               .start()
                 .addClass(self.myClass('radio-outer'))
                 .add(self.RadioButton.create({
@@ -119,12 +122,12 @@ foam.CLASS({
               .end()
             .end();
         });
-      });
+      }));
     },
 
     // remove eventually
     function renderU2Content() {
-      var self = this
+      var self = this;
 
       this.add(self.slot(function(choices) {
         return choices.map(c => {
