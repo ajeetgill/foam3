@@ -279,7 +279,7 @@ const ENVS = {
   JOURNAL_HOME:      ['Application journals directory',() => `${APP_HOME}/journals`],
   JOURNAL_OUT:       ['Build journals directory',() => `${PROJECT_HOME}/${BUILD_DIR}/journals`],
   LOG_HOME:          ['Application logs directory',() => `${APP_HOME}/logs`],
-  LOG_LEVEL:         ['Set JVM Log level for TEST cases. Defaults to ERROR. example: -ELOG_LEVEL=INFO',null],
+  LOG_LEVEL:         ['Set JVM Log level for TEST cases. Defaults to ERROR. example: -ELOG_LEVEL:INFO',null],
   POMS:              ['CSV list of pom files to process,minus any suffix. Defaults to the pom at the root of the project.'],
   POM_TASKS:         ['CSV list of tasks from the root pom'],
   POM_ENVS:          ['Environment variables expected to be set from POMs', 'APP_NAME=name,JAVA_RELEASE=java,VERSION=version,VENDOR=vendor,VENDOR_ID=vendorId'],
