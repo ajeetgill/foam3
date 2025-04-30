@@ -43,7 +43,7 @@ foam.CLASS({
     ^ .property-skip { display: inline-flex; }
     ^helper-icon svg { fill: currentColor; }
     ^helper-icon { vertical-align: sub; }
-    ^content {
+    ^content:has(div) {
       max-height: 700px;
       overflow-y: auto;
       border: 1px solid gray;

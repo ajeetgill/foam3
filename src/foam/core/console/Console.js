@@ -163,10 +163,15 @@ foam.CLASS({
   css: `
     ^ {
       padding: 4px;
+    }
+    ^:not(^hidePrompts) {
       border-top: 1px solid #999;
     }
     ^output {
       overflow-x: scroll;
+    }
+    ^hidePrompts ^toolbar {
+      display: none;
     }
     ^prompt {
       display: flex;
@@ -206,11 +211,10 @@ foam.CLASS({
 
   methods: [
     function render() {
+      this.enableClass(this.myClass('hidePrompts'), this.showPrompts$.not());
       this.title.
         on('click', (e) => { e.stopPropagation();  e.preventDefault(); }).
         on('dblclick', (e) => { e.stopPropagation();  e.preventDefault(); }).
-        show(this.showPrompts$).
-        // style({ display: 'flex', width: '100%' }).
         start('span')
           .addClass(this.myClass('prompt')).start(foam.u2.ReadWriteView, {data$: this.flowName$})
         .end()
