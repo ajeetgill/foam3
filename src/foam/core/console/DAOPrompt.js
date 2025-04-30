@@ -53,7 +53,7 @@ foam.CLASS({
   properties: [
     {
       class: 'String',
-      name: 'daoKey',
+      name: 'daoLabel',
       factory: function() {
         return this.dao.of.model_.plural;
       }
@@ -195,7 +195,7 @@ foam.CLASS({
       this.rowCount = (await this.dao.select(this.COUNT())).value;
 
       this.
-        start(this.Link).add(this.daoKey$, '.').on('click', this.describe).end().
+        start(this.Link).add(this.daoLabel$, '.').on('click', this.describe).end().
         start('div').style({'margin-top': '0', 'margin-left': '20px', 'margin-bottom': '6px', 'line-height': '26px'}).
         add('skip(',    this.SKIP,  ').').br().
         add('limit(',   this.LIMIT, ').').br().
