@@ -165,7 +165,7 @@ foam.CLASS({
     ^ .foam-u2-ReadWriteView .foam-u2-TextField { height: 20px; }
 
     ^ .toolbar {
-    
+
       display: flex;
       flex-direction: row;
     }
@@ -526,7 +526,17 @@ foam.CLASS({
         console.log('***** CONSOLE memento');
         feedback_ = true;
         try {
-//          this.flowChildren = this.value.memento;
+          var cs = this.value.memento;
+          this.clearFlow();
+          cs.forEach(c => {
+            console.log('***child:', c.flowName, c.cmd, c.value);
+            this.eval_(c.cmd);
+            // TODO: await
+            this.currentBlock.flowName = c.flowName;
+            if ( this.currentBlock.value && c.value ) {
+              this.currentBlock.value.copyFrom(c.value);
+            }
+          });
         } finally {
           feedback_ = false;
         }
