@@ -23,9 +23,16 @@ foam.CLASS({
           Only used for skipping this wizard in case all facaded wizardlets are granted, should not be used as a source of truth`,
           value: 'AVAILABLE'
         },
-        'wizardlets'
+        {
+          class: 'Map',
+          name: 'wizardlets',
+        }
       ],
       methods: [
+        function init() {
+          this.linkIsValid();
+          this.SUPER();
+        },
         function populateStatus() {
           let anyIncomplete = false ;
           Object.keys(this.wizardlets).forEach(v => {
@@ -37,6 +44,20 @@ foam.CLASS({
         function handleSkipping() {
           let next = this.dynamicActions.find(v => v.name == 'goNext');
           next.alternateFlow.execute(this.__subContext__);
+        }
+      ],
+      listeners: [
+        {
+          name: 'linkIsValid',
+          on: ['this.propertyChange.wizardlets'],
+          code: function() {
+            let ws = Object.values(this.wizardlets);
+            if ( ! ws.length ) return;
+            let arrSlot = foam.lang.ArraySlot.create({
+              slots: ws.map(w => w.isValid$.map(() => w)),
+            });
+            this.onDetach(this.isValid$.follow(arrSlot.map(arr => ! arr.some(v => v.isValid == false))));
+          }
         }
       ]
     },
@@ -139,6 +160,7 @@ foam.CLASS({
       var facadeModel = {
         package: 'FacadeWizardlet',
         name: this.wizardletId,
+        requires: ['foam.core.crunch.ui.MinMaxCapabilityWizardlet'],
         properties: [
           ...this.capabilityIds.map(element => {
             let wi;
@@ -185,6 +207,13 @@ foam.CLASS({
             let status = '';
             Object.keys(self.wizardlets_).forEach(v => {
               // console.log(v, self.wizardlets_[v].getDataUpdateSub(), (self.wizardlets_[v].getDataUpdateSub()).$UID);
+
+              // Turn off this behaviour since the wizardlet will be consumed by the facade
+              // v.goNextOnSave = false;
+              if ( this.MinMaxCapabilityWizardlet.isInstance(v) ) {
+                v.goNextOnValid = false;
+              }
+
               let w = self.wizardlets_[v];
               this.onDetach(w.getDataUpdateSub().sub(() => {
                 // console.log('Updating facade prop', v, this[self.createPropertyName(v)], w.data);
@@ -216,7 +245,6 @@ foam.CLASS({
       facadeWizardlet.dynamicActions.push(altAction);
 
       // Add a create loader in order to init the wizardlet data
-      // TODO: Add loaders that can load data from the wizardlets directly
       facadeWizardlet.wao.loader = {
         class: 'foam.u2.wizard.wizardflow.AddFacadeWizardlet.FacadeLoader',
         spec: { class: facadeClass.id, realWizardlets: self.wizardlets_ }

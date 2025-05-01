@@ -139,17 +139,6 @@ p({
           class: 'foam.u2.detail.VerticalDetailView'
         },
         title: 'Schedule Details'
-      },
-      {
-        class: 'foam.u2.wizard.wizardlet.ReviewItem',
-        name: 'schedulableNote',
-        border: {
-          class: 'foam.u2.borders.NullBorder',
-          cssClasses: ['p']
-        },
-        view: {
-          class: 'foam.u2.HTMLView'
-        }
       }
     ],
     wao: {
@@ -169,14 +158,6 @@ p({
           minMaxCapabilityId: 'schedulable-xorminmax',
           loadFromPath: 'schedule',
           loadIntoPath: 'value.schedule'
-        },
-        {
-          class: 'foam.u2.wizard.wao.XORMinMaxWAO',
-          of: 'foam.lang.StringHolder',
-          minMaxCapabilityId: 'schedulable-xorminmax',
-          loadFromPath: 'schedulableNote',
-          loadIntoPath: 'value.schedulableNote',
-          cloneValue: false
         }
       ]
     }
