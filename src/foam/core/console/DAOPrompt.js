@@ -43,7 +43,7 @@ foam.CLASS({
     ^ .property-skip { display: inline-flex; }
     ^helper-icon svg { fill: currentColor; }
     ^helper-icon { vertical-align: sub; }
-    ^content {
+    ^content:has(div) {
       max-height: 700px;
       overflow-y: auto;
       border: 1px solid gray;
@@ -53,18 +53,25 @@ foam.CLASS({
   properties: [
     {
       class: 'String',
-      name: 'daoKey',
-      adapt: function(o, n) {
-        if ( this.__context__[n] ) return n;
-        if ( this.__context__[n + 'DAO'] ) return n + 'DAO';
-        if ( n.endsWith('s') ) return n.substring(0, n.length-1) + 'DAO';
-        return n;
+      name: 'daoLabel',
+      factory: function() {
+        return this.dao.of.model_.plural;
       }
     },
     {
+      class: 'foam.dao.DAOProperty',
       name: 'dao',
-      factory: function() {
-        return this.__context__[this.daoKey];
+      adapt: function(o, n, p) {
+        let oldAdapt = foam.dao.DAOProperty.ADAPT;
+        if ( foam.String.isInstance(n) ) {
+          if ( this.__context__[n + 'DAO'] ) {
+            n =  n + 'DAO';
+          } else if ( n.endsWith('s') ) {
+            this.daoKey = n;
+            n = n.substring(0, n.length-1) + 'DAO';
+          }
+        }
+        return oldAdapt.value.call(this, o, n, p);
       }
     },
     {
@@ -188,7 +195,7 @@ foam.CLASS({
       this.rowCount = (await this.dao.select(this.COUNT())).value;
 
       this.
-        start(this.Link).add(this.daoKey$, '.').on('click', this.describe).end().
+        start(this.Link).add(this.daoLabel$, '.').on('click', this.describe).end().
         start('div').style({'margin-top': '0', 'margin-left': '20px', 'margin-bottom': '6px', 'line-height': '26px'}).
         add('skip(',    this.SKIP,  ').').br().
         add('limit(',   this.LIMIT, ').').br().

@@ -151,9 +151,7 @@ foam.CLASS({
 
   methods: [
     function execute(dao, opt_label) {
-      var p = foam.String.isInstance(dao) ?
-        this.DAOPrompt.create({daoKey: dao}) :
-        this.DAOPrompt.create({dao: dao, daoKey: opt_label || dao.of.model_.plural}) ;
+      var p = this.DAOPrompt.create({dao: dao,  daoLabel: opt_label});
 
       this.out.tag(p);
       this.currentBlock.obj = p;
