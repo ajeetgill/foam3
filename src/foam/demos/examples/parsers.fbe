@@ -112,12 +112,15 @@ function testP(parser, strs) {
     attrs({border: 1, cellpadding: 6, cellspacing: 0}).
     start('tr').start('th').
       style({background: '#eee'}).
-      attrs({colspan:2}).add(`Parser: ${parser}`)
+      attrs({colspan:3}).add(`Parser: ${parser}`)
     .end().
   end().
   start('tr').
     start('th').
       add('Input').
+    end().
+    start('th').
+      add('Parsed').
     end().
     start('th').
       add('Result').
@@ -126,14 +129,18 @@ function testP(parser, strs) {
   forEach(strs, function(s) {
     var input  = foam.lang.SimpleSlot.create({value: s});
     var output = input.map(s => parser.parse(P.stringPStream(s)));
+
     this.start('tr').
       start('td').
         style({width:'25%'}).
         tag({class: 'foam.u2.TextField', size: 10, onKey: true, data$: input}).
       end().
       start('td').start('pre').
+        add(output.map(o => o ? s.substring(0, o.pos) : '')).
+      end().end().
+      start('td').start('pre').
         style({color: output.map(s=> s ? 'green' : 'red')}).
-        add(output.map(s => s ? s.toString() : 'undefined')).
+        add(output.map(s => s ? foam.json.Compact.stringify(s.value) : 'undefined')).
       end().end().
     end();
   });
