@@ -15,7 +15,8 @@ foam.CLASS({
   properties: [
     {
       class: 'Long',
-      name: 'value'
+      name: 'value',
+      shortName: 'v'
     }
   ],
 

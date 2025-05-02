@@ -91,8 +91,7 @@ return getGroupKeys();`
         var group = this.groups.hasOwnProperty(key) && this.groups[key];
         if ( ! group ) {
           group = this.arg2.clone();
-          if ( ! this.groupKeys.includes(key) )
-            this.groupKeys.push(key);
+          this.groupKeys = undefined;
           this.groups[key] = group;
         }
         group.put(obj, sub);
@@ -103,8 +102,7 @@ return getGroupKeys();`
  if ( group == null ) {
    group = (foam.dao.Sink) (((foam.lang.FObject)getArg2()).fclone());
    getGroups().put(key, group);
-   if ( ! this.getGroupKeys().contains(key) )
-     getGroupKeys().add(key);
+   clearGroupKeys();
  }
  group.put(obj, sub);`
     },
