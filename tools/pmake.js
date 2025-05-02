@@ -116,6 +116,8 @@ var pmake = function(...args) {
           if ( f.name.endsWith('build') || f.name.endsWith('build2') ) return;
           if ( f.name.indexOf('android') != -1 ) return;
           if ( f.name.indexOf('examples') != -1 ) return;
+          if ( f.name.endsWith('test') && ! flags.test ) return;
+          if ( f.name.endsWith('tests') && ! flags.test ) return;
           if ( ! b_.isExcluded(pom, fn) ) processDir(pom, fn, true);
         }
         makers.forEach(v => v.visitDir && v.visitDir(pom, f, fn));

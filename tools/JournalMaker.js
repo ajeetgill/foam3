@@ -8,7 +8,7 @@ exports.description = 'Concatenate all repository .jrl files into .0 files.';
 
 const fs_   = require('fs');
 const path_ = require('path');
-const b_    = require('./buildlib');
+const { ensureDir, emptyDir, isExcluded, info, warning, error }    = require('./buildlib');
 
 const journalFiles  = [];
 const journalOutput = {};
@@ -21,21 +21,37 @@ function addJournalOutput(j, o) {
 
 exports.init = function() {
   X.journaldir = X.journaldir || (X.builddir + '/journals');
-  b_.ensureDir(X.journaldir);
-  b_.emptyDir(X.journaldir);
+  ensureDir(X.journaldir);
+  emptyDir(X.journaldir);
+
+  flags.loadFiles = true;
 }
 
-
-exports.visitFile = async function(pom, f, fn) {
+exports.visitFile = function(pom, f, fn) {
   if ( f.name.endsWith('.jrl') ) {
+    var i           = fn.lastIndexOf('/');
+    var journalName = fn.substring(i+1, fn.length-4);
+
     // Disallow wildcard matching for excluding .jrl files, excluded entries must be exact match
-    // if ( b_.isExcluded(pom, fn, true) ) return;
+    // if ( isExcluded(pom, fn, true) ) return;
+
+    // Until all journal files are under pom control, use the
+    // journalFiles list as an exclude list.
+    // If test flag enabled - include if present and flag match
+    if ( ! flags.test &&
+         pom.journalFiles ) {
+      // journalFiles name is relative to pom
+      var name = f.parentPath.substring(pom.location.length+1);
+      name += (name ? '/' : '') + journalName;
+      let jf = pom.journalFiles.find((jf) => jf.name === name);
+      if ( jf && foam.checkForFlag(foam.adaptFlags(jf.flags), 'test') )
+        return;
+    }
+    if ( f.name.endsWith('tests.jrl') && ! flags.test )
+      return;
 
     verbose('\t\tjournal source:', fn);
     journalFiles.push(fn);
-
-    var i           = fn.lastIndexOf('/');
-    var journalName = fn.substring(i+1, fn.length-4);
 
     addJournalOutput(journalName, {
       fn: fn,
