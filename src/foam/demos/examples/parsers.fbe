@@ -837,6 +837,8 @@ foam.CLASS({
   name: 'ExpressionParser',
   extends: 'foam.parse.Grammar',
 
+  requires: [ 'NumberParser' ],
+
   methods: [
     function grammar(plus, sym, alt, opt, seq, seq1, lit, range, eof) { return {
       START: seq1(0, sym('expr'), eof()),
@@ -861,7 +863,7 @@ foam.CLASS({
 
       group: seq1(1, '(', sym('expr'), ')'),
 
-      number: NumberParser.create()
+      number: this.NumberParser.create()
     }; }
   ]
 });
