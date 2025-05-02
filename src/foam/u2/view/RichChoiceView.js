@@ -205,6 +205,7 @@ foam.CLASS({
       border-radius: $inputBorderRadius;
       -webkit-appearance: none;
       cursor: pointer;
+      transition: all 0.2s ease;
     }
     ^dropdown {
       padding: 0 0.8rem;
@@ -805,11 +806,11 @@ foam.CLASS({
 
           this.addClass().add(this.dynamic(function(fullObject) {
             if ( fullObject ) {
-              this.start()
+              this.startContext({ controllerMode: 'VIEW' }).start()
                 .addClass(self.myClass('customSelectView'))
-                .enableClass(self.myClass('ro'), self.controllerMode$.map(v => v == 'VIEW'))
+                .addClass(self.myClass('ro'))
                 .tag((self.rowView || self.CitationView), { data: fullObject })
-              .end();
+              .end().endContext();
             } else {
               this.start().addClass(self.myClass('paddingWrapper')).add(self.defaultSelectionPrompt).end();
             }
