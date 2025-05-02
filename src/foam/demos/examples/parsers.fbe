@@ -759,7 +759,7 @@ This example demonstrates reuse through both composition and inheritance. The ex
 simple expression parser and interpreter derived from the built-in base defined in:
 <a href="https://github.com/foam-framework/foam/blob/2966cde661ccadbb8b1548fede78f6d67cc53ed5/core/experimental/scaleParser.js">scaleParser.js</a>.
 
-For composition, we create a NumberParser which is only able to parse negative or positive
+For <b>composition</b>, we create a NumberParser which is only able to parse negative or positive
 integers. This class/grammar isn't very large, but by the time we add support for
 decimal places, exponents, and maybe even numbers expressed in different bases, this class
 could become fairly large. It makes the code more modular and reusable to keep isolated
@@ -768,7 +768,7 @@ or could have different versions (say a JS version or a Java version) and then
 choose between implementations if we wanted to support JS or Java style
 numbers.
 
-To illustrate inheritance, we first create a generic ExpressionParser, and then we inherit from
+To illustrate <b>inheritance</b>, we first create a generic ExpressionParser, and then we inherit from
 it to create an ExperssionInterpreter. Grammars can be large and complex, and represent
 a sizeable investment of effort, so you might want to use the same grammar for multiple
 purposes. For example, our ExpressionParser might be used for an expression linter, pretty-printer,
