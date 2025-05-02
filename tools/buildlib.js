@@ -103,6 +103,7 @@ function buildEnv(m) {
 
   Object.keys(m).forEach(k => {
     let [doc, val] = m[k];
+    // console.log('buildEnv', doc, val);
     Object.defineProperty(globalThis, k, {
       get: function()  { return typeof val === 'function' ? val() : val; },
       set: function(v) { val = v; }
@@ -195,6 +196,62 @@ function error(...args) {
   process.exit(1);
 }
 
+// Build flag string with global and argument flags
+function flag(flgs) {
+  var f = globalThis['VERBOSE'] ? 'verbose' : '';
+  f = ( f ? f + ',' : '' ) + ( globalThis['TEST'] ? 'test' : '-test');
+
+  if ( globalThis['FLAGS'] )
+    f = ( f ? f + ',' : '' ) + FLAGS;
+
+  if ( flgs )
+    f = ( f ? f + ',' : '' ) + flgs;
+
+  return f;
+}
+
+// Bit of hack to only process tooling args.
+function processToolingArgs(ARGS, moreUsage) {
+  function usage(f) {
+    moreUsage && moreUsage();
+    if ( f ) {
+      if ( f instanceof Function ) f();
+      else warning('Unknown argument "'+f+'"');
+    }
+    process.exit(0);
+  }
+
+  var USAGE = [ 'Print usage information.', usage ];
+  if ( ! ARGS.h    ) ARGS.h    = USAGE;
+  if ( ! ARGS['?'] ) ARGS['?'] = USAGE;
+
+  const args = process.argv.slice(2);
+  for ( var i = 0 ; i < args.length ; i++ ) {
+    var arg = args[0];
+    if ( arg.startsWith('-') ) {
+      if ( arg === '-help') {
+        ARGS['h'][1]();
+      }
+      for ( var j = 1 ; j < arg.length ; j++ ) {
+        var a = arg.charAt(j);
+        if ( a != 'O' ) continue;
+
+        var d = ARGS[a];
+        if ( d ) {
+          d[1](arg.substring(j+1));
+          if ( a == 'O' ) break;
+        } else {
+          let msg = 'Unknown argument "' + a + '"';
+          warning(msg);
+          // output warning message after usage as the usage is so long
+          // the user will have to scroll pages up to see the issue.
+          ARGS['h'][1](() => warning(msg));
+        }
+      }
+    }
+  }
+}
+
 function processSingleCharArgs(ARGS, moreUsage) {
   function usage(f) {
     moreUsage && moreUsage();
@@ -245,8 +302,10 @@ exports.ensureDir             = ensureDir;
 exports.exec                  = exec;
 exports.execSync              = execSync;
 exports.exportEnvs            = exportEnvs;
+exports.flag                  = flag;
 exports.isExcluded            = isExcluded;
 exports.processSingleCharArgs = processSingleCharArgs;
+exports.processToolingArgs    = processToolingArgs;
 exports.rmdir                 = rmdir;
 exports.rmfile                = rmfile;
 exports.spawn                 = spawn;

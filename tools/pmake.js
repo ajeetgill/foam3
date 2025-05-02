@@ -99,10 +99,9 @@ var pmake = function(...args) {
   // update globalThis.foam.flags after Makers initialized
   globalThis.foam.flags = flags;
   globalThis.foam.setupFlags();
-  // console.log('[pmake] foam.flags', globalThis.foam.flags);
 
   function processDir(pom, location, skipIfHasPOM) {
-    // verbose('\tdirectory:', location);
+    verbose('\tdirectory:', location);
     var files = fs_.readdirSync(location, {withFileTypes: true});
 
     if ( skipIfHasPOM && files.find(f => f.name.endsWith('pom.js')) ) {
@@ -140,11 +139,11 @@ var pmake = function(...args) {
     pom.path     = foam.sourceFile;
 
     makers.forEach(v => {
-      // verbose('[pmake] visitPOM', v.name, pom);
+      verbose('[pmake] visitPOM', v.name, pom);
       v.visitPOM && v.visitPOM(pom);
     });
     if ( ! seen[foam.cwd] ) {
-      // verbose('[pmake] procesDir', pom.path );
+      verbose('[pmake] procesDir', pom.path );
       processDir(pom, foam.cwd, false, makers);
       seen[foam.cwd] = true;
     }
@@ -167,6 +166,16 @@ var pmake = function(...args) {
   });
 
   makers.forEach(v => v.end && v.end());
+
+  if ( makers.length == 1 ) {
+    return makers[0];
+  }
+  let map = new Map();
+  Object.keys(makers).forEach(m => {
+    let maker = makers[m];
+    map.set(maker.name, maker);
+  });
+  return map;
 };
 
 module.exports = pmake;

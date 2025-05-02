@@ -4,20 +4,15 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
+const tasks = {};
+
 exports.description = 'Register POM tasks for later execution.';
-
-exports.init = function() {
-  verbose('[Task] init');
-
-  X.pomTasks = X.pomTasks || {};
-};
 
 exports.visitPOM = function(pom) {
   if ( ! pom.tasks ) return;
 
   pom.tasks.forEach(t => {
-    console.log(`[Task] registering task ${t.name} from ${pom.name}`);
-    var tasks = X.pomTasks;
+    verbose(`[Task] registering task ${t.name} from ${pom.name}`);
     var task = tasks[t.name] || [];
     task.push(t);
     tasks[t.name] = task;
@@ -25,6 +20,8 @@ exports.visitPOM = function(pom) {
 };
 
 exports.end = function() {
-  let count = Object.keys(X.pomTasks).length;
-  console.log(`[Task] END Registered ${count} tasks`);
+  let count = Object.keys(tasks).length;
+  console.log(`[Task] Registered ${count} tasks`);
 };
+
+exports.tasks = tasks;
