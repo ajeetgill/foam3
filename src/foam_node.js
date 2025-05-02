@@ -4,7 +4,7 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-var path_ = require('path');
+const path_ = require('path');
 
 globalThis.foam = {
   isServer: true,
@@ -39,7 +39,7 @@ globalThis.foam = {
 
     // ???: foam.resolve()?
     var cwd  = foam.cwd;
-    var path = path_.resolve(foam.cwd, fn) + '.js';
+    var path = path_.resolve(foam.cwd, fn + '.js');
     try {
       if ( ! isProject && globalThis.foam.seen(path) ) return;
       foam.cwd = path_.dirname(path);
@@ -53,6 +53,7 @@ globalThis.foam = {
     } catch (x) {
       console.log('Error Loading:', path);
       console.log(x);
+      console.trace();
       throw x;
     } finally {
       foam.cwd = cwd;
