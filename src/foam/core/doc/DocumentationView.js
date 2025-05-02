@@ -12,6 +12,7 @@ foam.CLASS({
 
   css: `
     ^ {
+      padding-left: 12px;
       max-width: 800px;
     }
     ^ table { width: 100%; }

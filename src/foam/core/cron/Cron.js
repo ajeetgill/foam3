@@ -286,7 +286,7 @@ foam.CLASS({
     {
       name: 'disable',
       isAvailable: function() {
-        return this.enabled;
+        return this.enabled && this.cronJobDAO;
       },
       code: function(X) {
         var cron = this.clone();
@@ -306,7 +306,7 @@ foam.CLASS({
     {
       name: 'enable',
       isAvailable: function() {
-        return ! this.enabled;
+        return ! this.enabled && this.cronJobDAO;
       },
       code: function(X) {
         var cron = this.clone();

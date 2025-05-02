@@ -79,13 +79,13 @@ foam.CLASS({
       postSet: function(o, n) {
         if ( this.feedback_ ) return;
         this.feedback_ = true;
-        console.log('******************** memento change: ', n);
+        console.log('*********** FLOW memento change: ', n);
         try {
           // TODO: should still not output empty reactions_: or children:
           var json = foam.json.Outputter.create({
             pretty: true,
-            strict: false,
-            formatDatesAsNumbers: true,
+            strict: true,
+            formatDatesAsNumbers: false,
             outputDefaultValues: false,
             useShortNames: false,
             propertyPredicate: function(o, p) { return ! p.externalTransient && ! p.networkTransient; }
@@ -105,7 +105,10 @@ foam.CLASS({
         if ( this.feedback_ ) return;
         this.feedback_ = true;
         try {
-          this.memento = foam.json.parseString(n, this.__context__);
+          console.log('*********** FLOW mementoStr change:', n);
+          var memento = this.memento = foam.json.parseString(n, this.__context__);
+          console.log('mementos:', memento.length);
+
         } finally {
           this.feedback_ = false;
         }
