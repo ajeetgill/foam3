@@ -17,7 +17,7 @@ exports.visitPOM = function(pom) {
       if ( ! envs[k] ) {
         envs[k] = pom.envs[k];
       } else {
-        warning(`[Tooling] duplicate env '$[k]' ignore from pom '${pom.name}'`);
+        warning(`[Tooling] duplicate env '${k}\' ignored from pom '${pom.name}'`);
       }
     });
 
@@ -26,7 +26,7 @@ exports.visitPOM = function(pom) {
       if ( ! args[k] ) {
         args[k] = pom.args[k];
       } else {
-        warning(`[Tooling] duplicate arg '$[k]' ignore from pom '${pom.name}'`);
+        warning(`[Tooling] duplicate arg '${k}' ignored from pom '${pom.name}'`);
       }
     });
 
