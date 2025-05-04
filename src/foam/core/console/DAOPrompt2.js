@@ -193,7 +193,7 @@ foam.CLASS({
         return {
           class: 'foam.u2.view.DualView',
           viewa: { class: 'foam.u2.IntView' },
-          viewb: { class: 'foam.u2.RangeView', minValue: 0, maxValue: X.data.rowCount-1, onKey: true }
+          viewb: { class: 'foam.u2.RangeView', minValue: 0, maxValue$: X.data.rowCount$.map(c => c-1), onKey: true }
         };
       }
     },
@@ -278,7 +278,9 @@ foam.CLASS({
       start('div', {}, this.content$).addClass(this.myClass('content')).style({fontSize: 'smaller'}).end();
       }
       */
-    function addToE(e) {
+    async function addToE(e) {
+      this.rowCount = (await this.dao.select(this.COUNT())).value;
+
       e.tag(this.DAOPrompt2View, {data: this, label: this.label});
     }
   ],
