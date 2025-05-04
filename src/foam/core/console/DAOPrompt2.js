@@ -12,7 +12,6 @@ foam.CLASS({
   imports: [ 'executionTime' ],
 
   css: `
-    ^ { border: 1px solid gray; }
   `,
 
   methods: [
@@ -26,13 +25,12 @@ foam.CLASS({
           this.start('h3').
             add(self.data.label$).
             start().
-              add(self.data.dynamic(async function(hasRun, filteredDAO, limitedDAO, select) {
-                if ( ! hasRun ) return;
+              add(self.data.dynamic(async function(version, skip) {
+                if ( ! version ) return;
 
                 var startTime = Date.now();
-
-                await select.execute(this);
-                this.executionTime = foam.lang.Duration.duration(Date.now() - startTime);
+                await self.data.select.execute(this);
+                self.data.executionTime = foam.lang.Duration.duration(Date.now() - startTime);
               })).
             end().
           end();
@@ -236,6 +234,7 @@ foam.CLASS({
     { class: 'Long', name: 'rowCount', visibility: 'RO' },
     { name: 'executionTime', value: '-' },
     { class: 'Boolean', name: 'hasRun', hidden: true },
+    { class: 'Int', name: 'version', hidden: true, transient: true }
   ],
 
   methods: [
@@ -288,19 +287,13 @@ foam.CLASS({
   actions: [
     {
       name: 'run',
-      code: async function() {
-        this.hasRun = true;
+      code: function() {
+        this.version++;
       }
     }
   ],
 
   listeners: [
-    {
-      name: 'onSkip',
-      isMerged: true,
-      delay: 64,
-      code: function() { this.run(); }
-    },
     function describe() {
       this.eval_('describe ' + this.dao.of.id);
     },
