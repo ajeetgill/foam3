@@ -267,7 +267,8 @@ EXPORTS = Object.assign(EXPORTS, {
   showSummary
 });
 
-// from buildlib
+// Export functions for Tooling and Build POM tasks
+// from buildlib.js
 EXPORTS = Object.assign(EXPORTS, {
   comma,
   copyDir,

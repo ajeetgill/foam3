@@ -296,7 +296,7 @@ Implementation-Vendor: ${VENDOR || APP_NAME}
       } else if ( BENCHMARK ) {
         exec(`java -jar ${JAR_OUT}`);
       } else {
-        showSummary();
+        this.showSummary();
         // Acquires environment variables via JAVA_TOOL_OPTIONS (JAVA_OPTS)
         exec(`java -cp "${CLASSPATH}" foam.core.boot.Boot`);
       }
