@@ -316,6 +316,7 @@ foam.CLASS({
     'foam.core.console.FlowableTree',
     'foam.core.console.Layout',
     'foam.core.console.ReactiveDetailView',
+    // 'foam.u2.DetailView as ReactiveDetailView',
     'foam.dao.ArrayDAO',
     'foam.flow.Document',
     'foam.u2.Link'
@@ -455,6 +456,8 @@ foam.CLASS({
     async function render() {
       this.SUPER();
 
+      var self = this;
+
       this.flowName$.sub(() => this.refreshFlowScope());
       this.value$.sub(() => this.refreshFlowScope());
 
@@ -515,7 +518,9 @@ foam.CLASS({
 
       layout.left.tag(this.FlowableTree, {data: this, selected$: this.selected$});
       layout.middle.call(this.renderSelf, [this]);
-      layout.right.tag(this.ReactiveDetailView, {data$: this.selectedValue$});
+      layout.right.add(this.dynamic(function(selectedValue) {
+        this.tag(self.ReactiveDetailView, {data: selectedValue});
+      }));
     },
 
     function renderSelf(self) {
