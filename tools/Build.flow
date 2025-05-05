@@ -1,21 +1,25 @@
 <title>FOAM Build</title>
-<h1>Incomplete</h1>
+<h1>Pom-O-Matic</h1>
+<p>Solve your Build troubles with Pom-O-Matic!  But wait, there's more...</p>
 
-<p>The FOAM build process is composed of phases which operate against Projet Object Models (<b>pom</b>).</p>
-<p>There two types of <b>POMs</b>:
+<i>Incomplete</i>
+
+<p>The FOAM build is a <b>node</b> tool which executes Javascript methods (<b>Tasks</b>) against Project Object Model (<b>POM</b>)(or POM = Pom-O-Matic) files.</p>
+
+<p>There are two types of POMs:
 <ol>
-  <li><b>Tooling</b> - POMs which prepare the Build environment for the task execution phase.</li>
-  <li><b>Build</b> - POMs which specify code and deployment configuration to include.</li>
+  <li><b>Tooling</b> - POMs which configure the Build environment itself. <i>For example</i>, preparing for a Java build.</li>
+  <li><b>Build</b> - POMs which specify code and deployment configuration to include.  <i>For example</i>, specifying the models to generate Java from and specifying the configuration to include in a JAR file.</li>
 </ol>
 </p>
 
-<p>There are three distinct phases:
+<p>There are three distinct build <b>phases</b>:
 <ol>
-  <li><b>Tooling</b> - the build runs <b>ToolingMaker</b> which loads Tooling POMs such as <b>StandardTooling</b>, <b>JavaTooling</b>. These Tooling poms add evironment variables (<b>envs</b>), command line arguments (<b>args</b>), and <b>tasks</b>.
+  <li><b>Tooling</b> - the build loads Tooling POMs which add evironment variables (<b>envs</b>), command line options (<b>args</b>), and build <b>Tasks</b> specific to the type of code generation, compilation, and deployment to be supported.  <i>For example</i>, <b>JavaTooling</b> adds variables to control the Java target version, adds command line arguments to control creating a JAR file or start the JVM with JDPA enabled, adds Tasks for building and starting from JAR file locally or building a TAR file for remote deployment.
   </li>
-  <li><b>Environment and Registration</b> - the buld runs <b>EnvMaker</b> to allow Build POMs to set environment variable values, such as APP_NAME, or JAVA_RELEASE.  <b>TaskMaker</b> is also run to register Build POM <b>tasks</b> to be run when same named Build <b>tasks</b> are run. Such as <b>setRunArgs</b> or <b>setJavaEnv</b>.
+  <li><b>Environment and Registration</b> - the build processes the Build POMs to (1) set environment variable values for variables added during the Tooling phase (i.e., Java target release = 21), and (2) register Build POM <b>Tasks</b> to be run when same-named Tooling <b>Tasks</b> are run (i.e., <b>setJavaEnv</b> JAVA_OPTS=-Dxyz before the JVM is started).
   </li>
-  <li><b>Task</b> - the Build processes the command line options, translating into a set of <b>tasks</b> which are then executed.
+  <li><b>Task</b> - the build processes the command line arguments, for options added during the Tooling phase, and prepares a set of <b>Tasks</b> which are then executed.  The <b>Tasks</b> themselves, act on the Build POMs.
   </li>
 </ol>
 </p>
