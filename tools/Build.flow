@@ -1,10 +1,15 @@
 <title>FOAM Build</title>
 <h1>Pom-O-Matic</h1>
-<p>Solve your Build troubles with Pom-O-Matic!  But wait, there's more...</p>
+<p>Solve your Build troubles with Pom-O-Matic!</p>
 
 <i>Incomplete</i>
 
-<p>The FOAM build is a <b>node</b> tool which executes Javascript methods (<b>Tasks</b>) against Project Object Model (<b>POM</b>)(or POM = Pom-O-Matic) files.</p>
+<h1>Overview</h1>
+
+<p>The FOAM build is a <b>node</b> tool which executes Javascript methods (<b>Tasks</b>) against Project Object Model (<b>POM</b>)(or a more lighthearted acronym expansion: Pom-O-Matic) files.</p>
+
+
+<p><b>POMs</b> are JSON files which identify source code, application configuration, and build instructions. They are hierarchical and can exist at any level of a code repository.
 
 <p>There are two types of POMs:
 <ol>
