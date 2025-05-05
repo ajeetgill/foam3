@@ -99,8 +99,6 @@ foam.CLASS({
       var generalQueryView = foam.u2.ViewSpec.createView(
         {
           class: 'foam.u2.search.TextSearchView'
-          // searchMode: this.searchMode
-          // keywordSearch: this.searchMode == foam.comics.SearchMode.SIMPLE
         },
         {
           richSearch: true,
