@@ -11,7 +11,7 @@ foam.CLASS({
 
   requires: [
     'foam.dao.MDAO',
-    'foam.u2.view.TableView'
+    'foam.u2.table.TableView'
   ],
 
   properties: [

@@ -46,6 +46,7 @@ foam.CLASS({
     ^content:has(div) {
       max-height: 700px;
       overflow-y: auto;
+      display: flex;
       border: 1px solid gray;
     }
   `,
@@ -285,7 +286,7 @@ foam.CLASS({
         this.setTimeout(() => {
           this.previousOutput?.remove();
           this.previousOutput = out;
-          out.style({display: 'block'});
+          out.style({display: 'contents'});
         }, 17)
       }
     },
