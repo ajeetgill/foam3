@@ -25,6 +25,7 @@ foam.CLASS({
   requires: [
     'foam.u2.memento.Memento',
     'foam.lang.SimpleSlot',
+    'foam.log.LogLevel',
     'foam.u2.dialog.Popup',
     'foam.u2.filter.FilterController',
     'foam.u2.filter.properties.PropertyFilterView',
@@ -34,6 +35,7 @@ foam.CLASS({
 
   imports: [
     'auth',
+    'notify',
     'searchColumns'
   ],
 
@@ -50,6 +52,7 @@ foam.CLASS({
 
     ^container-search {
       display: flex;
+      margin: 4px 0;
     }
 
     ^container-drawer {
@@ -91,6 +94,7 @@ foam.CLASS({
     }
 
     ^container-handle {
+      display: flex;
       box-sizing: border-box;
       height: 34px;
 
@@ -170,13 +174,33 @@ foam.CLASS({
         gap: 24px;
       }
     }
+
+    ^filter-selection {
+      max-height: 320px;
+      width: max-content;
+      overflow: auto;
+      padding: 12px;
+      position: absolute;
+      background-color: $white;
+      border-radius: 3px;
+      border: solid 1px #cbcfd4;
+      z-index: 100;
+    }
   `,
+
+  constants: [
+    { type: 'Integer', name: 'MAX_FILTERS', value: 9 }
+  ],
 
   messages: [
     { name: 'LINK_ADVANCED', message: 'Advanced filters' },
     { name: 'LINK_SIMPLE', message: 'Switch to simple filters' },
     { name: 'MESSAGE_ADVANCEDMODE', message: 'Advanced filters are currently being used.' },
-    { name: 'LABEL_FILTER', message: 'Filters' }
+    { name: 'LABEL_FILTER', message: 'Filters' },
+    { name: 'SEARCH_PLACEHOLDER', message: 'Search' },
+    { name: 'SELECTED_OPTIONS', message: 'Selected' },
+    { name: 'OPTIONS', message: 'Options' },
+    { name: 'ENABLE_COLUMNS', message: 'Enable Columns for Filter' }
   ],
 
   properties: [
@@ -256,6 +280,14 @@ foam.CLASS({
       name: 'searchData',
       shortName: 'search',
       memorable: true
+    },
+    {
+      class: 'Boolean',
+      name: 'filterSelectionOpen'
+    },
+    {
+      class: 'String',
+      name: 'filterSearch'
     }
   ],
 
@@ -278,7 +310,6 @@ foam.CLASS({
         .add(this.slot(function(filters) {
 
           var generalSearchField = foam.u2.ViewSpec.createView(self.TextSearchView, {
-            richSearch: true,
             of: self.dao.of.id,
             onKey: true,
             name: 'filterSearch',
@@ -298,9 +329,73 @@ foam.CLASS({
             .start().addClass(self.myClass('container-handle'))
             .startContext({ data: self })
               .start(self.TOGGLE_DRAWER, { label$: labelSlot, isIconAfter: true, themeIcon: 'dropdown', size: 'SMALL' })
-                .show(filters && filters.length)
+                .show(filters)
                 .enableClass(this.myClass('filter-button-active'), this.isOpen$)
                 .addClass(this.myClass('filter-button'))
+              .end()
+              // dynamic filters
+              .start()
+                .start(self.ADD_SEARCH_FILTER, { label: '⚙️', size: 'SMALL' }).end()
+                .start()
+                  .show(this.filterSelectionOpen$)
+                  .addClass(this.myClass('filter-selection'))
+                  // search
+                  .start('p').addClass('p-label-lg').add(self.ENABLE_COLUMNS).end()
+                  .start().addClass(this.myClass('container-search'))
+                    .start({
+                      class: 'foam.u2.TextField',
+                      data$: this.filterSearch$,
+                      placeholder: this.SEARCH_PLACEHOLDER,
+                      onKey: true
+                    })
+                    .end()
+                  .end()
+                  // selected
+                  .add(self.slot(function(filterSelectionOpen, filters, filterSearch) {
+                    var element = this.E();
+                    var filteredFilters = filters.filter(function(f) {
+                      return f.toLowerCase().includes(filterSearch.toLowerCase());
+                    })
+                    if ( ! filterSelectionOpen || ! filteredFilters?.length ) return element;
+                    return element
+                      .start('p').addClass('p-label')
+                        .add(self.SELECTED_OPTIONS)
+                      .end()
+                      .call(function() {
+                        filteredFilters.forEach(function(prop) {
+                          return element
+                            .start()
+                              .on('click', () => self.deselectFilter(prop))
+                              .start({ class: 'foam.u2.CheckBox', data: true, label: prop }).end()
+                            .end();
+                        });
+                      });
+                  }))
+                  // options
+                  .add(self.slot(function(filterSelectionOpen, filters, filterSearch) {
+                    var props = x.userDAO.of.getAxiomsByClass(foam.lang.Property)
+                      .filter( m => m.searchView && m.name != 'reactions_' && ! m.hidden && ! filters.includes(m.name) )
+                      .map( n => n.name )
+                      .filter(function(f) {
+                        return f.toLowerCase().includes(filterSearch.toLowerCase());
+                      });
+                    var element = this.E();
+                    if ( ! filterSelectionOpen || ! props?.length ) return element;
+                    return element
+                      .start('p').addClass('p-label')
+                        .add(self.OPTIONS)
+                      .end()
+                      .call(function() {
+                        props.forEach(function(prop) {
+                          return element
+                            .start()
+                              .on('click', () => self.selectFilter(prop))
+                              .start({ class: 'foam.u2.CheckBox', data: false, label: prop }).end()
+                            .end();
+                        });
+                      });
+                  }))
+                .end()
               .end()
             .endContext()
             .end()
@@ -363,6 +458,25 @@ foam.CLASS({
 
           return e;
         }, this.filters$));
+    },
+
+    function selectFilter(key) {
+      if ( this.filters.length >= this.MAX_FILTERS ) {
+        this.notify('Max filters: ' + this.MAX_FILTERS, '', this.LogLevel.ERROR);
+        return;
+      }
+      var newFilters = [].concat(this.filters);
+      newFilters.push(key);
+      this.filters = newFilters;
+    },
+
+    function deselectFilter(key) {
+      var newFilters = [].concat(this.filters);
+      var index = newFilters.indexOf(key);
+      if ( index !== -1 ) {
+        newFilters.splice(index, 1);
+      }
+      this.filters = newFilters;
     },
 
     function addFilter(key) {
@@ -540,6 +654,14 @@ foam.CLASS({
         this.filterController.clearAll();
         if ( this.generalSearchField ) this.generalSearchField.view.data = '';
         this.mementoString = '';
+      }
+    },
+    {
+      name: 'addSearchFilter',
+      toolTip: 'Add Search Filters',
+      code: function() {
+        this.isOpen = true;
+        this.filterSelectionOpen = ! this.filterSelectionOpen;
       }
     },
     {

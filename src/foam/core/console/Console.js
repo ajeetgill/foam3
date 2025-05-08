@@ -325,9 +325,8 @@ foam.CLASS({
   imports: [ 'commandDAO', 'scope?', 'window', 'setTimeout' ],
 
   exports: [
-    'selected',
-    'value as flow',
     'clearFlow',
+    'createFlowChildName',
     'currentBlock',
     'eval_',
     'flowScope as scope',
@@ -335,7 +334,9 @@ foam.CLASS({
     'log',
     'out',
     'scrollToBottom',
-    'showPrompts'
+    'selected',
+    'showPrompts',
+    'value as flow'
   ],
 
   css: `
@@ -432,10 +433,10 @@ foam.CLASS({
     },
     'currentBlock',
     {
-      name: 'selected'
+      name: 'selected', postSet: function(o, n) { this.selectedValue = n ? n.value : null; console.log('*** selected=>', n && n.flowName); }
     },
     {
-      name: 'selectedValue'
+      name: 'selectedValue', postSet: function(o, n) { console.log('*** selectedValue=>', n); }
     },
     {
       name: 'value',
@@ -463,7 +464,9 @@ foam.CLASS({
 
       globalThis.shell = this; // for debugging
 
-      this.selectedValue$.follow(this.selected$.dot('value'));
+      // Doesn't work for some reason. Gets detached when new flow loaded
+      // Replaced with postSet
+      // this.selectedValue$.follow(this.selected$.dot('value'));
 
       // Add commands to localScope
       var cmds = await this.commandDAO.select();
@@ -493,7 +496,7 @@ foam.CLASS({
         feedback_ = true;
         try {
           var cs = this.value.memento;
-          var currentBlockName = this.selected.flowName;
+          var currentBlockName = this.selected ? this.selected.flowName : this.flowName;
           this.clearFlow();
           cs.forEach(c => {
             console.log('***child:', c.flowName, c.cmd, c.value);
@@ -617,7 +620,7 @@ foam.CLASS({
       this.addHistory(cmd);
 
 //      this.out.tag('br').start().show(self.showPrompts$).start('b').add('> ').end().add(cmd);
-      var block = this.currentBlock = this.Block.create({flowName: this.createFlowChildName('a'), cmd: cmd, flowParent: this});
+      var block = this.currentBlock = this.Block.create({cmd: cmd, flowParent: this});
       this.addFlowChild(block);
 
       var innerScope = {
@@ -635,9 +638,11 @@ foam.CLASS({
         var r, arg;
         try {
           r = eval(cmd);
-          // For commands like 'cells(2,3)' pickout 'cells' as the block name
-          var m = cmd.match(/^\s*([a-zA-Z][a-zA-Z0-9_\$]*)\(/);
-          if ( m ) block.flowName = this.createFlowChildName(m[1]);
+          if ( ! block.flowName ) {
+            // For commands like 'cells(2,3)' pickout 'cells' as the block name
+            var m = cmd.match(/^\s*([a-zA-Z][a-zA-Z0-9_\$]*)\(/);
+            if ( m ) block.flowName = this.createFlowChildName(m[1]);
+          }
         } catch (x) {
           var i = cmd.indexOf(' ');
           if ( i != -1 ) {
@@ -654,6 +659,10 @@ foam.CLASS({
             block.flowName = this.createFlowChildName('error');
           }
         }
+
+        // Name the block if it hasn't already been named
+        if ( ! block.flowName ) block.flowName = this.createFlowChildName('a');
+
         if ( typeof r === 'function' ) {
           if ( ! block.flowName.startsWith(cmd) )
             block.flowName = this.createFlowChildName(cmd);
