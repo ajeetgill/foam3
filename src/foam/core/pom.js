@@ -253,6 +253,7 @@ foam.POM({
     { name: "export/GoogleSheetsOutputter",                                               flags: "js" },
     { name: "export/GoogleSheetsPropertyMetadata",                                        flags: "js|java" },
     { name: "export/GoogleSheetsServiceConfig",                                           flags: "js|java" },
+    { name: "export/FLOWExportDriver",                                                    flags: "js" },
     { name: "export/JSONDriver",                                                          flags: "js" },
     { name: "export/JSONJDriver",                                                         flags: "js" },
     { name: "export/XMLDriver",                                                           flags: "js" },
