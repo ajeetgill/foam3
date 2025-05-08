@@ -63,12 +63,8 @@ foam.CLASS({
     function findComparator(dao) {
       for ( ; dao ; dao = dao.delegate) {
         console.log('***', dao.cls_.id);
-        if ( foam.dao.FilteredDAO.isInstance(dao) ) {
-          console.log('******', dao.predicate.toString());
-        }
-        if ( foam.dao.OrderedDAO.isInstance(dao) && dao.comparator ) {
+        if ( foam.dao.OrderedDAO.isInstance(dao) && dao.comparator )
           return dao.comparator;
-        }
       }
     },
 
@@ -87,7 +83,8 @@ foam.CLASS({
 
       if ( p ) {
         p = p.partialEval();
-        where = `\n      "where": ${JSON.stringify(p.toMQL())},`;
+        if ( p.toMQL )
+          where = `\n      "where": ${JSON.stringify(p.toMQL())},`;
       }
 
       if ( comp ) { debugger; }
@@ -114,7 +111,7 @@ foam.CLASS({
         `
       });
       this.flowDAO.put(flow);
-      return '/reflow.html?flow=' + this.name;
+      // return '/reflow.html?flow=' + this.name;
     }
   ]
 });
