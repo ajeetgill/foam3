@@ -9,7 +9,8 @@ foam.CLASS({
   name: 'FLOWExportDriver',
 
   implements: [
-    'foam.core.export.ExportDriver'
+    'foam.core.export.ExportDriver',
+    'foam.mlang.Expressions',
   ],
 
   requires: [ 'foam.core.console.Flow' ],
@@ -49,19 +50,48 @@ foam.CLASS({
       var prefix = this.plural + ' View ';
       for ( var i = 1 ; i < 99 ; i++ ) {
         var name = prefix + i;
-        // TODO: faster to do a .limit(1).select(COUNT())
-        var flow = await this.flowDAO.find(name);
-        if ( ! flow ) return name;
+        var count = await this.flowDAO.limit(1).where(this.EQ(this.Flow.ID, name)).select(this.COUNT());
+        if ( count.value == 0 ) return name;
       }
       return 'Unnamed';
     },
 
     function exportFObject(X, obj) {
-      debugger;
       return '/reflow.html';
     },
 
+    function findComparator(dao) {
+      for ( ; dao ; dao = dao.delegate) {
+        console.log('***', dao.cls_.id);
+        if ( foam.dao.FilteredDAO.isInstance(dao) ) {
+          console.log('******', dao.predicate.toString());
+        }
+        if ( foam.dao.OrderedDAO.isInstance(dao) && dao.comparator ) {
+          return dao.comparator;
+        }
+      }
+    },
+
+    function findPredicate(dao) {
+      for ( ; dao ; dao = dao.delegate) {
+        if ( foam.dao.FilteredDAO.isInstance(dao) ) {
+          return dao.predicate;
+        }
+      }
+    },
+
     function exportDAO(X, dao) {
+      var where = '';
+      var comp  = this.findComparator(dao);
+      var p     = this.findPredicate(dao);
+
+      if ( p ) {
+        p = p.partialEval();
+        where = `\n      "where": ${JSON.stringify(p.toMQL())},`;
+      }
+
+      if ( comp ) { debugger; }
+
       var flow = this.Flow.create({
         name: this.name,
         description: this.description,
@@ -73,7 +103,7 @@ foam.CLASS({
     "value": {
       "class": "foam.core.console.DAOPrompt2",
       "label": "${this.plural}",
-      "version": 2,
+      "version": 2,${where}
       "select": {
         "class": "foam.core.console.ScrollTableDAOAgent",
         "of": {"class":"__Class__","forClass_":"${this.of.id}"}
