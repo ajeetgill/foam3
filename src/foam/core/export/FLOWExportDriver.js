@@ -9,8 +9,8 @@ foam.CLASS({
   name: 'FLOWExportDriver',
 
   implements: [
-    'foam.core.export.ExportDriver',
-    'foam.mlang.Expressions',
+    'foam.core.export.TableExportDriver',
+    'foam.mlang.Expressions'
   ],
 
   requires: [ 'foam.core.console.Flow' ],
@@ -77,9 +77,10 @@ foam.CLASS({
     },
 
     function exportDAO(X, dao) {
-      var where = '';
-      var comp  = this.findComparator(dao);
-      var p     = this.findPredicate(dao);
+      var propNames = this.getPropName(X, dao.of);
+      var where     = '';
+      var comp      = this.findComparator(dao);
+      var p         = this.findPredicate(dao);
 
       if ( p ) {
         p = p.partialEval();
@@ -100,6 +101,7 @@ foam.CLASS({
     "value": {
       "class": "foam.core.console.DAOPrompt2",
       "label": "${this.plural}",
+      "columns": "${propNames.join(',')}",
       "version": 2,${where}
       "select": {
         "class": "foam.core.console.ScrollTableDAOAgent",
@@ -111,7 +113,7 @@ foam.CLASS({
         `
       });
       this.flowDAO.put(flow);
-      // return '/reflow.html?flow=' + this.name;
+      return '/reflow.html?flow=' + this.name;
     }
   ]
 });

@@ -184,7 +184,7 @@ foam.CLASS({
     {
       class: 'String',
       name: 'where',
-      displayWidth: 55,
+      displayWidth: 60,
       view: { class: 'foam.u2.TextField', type: 'search' } // adds 'x' to clear field
     },
     {
@@ -193,18 +193,17 @@ foam.CLASS({
       displayWidth: 60,
       view: { class: 'foam.u2.TextField', type: 'search' } // adds 'x' to clear field
     },
-    /*
     {
       class: 'String',
       name: 'columns',
-      view: function(_, X) {
+      displayWidth: 60,
+      xxxview: function(_, X) {
         return {
           class: 'foam.core.console.PropertyListView',
           of: X.data.dao.of
         };
       }
-      },
-      */
+    },
     {
       name: 'select',
       preSet: function(o, n) { return n.clone(this.__subContext__); },
