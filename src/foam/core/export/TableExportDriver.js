@@ -45,7 +45,7 @@ foam.CLASS({
     {
       class: 'Boolean',
       name: 'addUnits',
-      documentation: 'Include unit in UnitValues (mostly currencies) or now',
+      documentation: 'Include unit in UnitValues (mostly currencies) or not',
       value: true
     }
   ],
