@@ -322,7 +322,13 @@ foam.CLASS({
     'foam.u2.Link'
   ],
 
-  imports: [ 'commandDAO', 'scope?', 'window', 'setTimeout' ],
+  imports: [
+    'commandDAO',
+    'params',
+    'scope?',
+    'setTimeout',
+    'window'
+  ],
 
   exports: [
     'clearFlow',
@@ -524,6 +530,12 @@ foam.CLASS({
       layout.right.add(this.dynamic(function(selectedValue) {
         this.tag(self.ReactiveDetailView, {data: selectedValue});
       }));
+
+      if ( this.params.flow ) {
+        await this.eval_(`load("${decodeURIComponent(this.params.flow)}")`);
+        this.selected = this.currentBlock;
+      }
+
     },
 
     function renderSelf(self) {
