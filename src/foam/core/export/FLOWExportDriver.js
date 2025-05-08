@@ -61,8 +61,8 @@ foam.CLASS({
     },
 
     function findComparator(dao) {
+      // Doesn't work. TableView's sort order isn't shared
       for ( ; dao ; dao = dao.delegate) {
-        console.log('***', dao.cls_.id);
         if ( foam.dao.OrderedDAO.isInstance(dao) && dao.comparator )
           return dao.comparator;
       }
