@@ -12,7 +12,7 @@ foam.CLASS({
   requires: [
     'foam.u2.dialog.Popup',
     'foam.u2.ListCreateController',
-    'foam.u2.view.TableView'
+    'foam.u2.table.TableView'
   ],
 
   imports: [
@@ -173,7 +173,7 @@ foam.CLASS({
         function render() {
           this
             .start({
-              class: 'foam.u2.view.ScrollTableView',
+              class: 'foam.u2.table.TableView',
               selection$: this.selection$,
               data: this.data,
               columns: [

@@ -116,7 +116,7 @@ foam.CLASS({
           this
             .start({
               selection$: this.selection$,
-              class: 'foam.u2.view.ScrollTableView',
+              class: 'foam.u2.table.TableView',
               data: this.subject.user.tickets,
             }).addClass(this.myClass('table')).end();
         }
