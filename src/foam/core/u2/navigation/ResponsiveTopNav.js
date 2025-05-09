@@ -17,7 +17,8 @@ foam.CLASS({
     'loginSuccess',
     'menuDAO',
     'pushDefaultMenu?',
-    'theme'
+    'theme',
+    'toolbar?'
   ],
 
   cssTokens: [
@@ -114,6 +115,7 @@ foam.CLASS({
               this.pushDefaultMenu();
             })
           .end()
+        .tag('span', {}, this.toolbar$) // Is exported by ApplicationController
         .end()
         // .tag({class: 'foam.core.so.SystemNotificationBorder'})
         .add(this.slot(function(displayWidth) {
