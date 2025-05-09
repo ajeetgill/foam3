@@ -81,6 +81,3 @@ $ node tools/build.js -f
 $ node tools/build.js --build-jar
 </code>
 </p>
-
-<h2>ExampleTooling</h2>
-Move example to an examples subdirectory
