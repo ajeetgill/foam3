@@ -1,0 +1,2 @@
+p({"class": "foam.core.script.TestRunnerScript", "id":"testRunnerScript"})
+p({"class": "foam.core.bench.BenchmarkRunnerScript", "id":"benchmarkRunnerScript"})

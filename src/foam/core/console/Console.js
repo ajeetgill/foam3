@@ -322,12 +322,17 @@ foam.CLASS({
     'foam.u2.Link'
   ],
 
-  imports: [ 'commandDAO', 'scope?', 'window', 'setTimeout' ],
+  imports: [
+    'commandDAO',
+    'params',
+    'scope?',
+    'setTimeout',
+    'window'
+  ],
 
   exports: [
-    'selected',
-    'value as flow',
     'clearFlow',
+    'createFlowChildName',
     'currentBlock',
     'eval_',
     'flowScope as scope',
@@ -335,7 +340,9 @@ foam.CLASS({
     'log',
     'out',
     'scrollToBottom',
-    'showPrompts'
+    'selected',
+    'showPrompts',
+    'value as flow'
   ],
 
   css: `
@@ -523,6 +530,12 @@ foam.CLASS({
       layout.right.add(this.dynamic(function(selectedValue) {
         this.tag(self.ReactiveDetailView, {data: selectedValue});
       }));
+
+      if ( this.params.flow ) {
+        await this.eval_(`load("${decodeURIComponent(this.params.flow)}")`);
+        this.selected = this.currentBlock;
+      }
+
     },
 
     function renderSelf(self) {
@@ -619,7 +632,7 @@ foam.CLASS({
       this.addHistory(cmd);
 
 //      this.out.tag('br').start().show(self.showPrompts$).start('b').add('> ').end().add(cmd);
-      var block = this.currentBlock = this.Block.create({flowName: this.createFlowChildName('a'), cmd: cmd, flowParent: this});
+      var block = this.currentBlock = this.Block.create({cmd: cmd, flowParent: this});
       this.addFlowChild(block);
 
       var innerScope = {
@@ -637,9 +650,11 @@ foam.CLASS({
         var r, arg;
         try {
           r = eval(cmd);
-          // For commands like 'cells(2,3)' pickout 'cells' as the block name
-          var m = cmd.match(/^\s*([a-zA-Z][a-zA-Z0-9_\$]*)\(/);
-          if ( m ) block.flowName = this.createFlowChildName(m[1]);
+          if ( ! block.flowName ) {
+            // For commands like 'cells(2,3)' pickout 'cells' as the block name
+            var m = cmd.match(/^\s*([a-zA-Z][a-zA-Z0-9_\$]*)\(/);
+            if ( m ) block.flowName = this.createFlowChildName(m[1]);
+          }
         } catch (x) {
           var i = cmd.indexOf(' ');
           if ( i != -1 ) {
@@ -656,6 +671,10 @@ foam.CLASS({
             block.flowName = this.createFlowChildName('error');
           }
         }
+
+        // Name the block if it hasn't already been named
+        if ( ! block.flowName ) block.flowName = this.createFlowChildName('a');
+
         if ( typeof r === 'function' ) {
           if ( ! block.flowName.startsWith(cmd) )
             block.flowName = this.createFlowChildName(cmd);

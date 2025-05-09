@@ -167,6 +167,8 @@ foam.CLASS({
 
   requires: [ 'foam.core.console.DAOPrompt2' ],
 
+  imports: [ 'createFlowChildName' ],
+
   properties: [
     [ 'description', 'Perform DAO operation' ]
   ],
@@ -176,8 +178,9 @@ foam.CLASS({
       var p = this.DAOPrompt2.create({dao: dao, label: opt_label});
 
       p.addToE(this.out);
-      this.currentBlock.obj = p;
-      this.currentBlock.value = p;
+      this.currentBlock.flowName = this.createFlowChildName(p.label.toLowerCase());
+      this.currentBlock.obj      = p;
+      this.currentBlock.value    = p;
     }
   ]
 });
@@ -219,8 +222,9 @@ foam.CLASS({
 
   methods: [
     function execute(opt_nameQuery) {
-      var self  = this;
-      var dao   = this.cSpecDAO.where(this.CSpec.SERVED_DAOS);
+      var self = this;
+      var dao  = this.cSpecDAO.where(this.CSpec.SERVED_DAOS);
+      var count = foam.lang.SimpleSlot.create({value: 0});
       if ( opt_nameQuery ) dao = dao.where(
         this.OR(
           this.CONTAINS_IC(this.CSpec.NAME,     opt_nameQuery),
@@ -231,6 +235,13 @@ foam.CLASS({
         select(dao, function(n) {
           var sdao  = self.__context__[n.name];
           var of    = sdao.of;
+
+          if ( ! of ) {
+            console.log('Bad DAO:', n.name);
+            return;
+          }
+
+          count.value++;
           var daoFn = () => self.eval_('dao("' + n.name + '")');
           var addFn = () => self.eval_('add("' + n.name + '")');
           var uplFn = () => self.eval_('upload("' + n.name + '")');
@@ -241,16 +252,27 @@ foam.CLASS({
               start(self.Link).add(n.name).on('click', daoFn).end().
             end().
             start('td').attr('align', 'left').
+              start(self.Link).add(of.id).on('click', desFn).end().
+            end().
+            start('td').attr('align', 'left').
+              style({
+                textWrapMode: 'nowrap',
+                overflow: 'hidden',
+                paddingRight: '8px',
+                maxWidth: '500px',
+                textOverflow: 'ellipsis'
+              }).
+              add(n.description).
+            end().
+            start('td').attr('align', 'left').
               start(self.Link).add('add').on('click', addFn).end().
             end().
             start('td').attr('align', 'left').
               start(self.Link).add('upload').on('click', uplFn).end().
-            end().
-            start('td').attr('align', 'left').
-              start(self.Link).add(of.id).on('click', desFn).end().
-            end().
-            start('td').attr('align', 'left').add(n.description);
-        });
+            end()
+            ;
+        }).
+        start('b').add(count, ' selected').end();
     }
   ]
 });

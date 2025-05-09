@@ -71,13 +71,24 @@ foam.CLASS({
     {
       name: 'data',
       expression: function(choice) {
-        var cls = foam.lookup(this.cls_.package + '.' + choice + 'DAOAgent');
+        var cls = foam.lookup(this.choiceToClass(choice));
         return cls.create({}, this);
+      },
+      postSet: function(o, n) {
+        for ( var i = 0 ; i < this.AGENTS.length ; i++ ) {
+          if ( this.choiceToClass(this.AGENTS[i][0]) == n.cls_.id ) {
+            this.choice = this.AGENTS[i][0];
+            return;
+          }
+        }
       }
     }
   ],
 
   methods: [
+    function choiceToClass(choice) {
+      return this.cls_.package + '.' + choice + 'DAOAgent';
+    },
     function render() {
       var self = this;
       if ( ! this.data ) { this.data = undefined; }
@@ -87,7 +98,6 @@ foam.CLASS({
         style({'display': 'inline-flex'}).
         startContext({data: this}).
         add(this.CHOICE).
-        start(). // TODO: This line needed for U2, remove when U3
         add(' ', self.dynamic(function (data) {
           if ( ! self.dao ) return;
           data.addToE(this);

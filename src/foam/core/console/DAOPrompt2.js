@@ -28,8 +28,7 @@ foam.CLASS({
             add(self.data.dynamic(async function(version, skip) {
               if ( ! version ) return;
               var startTime = Date.now();
-              // Recontextualize the select so that it has the required imports.
-              var select = self.data.select.clone(self.data.__subContext__);
+              var select = self.data.select;
               await select.execute(this);
               self.data.executionTime = foam.lang.Duration.duration(Date.now() - startTime);
             })).
@@ -166,7 +165,7 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'skip',
-      displayWidth: 5,
+      displayWidth: 8,
       view: function(_, X) {
         return {
           class: 'foam.u2.view.DualView',
@@ -180,12 +179,12 @@ foam.CLASS({
       name: 'limit',
       value: 100,
       placeholder: '',
-      size: 5
+      displayWidth: 8
     },
     {
       class: 'String',
       name: 'where',
-      displayWidth: 55,
+      displayWidth: 60,
       view: { class: 'foam.u2.TextField', type: 'search' } // adds 'x' to clear field
     },
     {
@@ -194,21 +193,21 @@ foam.CLASS({
       displayWidth: 60,
       view: { class: 'foam.u2.TextField', type: 'search' } // adds 'x' to clear field
     },
-    /*
     {
       class: 'String',
       name: 'columns',
-      view: function(_, X) {
+      displayWidth: 60,
+      xxxview: function(_, X) {
         return {
           class: 'foam.core.console.PropertyListView',
           of: X.data.dao.of
         };
       }
-      },
-      */
+    },
     {
       name: 'select',
-      view: { class: 'foam.core.console.SinkView', sinksOnly: false }
+      preSet: function(o, n) { return n.clone(this.__subContext__); },
+      view: function(_, X) { return foam.core.console.SinkView.create({sinksOnly: false}, X.data); }
     },
     { class: 'Long', name: 'rowCount', visibility: 'RO' },
     { name: 'executionTime', value: '-', visibility: 'RO' },
