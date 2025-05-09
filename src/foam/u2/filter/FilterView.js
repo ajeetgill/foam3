@@ -53,7 +53,6 @@ foam.CLASS({
 
     ^container-search {
       display: flex;
-      margin: 4px 0;
     }
 
     ^container-drawer {
