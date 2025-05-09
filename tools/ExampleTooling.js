@@ -4,9 +4,6 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-const pmake    = require('./pmake.js');
-const { comma, copyDir, copyFile, emptyDir, ensureDir, exec, execSync, exportEnvs, flag, info, rmdir, rmfile, warning } = require('./buildlib');
-
 foam.POM({
   name: 'example',
   envs: {
@@ -23,7 +20,7 @@ foam.POM({
     example: ['Run example', [], function example() {
       console.log(`[Example] enabled ${EXAMPLE}, release ${EXAMPLE_RELEASE || EXAMPLE_RELEASE_DEFAULT}`); } ],
     examplePOMs: ['Show POM structure.', [], function examplePOMs() {
-      pmake(`-makers=Verbose -flags=${flag('web,java')} -pom=${POMS} -builddir=${BUILD_DIR}`);
+      this.pmake.bind(this, `-makers=Verbose -flags=${this.flag('web,java')} -pom=${POMS} -builddir=${BUILD_DIR}`)();
     }],
     clean: ['Clean', [], function clean() {
       console.log('[Example] clean');

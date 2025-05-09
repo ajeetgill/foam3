@@ -4,9 +4,6 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-const fs       = require('fs');
-const { comma, copyDir, copyFile, emptyDir, ensureDir, exec, execSync, exportEnvs, info, rmdir, rmfile, warning } = require('./buildlib');
-
 foam.POM({
   name: 'standard',
   envs: {
@@ -30,14 +27,14 @@ foam.POM({
 
     clean: ['Remove generated files', ['pomEnvs'], function clean() {
       console.log('[StandardTooling] clean');
-      if ( fs.existsSync(BUILD_DIR) ) {
-        var files = fs.readdirSync(BUILD_DIR, {withFileTypes: true});
+      if ( this.existsSync(BUILD_DIR) ) {
+        var files = this.readdirSync(BUILD_DIR, {withFileTypes: true});
         files.forEach(f => {
           if ( f.name === 'lib' ) return; // handled via cleanLib
 
           var fn = BUILD_DIR + '/' + f.name;
-          if ( f.isDirectory() ) rmdir(fn);
-          if ( f.isFile()      ) rmfile(fn);
+          if ( f.isDirectory() ) this.rmdir(fn);
+          if ( f.isFile()      ) this.rmfile(fn);
         });
       }
     }],

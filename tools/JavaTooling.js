@@ -4,11 +4,6 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-const fs       = require('fs');
-const { join } = require('path');
-const pmake    = require('./pmake.js');
-const { comma, copyDir, copyFile, emptyDir, ensureDir, exec, execSync, exportEnvs, flag, info, rmdir, rmfile, warning } = require('./buildlib');
-
 foam.POM({
   name: 'java',
 
@@ -33,7 +28,7 @@ foam.POM({
     JAVA_TOOL_OPTIONS: ['Internal configuration for JVM with the JAVA_OPTS',() => JAVA_OPTS],
     JAVAC_PARAMS:      ['Parameters passed to Java Compiler',''],
     JAVAC_PARAMS_DEFAULT:  ['Default parameters for Java Compiler', () => `--release ${JAVA_RELEASE} -proc:none`],
-    JOURNALS:          ['Deployment poms to include in build',''],
+//    JOURNALS:          ['Deployment poms to include in build',''],
     JOURNAL_HOME:      ['Application journals directory',() => `${APP_HOME}/journals`],
     JOURNAL_OUT:       ['Build journals directory',() => `${PROJECT_HOME}/${BUILD_DIR}/journals`],
     LOG_HOME:          ['Application logs directory',() => `${APP_HOME}/logs`],
@@ -58,7 +53,11 @@ foam.POM({
     j: [ 'Delete runtime journals.',
          () => DELETE_RUNTIME_JOURNALS = true ],
     J: [ 'JOURNALS : comma seperated list of additional journal directories, relative to deployment/ from the root project.',
-       args => JOURNALS = comma(JOURNALS, args) ],
+         args => {
+           // FIXME: this.comma undefined, see buildlib.js:281
+           // JOURNALS = comma(JOURNALS, args);
+           JOURNALS = EXPORTS.comma(JOURNALS, args);
+         }],
     k: [ 'Package up a deployment tarball.',
          () => { TAR = true; } ],
     o: [ "Build only - don't start CORE server.",
@@ -76,31 +75,31 @@ foam.POM({
 
   tasks: {
     clean: ['Remove generated files', ['pomEnvs'], function clean() {
-      if ( APP_HOME && fs.existsSync(APP_HOME) ) {
-        emptyDir(`${APP_HOME}/bin`);
-        emptyDir(`${APP_HOME}/lib`);
+      if ( APP_HOME && this.existsSync(APP_HOME) ) {
+        this.emptyDir(`${APP_HOME}/bin`);
+        this.emptyDir(`${APP_HOME}/lib`);
       }
     }],
 
     cleanAll: ['Remove pom.xml and java lib directory.', [], function cleanAll() {
-      rmfile('pom.xml');
-      emptyDir(BUILD_DIR + '/lib');
+      this.rmfile('pom.xml');
+      this.emptyDir(BUILD_DIR + '/lib');
     }],
 
     cleanJava: ['Remove previously generated JAR.', [], function cleanJava() {
       // remove previous app jar in build directory to fix classes resolution for non-jar run
-      execSync(`rm -f ${BUILD_DIR}/lib/${APP_NAME}-*.jar >/dev/null 2>&1`);
+      this.execSync(`rm -f ${BUILD_DIR}/lib/${APP_NAME}-*.jar >/dev/null 2>&1`);
     }],
 
     deleteRuntimeJournals: ['Delete runtime journals.', [], function deleteRuntimeJournals() {
-      info('Runtime journals deleted.');
-      emptyDir(JOURNAL_HOME);
+      this.info('Runtime journals deleted.');
+      this.emptyDir(JOURNAL_HOME);
     }],
 
     genImages: ['Prepare images from inclusion in jar.', [], function genImages() {
       JAR_INCLUDES += ` -C ${BUILD_DIR} images `;
 
-      pmake(`-makers=Image -flags=${flag()} -pom=${POMS} -builddir=${BUILD_DIR}`);
+      this.pmake.bind(this, `-makers=Image -flags=${this.flag()} -pom=${POMS} -builddir=${BUILD_DIR}`)();
     }],
     genJava: ['Generate Java source from models and complile', ['cleanJava'], function genJava() {
       JAR_INCLUDES += ` -C ${BUILD_DIR} journals `;
@@ -111,11 +110,11 @@ foam.POM({
       // NOTE: Java and Javac Maker must be run together as they share data through X
       makers += 'Java,Maven,Javac';
       makers += ',Journal,Doc';
-      pmake(`-makers=${makers} -flags=${flag()} -pom=${POMS} -builddir=${BUILD_DIR} -d=${BUILD_DIR}/classes -journaldir=${JOURNAL_OUT} -documentdir=${DOCUMENT_OUT} -outdir=${BUILD_DIR}/src/java -libdir=${BUILD_DIR}/lib -javacParams='${JAVAC_PARAMS_DEFAULT} ${JAVAC_PARAMS}'`);
+      this.pmake.bind(this, `-makers=${makers} -flags=${this.flag()} -pom=${POMS} -builddir=${BUILD_DIR} -d=${BUILD_DIR}/classes -journaldir=${JOURNAL_OUT} -documentdir=${DOCUMENT_OUT} -outdir=${BUILD_DIR}/src/java -libdir=${BUILD_DIR}/lib -javacParams='${JAVAC_PARAMS_DEFAULT} ${JAVAC_PARAMS}'`)();
     }],
 
     genManifest: ['Generate JVM Manifest', ['versions', 'genFoamBinVersion'], function genManifest() {
-      var jars = execSync(`find ${BUILD_DIR}/lib -type f -name "*.jar"`).toString()
+      var jars = this.execSync(`find ${BUILD_DIR}/lib -type f -name "*.jar"`).toString()
           .replaceAll(`${BUILD_DIR}/lib/`, '  ').trim();
       var m = `
 Manifest-Version: 1.0
@@ -134,7 +133,7 @@ Implementation-Vendor: ${VENDOR || APP_NAME}
         m += `Implementation-Vendor-Id: ${VENDOR_ID}\n`;
       }
 
-      fs.writeFileSync(BUILD_DIR + '/MANIFEST.MF', m);
+      this.writeFileSync(BUILD_DIR + '/MANIFEST.MF', m);
       return m;
     }],
 
@@ -142,16 +141,16 @@ Implementation-Vendor: ${VENDOR || APP_NAME}
       var out = 'Unversioned';
 
       try {
-        out = execSync('git rev-parse --short HEAD');
+        out = this.execSync('git rev-parse --short HEAD');
       } catch (x) {
-        warning('Cannot determine project revision, no commit yet');
+        this.warning('Cannot determine project revision, no commit yet');
       }
 
       PROJECT_REVISION = out.toString().trim();
     }],
 
     getFOAMGitHash: ['Extract FOAM git hash.', [], function getFOAMGitHash() {
-      FOAM_REVISION = execSync('git -C foam3 rev-parse --short HEAD').toString().trim();
+      FOAM_REVISION = this.execSync('git -C foam3 rev-parse --short HEAD').toString().trim();
     }],
 
     versions: ['Show version information.', [ 'pomEnvs', 'getProjectGitHash', 'getFOAMGitHash'], function versions() {
@@ -161,53 +160,53 @@ Implementation-Vendor: ${VENDOR || APP_NAME}
     }],
 
     deployBin: ['Copy bash files to deployment', [], function deployBin() {
-      ensureDir(join(APP_HOME, 'bin'));
-      copyDir('./foam3/tools/deploy/bin', join(APP_HOME, 'bin'));
-      ensureDir(join(APP_HOME, 'etc'));
-      copyDir('./foam3/tools/deploy/etc', join(APP_HOME, 'etc'));
+      this.ensureDir(this.join(APP_HOME, 'bin'));
+      this.copyDir('./foam3/tools/deploy/bin', this.join(APP_HOME, 'bin'));
+      this.ensureDir(this.join(APP_HOME, 'etc'));
+      this.copyDir('./foam3/tools/deploy/etc', this.join(APP_HOME, 'etc'));
     }],
 
     deployLib: ['Copy library files to deployment', [], function deployLib() {
-      ensureDir(join(APP_HOME, 'lib'));
-      copyDir(BUILD_DIR + '/lib', join(APP_HOME, 'lib'));
+      this.ensureDir(this.join(APP_HOME, 'lib'));
+      this.copyDir(BUILD_DIR + '/lib', this.join(APP_HOME, 'lib'));
     }],
 
     deployDocuments: ['Deploy documents from DOCUMENT_OUT to DOCUMENT_HOME.', ['setupDirs'], function deployDocuments() {
-      ensureDir(DOCUMENT_HOME);
-      copyDir(DOCUMENT_OUT, DOCUMENT_HOME);
+      this.ensureDir(DOCUMENT_HOME);
+      this.copyDir(DOCUMENT_OUT, DOCUMENT_HOME);
     }],
 
     deployJournals: ['Deploy journal files from JOURNAL_OUT to JOURNAL_HOME.', ['setupDirs'], function deployJournals() {
-      ensureDir(JOURNAL_HOME);
-      copyDir(JOURNAL_OUT, JOURNAL_HOME);
+      this.ensureDir(JOURNAL_HOME);
+      this.copyDir(JOURNAL_OUT, JOURNAL_HOME);
     }],
 
     genJournals: ['Concatenate repository journal files into .0 files', [], function genJournals() {
       JAR_INCLUDES += ` -C ${BUILD_DIR} journals `;
-      pmake(`-makers=Journal -flags=${flag()} -pom=${POMS} -builddir=${BUILD_DIR} -journaldir=${JOURNAL_OUT}`);
+      this.pmake.bind(this, `-makers=Journal -flags=${this.flag()} -pom=${POMS} -builddir=${BUILD_DIR} -journaldir=${JOURNAL_OUT}`)();
     }],
 
     genDocuments: ['Capture repository documentation - flow docs', [], function genDocuments() {
       JAR_INCLUDES += ` -C ${BUILD_DIR} documents `;
-      pmake(`-makers=Doc -flags=${flag()} -pom=${POMS} -builddir=${BUILD_DIR} -documentdir=${DOCUMENT_OUT}`);
+      this.pmake(`-makers=Doc -flags=${this.flag()} -pom=${POMS} -builddir=${BUILD_DIR} -documentdir=${DOCUMENT_OUT}`);
     }],
 
     showManifest: ['Display generated JAR manifest file.', ['genManifest'], function showManifest() {
       console.log('Manifest:', genManifest());
     }],
     jarFOAM: ['Copy foam-bin files for inclusion in JAR file.', ['genJava'], function jarFOAM() {
-      ensureDir(join(BUILD_DIR, 'webroot'));
-      execSync(`cp ${BUILD_DIR}/js/foam-bin-* ${BUILD_DIR}/webroot/`, {stdio: VERBOSE ? 'inherit' : 'ignore' });
+      this.ensureDir(this.join(BUILD_DIR, 'webroot'));
+      this.execSync(`cp ${BUILD_DIR}/js/foam-bin-* ${BUILD_DIR}/webroot/`, {stdio: VERBOSE ? 'inherit' : 'ignore' });
     }],
     buildJar: ['Build Java JAR file.', [()=>JAR=true, 'setupDirs', 'genJS', 'genJava', 'versions', 'copy', 'genImages', 'genManifest', 'jarFOAM' ], function buildJar() {
       JAR_INCLUDES += ` -C ${BUILD_DIR} webroot `;
-      execSync(`jar cfm ${BUILD_DIR}/lib/${JAR_NAME} ${BUILD_DIR}/MANIFEST.MF ${JAR_INCLUDES}`, { stdio: VERBOSE ? 'inherit' : 'ignore' });
+      this.execSync(`jar cfm ${BUILD_DIR}/lib/${JAR_NAME} ${BUILD_DIR}/MANIFEST.MF ${JAR_INCLUDES}`, { stdio: VERBOSE ? 'inherit' : 'ignore' });
     }],
 
     buildTar: ['Package files into a TAR archive', ['buildJar'], function buildTar() {
-      ensureDir(join(BUILD_DIR, 'package'));
+      this.ensureDir(this.join(BUILD_DIR, 'package'));
       // Notice that the argument to the second -C is relative to the directory from the first -C, since -C
-      execSync(`tar -a -cf ${BUILD_DIR}/package/${APP_NAME}-deploy-${VERSION}.tar.gz -C ./foam3/tools/deploy bin etc -C${require('path').resolve(BUILD_DIR)} lib`, { stdio: VERBOSE ? 'inherit' : 'ignore' });
+      this.execSync(`tar -a -cf ${BUILD_DIR}/package/${APP_NAME}-deploy-${VERSION}.tar.gz -C ./foam3/tools/deploy bin etc -C${require('path').resolve(BUILD_DIR)} lib`, { stdio: VERBOSE ? 'inherit' : 'ignore' });
     }],
     setJavaEnv: ['Set Java environmental variables.', [], function setJavaEnv() {
       JAVA_OPTS += ` -DJOURNAL_HOME=${JOURNAL_HOME}`;
@@ -225,21 +224,21 @@ Implementation-Vendor: ${VENDOR || APP_NAME}
     setupDirs: ['Create empty build and deployment directory structures if required.', [], function setupDirs() {
       try {
         if ( ! BUILD_ONLY ) {
-          ensureDir(APP_HOME);
+          this.ensureDir(APP_HOME);
           if ( JAR ) {
-            ensureDir(DOCUMENT_HOME);
-            ensureDir(JOURNAL_HOME);
-            ensureDir(LOG_HOME);
+            this.ensureDir(DOCUMENT_HOME);
+            this.ensureDir(JOURNAL_HOME);
+            this.ensureDir(LOG_HOME);
           }
         }
       } catch ( e ) {
-        error(`Directory is not writable! Please run 'sudo chown -R $USER ${APP_ROOT}' first.`, e);
+        this.error(`Directory is not writable! Please run 'sudo chown -R $USER ${APP_ROOT}' first.`, e);
       }
     }],
 
     startCOREJar: ['Start CORE server (JAR).', [ 'setJavaEnv', 'setRunArgs', 'stopCORE', 'deployBin', 'deployLib'], function startCOREJar() {
       this.showSummary();
-      exec(`${APP_HOME}/bin/run.sh -N${APP_NAME} -V${VERSION} ${RUN_ARGS}`);
+      this.exec(`${APP_HOME}/bin/run.sh -N${APP_NAME} -V${VERSION} ${RUN_ARGS}`);
     }],
 
     startCORE: ['Start CORE server (CLASSPATH).', [ 'setJavaEnv', 'stopCORE', 'deployJournals', 'deployDocuments', 'deployLib' ], function startCORE() {
@@ -283,39 +282,39 @@ Implementation-Vendor: ${VENDOR || APP_NAME}
         }
       }
 
-      info('JAVA_OPTS:' + JAVA_OPTS);
-      info(MESSAGE);
+      this.info('JAVA_OPTS:' + JAVA_OPTS);
+      this.info(MESSAGE);
 
       if ( TEST ) {
         try {
-          exec(`java -jar ${JAR_OUT}`);
+          this.exec(`java -jar ${JAR_OUT}`);
         } catch ( e ) {
           // Failing tests, no need to throw
         }
         process.exit(0);
       } else if ( BENCHMARK ) {
-        exec(`java -jar ${JAR_OUT}`);
+        this.exec(`java -jar ${JAR_OUT}`);
       } else {
         this.showSummary();
         // Acquires environment variables via JAVA_TOOL_OPTIONS (JAVA_OPTS)
-        exec(`java -cp "${CLASSPATH}" foam.core.boot.Boot`);
+        this.exec(`java -cp "${CLASSPATH}" foam.core.boot.Boot`);
       }
     }],
 
     stopCORE: ['Stop CORE server.', [], function stopCORE() {
-      info('Stopping CORE server...');
+      this.info('Stopping CORE server...');
 
       var pid = '';
-      if ( fs.existsSync(CORE_PIDFILE) )
-        pid = fs.readFileSync(CORE_PIDFILE).toString().trim();
+      if ( this.existsSync(CORE_PIDFILE) )
+        pid = this.readFileSync(CORE_PIDFILE).toString().trim();
       try {
         if ( pid ) {
-          execSync(`kill -9 ${pid} &>/dev/null`);
-          rmfile(CORE_PIDFILE);
+          this.execSync(`kill -9 ${pid} &>/dev/null`);
+          this.rmfile(CORE_PIDFILE);
         }
-        info('Stopped CORE server.');
+        this.info('Stopped CORE server.');
       } catch (e) {
-        warning('CORE server not running or failed to stop');
+        this.warning('CORE server not running or failed to stop');
       }
     }],
 

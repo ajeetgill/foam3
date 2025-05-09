@@ -278,6 +278,10 @@ function processSingleCharArgs(ARGS, moreUsage) {
         var a = arg.charAt(j);
         var d = ARGS[a];
         if ( d ) {
+          // FIXME: see TestTooling.js:30 and JavaTooling.js:55,
+          // this.comma is undefined. EXPORTS.comma works.
+          // bind(this, and bind(EXPORTS, did not help - Joel
+          // d[1].bind(this, arg.substring(j+1))();
           d[1](arg.substring(j+1));
           if ( a >= 'A' && a <= 'Z' ) break;
         } else {

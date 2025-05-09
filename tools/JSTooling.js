@@ -4,9 +4,6 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-const pmake    = require('./pmake.js');
-const { comma, copyDir, copyFile, emptyDir, ensureDir, exec, execSync, exportEnvs, flag, info, rmdir, rmfile, warning } = require('./buildlib');
-
 foam.POM({
   name: 'js',
 
@@ -28,7 +25,7 @@ foam.POM({
 
   tasks: {
     cleanFOAM: ['Remove foam-bin files.', [], function cleanFOAM() {
-      execSync(`rm -f ${BUILD_DIR}/js/foam-bin-* >/dev/null 2>&1`);
+      this.execSync(`rm -f ${BUILD_DIR}/js/foam-bin-* >/dev/null 2>&1`);
     }],
 
     genFoamBinVersion: ['Generate version string for the foam-bin, with our without a timestamp', [], function genFoamBinVersion() {
@@ -37,14 +34,14 @@ foam.POM({
 
     genJS: ["Build 'foam-bin.js'.", ['cleanFOAM', 'genFoamBinVersion'], function genJS() {
       let version = FOAM_BIN_VERSION;
-      let flags = flag();
+      let flags = this.flag();
       let outdir = BUILD_DIR+'/js';
       if ( STAGE_JS ) {
-        pmake(`-flags=${flags} -makers=JS -version=${version} -pom=${POMS} -builddir=${BUILD_DIR} -outdir=${outdir} -stage=0`);
-        pmake(`-flags=${flags} -makers=JS -version=${version} -pom=${POMS} -builddir=${BUILD_DIR} -outdir=${outdir} -stage=1`);
-        pmake(`-flags=${flags} -makers=JS -version=${version} -pom=${POMS} -builddir=${BUILD_DIR} -outdir=${outdir} -stage=2`);
+        this.pmake.bind(this, `-flags=${flags} -makers=JS -version=${version} -pom=${POMS} -builddir=${BUILD_DIR} -outdir=${outdir} -stage=0`)();
+        this.pmake.bind(this, `-flags=${flags} -makers=JS -version=${version} -pom=${POMS} -builddir=${BUILD_DIR} -outdir=${outdir} -stage=1`)();
+        this.pmake.bind(this, `-flags=${flags} -makers=JS -version=${version} -pom=${POMS} -builddir=${BUILD_DIR} -outdir=${outdir} -stage=2`)();
       } else {
-        pmake(`-flags=${flags} -makers=JS -version=${version} -pom=${POMS} -builddir=${BUILD_DIR} -outdir=${outdir}`);
+        this.pmake.bind(this, `-flags=${flags} -makers=JS -version=${version} -pom=${POMS} -builddir=${BUILD_DIR} -outdir=${outdir}`)();
       }
     }]
   }

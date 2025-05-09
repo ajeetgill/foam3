@@ -60,11 +60,11 @@ rm -rf ~/foam3/build
 ln -s /Volumes/RamDisk/build ~/foam3/build
 */
 
-const fs       = require('fs');
-const os       = require('os');
-const { join } = require('path');
-const { buildEnv, comma, copyDir, copyFile, emptyDir, ensureDir, exec, execSync, exportEnvs, flag, info, processSingleCharArgs, processToolingArgs, rmdir, rmfile, spawn, warning } = require('./buildlib');
-const pmake    = require('./pmake.js');
+const { existsSync,  readdirSync, writeFileSync } = require('fs');
+const { hostname }                                = require('os');
+const { join }                                    = require('path');
+const { buildEnv, comma, copyDir, copyFile, emptyDir, ensureDir, exec, execSync, exportEnvs, flag, info, isExcluded, processSingleCharArgs, processToolingArgs, rmdir, rmfile, spawn, warning, error } = require('./buildlib');
+const pmake                                       = require('./pmake');
 
 process.on('unhandledRejection', e => {
   console.error("ERROR: Unhandled promise rejection ", e);
@@ -182,17 +182,11 @@ function showSummary() {
    process.exit(code);
  }
 
- function error(...args) {
-   let msg = args.join(' ');
-   console.log('\x1b[0;31mERROR ::', msg, '\x1b[0;0m');
-   quit(1);
- }
-
  // build pom map and ensure the POMS list is viable
  function pom() {
    var poms   = [];
    function addPom(fn) {
-     if ( ! fs.existsSync(fn + '.js') )
+     if ( ! existsSync(fn + '.js') )
        error('File not found ' + fn + '.js');
      else
        poms.push(fn);
@@ -226,27 +220,14 @@ function showSummary() {
    return POMS;
  }
 
- // // Build flag string with global and argument flags
- // function flag(flgs) {
- //   var f = VERBOSE ? 'verbose' : '';
- //   f = ( f ? f + ',' : '' ) + ( globalThis['TEST'] ? 'test' : '-test');
-
- //   if ( FLAGS )
- //     f = ( f ? f + ',' : '' ) + FLAGS;
-
- //   if ( flgs )
- //     f = ( f ? f + ',' : '' ) + flgs;
-
- //   return f;
- // }
-
  // Environment Variables which are exported when updated
  var ENVS = {
    BUILD_DIR:         ['Build directory, relative to project root','build'],
    DRY_RUN:           ['Run build in dry-run mode which just lists tasks that would have run.', false],
    EXPORTS:           ['Build environment variables which will be exported to pom tasks.', {}],
    FLAGS:             ['pmake flags'],
-   HOST_NAME:         ['Hostname set in JVM', () => os.hostname()],
+   HOST_NAME:         ['Hostname set in JVM', () => hostname()],
+   JOURNALS:          ['Deployment poms to include in build',''],
    POMS:              ['CSV list of pom files to process,minus any suffix. Defaults to the pom at the root of the project.'],
    POM_TASKS:         ['CSV list of tasks from the root pom'],
    POM_ENVS:          ['Environment variables expected to be set from POMs', 'APP_NAME=name,JAVA_RELEASE=java,VERSION=version,VENDOR=vendor,VENDOR_ID=vendorId'],
@@ -260,15 +241,6 @@ function showSummary() {
  buildEnv(ENVS);
 
 // Export functions for Tooling and Build POM tasks
-// from this build.js
-EXPORTS = Object.assign(EXPORTS, {
-  execute,
-// flag,
-  showSummary
-});
-
-// Export functions for Tooling and Build POM tasks
-// from buildlib.js
 EXPORTS = Object.assign(EXPORTS, {
   comma,
   copyDir,
@@ -277,13 +249,20 @@ EXPORTS = Object.assign(EXPORTS, {
   ensureDir,
   error,
   exec,
+  execute,
   execSync,
+  existsSync,
   flag,
   info,
+  isExcluded,
   join,
+  pmake,
+  readdirSync,
   rmdir,
   rmfile,
-  warning
+  showSummary,
+  warning,
+  writeFileSync
 });
 
 var TOOLING_ARGS = {
@@ -378,16 +357,17 @@ task('Prepare build environment', [], function tooling() {
   var tps = '';
   (TOOLING_POMS || '').split(',').forEach(name => {
     var fn = join(__dirname,`${name}Tooling`);
-    if ( fs.existsSync(fn + '.js') ) {
+    if ( existsSync(fn + '.js') ) {
       tps = comma(tps, fn);
     }
     fn = join(process.cwd(),`tools/${name}Tooling`);
 
-    if ( fs.existsSync(fn + '.js') ) {
+    if ( existsSync(fn + '.js') ) {
       tps = comma(tps, fn);
     }
   });
-  let maker = pmake(`-makers=Tooling -pom=${tps} -envs=${ENVS} -args=${ARGS}`);
+  // let maker = pmake.bind(this, `-makers=Tooling -pom=${tps} -envs=${ENVS} -args=${ARGS}`)();
+  let maker = pmake.bind(Object.assign({}, EXPORTS), `-makers=Tooling -pom=${tps} -envs=${ENVS} -args=${ARGS}`)();
   Object.assign(ENVS, maker.envs || {});
   buildEnv(maker.envs);
 
@@ -421,7 +401,7 @@ task('Prepare build environment', [], function tooling() {
 });
 
 task('Capture POM specified environment values and register POM tasks for later execution when the corresponding build tasks is executed.', [], function pomEnvs() {
-  let makers = pmake(`-makers=Env,Task -flags=${flag()} -pom=${POMS} -builddir=${BUILD_DIR} -envs=${POM_ENVS}`);
+  let makers = pmake.bind(Object.assign({}, EXPORTS), `-makers=Env,Task -flags=${flag()} -pom=${POMS} -builddir=${BUILD_DIR} -envs=${POM_ENVS}`)();
 
   let envMaker = makers.get('Env');
   Object.keys(envMaker.envs || {}).forEach(k => {
@@ -441,18 +421,18 @@ task('Capture POM specified environment values and register POM tasks for later 
 });
 
 task('Run pom copy[] tasks.', [], function copy() {
-  pmake(`-makers=Copy -flags=${flag()} -pom=${POMS} -builddir=${BUILD_DIR}`);
+  pmake.bind(Object.assign({}, EXPORTS), `-makers=Copy -flags=${flag()} -pom=${POMS} -builddir=${BUILD_DIR}`)();
 });
 
 task('Show POM structure.', [], function showPOMs() {
-  pmake(`-makers=Verbose -flags=${flag('web,java')} -pom=${POMS} -builddir=${BUILD_DIR}`);
+  pmake.bind(Object.assign({}, EXPORTS), `-makers=Verbose -flags=${flag('web,java')} -pom=${POMS} -builddir=${BUILD_DIR}`)();
 });
 
-processToolingArgs(TOOLING_ARGS, moreUsage);
+processToolingArgs.bind(Object.assign({}, EXPORTS), TOOLING_ARGS, moreUsage)();
 execute('tooling');
 
 // Process command line arguments
-processSingleCharArgs(ARGS, moreUsage);
+processSingleCharArgs.bind(Object.assign({}, EXPORTS), ARGS, moreUsage)();
 
 // build pom map for POM_TASKS, and ensure POMS list is viable
 pom();

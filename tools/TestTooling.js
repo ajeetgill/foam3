@@ -4,8 +4,6 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-const { comma, copyDir, copyFile, emptyDir, ensureDir, exec, execSync, exportEnvs, info, rmdir, rmfile, warning } = require('./buildlib');
-
 foam.POM({
   name: 'test',
   envs: {
@@ -26,10 +24,12 @@ foam.POM({
     B: [ 'benchmarkId1,benchmarkId2,... : Run listed benchmarks.',
          args => { ARGS.b[1](); BENCHMARKS = args; } ],
     t: [ 'Run All tests.',
-         () => {
+         args => {
            TEST = true;
            DELETE_RUNTIME_JOURNALS = true;
-           JOURNALS = comma(JOURNALS, 'test');
+           // FIXME: this.comma undefined, see buildlib.js:281
+           // JOURNALS = this.comma(JOURNALS, 'test');
+           JOURNALS = EXPORTS.comma(JOURNALS, 'test');
            APP_ROOT='/tmp';
          } ],
     T: [ 'testId1,testId2,... : Run listed tests.',
@@ -42,7 +42,7 @@ foam.POM({
   tasks: {
     clean: ['Set Java environmental variables specific to running test cases.', [], function clean() {
       if ( TEST || BENCHMARK ) {
-        rmdir(APP_HOME);
+        this.rmdir(APP_HOME);
       }
     }]
   }

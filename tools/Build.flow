@@ -9,16 +9,20 @@
 
 <p><b>POMs</b> are JSON files which identify source code, application configuration, and build instructions. They are hierarchical and can exist at any level of a code repository.</p>
 
-<p>There are two types of POMs:
+<p>Presently, there are two types of POMs, or more precisely, two types of POM <b>fields</b>
 <ol>
-  <li><b>Tooling</b> - POMs which configure the Build environment itself. <i>For example</i>, preparing for a Java build.</li>
-  <li><b>Build</b> - POMs which specify code and deployment configuration to include.  <i>For example</i>, specifying the models to generate Java from and specifying the configuration to include in a JAR file.</li>
+  <li><b>Tooling</b> - fields which configure the Build environment itself with tasks and environment variables.
+  <p>Fields which set up tasks and environment variables for the build.js process.  <i>For example</i>, <b>JavaTooling</b> adds variables to control the Java target version, adds command line arguments to control creating a JAR file or start the JVM with JDPA enabled, adds Tasks for building and starting from JAR file locally or building a TAR file for remote deployment.</p>
+  </li>
+  <li><b>Build</b> - fields which declare build inputs.
+  <p>Such as code and deployment configuration to include.  <i>For example</i>, specifying the models to generate Java from and specifying the configuration to include in a JAR file.</p>
+  </li>
 </ol>
 </p>
 
 <p>There are three distinct build <b>phases</b>:
 <ol>
-  <li><b>Tooling</b> - the build loads Tooling POMs which add evironment variables (<b>envs</b>), command line options (<b>args</b>), and build <b>Tasks</b> specific to the type of code generation, compilation, and deployment to be supported.  <i>For example</i>, <b>JavaTooling</b> adds variables to control the Java target version, adds command line arguments to control creating a JAR file or start the JVM with JDPA enabled, adds Tasks for building and starting from JAR file locally or building a TAR file for remote deployment.
+  <li><b>Tooling</b> - the build loads Tooling POMs which add evironment variables (<b>envs</b>), command line options (<b>args</b>), and build <b>Tasks</b> specific to the type of code generation, compilation, and deployment to be supported.
   </li>
   <li><b>Environment and Registration</b> - the build processes the Build POMs to (1) set environment variable values for variables added during the Tooling phase (i.e., Java target release = 21), and (2) register Build POM <b>Tasks</b> to be run when same-named Tooling <b>Tasks</b> are run (i.e., <b>setJavaEnv</b> JAVA_OPTS=-Dxyz before the JVM is started).
   </li>
@@ -32,7 +36,7 @@
 <h1>POMs</h1>
 <p>POMs are hierarchical and a POM is responsible for the files in it's directory and child directories which themselves do not contain a POM.</p>
 <p>POM structure</p>
-<p>Build POMs
+<p>Build POM Fields
 <ul>
   <li>name - </li>
   <li>excludes - </li>
@@ -49,10 +53,12 @@
 </ul>
 </p>
 
-<p>Tooling POMs
+<p>Tooling POM Fields
 <ul>
   <li>name</li>
-  <li>envs</li>
+  <li>envs - Environment Variables
+  <p>Environment variables are delcared with default values in the Tooling POMs.  Build POMs and the CLI can set override or append to the environment variable values. <i>For example</i>, JAVA_OPTS, which controls the JVM environment, can be appended to with build specific parameters such as -Xmx  or -Dappproperty.</p>
+  </li>
   <li>args</li>
   <li>tasks</li>
 </ul>
@@ -85,13 +91,4 @@ Move example to an examples subdirectory
 <p>That way these pom files can look the same as the pom files in the source tree and still be loaded on in other environmetns that don't provide require() (such as web)</p>
 
 <p>I think the existing build.js tried to achieve this by setting "this" to an object that contains all the buildlib functions when running the pom tasks so that the tasks can do this this.execSync and whatnot</p>
-
-<h2>Build doc</h2>
-<p>re: There are two types of POMs</p>
-<p>Let's expand or rephrase this.</p>
-
-<p>Conceptually there are two types of fields to the pom, tooling fields which set up tasks and environment variables for the build.js process, and build fields which declare build inputs such as files/javaFiles etc.</p>
-
-<p>It would also be useful to add a section about how environment variables work.</p>
-
-<p>From what I gather, environment variables are delcared with default values but can be overriden by environment variables that exist when you run the code? And environment variables are passed down into tools run by the build process somehow?</p>
+<p>See the Object.assign(  , EXPORTS) </p>
