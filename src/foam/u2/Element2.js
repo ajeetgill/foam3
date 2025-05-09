@@ -1168,6 +1168,7 @@ foam.CLASS({
     },
 
     function translate(source, opt_default) {
+      /* Translate text before add()-ing to the Element. Lets text be edited if XMSG is in URL. */
       var translationService = this.translationService;
       if ( translationService ) {
         /* Add the translation of the supplied source to the Element as a String */
