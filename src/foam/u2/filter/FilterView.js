@@ -392,10 +392,11 @@ foam.CLASS({
                       .end()
                       .call(function() {
                         props.forEach(function(prop) {
+                          var data = foam.lang.SimpleSlot.create({ value: false })
                           return element
                             .start()
-                              .on('click', () => self.selectFilter(prop))
-                              .start({ class: 'foam.u2.CheckBox', data: false, label: prop }).end()
+                              .on('click', () => self.selectFilter(prop, data))
+                              .start({ class: 'foam.u2.CheckBox', data$: data, label: prop }).end()
                             .end();
                         });
                       });
@@ -465,9 +466,10 @@ foam.CLASS({
         }, this.filters$));
     },
 
-    function selectFilter(key) {
+    function selectFilter(key, data) {
       if ( this.filters.length >= this.MAX_FILTERS ) {
         this.notify('Max filters: ' + this.MAX_FILTERS, '', this.LogLevel.ERROR);
+        data.set(false);
         return;
       }
       var newFilters = [].concat(this.filters);
