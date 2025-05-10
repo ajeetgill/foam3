@@ -113,6 +113,7 @@ foam.CLASS({
     'signUpEnabled',
     'stack',
     'subject',
+    'toolbar',
     'theme',
     'user',
     'wrapCSS as installCSS',
@@ -199,6 +200,9 @@ foam.CLASS({
   `,
 
   properties: [
+    {
+      name: 'toolbar'
+    },
     {
       name: 'loginVariables',
       expression: function( client$userRegistrationDAO, group$emailRequired ) {
@@ -1034,7 +1038,7 @@ foam.CLASS({
       /**
        * Replaces the url to redirect to the new menu without cleared tails
        */
-      this.window.location.hash = link;
+      this.window.location.hash = link ?? '';
     },
     async function routeToDAO(dao, id) {
       // Check if current menu has object
