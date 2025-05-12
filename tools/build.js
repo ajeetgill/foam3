@@ -63,7 +63,7 @@ ln -s /Volumes/RamDisk/build ~/foam3/build
 const { existsSync,  readdirSync, writeFileSync } = require('fs');
 const { hostname }                                = require('os');
 const { join }                                    = require('path');
-const { buildEnv, addOptions, comma, copyDir, copyFile, emptyDir, ensureDir, exec, execSync, exportEnvs, findOption, findSimilarOptions, findTask, findSimilarTasks, flag, hyphenate, info, isExcluded, Option, processBuildArgs, processToolingArgs, rmdir, rmfile, spawn, Task, warning} = require('./buildlib');
+const { buildEnv, addOptions, comma, copyDir, copyFile, emptyDir, ensureDir, exec, execSync, exportEnvs, findOption, findSimilarOptions, findTask, findSimilarTasks, flag, hyphenate, info, isExcluded, processBuildArgs, processToolingArgs, rmdir, rmfile, spawn, warning, verbose } = require('./buildlib');
 const pmake                                       = require('./pmake');
 
 process.on('unhandledRejection', e => {
@@ -76,43 +76,31 @@ var summary = [];
 var tasks   = [];
 
 function task() {
-  var name, gnuopt, desc, dep, f;
-  var task;
+  var name, gnuopt, desc = '', dep = [], f;
   if ( arguments.length == 1 ) {
-    task = Object.create(Task, {
-      f: arguments[0],
-      name: f.name,
-      gnuopt: hyphenate(f.name)
-    });
-    // function
     f = arguments[0];
     name = f.name;
     gnuopt = hyphenate(f.name);
-    desc = '';
-    dep = [];
   } else if ( arguments.length == 3 ) {
-    // desc, dep, function
     f = arguments[2];
     name = f.name;
     gnuopt = hyphenate(f.name);
     desc = arguments[0];
     dep = arguments[1];
   } else if ( arguments.length == 4 ) {
-    // genopt, desc, dep, function
     f = arguments[3];
     name = f.name;
     gnuopt = arguments[0];
     desc = arguments[1];
     dep = arguments[2];
   } else if ( arguments.length == 5 ) {
-    // name, genopt, desc, dep, function
     name = arguments[0];
     gnuopt = arguments[1];
     desc = arguments[2];
     dep = arguments[3];
     f = arguments[4];
   } else {
-    var msg = 'task(): expecting 1, 3, 4, or 5 arguments\n';
+    var msg = 'task() expecting 1, 3, 4, or 5 arguments\n';
     Object.keys(arguments).forEach(key => {
       msg += key +': ' + arguments[key] + '\n';
     });
@@ -120,8 +108,16 @@ function task() {
   }
 
   if ( ! tasks[name] ) {
-    tasks[name] = [gnuopt, desc, dep, f];
-    tasks[name].name = name;
+    tasks[name] = {
+      name: name,
+      gnuopt: gnuopt,
+      desc: desc,
+      dep: dep,
+      f: f
+    };
+    // console.log(`task created ${task} ${tasks[name]}`);
+    // tasks[name] = [gnuopt, desc, dep, f];
+    // tasks[name].name = name;
   } else {
     warning(`[build] ignoring duplicate task -  name: ${name}, gnuopt: ${gnuopt}, desc: ${desc}, dep: ${dep}`);
   }
@@ -145,7 +141,7 @@ function task() {
 
     // execute task dependencies
     let task = tasks[name];
-    let dep = task[2];
+    let dep = task.dep;
     dep.forEach(d => {
       if ( d instanceof Function ) {
         d(...args);
@@ -198,17 +194,17 @@ function execute(t, args) {
     let task = findTask(tasks, t);
     if ( task ) {
       f = globalThis[task.name];
-      if ( ! f && task[4] ) {
-        f = task[4];
+      if ( ! f && task.f ) {
+        f = task.f;
       }
     }
   }
   if ( ! f ) {
     let option = findOption(OPTIONS, t);
     if ( option ) {
-      f = globalThis[option.key];
-      if ( ! f && option[5] ) {
-        f = option[5];
+      f = globalThis[option.name];
+      if ( ! f && option.f ) {
+        f = option.f;
       }
     }
   }
@@ -222,14 +218,14 @@ function execute(t, args) {
         extra += '\n  Possible Task matches: \n';
       }
       similar.forEach(task => {
-        extra += '    ' + task.name + ' ' + task[0] + ' - ' + task[1] + '\n';
+        extra += '    ' + task.name + ' ' + task.gnuopt + ' - ' + task.desc + '\n';
       });
       similar = findSimilarOptions(OPTIONS, t);
       if ( similar.length > 0 ) {
         extra += '\n  Possible Option matches: \n';
       }
       similar.forEach(option => {
-        extra += '    ' + option.key + ' ' + option[0] + ' ' + option[1] + ' - ' + option[3] + '\n';
+        extra += '    ' + option.name + ' ' + option.opt + ' ' + option.gnuopt + ' - ' + option.desc + '\n';
       });
     }
     error('Task not found - ', t, extra);
@@ -351,11 +347,12 @@ EXPORTS = Object.assign(EXPORTS, {
   rmfile,
   showSummary,
   warning,
-  writeFileSync
+  writeFileSync,
+  verbose
 });
 
 TOOLING_OPTIONS = addOptions({
-  toolingPoms: [ 'O', 'tooling-poms', 'TOOLING_POMS', 'CSV list of tooling poms', 'Standard,Example,Java,JS,Maven,Npm,Test', '', args => TOOLING_POMS = args ]
+  toolingPoms: [ 'O', 'tooling-poms', 'TOOLING_POMS', 'CSV list of tooling poms', 'Standard,Example,Java,JS,Maven,Npm,Test', args => TOOLING_POMS = args ]
 }, TOOLING_OPTIONS);
 
 OPTIONS = addOptions({
@@ -383,19 +380,19 @@ OPTIONS = addOptions({
              info(`Help for \'${arg}\'`);
              var option = findOption(OPTIONS, arg);
              if ( option ) {
-               let opts = option[0] ? '-'+option[0]+', ' : '';
-               opts += '--'+option.key;
-               if ( option.key !== option[1] ) {
-                 opts += ', --'+option[1];
+               let opts = option.opt ? '-'+option.opt+', ' : '';
+               opts += '--'+option.name;
+               if ( option.name !== option.gnuopt ) {
+                 opts += ', --'+option.gnuopt;
                }
-               var def = option[2] && globalThis[option[2]];
+               var def = env && globalThis[env];
                if ( ! def ) {
-                 def = option[4] ? option[4] : '';
+                 def = option.def ? option.def : '';
                  if ( def instanceof Function ) {
                    def = def();
                  }
                }
-               let desc = option[3];
+               let desc = option.desc;
                console.log(''.padStart(0), opts+':', '\x1b[0;35m', def,'\x1b[0;0m', desc);
             } else {
                let t = findTask(tasks, arg);
@@ -412,14 +409,14 @@ OPTIONS = addOptions({
                      extra += '\n  Possible Task matches: \n';
                    }
                    similar.forEach(task => {
-                     extra += '    ' + task.name + ' ' + task[0] + ' - ' + task[1] + '\n';
+                     extra += '    ' + task.name + ' ' + task.gnuopt + ' - ' + task.desc + '\n';
                    });
                    similar = findSimilarOptions(OPTIONS, arg);
                    if ( similar.length > 0 ) {
                      extra += '\n  Possible Option matches: \n';
                    }
                    similar.forEach(option => {
-                     extra += '    ' + option.key + ' ' + option[0] + ' ' + option[1] + ' - ' + option[3] + '\n';
+                     extra += '    ' + option.name + ' ' + option.opt + ' ' + option.gnuopt + ' - ' + option.desc + '\n';
                    });
                    error('Topic not found - ', arg, extra);
                  }
@@ -473,27 +470,27 @@ function moreUsage(arg) {
     Object.keys(OPTIONS).forEach(key => {
       let option = OPTIONS[key];
       var opts = '';
-      if ( option[0] ) {
-        opts = '-'+option[0];
+      if ( option.opt ) {
+        opts = '-'+option.opt;
       }
       opts += (opts ? ', ' : '');
-      opts += '--'+key;
-      if( option[1] !== key ) {
-        opts += ', --'+option[1];
+      opts += '--'+option.name;
+      if( option.gnuopt !== key ) {
+        opts += ', --'+option.gnuopt;
       }
-      if ( option[2] ) {
-        opts += ', '+option[2];
+      if ( option.env ) {
+        opts += ', '+option.env;
       }
-      var def = option[2] && globalThis[option[2]].toString();
+      var def = option.env && globalThis[option.env].toString();
       if ( ! def ) {
-        def = option[4] ? option[4] : '';
+        def = option.def ? option.def : '';
         if ( def instanceof Function ) {
           def = def();
         }
       }
       console.log(''.padStart(0), opts+':', ''.padStart(41-opts.length), '\x1b[0;35m', def,'\x1b[0;0m');
       if ( ! SHOW_REPORT ) {
-        console.log(''.padStart(3), option[3]);
+        console.log(''.padStart(3), option.desc);
       }
     });
   }
@@ -509,13 +506,13 @@ function moreUsage(arg) {
     function printTask(t) {
       if ( ! ts[t] ) return;
       delete ts[t];
-      var [ gnu, desc, dep ] = findTask(tasks, t);
-      var dep2 = dep.filter(d => ! ts[d]); // list of dependencies which appear elsewhere in tree
+      var task = findTask(tasks, t);
+      var dep2 = task.dep.filter(d => ! ts[d]); // list of dependencies which appear elsewhere in tree
       var dstr = dep2.length ? ' [ ' + dep2.join(', ') + ' ]': '';
-      desc = SHOW_REPORT ? '' : desc;
+      let desc = SHOW_REPORT ? '' : task.desc;
       console.log(''.padEnd(depth*2) + t.padEnd(27-depth*2) + desc + dstr);
       depth++;
-      dep.forEach(printTask);
+      task.dep.forEach(printTask);
       depth--;
     }
     Object.keys(ts).sort().forEach(t => {
@@ -616,7 +613,7 @@ task('Capture POM arguments to environment values or options, and register POM t
     }
     let option = findOption(OPTIONS, e);
     if ( option ) {
-      option[5](envMaker.envs[e]);
+      option.f(envMaker.envs[e]);
       // info(`[build] set option ${e} = ${envMaker.envs[e]}`);
       return;
     }

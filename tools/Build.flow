@@ -6,6 +6,12 @@
 
 <p>The FOAM build is a <b>node</b> tool which executes Javascript methods (<b>Tasks</b>) against Project Object Model (<b>POM</b>)(or a more lighthearted acronym expansion: Pom-O-Matic) files.</p>
 
+<p>The build manages three components: environment variables (envs), options, and tasks:
+<ul>
+  <li>envs - variables which can be set directly or via <i>options</i>, and impact the execution of <i>tasks</i>.</li>
+  <li>options - provide build specific command line arguments. Options can manipulate <i>envs</i> and impact the execution of <i>tasks</i>.</li>
+  <li>tasks - methods which act against the source code to generate an application. </li>
+</ul>
 
 <p><b>POMs</b> are JSON files which identify source code, application configuration, and build instructions. They are hierarchical and can exist at any level of a code repository.</p>
 
@@ -132,6 +138,7 @@ Fields:
   <li>envs - Environment Variables
   <p>Environment variables are declared with default values in the Tooling POMs.  Build POMs and the CLI can set override or append to the environment variable values. <i>For example</i>, JAVA_OPTS, which controls the JVM environment, can be appended to with build specific parameters such as -Xmx  or -Dappproperty.</p>
   <code>
+$ node tools/build.js -EJAVA_OPTS:"-Xms12g -Xmx12g"
   </code>
   </li>
   <li>options</li>
