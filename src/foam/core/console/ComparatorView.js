@@ -13,11 +13,34 @@ foam.CLASS({
     'foam.u2.TextField'
   ],
 
+  imports: [
+    'objData'
+  ],
+
   css: `
   `,
 
   properties: [
-    [ 'type', 'search' ]
+    [ 'type', 'search' ],
+    {
+      name: 'choices',
+      view: function(_, X) {
+        var of = X.objData.dao.of;
+        var choices = [ '--' ];
+        of.getAxiomsByClass(foam.lang.Property).forEach(p => {
+          if ( p.hidden || p.networkTransient ) return;
+          choices.push(p.name);
+          choices.push('-' + p.name);
+        });
+        return { class: 'foam.u2.view.ChoiceView', choices: choices };
+      },
+      preSet: function(o, n) {
+        if ( n == '--' ) return;
+        if ( this.objData.order ) this.objData.order += ',';
+        this.objData.order += n;
+        return '--';
+      }
+    }
   ],
 
   methods: [
@@ -25,7 +48,8 @@ foam.CLASS({
       this.
         start('span').
           style({display: 'flex'}).
-          tag(this.TextField, {data$: this.data$, size: 40});
+          tag(this.TextField, {data$: this.data$, size: 40}).
+          startContext({data: this}).add(this.CHOICES).endContext();
     }
   ],
 

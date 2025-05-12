@@ -18,7 +18,7 @@ foam.CLASS({
     {
       class: 'String',
       name: 'data',
-      width: '80',
+      width: '40',
       placeholder: '*'
     },
     {

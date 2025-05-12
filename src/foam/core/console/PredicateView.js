@@ -27,7 +27,7 @@ foam.CLASS({
   properties: [
     [ 'type', 'search' ],
     {
-      name: 'propertyChoice',
+      name: 'choices',
       view: function(_, X) {
         var of = X.objData.dao.of;
         var choices = [ '--' ];
@@ -46,7 +46,7 @@ foam.CLASS({
         if ( n == '--' ) return;
         if ( this.objData.where ) this.objData.where += ' ';
         this.objData.where += n;
-        return n;
+        return '--';
       }
     }
   ],
@@ -57,7 +57,7 @@ foam.CLASS({
         start('span').
           style({display: 'flex'}).
           tag(this.TextField, {data$: this.data$, size: 40}).
-          startContext({data: this}).add(this.PROPERTY_CHOICE).endContext().
+          startContext({data: this}).add(this.CHOICES).endContext().
           start(this.CircleIndicator, {glyph: 'helpIcon', icon: '/images/question-icon.svg', size:20}).
             addClass(this.myClass('helper-icon')).
             on('click', this.mqlHelp).

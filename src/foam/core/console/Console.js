@@ -281,6 +281,7 @@ foam.CLASS({
       padding: 4px 4px 4px 8px;
       width: 60%;
     }
+    ^ .foam-u2-RangeView-skip { width: 266px; }
   `,
 
   properties: [
