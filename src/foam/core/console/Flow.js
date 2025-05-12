@@ -32,7 +32,7 @@ foam.CLASS({
     }
   ],
 
-  tableColumns: [ 'name', 'description', 'status', 'isPublic', 'readOnly' ],
+  tableColumns: [ 'name', 'description', 'status', 'isPublic', 'readOnly', 'reflow' ],
 
   properties: [
     {
@@ -129,6 +129,12 @@ foam.CLASS({
       name: 'save',
       code: function() {
         this.flowDAO.put(this);
+      }
+    },
+    {
+      name: 'reflow',
+      code: function(X) {
+        X.routeTo("reflow/" + this.name);
       }
     }
   ]
