@@ -309,7 +309,7 @@ foam.CLASS({
   name: 'Console',
   extends: 'foam.u2.Controller',
 
-  mixins: [ 'foam.core.console.Flowable' ],
+  mixins: [ 'foam.core.console.Flowable', 'foam.u2.memento.Memorable' ],
 
   requires: [
     'foam.core.console.Block',
@@ -385,6 +385,12 @@ foam.CLASS({
   `,
 
   properties: [
+    {
+      class: 'String',
+      name: 'flowName',
+      shortName: 'route',
+      memorable: true
+    },
     {
       class: 'String',
       name: 'input',
@@ -486,7 +492,6 @@ foam.CLASS({
 
       var feedback_ = false;
 
-      this.flowName$ = this.value.name$;
       this.flowChildren$.sub(() => {
         if (feedback_ ) return;
         console.log('***** CONSOLE flowChildren');
@@ -535,8 +540,12 @@ foam.CLASS({
       if ( this.params.flow ) {
         await this.eval_(`load("${decodeURIComponent(this.params.flow)}")`);
         this.selected = this.currentBlock;
+      } else {
+        await this.eval_(`load("${decodeURIComponent(this.flowName)}")`);
+        this.selected = this.currentBlock;
       }
 
+      this.flowName$ = this.value.name$;
     },
 
     function renderSelf(self) {
