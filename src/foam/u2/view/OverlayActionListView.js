@@ -235,7 +235,7 @@ foam.CLASS({
         this.obj = await this.dao.inX(this.__context__).find(this.obj.id);
       }
 
-      self.availabilities_$.follow(self.createAvailabilitySlotArray()) 
+      self.availabilities_$.follow(self.createAvailabilitySlotArray())
 
       this.onDetach(() => { this.overlay_ && this.overlay_.remove(); });
 
@@ -291,7 +291,7 @@ foam.CLASS({
        * checks if action is enabled
        */
       let slot;
-      if (  foam.u2.ActionReference.isInstance(action) ) {
+      if ( foam.u2.ActionReference.isInstance(action) ) {
         slot = action.action.createIsEnabled$(this.__context__, action.data)
       } else if ( foam.lang.Action.isInstance(action) ) {
         slot = action.createIsEnabled$(this.__context__, this.obj);
@@ -313,7 +313,7 @@ foam.CLASS({
       }
     },
     {
-      name: 'createAvailabilitySlotArray', 
+      name: 'createAvailabilitySlotArray',
       documentation: 'Returns an array slot that returns true when any of the actions in data are available',
       code: function() {
         let availSlots = this.data.map(action => {
