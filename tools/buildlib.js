@@ -120,7 +120,6 @@ function buildEnv(m) {
 
 function createOption() {
   var name, opt, gnuopt, env, desc, def, f;
-  // console.log(`option length: ${arguments.length}, 0: ${arguments[0]}, 1: ${arguments[1]}, 2: ${arguments[2]}`);
   if ( arguments.length == 7 ) {
     name = arguments[0];
     opt = arguments[1];
@@ -145,7 +144,6 @@ function createOption() {
     def: def,
     f: f
   };
-  // console.log(`option created name: ${option.name} opt: ${option.opt} gnuopt: ${gnuopt}`);
   return option;
 }
 
@@ -157,17 +155,18 @@ function addOptions(options, existing = {}) {
     } else {
       var args = options[key];
       args.unshift(key);
-      // console.log('addOptions', args);
       opt = createOption(...args);
-      // existing[key] = options[key];
       existing[key] = opt;
       existing[key].key = key;
     }
     opt = existing[key];
-    let env = opt.env; // opt[2];
+    let env = opt.env;
     if ( env && ! globalThis[env] ) {
-      // addBuildEnv(env, opt[3], opt[4]);
       addBuildEnv(env, opt.desc, opt.def);
+      let envs = globalThis['ENVS'];
+      if ( envs && ! envs[env] ) {
+        envs[env] = globalThis[env];
+      }
     }
   });
   return existing;

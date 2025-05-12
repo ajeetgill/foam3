@@ -115,9 +115,6 @@ function task() {
       dep: dep,
       f: f
     };
-    // console.log(`task created ${task} ${tasks[name]}`);
-    // tasks[name] = [gnuopt, desc, dep, f];
-    // tasks[name].name = name;
   } else {
     warning(`[build] ignoring duplicate task -  name: ${name}, gnuopt: ${gnuopt}, desc: ${desc}, dep: ${dep}`);
   }
@@ -321,6 +318,7 @@ var ENVS = {
   TOOLING_OPTIONS:   ['Options which control the tooling phase of the build', {}],
   VERBOSE:           ['Enable VerboseMaker to log additional info during build',false],
 };
+globalThis['ENVS'] = ENVS;
 
 // Configure build variables
 buildEnv(ENVS);
@@ -461,12 +459,10 @@ function moreUsage(arg) {
   } else {
     info('Usage: build.js [OPTIONS] (see --usage for examples)');
   }
-  if( ! arg || arg === 'options' ) {
+  if( ! SHOW_REPORT &&
+      ( ! arg || arg === 'options' ) ) {
     console.log();
-    if ( SHOW_REPORT )
-      info('Option report:');
-    else
-      info('Options are:');
+    info('Options are:');
     Object.keys(OPTIONS).forEach(key => {
       let option = OPTIONS[key];
       var opts = '';
@@ -489,18 +485,14 @@ function moreUsage(arg) {
         }
       }
       console.log(''.padStart(0), opts+':', ''.padStart(41-opts.length), '\x1b[0;35m', def,'\x1b[0;0m');
-      if ( ! SHOW_REPORT ) {
-        console.log(''.padStart(3), option.desc);
-      }
+      console.log(''.padStart(3), option.desc);
     });
   }
 
-  if( ! arg || arg === 'tasks' ) {
+  if( ! SHOW_REPORT &&
+      ( ! arg || arg === 'tasks' ) ) {
     console.log();
-    if ( SHOW_REPORT )
-      info('Task report:');
-    else
-      info('Tasks: (invoke with -XtaskName or --task-name)');
+    info('Tasks: (invoke with -XtaskName or --task-name)');
     var ts = { ...tasks };
     var depth = 1;
     function printTask(t) {
@@ -522,13 +514,17 @@ function moreUsage(arg) {
 
   if( ! arg || arg === 'envs' ) {
     console.log();
-    if ( SHOW_REPORT )
-      info('Environment variable report:');
-    else
+    if ( ! SHOW_REPORT ) {
       info('Environment variables: (set with -E)');
+    }
     depth = 1;
+
     Object.keys(ENVS).sort().forEach(k => {
-      var [ desc, val ] = ENVS[k];
+      var env = ENVS[k];
+      var desc, val;
+      if ( typeof env === 'object') {
+        [ desc, val ] = env;
+      }
       var v = val;
       if ( val instanceof Function)
         v = val();
@@ -537,8 +533,8 @@ function moreUsage(arg) {
       // TODO: better object support, don't want to display all
       // of EXPORTS or OPTIONS, for example
       v = v ? v.toString() : '';
-      console.log(''.padStart(0), k+':', ''.padStart(16-k.length), '\x1b[0;35m', v, '\x1b[0;0m',);
-      if ( ! SHOW_REPORT ) {
+      console.log(''.padStart(0), k+':', ''.padStart(20-k.length), '\x1b[0;35m', v, '\x1b[0;0m',);
+      if ( ! SHOW_REPORT && desc ) {
         console.log(''.padStart(3), desc);
       }
     });
@@ -602,13 +598,12 @@ task('Capture POM arguments to environment values or options, and register POM t
   Object.keys(envMaker.envs || {}).forEach(e => {
     if ( globalThis[e] ) {
       globalThis[e] = envMaker.envs[e];
-      // info(`[build] set global ${e} = ${ENVS[e]}`);
+      ENVS[e] = envMaker.envs[e];
       return;
     }
     let env = ENVS[e];
     if ( env ) {
       globalThis[e] = envMaker.envs[e];
-      // info(`[build] set env ${e} = ${globalThis[e]}`);
       return;
     }
     let option = findOption(OPTIONS, e);

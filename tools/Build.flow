@@ -83,7 +83,7 @@ For example, the following will only output usage of <b>help</b> itself
 </p>
 
 <h1>Troubleshooting</h1>
-<p>Adding argument <b>--show-report</b> will cause the build to output the final value of all options, tasks, and environment variables at the point of exit on error, or just before start CORE.</p>
+<p>Adding argument <b>--show-report</b> will cause the build to output the final value of all environment variables at the point of exit on error, or just before start CORE.</p>
 
 <h1>POMs</h1>
 <h2><i>Incomplete</i></h2>
