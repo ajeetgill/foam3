@@ -15,7 +15,8 @@ foam.CLASS({
   ],
 
   imports: [
-    'eval_'
+    'eval_',
+    'objData'
   ],
 
   css: `
@@ -24,7 +25,30 @@ foam.CLASS({
   `,
 
   properties: [
-    [ 'type', 'search' ]
+    [ 'type', 'search' ],
+    {
+      name: 'propertyChoice',
+      view: function(_, X) {
+        var of = X.objData.dao.of;
+        var choices = [ '--' ];
+        of.getAxiomsByClass(foam.lang.Property).forEach(p => {
+          if ( ! p.searchable && ( p.hidden || p.networkTransient ) ) return;
+          if ( foam.lang.Boolean.isInstance(p) ) {
+            choices.push('is:'  + p.name);
+            choices.push('-is:' + p.name);
+          } else {
+            choices.push(p.name);
+          }
+        });
+        return { class: 'foam.u2.view.ChoiceView', choices: choices };
+      },
+      preSet: function(o, n) {
+        if ( n == '--' ) return;
+        if ( this.objData.where ) this.objData.where += ' ';
+        this.objData.where += n;
+        return n;
+      }
+    }
   ],
 
   methods: [
@@ -32,7 +56,8 @@ foam.CLASS({
       this.
         start('span').
           style({display: 'flex'}).
-          tag(this.TextField, {data$: this.data$}).
+          tag(this.TextField, {data$: this.data$, size: 40}).
+          startContext({data: this}).add(this.PROPERTY_CHOICE).endContext().
           start(this.CircleIndicator, {glyph: 'helpIcon', icon: '/images/question-icon.svg', size:20}).
             addClass(this.myClass('helper-icon')).
             on('click', this.mqlHelp).

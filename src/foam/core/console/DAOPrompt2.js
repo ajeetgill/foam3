@@ -196,7 +196,8 @@ foam.CLASS({
       class: 'String',
       name: 'order',
       displayWidth: 60,
-      view: { class: 'foam.u2.TextField', type: 'search' } // adds 'x' to clear field
+      view: { class: 'foam.core.console.ComparatorView' }
+//      view: { class: 'foam.u2.TextField', type: 'search' } // adds 'x' to clear field
     },
     {
       class: 'String',
