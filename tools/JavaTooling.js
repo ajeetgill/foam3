@@ -8,31 +8,22 @@ foam.POM({
   name: 'java',
 
   envs: {
-    CORE_PIDFILE:      ['JVM process ID file','/tmp/core.pid', () => `/tmp/core_${APP_NAME}.pid`],
-    DOCUMENT_HOME:     ['Appplication documents directory',() => `${APP_HOME}/documents`],
+    CORE_PIDFILE:      ['JVM process ID file', () => APP_NAME ? `/tmp/core_${APP_NAME}.pid` : '/tmp/core_APP_NAME.pid'],
+    DOCUMENT_HOME:     ['Appplication documents directory',() => APP_NAME ? `${APP_HOME}/documents`: 'APP_HOME/documents'],
     DOCUMENT_OUT:      ['Build documents directory',() => `${PROJECT_HOME}/${BUILD_DIR}/documents`],
-    GEN_JAVA:          ['Generate Java from model files',true],
+    FOAM_REVISION:     ['FOAM Revision. Defaults to git branch commit'],
     JAR_INCLUDES:      ['Additional directories to include Java jar',''],
-    JAR_LIB_DIR:       ['Deployment lib directory',() => ( TAR ? `${PROJECT_HOME}/${BUILD_DIR}` : APP_HOME ) + '/lib'],
-    JAR_NAME:          ['Java jar name',() => `${APP_NAME}-${VERSION}.jar`],
+    JAR_LIB_DIR:       ['Deployment lib directory',() => ( TAR ? `${PROJECT_HOME}/${BUILD_DIR}` : (APP_NAME ? APP_HOME : 'APP_HOME')) + '/lib'],
+    JAR_NAME:          ['Java jar name',() => APP_NAME ? `${APP_NAME}-${VERSION}.jar` : 'APP_NAME-VERSION.jar' ],
     JAR_OUT:           ['Java jar path and name',() => `${JAR_LIB_DIR}/${JAR_NAME}`],
     JAVA_OPTS:         ['Additional JVM options',''],
-    JAVA_RELEASE:      ['Java target version. Can also be set in root pom. ex: java: \'11\''],
-    JAVA_RELEASE_DEFAULT: ['Default Java target version.','17'],
     JAVA_TOOL_OPTIONS: ['Internal configuration for JVM with the JAVA_OPTS',() => JAVA_OPTS],
-    JAVAC_PARAMS:      ['Parameters passed to Java Compiler',''],
-    JAVAC_PARAMS_DEFAULT:  ['Default parameters for Java Compiler', () => `--release ${JAVA_RELEASE} -proc:none`],
+    JAVAC_PARAMETERS:  ['Parameters passed to Java Compiler','-proc:none'],
     JOURNAL_HOME:      ['Application journals directory',() => `${APP_HOME}/journals`],
     JOURNAL_OUT:       ['Build journals directory',() => `${PROJECT_HOME}/${BUILD_DIR}/journals`],
-    LOG_HOME:          ['Application logs directory',() => `${APP_HOME}/logs`],
-    LOG_LEVEL:         ['Set JVM Log level for TEST cases. Defaults to ERROR. example: -ELOG_LEVEL:INFO',null],
+    LOG_HOME:          ['Application logs directory',() => APP_NAME ? `${APP_HOME}/logs`: 'APP_HOME/logs'],
     PROJECT_REVISION:  ['Root project git revision. Will be set JVM Manifest',null],
-    RUN_ARGS:          ['Arguments which will be passed to run.sh to when starting CORE server from JAR',''],
-    TIMESTAMP:         ['Build date, used to timestamp foam-bin and jar files',Date.now()],
-    VENDOR:            ['Java Manifest Vendor. Defaults to APP_NAME'],
-    VENDOR_ID:         ['Java Manifest Vendor ID'],
-    VERSION:           ['Application version'],
-    VERSION_DEFAULT:   ['Default Application version', '1.0.0']
+    RUN_ARGS:          ['Arguments which will be passed to run.sh to when starting CORE server from JAR','']
   },
 
   options: {
@@ -40,6 +31,7 @@ foam.POM({
     debug: [ 'd', 'debug', 'DEBUG', 'Launch JVM with JDPA debugging enabled. Default port 8000.', false, () => DEBUG = true ],
     debugPort: [ 'D', 'debug-port', 'DEBUG_PORT', 'Port JVM will listen on for debuggers (JDPA) connections.',8000, args => DEBUG_PORT = args],
     deleteRuntimeJournals: [ 'j', 'delete-runtime-journals', 'DELETE_RUNTIME_JOURNALS', 'Delete runtime journals.', false, () => DELETE_RUNTIME_JOURNALS = true ],
+    javaRelease: ['', 'java-release', 'JAVA_RELEASE', 'Java target version. Can also be set in root pom. ex: java: \'11\'', '17', args => JAVA_RELEASE = args],
     journals: [ 'J', 'journals', 'JOURNALS', 'Comma seperated list of additional journal directories, relative to deployment/ from the root project.', '',
       args => {
         // FIXME: this.comma undefined, see buildlib.js:281
@@ -55,39 +47,47 @@ foam.POM({
         DEBUG = true;
         SUSPEND = true;
       } ],
-    webPort: [ 'W', 'web-port', 'WEB_PORT', 'Port WebServer will listen on. HTTP defaults to 8080, HTTPS defaults to 8443.  WebSocketServer will use PORT+1', '8080',
-      args => WEB_PORT = args ]
+    webPort: [ 'W', 'web-port', 'WEB_PORT', 'Port WebServer will listen on. HTTP defaults to 8080, HTTPS defaults to 8443.  WebSocketServer will use PORT+1', '8080', args => WEB_PORT = args ],
+    javaManifestVendor: ['', 'java-manifest-vendor', 'JAVA_MANIFEST_VENDOR', 'Java Manifest Vendor', () => APP_NAME ? `${APP_NAME}` : 'APP_NAME', args => JAVA_MANIFEST_VENDOR = args ],
+    javaManifestVendorId: ['', 'java-manifiest-vendor-id', 'JAVA_MANIFEST_VENDOR_ID', 'Java Manifest Vendor ID', '', args => JAVA_MANIFEST_VENDOR_ID = args ],
+    version: ['', 'version', 'VERSION', 'Application version', '1.0.0', args => VERSION = args ]
   },
 
   tasks: {
-    clean: ['Remove generated files', ['pomEnvs'], function clean() {
+    clean: ['clean', 'Remove generated files', ['pomEnvs'], function clean() {
       if ( APP_HOME && this.existsSync(APP_HOME) ) {
         this.emptyDir(`${APP_HOME}/bin`);
         this.emptyDir(`${APP_HOME}/lib`);
       }
     }],
 
-    cleanAll: ['Remove pom.xml and java lib directory.', [], function cleanAll() {
+    cleanAll: ['clean-all', 'Remove pom.xml and java lib directory.', [], function cleanAll() {
       this.rmfile('pom.xml');
       this.emptyDir(BUILD_DIR + '/lib');
     }],
 
-    cleanJava: ['Remove previously generated JAR.', [], function cleanJava() {
+    cleanJava: ['clean-java', 'Remove previously generated JAR.', [], function cleanJava() {
       // remove previous app jar in build directory to fix classes resolution for non-jar run
       this.execSync(`rm -f ${BUILD_DIR}/lib/${APP_NAME}-*.jar >/dev/null 2>&1`);
     }],
 
-    deleteRuntimeJournals: ['Delete runtime journals.', [], function deleteRuntimeJournals() {
+    deleteRuntimeJournals: ['delete-runtime-journals', 'Delete runtime journals.', [], function deleteRuntimeJournals() {
       this.info('Runtime journals deleted.');
       this.emptyDir(JOURNAL_HOME);
     }],
 
-    genImages: ['Prepare images from inclusion in jar.', [], function genImages() {
+    genImages: ['gen-images', 'Prepare images from inclusion in jar.', [], function genImages() {
       JAR_INCLUDES += ` -C ${BUILD_DIR} images `;
 
       this.pmake.bind(this, `-makers=Image -flags=${this.flag()} -pom=${POMS} -builddir=${BUILD_DIR}`)();
     }],
-    genJava: ['Generate Java source from models and complile', ['cleanJava'], function genJava() {
+    javacParameters: ['javac-parameters', 'Set parameters passed the Java compiler', [], function javacParameters() {
+      if ( ! JAVAC_PARAMETERS.includes('--release') ) {
+        JAVAC_PARAMETERS += ` --release ${JAVA_RELEASE}`;
+      }
+    }],
+
+    genJava: ['gen-java', 'Generate Java source from models and complile', ['cleanJava', 'javacParameters'], function genJava() {
       JAR_INCLUDES += ` -C ${BUILD_DIR} journals `;
       JAR_INCLUDES += ` -C ${BUILD_DIR} documents `;
       JAR_INCLUDES += ` -C ${BUILD_DIR}/classes .`;
@@ -96,10 +96,10 @@ foam.POM({
       // NOTE: Java and Javac Maker must be run together as they share data through X
       makers += 'Java,Maven,Javac';
       makers += ',Journal,Doc';
-      this.pmake.bind(this, `-makers=${makers} -flags=${this.flag()} -pom=${POMS} -builddir=${BUILD_DIR} -d=${BUILD_DIR}/classes -journaldir=${JOURNAL_OUT} -documentdir=${DOCUMENT_OUT} -outdir=${BUILD_DIR}/src/java -libdir=${BUILD_DIR}/lib -javacParams='${JAVAC_PARAMS_DEFAULT} ${JAVAC_PARAMS}'`)();
+      this.pmake.bind(this, `-makers=${makers} -flags=${this.flag()} -pom=${POMS} -builddir=${BUILD_DIR} -d=${BUILD_DIR}/classes -journaldir=${JOURNAL_OUT} -documentdir=${DOCUMENT_OUT} -outdir=${BUILD_DIR}/src/java -libdir=${BUILD_DIR}/lib -javacParams=${JAVAC_PARAMETERS}`)();
     }],
 
-    genManifest: ['Generate JVM Manifest', ['versions', 'genFoamBinVersion'], function genManifest() {
+    javaManifest: ['java-manifest', 'Generate JVM Manifest', ['versions', 'genFoamBinVersion'], function javaManifest() {
       var jars = this.execSync(`find ${BUILD_DIR}/lib -type f -name "*.jar"`).toString()
           .replaceAll(`${BUILD_DIR}/lib/`, '  ').trim();
       var m = `
@@ -112,18 +112,22 @@ Specification-Version: ${PROJECT_REVISION}
 Implementation-Timestamp: ${TIMESTAMP}
 ${APP_NAME}-Revision: ${PROJECT_REVISION}
 FOAM-Revision: ${FOAM_REVISION}
-Implementation-Vendor: ${VENDOR || APP_NAME}
+Implementation-Vendor: ${JAVA_MANIFEST_VENDOR}
 `.trim() + '\n';
 
-      if ( VENDOR_ID ) {
-        m += `Implementation-Vendor-Id: ${VENDOR_ID}\n`;
+      if ( JAVA_MANIFEST_VENDOR_ID ) {
+        m += `Implementation-Vendor-Id: ${JAVA_MANIFEST_VENDOR_ID}\n`;
       }
 
       this.writeFileSync(BUILD_DIR + '/MANIFEST.MF', m);
       return m;
     }],
 
-    getProjectGitHash: ['Extract project git hash.', [], function getProjectGitHash() {
+    showJavaManifest: ['show-java-manifest', 'Display generated JAR manifest file.', ['javaManifest'], function showJavaManifest() {
+      console.log('Manifest:', javaManifest());
+    }],
+
+    getProjectGitHash: ['gen-project-git-hash', 'Extract project git hash.', [], function getProjectGitHash() {
       var out = 'Unversioned';
 
       try {
@@ -135,71 +139,68 @@ Implementation-Vendor: ${VENDOR || APP_NAME}
       PROJECT_REVISION = out.toString().trim();
     }],
 
-    getFOAMGitHash: ['Extract FOAM git hash.', [], function getFOAMGitHash() {
+    getFOAMGitHash: ['gen-foam-git-hash', 'Extract FOAM git hash.', [], function getFOAMGitHash() {
       FOAM_REVISION = this.execSync('git -C foam3 rev-parse --short HEAD').toString().trim();
     }],
 
-    versions: ['Show version information.', [ 'pomEnvs', 'getProjectGitHash', 'getFOAMGitHash'], function versions() {
+    versions: ['versions', 'Show version information.', [ 'pomEnvs', 'getProjectGitHash', 'getFOAMGitHash'], function versions() {
       console.log(`Application Version: ${VERSION}`);
       console.log(`${APP_NAME} revision: ${PROJECT_REVISION}`);
       console.log(`FOAM revision:       ${FOAM_REVISION}`);
     }],
 
-    deployBin: ['Copy bash files to deployment', [], function deployBin() {
+    deployBin: ['deploy-bin', 'Copy bash files to deployment', [], function deployBin() {
       this.ensureDir(this.join(APP_HOME, 'bin'));
       this.copyDir('./foam3/tools/deploy/bin', this.join(APP_HOME, 'bin'));
       this.ensureDir(this.join(APP_HOME, 'etc'));
       this.copyDir('./foam3/tools/deploy/etc', this.join(APP_HOME, 'etc'));
     }],
 
-    deployLib: ['Copy library files to deployment', [], function deployLib() {
+    deployLib: ['depoy-lib', 'Copy library files to deployment', [], function deployLib() {
       this.ensureDir(this.join(APP_HOME, 'lib'));
       this.copyDir(BUILD_DIR + '/lib', this.join(APP_HOME, 'lib'));
     }],
 
-    deployDocuments: ['Deploy documents from DOCUMENT_OUT to DOCUMENT_HOME.', ['setupDirs'], function deployDocuments() {
+    deployDocuments: ['deploy-documents', 'Deploy documents from DOCUMENT_OUT to DOCUMENT_HOME.', ['setupDirs'], function deployDocuments() {
       this.ensureDir(DOCUMENT_HOME);
       this.copyDir(DOCUMENT_OUT, DOCUMENT_HOME);
     }],
 
-    deployJournals: ['Deploy journal files from JOURNAL_OUT to JOURNAL_HOME.', ['setupDirs'], function deployJournals() {
+    deployJournals: ['deploy-journals', 'Deploy journal files from JOURNAL_OUT to JOURNAL_HOME.', ['setupDirs'], function deployJournals() {
       this.ensureDir(JOURNAL_HOME);
       this.copyDir(JOURNAL_OUT, JOURNAL_HOME);
     }],
 
-    genJournals: ['Concatenate repository journal files into .0 files', [], function genJournals() {
+    genJournals: ['gen-journals', 'Concatenate repository journal files into .0 files', [], function genJournals() {
       JAR_INCLUDES += ` -C ${BUILD_DIR} journals `;
       this.pmake.bind(this, `-makers=Journal -flags=${this.flag()} -pom=${POMS} -builddir=${BUILD_DIR} -journaldir=${JOURNAL_OUT}`)();
     }],
 
-    genDocuments: ['Capture repository documentation - flow docs', [], function genDocuments() {
+    genDocuments: ['gen-documents', 'Capture repository documentation - flow docs', [], function genDocuments() {
       JAR_INCLUDES += ` -C ${BUILD_DIR} documents `;
       this.pmake(`-makers=Doc -flags=${this.flag()} -pom=${POMS} -builddir=${BUILD_DIR} -documentdir=${DOCUMENT_OUT}`);
     }],
 
-    showManifest: ['Display generated JAR manifest file.', ['genManifest'], function showManifest() {
-      console.log('Manifest:', genManifest());
-    }],
-    jarFOAM: ['Copy foam-bin files for inclusion in JAR file.', ['genJava'], function jarFOAM() {
+    jarFOAM: ['jar-foam', 'Copy foam-bin files for inclusion in JAR file.', ['genJava'], function jarFOAM() {
       this.ensureDir(this.join(BUILD_DIR, 'webroot'));
       this.execSync(`cp ${BUILD_DIR}/js/foam-bin-* ${BUILD_DIR}/webroot/`, {stdio: VERBOSE ? 'inherit' : 'ignore' });
     }],
-    buildJar: ['Build Java JAR file.', [()=>JAR=true, 'setupDirs', 'genJS', 'genJava', 'versions', 'copy', 'genImages', 'genManifest', 'jarFOAM' ], function buildJar() {
+    buildJar: ['build-jar', 'Build Java JAR file.', [()=>JAR=true, 'setupDirs', 'genJS', 'genJava', 'versions', 'copy', 'genImages', 'javaManifest', 'jarFOAM' ], function buildJar() {
       JAR_INCLUDES += ` -C ${BUILD_DIR} webroot `;
       this.execSync(`jar cfm ${BUILD_DIR}/lib/${JAR_NAME} ${BUILD_DIR}/MANIFEST.MF ${JAR_INCLUDES}`, { stdio: VERBOSE ? 'inherit' : 'ignore' });
     }],
 
-    buildTar: ['Package files into a TAR archive', ['buildJar'], function buildTar() {
+    buildTar: ['build-tar', 'Package files into a TAR archive', [()=>TAR=true, 'buildJar'], function buildTar() {
       this.ensureDir(this.join(BUILD_DIR, 'package'));
       // Notice that the argument to the second -C is relative to the directory from the first -C, since -C
       this.execSync(`tar -a -cf ${BUILD_DIR}/package/${APP_NAME}-deploy-${VERSION}.tar.gz -C ./foam3/tools/deploy bin etc -C${require('path').resolve(BUILD_DIR)} lib`, { stdio: VERBOSE ? 'inherit' : 'ignore' });
     }],
-    setJavaEnv: ['Set Java environmental variables.', [], function setJavaEnv() {
+    buildJavaOpts: ['build-java-opts', 'Set Java environmental variables.', [], function buildJavaOpts() {
       JAVA_OPTS += ` -DJOURNAL_HOME=${JOURNAL_HOME}`;
       JAVA_OPTS += ` -DDOCUMENT_HOME=${DOCUMENT_HOME}`;
     }],
 
-    setRunArgs: ['Set arguments which will be passed to run.sh to start CORE server', [], function setRunArgs() {
+    buildRunArgs: ['set-run-args', 'Set arguments which will be passed to run.sh to start CORE server', [], function buildRunArgs() {
       if ( WEB_PORT ) RUN_ARGS += ` -W${WEB_PORT}`;
       if ( DEBUG ) RUN_ARGS += ` -D${DEBUG_PORT}`;
       if ( SUSPEND ) RUN_ARGS += ` -s`;
@@ -207,7 +208,7 @@ Implementation-Vendor: ${VENDOR || APP_NAME}
       if ( HOST_NAME && HOST_NAME !== 'localhost' ) RUN_ARGS += ` -H${HOST_NAME}`;
     }],
 
-    setupDirs: ['Create empty build and deployment directory structures if required.', [], function setupDirs() {
+    setupDirs: ['setup-dirs', 'Create empty build and deployment directory structures if required.', [], function setupDirs() {
       try {
         if ( ! BUILD_ONLY ) {
           this.ensureDir(APP_HOME);
@@ -222,12 +223,12 @@ Implementation-Vendor: ${VENDOR || APP_NAME}
       }
     }],
 
-    startCOREJar: ['Start CORE server (JAR).', [ 'setJavaEnv', 'setRunArgs', 'stopCORE', 'deployBin', 'deployLib'], function startCOREJar() {
+    startCOREJar: ['start-core-jar', 'Start CORE server (JAR).', [ 'buildJavaOpts', 'buildRunArgs', 'stopCORE', 'deployBin', 'deployLib'], function startCOREJar() {
       this.showSummary();
       this.exec(`${APP_HOME}/bin/run.sh -N${APP_NAME} -V${VERSION} ${RUN_ARGS}`);
     }],
 
-    startCORE: ['Start CORE server (CLASSPATH).', [ 'setJavaEnv', 'stopCORE', 'deployJournals', 'deployDocuments', 'deployLib' ], function startCORE() {
+    startCORE: ['start-core', 'Start CORE server (CLASSPATH).', [ 'buildJavaOpts', 'stopCORE', 'deployJournals', 'deployDocuments', 'deployLib' ], function startCORE() {
       if ( HOST_NAME && HOST_NAME !== 'localhost' ) {
         JAVA_OPTS += ` -Dhostname=${HOST_NAME}`;
       }
@@ -244,12 +245,7 @@ Implementation-Vendor: ${VENDOR || APP_NAME}
 
       CLASSPATH = `${BUILD_DIR}/lib/\*:${BUILD_DIR}/classes`;
 
-      logLevelLower = 'info';
-      if ( LOG_LEVEL ) {
-        JAVA_OPTS += ` -Dlog.level=${LOG_LEVEL}`;
-        logLevelLower = `${LOG_LEVEL}`.toLowerCase();
-      }
-      JAVA_OPTS += ` -Dorg.slf4j.simpleLogger.defaultLogLevel=${logLevelLower}`;
+      // JAVA_OPTS += ' -Dorg.slf4j.simpleLogger.defaultLogLevel=info';
 
       MESSAGE = `Starting CORE ${APP_NAME}`;
 
@@ -265,15 +261,17 @@ Implementation-Vendor: ${VENDOR || APP_NAME}
         if ( TEST ) {
           MESSAGE = 'Running tests...';
           JAVA_OPTS += ' -Dfoam.main=testRunnerScript';
-          if ( TESTS ) JAVA_OPTS += ' -Dfoam.tests=' + TESTS;
+          if ( TESTS )
+            JAVA_OPTS += ' -Dfoam.tests=' + TESTS;
         } else if ( BENCHMARK ) {
           MESSAGE = 'Running benchmarks...';
           JAVA_OPTS += ' -Dfoam.main=benchmarkRunnerScript';
-          if ( BENCHMARKS ) JAVA_OPTS += ' -Dfoam.benchmarks=' + BENCHMARKS;
+          if ( BENCHMARKS )
+            JAVA_OPTS += ' -Dfoam.benchmarks=' + BENCHMARKS;
         }
       }
 
-      this.info('JAVA_OPTS:' + JAVA_OPTS);
+      this.showSummary();
       this.info(MESSAGE);
 
       if ( TEST ) {
@@ -286,13 +284,12 @@ Implementation-Vendor: ${VENDOR || APP_NAME}
       } else if ( BENCHMARK ) {
         this.exec(`java -jar ${JAR_OUT}`);
       } else {
-        this.showSummary();
         // Acquires environment variables via JAVA_TOOL_OPTIONS (JAVA_OPTS)
         this.exec(`java -cp "${CLASSPATH}" foam.core.boot.Boot`);
       }
     }],
 
-    stopCORE: ['Stop CORE server.', [], function stopCORE() {
+    stopCORE: ['stop-core', 'Stop CORE server.', [], function stopCORE() {
       this.info('Stopping CORE server...');
 
       var pid = '';
@@ -309,14 +306,18 @@ Implementation-Vendor: ${VENDOR || APP_NAME}
       }
     }],
 
-    usage: ['Build usage examples', [], function usage() {
+    usage: ['usage', 'Build usage examples', [], function usage() {
       console.log('All builds will still start a Java web server (CORE), unless directed otherwise.');
       console.log('./build.sh -aJhttps -EJAVA_OPTS:\"-Xms4g -Xmx8g\"');
-      console.log('    Start CORE with additional memory, launch from JAR file, and suppor HTTPS support.');
-      console.log('./build.sh -Ndemo -W8300');
-      console.log('    Build into a unique path \'demo\', and start web server on port \'8300\'.');
-      console.log('./build.sh -EAPP_NAME:demo,WEB_PORT:8300');
-      console.log('    Build into a unique path \'demo\', and start web server on port \'8300\'.');
+      console.log('    Start CORE with additional memory, launch from JAR, start HTTPS web server, set JVM max and min memory.');
+      console.log('./build.sh -Ndemo -W8300 -aJhttps');
+      console.log('    Build into a unique path \'demo\', launch from JAR, start HTTPS web server on port \'8300\'.');
+      console.log('./build.sh --appName:demo --webPort:8300 --jar --journals:https');
+      console.log('    Build into a unique path \'demo\', launch from JAR, start HTTPS web server on port \'8300\'.');
+      console.log('./build.sh --app-name:demo --web-port:8300 --jar --journasl:https');
+      console.log('    Build into a unique path \'demo\', launch from JAR, start HTTPS web server on port \'8300\'.');
+      console.log('./build.sh -EAPP_NAME:demo,WEB_PORT:8300,JAR:true,JOURNALS:https');
+      console.log('    Build into a unique path \'demo\', launch from JAR, start HTTPS web server on port \'8300\'.');
     }]
  }
 });

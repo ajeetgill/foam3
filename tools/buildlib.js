@@ -10,6 +10,23 @@ const fs_   = require('fs');
 const exec_ = require('child_process');
 const path_ = require('path');
 
+const Task = {
+  'name':   '',
+  'gnuopt': '',
+  'desc':   '',
+  'dep':    [],
+  'f':      null
+};
+
+const Option = {
+  'name':   '',
+  'opt':    '',
+  'gnuopt': '',
+  'env':    '',
+  'desc':   '',
+  'def':    '',
+  'f':      ''
+};
 
 function adaptOrCreateArgs(X, args) {
   /**
@@ -44,7 +61,8 @@ function adaptOrCreateArgs(X, args) {
 
 function ensureDir(dir) {
   if ( ! fs_.existsSync(dir) ) {
-    console.log('Creating directory', dir);
+    if ( globalThis['VERBOSE'] )
+      console.log('Creating directory', dir);
     fs_.mkdirSync(dir, {recursive: true});
     return true;
   }
@@ -124,7 +142,7 @@ function buildEnv(m) {
 function addOptions(options, existing = {}) {
   Object.keys(options).forEach(key => {
     if ( existing[key] ) {
-      warning(`[Tooling] duplicate option '${key}' ignored'`);
+      warning(`[Tooling] ignoring duplicate option '${key}'`);
     } else {
       existing[key] = options[key];
       existing[key].key = key;
@@ -166,7 +184,8 @@ function copyFile(src, dst) {
 function spawn(s) {
   exportEnvs();
 
-  console.log('Spawn: ', s);
+  if ( globalThis['VERBOSE'] )
+    console.log('Spawn: ', s);
   var [cmd, ...args] = s.split(' ');
   return exec_.spawn(cmd, args, { stdio: 'ignore' });
 }
@@ -209,7 +228,9 @@ function info(...args) {
 
 function warning(...args) {
   let msg = args.join(' ');
-  console.log('\x1b[0;33mWARNING ::', msg, '\x1b[0;0m');
+  console.log('\x1b[0;35mWARNING ::', msg, '\x1b[0;0m');
+  // yellow: 33m - too light for white background
+  // magenta: 35m - works well for both light and dark backgrounds
 }
 
 function error(...args) {
@@ -218,6 +239,9 @@ function error(...args) {
   process.exit(1);
 }
 
+function hyphenate(str) {
+  return str.replace(/([a-z])([^0-9a-z_])/g, '$1-$2').replace(/\s/g,'').toLowerCase();
+}
 // Build flag string with global and argument flags
 function flag(flgs) {
   var f = globalThis['VERBOSE'] ? 'verbose' : '';
@@ -230,6 +254,39 @@ function flag(flgs) {
     f = ( f ? f + ',' : '' ) + flgs;
 
   return f;
+}
+
+function findTask(tasks, t) {
+  var result = null;
+  Object.keys(tasks).forEach(key => {
+    let task = tasks[key];
+    if ( t === key ||
+         t === task[0] ) {
+      result = task;
+      return;
+    }
+  });
+  return result;
+}
+
+function findSimilarTasks(tasks, t) {
+  var similar = [];
+  if ( ! t ) return similar;
+
+  Object.keys(tasks).forEach(key => {
+    let task = tasks[key];
+    var gnu = task[1];
+    if ( typeof gnu == "string" ) { // see h ?
+      gnu = gnu.replaceAll("-","").toLowerCase();
+      let target = t.replaceAll("-","").toLowerCase();
+      if ( gnu.startsWith(target) ||
+           key.toLowerCase().startsWith(target) ) {
+        similar.push(task);
+        // TODO: add column of common mismatches.
+      }
+    }
+  });
+  return similar;
 }
 
 function findOption(options, o) {
@@ -249,6 +306,8 @@ function findOption(options, o) {
 
 function findSimilarOptions(options, o) {
   var similar = [];
+  if ( ! o ) return similar;
+
   Object.keys(options).forEach(key => {
     let option = options[key];
     var gnu = option[1];
@@ -272,71 +331,66 @@ function processToolingArgs(ARGS, moreUsage) {
     if ( arg.startsWith('--') ) {
       var a = arg.substring(2);
       var option = findOption(ARGS, a);
-      if ( option ) {
+      if ( option && option[5] ) {
         option[5].bind(this, arg.substring(j+1))();
         if ( option.key === 'toolingPoms' ) {
           break;
         }
+      } else {
+        console.log(`processToolingArgs -- not found a: ${a}`);
       }
     } else if ( arg.startsWith('-') ) {
       for ( var j = 1 ; j < arg.length ; j++ ) {
         a = arg.charAt(j);
         option = findOption(ARGS, a);
-        if ( option ) {
+        if ( option && option[5] ) {
           option[5].bind(this, arg.substring(j+1))();
           if ( option.key === 'toolingPoms' ) {
             break;
           }
+        } else {
+          console.log(`processToolingArgs - not found a: ${a}`);
         }
       }
     }
   }
 }
 
-function processBuildArgs(ARGS, moreUsage) {
-  function usage(f) {
-    moreUsage && moreUsage(ARGS);
-    if ( f ) {
-      if ( f instanceof Function ) f();
-      else {
-        warning('Unknown argument "'+f+'"');
-      }
-    }
-    process.exit(0);
-  }
-
-  var USAGE = [ 'Print usage information.', usage ];
-  if ( ! ARGS['h'] ) ARGS['h'] = USAGE;
-  if ( ! ARGS['?'] ) ARGS['?'] = USAGE;
-
+function processBuildArgs(OPTIONS, moreUsage) {
   const args = process.argv.slice(2);
   for ( var i = 0 ; i < args.length ; i++ ) {
     var arg = args[i];
-    if ( arg === '-h' ||
-         arg === '-?' ||
-         arg === '-help' ||
-         arg === '--help' ) {
-      ARGS['h'][1]();
-    } else {
-      if ( arg.startsWith('--') ) {
-        ARGS['tasks'][5](arg.substring(2));
-      } else if ( arg.startsWith('-') ) {
-        for ( var j = 1 ; j < arg.length ; j++ ) {
-          var a = arg.charAt(j);
-          var option = findOption(ARGS, a);
-          if ( option ) {
-            // FIXME: see TestTooling.js:30 and JavaTooling.js:55,
-            // this.comma is undefined. EXPORTS.comma works.
-            // bind(this, and bind(EXPORTS, did not help - Joel
-            // option[5](arg.substring(j+1));
-            option[5].bind(this, arg.substring(j+1))();
-            if ( a >= 'A' && a <= 'Z' ) break;
-          } else {
-            let msg = 'Unknown argument "' + a + '"';
-            // output warning message after usage as the usage is so long
-            // the user will have to scroll pages up to see the issue.
-            ARGS['h'][1](() => warning(msg));
-          }
+    if ( arg.startsWith('--') ) {
+      arg = arg.substring(2);
+      var [opt, val] = arg.split(':');
+      if ( opt === 'help' ) {
+        OPTIONS['help'][5](val);
+      } else {
+        let option = findOption(OPTIONS, opt);
+        if ( option ) {
+          option[5](val);
+        } else {
+          OPTIONS['tasks'][5](opt, val);
+        }
+      }
+    } else if ( arg.startsWith('-') ) {
+      for ( var j = 1 ; j < arg.length ; j++ ) {
+        var a = arg.charAt(j);
+        if ( a === '?' )
+          a = 'h';
+        var option = findOption(OPTIONS, a);
+        if ( option ) {
+          // FIXME: see TestTooling.js:30 and JavaTooling.js:55,
+          // this.comma is undefined. EXPORTS.comma works.
+          // bind(this, and bind(EXPORTS, did not help - Joel
+          // option[5](arg.substring(j+1));
+          option[5].bind(this, arg.substring(j+1))();
+          if ( a >= 'A' && a <= 'Z' ) break;
+        } else {
+          let msg = 'Unknown argument "' + a + '"';
+          // output warning message after usage as the usage is so long
+          // the user will have to scroll pages up to see the issue.
+          OPTIONS['help'][5](() => warning(msg));
         }
       }
     }
@@ -355,15 +409,20 @@ exports.error                 = error;
 exports.exec                  = exec;
 exports.execSync              = execSync;
 exports.exportEnvs            = exportEnvs;
+exports.findTask              = findTask;
 exports.findOption            = findOption;
 exports.findSimilarOptions    = findSimilarOptions;
+exports.findSimilarTasks      = findSimilarTasks;
 exports.flag                  = flag;
+exports.hyphenate             = hyphenate;
 exports.info                  = info;
 exports.isExcluded            = isExcluded;
+exports.Option                = Option;
 exports.processBuildArgs      = processBuildArgs;
 exports.processToolingArgs    = processToolingArgs;
 exports.rmdir                 = rmdir;
 exports.rmfile                = rmfile;
 exports.spawn                 = spawn;
+exports.Task                  = Task;
 exports.warning               = warning;
 exports.writeFileIfUpdated    = writeFileIfUpdated;

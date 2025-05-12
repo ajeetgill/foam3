@@ -7,7 +7,10 @@
 const { warning } = require('./buildlib');
 const envs = {};
 
-exports.description = 'Capture POM specified environment variables.';
+exports.description = `Capture POM values for environment variables or options,
+and translate top level POM keys to build variables ( ex: pom.name -> appName )
+and provide backwards compatibility for legacy poms still using
+pom keys such as 'java' to set the javaRelease`;
 
 exports.init = function() {
   verbose('[Env] init');
@@ -25,6 +28,16 @@ exports.init = function() {
 };
 
 exports.visitPOM = function(pom) {
+  pom.envs && Object.keys(pom.envs).forEach(e => {
+    verbose(`[Env] pom ${pom.name} testing ${e} = ${pom.envs[e]}`);
+    if ( envs[e] ) {
+      warning(`[Env] pom ${pom.name} ignoring duplicate ${e} = ${pom.envs[e]}`);
+      return;
+    }
+    console.log(`[Env] pom ${pom.name} setting ${e} = ${pom.envs[e]}`);
+    envs[e] = pom.envs[e];
+  });
+
   Object.keys(envs).forEach(k => {
     if ( envs[envs[k]] ) return;
 

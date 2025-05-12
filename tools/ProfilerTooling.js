@@ -13,8 +13,11 @@ foam.POM({
   },
 
   tasks: {
-    setRunArgs: ['Set profiler port',[], function setRunArgs() {
+    setRunArgs: ['set-run-args', 'Set profiler port',[], function setRunArgs(args) {
       if ( PROFILER ) RUN_ARGS += ` -P${PROFILER_PORT}`;
+      if ( args ) {
+        RUN_ARGS += ` ${args}`;
+      }
     }]
   }
 });

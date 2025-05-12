@@ -6,6 +6,10 @@
 
 foam.POM({
   name: 'test',
+  envs: {
+    LOG_LEVEL: ['Set JVM Log level for TEST cases. Defaults to ERROR. example: -ELOG_LEVEL:INFO',null],
+  },
+
   options: {
     benchmark: [ 'b', 'benchmarks', 'BENCHMARK', 'Run all benchmarks.', false,
                  () => {
@@ -36,12 +40,12 @@ foam.POM({
   },
 
   tasks: {
-    clean: ['Set Java environmental variables specific to running test cases.', [], function clean() {
+    clean: ['clean', 'Set Java environmental variables specific to running test cases.', [], function clean() {
       if ( TEST || BENCHMARK ) {
         this.rmdir(APP_HOME);
       }
     }],
-    runTests: ['Run all or specified test cases. ex: runTests[:Test1,Test2]', ['pomEnvs'], function runTests(args) {
+    runTests: ['run-tests', 'Run all or specified test cases. ex: runTests[:Test1,Test2]', ['pomEnvs'], function runTests(args) {
       if ( args ) {
         OPTIONS['tests'][5](args);
       } else {
@@ -55,7 +59,7 @@ foam.POM({
       this.execute('buildJar');
       this.execute('startCORE');
     }],
-    runBenchmarks: ['Run all or specified benchmarks. ex: runBenchmarks[:Benchmark1,Benchmark2]', ['pomEnvs'], function runBenchmarks(args) {
+    runBenchmarks: ['run-benchmarks', 'Run all or specified benchmarks. ex: runBenchmarks[:Benchmark1,Benchmark2]', ['pomEnvs'], function runBenchmarks(args) {
       if ( args ) {
         OPTIONS['benchmarks'][5](args);
       } else {

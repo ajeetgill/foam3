@@ -8,7 +8,7 @@ foam.POM({
   name: 'npm',
 
   tasks: {
-    install: ['Install npm tools that foam and the build use.', [], function install() {
+    install: ['install', 'Install npm tools that foam and the build use.', [], function install() {
       process.chdir(PROJECT_HOME);
       this.execSync('npm install', { stdio: 'inherit'} );
     }]
