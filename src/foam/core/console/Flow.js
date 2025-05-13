@@ -18,7 +18,7 @@ foam.CLASS({
   imports: [ 'flowDAO' ],
 
   ids: [ 'name' ],
-
+/*
   axioms: [
     {
       class: 'foam.comics.v2.CannedQuery',
@@ -31,6 +31,7 @@ foam.CLASS({
       predicateFactory: function(e, cls) { return e.EQ(cls.IS_PUBLIC, false); }
     }
   ],
+    */
 
   tableColumns: [ 'name', 'description', 'status', /* 'isPublic', 'readOnly', */ 'reflow' ],
 
@@ -107,7 +108,7 @@ foam.CLASS({
     {
       class: 'String',
       name: 'mementoStr',
-      label: 'Source',
+      label: 'JSON',
       postSet: function(o, n) {
         if ( this.feedback_ ) return;
         this.feedback_ = true;
