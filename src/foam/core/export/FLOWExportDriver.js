@@ -99,6 +99,7 @@ foam.CLASS({
       var flow = this.Flow.create({
         name: this.name,
         description: this.description,
+        source: this.daoKey,
         mementoStr: `
 [
   {
