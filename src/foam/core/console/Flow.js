@@ -112,7 +112,7 @@ foam.CLASS({
         if ( this.feedback_ ) return;
         this.feedback_ = true;
         try {
-          console.log('*********** FLOW mementoStr change:', n);
+          // console.log('*********** FLOW mementoStr change:', n);
           var memento = this.memento = foam.json.parseString(n, this.__context__);
           console.log('mementos:', memento.length);
 
@@ -134,7 +134,7 @@ foam.CLASS({
     {
       name: 'reflow',
       code: function(X) {
-        X.routeTo("reflow/" + this.name);
+        X.routeTo('reflow/' + this.name + '?showPrompts=false');
       }
     }
   ]
