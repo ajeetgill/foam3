@@ -98,13 +98,6 @@ foam.CLASS({
           )
         .end();
       }
-
-      if (this.description) {
-          (this.U3 ? this.parentNode.parentNode : this).start().addClass(this.myClass('desc'))
-            .add(this.description)
-          .end();
-      }
-      
     }
   ],
 

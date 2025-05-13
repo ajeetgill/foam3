@@ -34,6 +34,9 @@ foam.CLASS({
       border: 1px solid $grey200;
 
     }
+    ^ .foam-u2-TextInputCSS option {
+      padding: 10px;
+    }
     ^datatype-group {
       display: flex;
       align-items: center;
@@ -50,6 +53,10 @@ foam.CLASS({
       border-top: 1px solid $grey500;
       padding-top: 10px;
     }
+    ^ .foam-u2-borders-ExpandableBorder-container {
+      padding: 10px;
+    }
+      
   `,
 
   properties: [
@@ -100,8 +107,9 @@ foam.CLASS({
     {
       name: 'exportAllColumns',
       label: '',
-      view: { class: 'foam.u2.CheckBox',  label: 'Include all columns in export', description: 'Exports all columns, even those hidden by filters or view settings.'},
+      view: { class: 'foam.u2.CheckBox',  label: 'Include all columns in export'},
       class: 'Boolean',
+      help: 'Exports all columns, even those hidden by filters or view settings.'
     },
     'exportDriverReg',
     {
@@ -161,7 +169,6 @@ foam.CLASS({
             })
           .end()
           
-          // .start().addClass(this.myClass('divider')).end()
           .start().show(this.isDataTypeSelected$).addClass(this.myClass('divided-sec'))
             .add(this.slot(function (exportDriver) {
               return this.E()
@@ -177,7 +184,7 @@ foam.CLASS({
               .add(
                 self.slot(function(exportDriverReg$exportAllColumns) {
                   if ( exportDriverReg$exportAllColumns ) {
-                    return self.E().start().startContext({ data: self }).tag(self.EXPORT_ALL_COLUMNS).endContext().end();
+                    return self.E().start().startContext({ data: self }).tag(self.EXPORT_ALL_COLUMNS.__).endContext().end();
                   }
                 })
               )
