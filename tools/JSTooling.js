@@ -12,8 +12,8 @@ foam.POM({
   },
 
   options: {
-   timestampFoamBin: [ 'g', 'timestamp-foam-bin', 'TIMESTAMP_FOAM_BIN', 'Set to false to not timestamp foam-bin javascript file to retain breakpoints during development cycle.', true, () => TIMESTAMP_FOAM_BIN = false ],
-    withoutStages: [ 'w', 'without-stages', 'STAGE_JS', 'Generate a single foam-bin file.', true, () => STAGE_JS = false ]
+    timestampFoamBin: [ 'g', 'timestamp-foam-bin', 'TIMESTAMP_FOAM_BIN', 'Use --timestamp-foam-bin:false to not timestamp foam-bin javascript file to retain breakpoints during development cycle.', true, arg => TIMESTAMP_FOAM_BIN = arg && arg !== undefined ? arg : false ],
+    withoutStages: [ 'w', 'without-stages', 'STAGE_JS', 'Generate a single foam-bin file.', true, arg => STAGE_JS = arg && arg !== undefined ? arg : false ]
   },
 
   tasks: {

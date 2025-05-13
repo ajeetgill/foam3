@@ -102,13 +102,8 @@ function addBuildEnv(key, doc, val) {
     get: function()  { return typeof val === 'function' ? val() : val; },
     set: function(v) { val = v; }
   });
-  if ( val ) {
+  if ( val )
     globalThis[key] = val;
-    if ( ! globalThis['ENV'] ) {
-      globalThis['ENV'] = {};
-    }
-    globalThis.ENV[key] = val;
-  }
 }
 
 function buildEnv(m) {
@@ -157,15 +152,15 @@ function addOptions(options, existing = {}) {
       args.unshift(key);
       opt = createOption(...args);
       existing[key] = opt;
-      existing[key].key = key;
     }
     opt = existing[key];
     let env = opt.env;
     if ( env && ! globalThis[env] ) {
       addBuildEnv(env, opt.desc, opt.def);
+
       let envs = globalThis['ENVS'];
       if ( envs && ! envs[env] ) {
-        envs[env] = globalThis[env];
+        envs[env] = [ opt.desc, opt.def ];
       }
     }
   });
@@ -214,7 +209,7 @@ function exportEnv(name, value) {
 
 function exportEnvs() {
   /** Export environment variables. **/
-  Object.keys(ENV).forEach(k => {
+  Object.keys(globalThis['ENVS']).forEach(k => {
     var v = globalThis[k];
     exportEnv(k, v);
   });
@@ -274,6 +269,13 @@ function flag(flgs) {
     f = ( f ? f + ',' : '' ) + flgs;
 
   return f;
+}
+
+function argValue(arg, def = false) {
+  if ( ! arg ||
+       arg == undefined )
+    return def;
+  return arg;
 }
 
 function findTask(tasks, t) {
@@ -345,13 +347,13 @@ function findSimilarOptions(options, o) {
   return similar;
 }
 
-function processToolingArgs(ARGS, moreUsage) {
+function processToolingArgs(options, moreUsage) {
   const args = process.argv.slice(2);
   for ( var i = 0 ; i < args.length ; i++ ) {
     var arg = args[0];
     if ( arg.startsWith('--') ) {
       var a = arg.substring(2);
-      var option = findOption(ARGS, a);
+      var option = findOption(options, a);
       if ( option && option.f ) {
         option.f.bind(this, arg.substring(j+1))();
         if ( option.key === 'toolingPoms' ) {
@@ -363,7 +365,7 @@ function processToolingArgs(ARGS, moreUsage) {
     } else if ( arg.startsWith('-') ) {
       for ( var j = 1 ; j < arg.length ; j++ ) {
         a = arg.charAt(j);
-        option = findOption(ARGS, a);
+        option = findOption(options, a);
         if ( option && option.f ) {
           option.f.bind(this, arg.substring(j+1))();
           if ( option.key === 'toolingPoms' ) {
@@ -377,7 +379,7 @@ function processToolingArgs(ARGS, moreUsage) {
   }
 }
 
-function processBuildArgs(OPTIONS, moreUsage) {
+function processBuildArgs(options, moreUsage) {
   const args = process.argv.slice(2);
   for ( var i = 0 ; i < args.length ; i++ ) {
     var arg = args[i];
@@ -385,13 +387,13 @@ function processBuildArgs(OPTIONS, moreUsage) {
       arg = arg.substring(2);
       var [opt, val] = arg.split(':');
       if ( opt === 'help' ) {
-        OPTIONS['help'].f(val);
+        options['help'].f(val);
       } else {
-        let option = findOption(OPTIONS, opt);
+        let option = findOption(options, opt);
         if ( option ) {
           option.f(val);
         } else {
-          OPTIONS['tasks'].f(opt, val);
+          options['tasks'].f(opt, val);
         }
       }
     } else if ( arg.startsWith('-') ) {
@@ -399,7 +401,7 @@ function processBuildArgs(OPTIONS, moreUsage) {
         var a = arg.charAt(j);
         if ( a === '?' )
           a = 'h';
-        var option = findOption(OPTIONS, a);
+        var option = findOption(options, a);
         if ( option ) {
           // FIXME: see TestTooling.js:30 and JavaTooling.js:55,
           // this.comma is undefined. EXPORTS.comma works.
@@ -411,7 +413,7 @@ function processBuildArgs(OPTIONS, moreUsage) {
           let msg = 'Unknown argument "' + a + '"';
           // output warning message after usage as the usage is so long
           // the user will have to scroll pages up to see the issue.
-          OPTIONS['help'].f(() => warning(msg));
+          options['help'].f(() => warning(msg));
         }
       }
     }

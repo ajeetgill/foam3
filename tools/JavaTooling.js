@@ -16,21 +16,20 @@ foam.POM({
     JAR_LIB_DIR:       ['Deployment lib directory',() => ( TAR ? `${PROJECT_HOME}/${BUILD_DIR}` : (APP_NAME ? APP_HOME : 'APP_HOME')) + '/lib'],
     JAR_NAME:          ['Java jar name',() => APP_NAME ? `${APP_NAME}-${VERSION}.jar` : 'APP_NAME-VERSION.jar' ],
     JAR_OUT:           ['Java jar path and name',() => `${JAR_LIB_DIR}/${JAR_NAME}`],
-    JAVA_OPTS:         ['Additional JVM options',''],
     JAVA_TOOL_OPTIONS: ['Internal configuration for JVM with the JAVA_OPTS',() => JAVA_OPTS],
-    JAVAC_PARAMETERS:  ['Parameters passed to Java Compiler','-proc:none'],
     JOURNAL_HOME:      ['Application journals directory',() => `${APP_HOME}/journals`],
     JOURNAL_OUT:       ['Build journals directory',() => `${PROJECT_HOME}/${BUILD_DIR}/journals`],
     LOG_HOME:          ['Application logs directory',() => APP_NAME ? `${APP_HOME}/logs`: 'APP_HOME/logs'],
-    PROJECT_REVISION:  ['Root project git revision. Will be set JVM Manifest',null],
-    RUN_ARGS:          ['Arguments which will be passed to run.sh to when starting CORE server from JAR','']
+    PROJECT_REVISION:  ['Root project git revision. Will be set JVM Manifest',null]
   },
 
   options: {
-    jar: [ 'a', 'jar', 'JAR', 'Run/launch from Java jar file.', false, () => JAR = true ],
-    debug: [ 'd', 'debug', 'DEBUG', 'Launch JVM with JDPA debugging enabled. Default port 8000.', false, () => DEBUG = true ],
+    buildOnly: [ 'o', 'build-only', 'BUILD_ONLY', "Only execute java generation and java compilation build steps, don't start CORE server.", false, arg => BUILD_ONLY = arg && arg !== undefined ? arg : true ],
+    debug: [ 'd', 'debug', 'DEBUG', 'Launch JVM with JDPA debugging enabled. Default port 8000.', false, arg => DEBUG = arg && arg !== undefined ? arg : true ],
     debugPort: [ 'D', 'debug-port', 'DEBUG_PORT', 'Port JVM will listen on for debuggers (JDPA) connections.',8000, args => DEBUG_PORT = args],
-    deleteRuntimeJournals: [ 'j', 'delete-runtime-journals', 'DELETE_RUNTIME_JOURNALS', 'Delete runtime journals.', false, () => DELETE_RUNTIME_JOURNALS = true ],
+    deleteRuntimeJournals: [ 'j', 'delete-runtime-journals', 'DELETE_RUNTIME_JOURNALS', 'Delete runtime journals.', false, arg => DELETE_RUNTIME_JOURNALS = arg && arg !== undefined ? arg : true ],
+    hostname: ['', 'hostname', 'HOST_NAME', 'Hostname to set in JVM', () => EXPORTS.hostname(), args => HOST_NAME = args ],
+    javacParameters: ['', 'javac-parameters', 'JAVAC_PARAMETERS', 'Parameters passed to Java Compiler','-proc:none', arg => JAVAC_PARAMETERS = arg ],
     javaRelease: ['', 'java-release', 'JAVA_RELEASE', 'Java target version. Can also be set in root pom. ex: java: \'11\'', '17', args => JAVA_RELEASE = args],
     journals: [ 'J', 'journals', 'JOURNALS', 'Comma seperated list of additional journal directories, relative to deployment/ from the root project.', '',
       args => {
@@ -38,18 +37,15 @@ foam.POM({
         // JOURNALS = comma(JOURNALS, args);
         JOURNALS = EXPORTS.comma(JOURNALS, args);
       }],
-    tar: [ 'k', 'tar', 'TAR', 'Package up a deployment tarball for remote application installation', false, () => TAR = true ],
-    buildOnly: [ 'o', 'build-only', 'BUILD_ONLY', "Only execute java generation and java compilation build steps, don't start CORE server.", false, () => BUILD_ONLY = true ],
-    restart: [ 'r', 'restart', 'RESTART', 'Restart CORE Server using last build.', false,
-      () => RESTART = true ],
-    suspend: [ 's', 'suspend', 'SUSPEND', 'Start JDPA debugging in suspend state.', false,
-      ()  => {
-        DEBUG = true;
-        SUSPEND = true;
-      } ],
-    webPort: [ 'W', 'web-port', 'WEB_PORT', 'Port WebServer will listen on. HTTP defaults to 8080, HTTPS defaults to 8443.  WebSocketServer will use PORT+1', '8080', args => WEB_PORT = args ],
+    jar: [ 'a', 'jar', 'JAR', 'Run/launch from Java jar file.', false, arg => JAR = arg && arg !== undefined ? arg : true ],
     javaManifestVendor: ['', 'java-manifest-vendor', 'JAVA_MANIFEST_VENDOR', 'Java Manifest Vendor', () => APP_NAME ? `${APP_NAME}` : 'APP_NAME', args => JAVA_MANIFEST_VENDOR = args ],
     javaManifestVendorId: ['', 'java-manifiest-vendor-id', 'JAVA_MANIFEST_VENDOR_ID', 'Java Manifest Vendor ID', '', args => JAVA_MANIFEST_VENDOR_ID = args ],
+    javaOpts: ['', 'java-opts', 'JAVA_OPTS', 'Additional JVM options','', arg => JAVA_OPTS = arg ],
+    restart: [ 'r', 'restart', 'RESTART', 'Restart CORE Server using last build.', false, arg => RESTART = arg && arg !== undefined ? arg : true ],
+    runArgs: ['', 'run-args', 'RUN_ARGS', 'Arguments which will be passed to run.sh to when starting CORE server from JAR','', arg => RUN_ARGS = arg ],
+    suspend: [ 's', 'suspend', 'SUSPEND', 'Start JDPA debugging in suspend state.', false, arg => { DEBUG = arg && arg !== undefined ? arg : true; SUSPEND = arg && arg !== undefined ? arg : true; } ],
+    tar: [ 'k', 'tar', 'TAR', 'Package up a deployment tarball for remote application installation', false, arg => TAR = arg && arg !== undefined ? arg : true ],
+    webPort: [ 'W', 'web-port', 'WEB_PORT', 'Port WebServer will listen on. HTTP defaults to 8080, HTTPS defaults to 8443.  WebSocketServer will use PORT+1', '8080', args => WEB_PORT = args ],
     version: ['', 'version', 'VERSION', 'Application version', '1.0.0', args => VERSION = args ]
   },
 
@@ -81,9 +77,10 @@ foam.POM({
 
       this.pmake.bind(this, `-makers=Image -flags=${this.flag()} -pom=${POMS} -builddir=${BUILD_DIR}`)();
     }],
+
     javacParameters: ['javac-parameters', 'Set parameters passed the Java compiler', [], function javacParameters() {
       if ( ! JAVAC_PARAMETERS.includes('--release') ) {
-        JAVAC_PARAMETERS += ` --release ${JAVA_RELEASE}`;
+        JAVAC_PARAMETERS += ' --release '+JAVA_RELEASE;
       }
     }],
 
@@ -96,7 +93,7 @@ foam.POM({
       // NOTE: Java and Javac Maker must be run together as they share data through X
       makers += 'Java,Maven,Javac';
       makers += ',Journal,Doc';
-      this.pmake.bind(this, `-makers=${makers} -flags=${this.flag()} -pom=${POMS} -builddir=${BUILD_DIR} -d=${BUILD_DIR}/classes -journaldir=${JOURNAL_OUT} -documentdir=${DOCUMENT_OUT} -outdir=${BUILD_DIR}/src/java -libdir=${BUILD_DIR}/lib -javacParams=${JAVAC_PARAMETERS}`)();
+      this.pmake.bind(this, `-makers=${makers} -flags=${this.flag()} -pom=${POMS} -builddir=${BUILD_DIR} -d=${BUILD_DIR}/classes -journaldir=${JOURNAL_OUT} -documentdir=${DOCUMENT_OUT} -outdir=${BUILD_DIR}/src/java -libdir=${BUILD_DIR}/lib -javacParams=\'${JAVAC_PARAMETERS}\'`)();
     }],
 
     javaManifest: ['java-manifest', 'Generate JVM Manifest', ['versions', 'genFoamBinVersion'], function javaManifest() {
@@ -141,12 +138,6 @@ Implementation-Vendor: ${JAVA_MANIFEST_VENDOR}
 
     getFOAMGitHash: ['gen-foam-git-hash', 'Extract FOAM git hash.', [], function getFOAMGitHash() {
       FOAM_REVISION = this.execSync('git -C foam3 rev-parse --short HEAD').toString().trim();
-    }],
-
-    versions: ['versions', 'Show version information.', [ 'pomEnvs', 'getProjectGitHash', 'getFOAMGitHash'], function versions() {
-      console.log(`Application Version: ${VERSION}`);
-      console.log(`${APP_NAME} revision: ${PROJECT_REVISION}`);
-      console.log(`FOAM revision:       ${FOAM_REVISION}`);
     }],
 
     deployBin: ['deploy-bin', 'Copy bash files to deployment', [], function deployBin() {
@@ -221,6 +212,12 @@ Implementation-Vendor: ${JAVA_MANIFEST_VENDOR}
       } catch ( e ) {
         this.error(`Directory is not writable! Please run 'sudo chown -R $USER ${APP_ROOT}' first.`, e);
       }
+    }],
+
+    versions: ['versions', 'Show version information.', [ 'pomEnvs', 'getProjectGitHash', 'getFOAMGitHash'], function versions() {
+      console.log(`Application Version: ${VERSION}`);
+      console.log(`${APP_NAME} revision: ${PROJECT_REVISION}`);
+      console.log(`FOAM revision:       ${FOAM_REVISION}`);
     }],
 
     startCOREJar: ['start-core-jar', 'Start CORE server (JAR).', [ 'buildJavaOpts', 'buildRunArgs', 'stopCORE', 'deployBin', 'deployLib'], function startCOREJar() {

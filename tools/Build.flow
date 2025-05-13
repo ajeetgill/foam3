@@ -6,10 +6,10 @@
 
 <p>The FOAM build is a <b>node</b> tool which executes Javascript methods (<b>Tasks</b>) against Project Object Model (<b>POM</b>)(or a more lighthearted acronym expansion: Pom-O-Matic) files.</p>
 
-<p>The build manages three components: environment variables (envs), options, and tasks:
+<p>The build manages <b>options</b> and <b>tasks</b>:
 <ul>
-  <li>envs - variables which can be set directly or via <i>options</i>, and impact the execution of <i>tasks</i>.</li>
-  <li>options - provide build specific command line arguments. Options can manipulate <i>envs</i> and impact the execution of <i>tasks</i>.</li>
+  <li>**** envs - variables which can be set directly or via <i>options</i>, and impact the execution of <i>tasks</i>.</li>
+  <li>options - provide build specific command line arguments that manipulate flags or environment variables to impact the selection and operation of <b>tasks</b>.</li>
   <li>tasks - methods which act against the source code to generate an application. </li>
 </ul>
 
@@ -17,22 +17,38 @@
 
 <p>Presently, there are two types of POMs, or more precisely, two types of POM <b>fields</b>
 <ol>
-  <li><b>Tooling</b> - fields which configure the Build environment itself with tasks and environment variables.
-  <p>Fields which set up tasks and environment variables for the build.js process.  <i>For example</i>, <b>JavaTooling</b> adds variables to control the Java target version, adds command line arguments to control creating a JAR file or start the JVM with JDPA enabled, adds Tasks for building and starting from JAR file locally or building a TAR file for remote deployment.</p>
+  <li><b>Tooling</b> - fields which configure the Build environment itself.
+  <p>Fields <b>options</b> and <b>tasks</b> add support for build specific command line options and methods to process the source code.<br/><i>For example</i>, <b>JavaTooling</b> adds <b>options</b> to allow the configuration of the Java target version, and provide command line arguments to control creating a JAR file or start the JVM with JDPA enabled.  And adds <b>tasks</b> for building and starting from JAR file locally or building a TAR file for remote deployment.</p>
   </li>
   <li><b>Build</b> - fields which declare build inputs.
-  <p>Such as code and deployment configuration to include.  <i>For example</i>, specifying the models to generate Java from and specifying the configuration to include in a JAR file.</p>
+  <p>Such as code and deployment configuration to include.  </br><i>For example</i>, specifying the models to generate Java from and specifying the configuration to include in a JAR file.</p>
   </li>
 </ol>
 </p>
 
 <p>There are three distinct build <b>phases</b>:
 <ol>
-  <li><b>Tooling</b> - the build loads Tooling POMs which add evironment variables (<b>envs</b>), command line options (<b>args</b>), and build <b>Tasks</b> specific to the type of code generation, compilation, and deployment to be supported.
+  <li><b>Tooling</b> - the build loads Tooling POMs which add <b>options</b> for command line control, and build <b>tasks</b> specific to the type of code generation, compilation, and deployment to be supported.
   </li>
-  <li><b>Environment and Registration</b> - the build processes the Build POMs to (1) set environment variable values for variables added during the Tooling phase (i.e., Java target release = 21), and (2) register Build POM <b>Tasks</b> to be run when same-named Tooling <b>Tasks</b> are run (i.e., <b>buildJavaOpts</b> JAVA_OPTS=-Dxyz before the JVM is started).
+  <li><b>Environment and Registration</b> - the build processes the Build POMs to (1) set environment variable values for <b>options</b> added during the Tooling phase (i.e., Java target release = 21), and (2) register Build POM <b>tasks</b> to be run when same-named Tooling <b>tasks</b> are run (i.e., <b>buildJavaOpts</b> JAVA_OPTS=-Dxyz before the JVM is started).
+  <code>
+foam.POM({
+  ...
+  envs: {
+    appName: 'foam',
+  },
+  ...
+  tasks: [
+    function javacParameters() {
+      JAVA_RELEASE = '21';
+    },
+    function buildJavaOpts() {
+      JAVA_OPTS += ` -DGO_HOME=${APP_HOME}`;
+    }
+
+  </code>
   </li>
-  <li><b>Task</b> - the build processes the command line arguments, for options added during the Tooling phase, and prepares a set of <b>Tasks</b> which are then executed.  The <b>Tasks</b> themselves, act on the Build POMs.
+  <li><b>Task</b> - the build processes the command line arguments, for options added during the Tooling phase, and prepares a set of <b>tasks</b> which are then executed.  The <b>tasks</b> themselves, act on the Build POMs.
   </li>
 </ol>
 </p>
@@ -41,30 +57,8 @@
 <p>Both single character (-h) and GNU getopt word style (--help) arguments are supported.<br/>
 The GNU args can also be comma seperated <i>For example</i> --cleanAll,all
 </p>
-
-<p>A number of single character options, such as <b>N, O, P</b> are actually short cuts for setting evironment variables which can also be set via argument <b>E</b> which takes the full upper case environment variable name. <i>For example</i> -Nfoo or -EAPP_NAME:foo.
-</p>
-
-<p>build.js and the Tooling POMs define <b>options</b> and <b>tasks</b>, such as:</p>
-<code>
-foam.POM({
-  options: {
-    test: [ 't', 'test', 'TEST', 'Run All tests.', false, ...]
-  },
-  ...
-  tasks: {
-    runTests: ['Run all or specified test cases. ex: runTests[:Test1,Test2]', ['pomEnvs'], ...]
-  }
-})
-</code>
-Which can be invoked as
-<code>
-$ node foam3/tools/build.js -ct
-# Or
-$ node foam3/tools/build.js --clean --test --all
-# Or
-$ node foam3/tools/build.js --runTests
-</code>
+<p>execute <b>--help</b> to see all options</b>
+<p>execute <b>--usage</b> for command line examles</p>
 
 <h1>Help on Help</h1>
 Build usage is generated by the <b>help</b> option and can be invoked in a number of ways:
@@ -83,7 +77,7 @@ For example, the following will only output usage of <b>help</b> itself
 </p>
 
 <h1>Troubleshooting</h1>
-<p>Adding argument <b>--show-report</b> will cause the build to output the final value of all environment variables at the point of exit on error, or just before start CORE.</p>
+<p>CLI argument <b>--show-report</b> will cause the build to output the final value of all <b>options</b> at the point of exit on error, or just before start CORE.</p>
 
 <h1>POMs</h1>
 <h2><i>Incomplete</i></h2>
@@ -136,7 +130,7 @@ Fields:
 <ul>
   <li>name</li>
   <li>envs - Environment Variables
-  <p>Environment variables are declared with default values in the Tooling POMs.  Build POMs and the CLI can set override or append to the environment variable values. <i>For example</i>, JAVA_OPTS, which controls the JVM environment, can be appended to with build specific parameters such as -Xmx  or -Dappproperty.</p>
+  <p>Variables defined in the envs: block are internal to the particular tooling. are declared with default values in the Tooling POMs.  Build POMs and the CLI can set override or append to the environment variable values. <i>For example</i>, JAVA_OPTS, which controls the JVM environment, can be appended to with build specific parameters such as -Xmx  or -Dappproperty.</p>
   <code>
 $ node tools/build.js -EJAVA_OPTS:"-Xms12g -Xmx12g"
   </code>
@@ -152,4 +146,4 @@ $ node tools/build.js -EJAVA_OPTS:"-Xms12g -Xmx12g"
 <h4>Creating a POM Tasks</h4>
 
 <h1>Test Cases and Benchmarks</h1>
-Using -EFLAGS:test will include all source and configuration flagged as 'test' to allow using test and benchmark logic form a normally built application.
+Using --flags:test will include all source and configuration flagged as 'test' to allow using test and benchmark logic form a normally built application.

@@ -6,9 +6,6 @@
 
 foam.POM({
   name: 'test',
-  envs: {
-    LOG_LEVEL: ['Set JVM Log level for TEST cases. Defaults to ERROR. example: -ELOG_LEVEL:INFO',null],
-  },
 
   options: {
     benchmark: [ 'b', 'benchmarks', 'BENCHMARK', 'Run all benchmarks.', false,
@@ -19,10 +16,11 @@ foam.POM({
                  } ],
     benchmarks: [ 'B', 'benchmarks', 'BENCHMARKS', 'Run listed benchmarks - benchmarkId1,benchmarkId2,...', '',
                   args => {
-                    OPTIONS['benchmark'][5]();
+                    OPTIONS['benchmark'].f();
                     BENCHMARKS = args;
                   } ],
     deleteRuntimeJournals: [ 'j', 'delete-runtime-journals', 'DELETE_RUNTIME_JOURNALS', 'Delete runtime journals.', false, () => DELETE_RUNTIME_JOURNALS = true ],
+    logLevel: ['l', 'log-level', 'LOG_LEVEL', 'Set JVM Log level for TEST cases. Defaults to ERROR. example: --log-level:INFO',null, arg => LOG_LEVEL = arg ],
     test: [ 't', 'test', 'TEST', 'Run All tests.', false,
             args => {
               TEST = true;
@@ -34,7 +32,7 @@ foam.POM({
             } ],
     tests: [ 'T', 'tests', 'TESTS', 'Run listed tests - testId1,testId2,...', '',
              args => {
-               OPTIONS['test'][5]();
+               OPTIONS['test'].f();
                TESTS = args;
              } ]
   },
@@ -47,9 +45,9 @@ foam.POM({
     }],
     runTests: ['run-tests', 'Run all or specified test cases. ex: runTests[:Test1,Test2]', ['pomEnvs'], function runTests(args) {
       if ( args ) {
-        OPTIONS['tests'][5](args);
+        OPTIONS['tests'].f(args);
       } else {
-        OPTIONS['test'][5]();
+        OPTIONS['test'].f();
       }
       if ( CLEAN_ALL ) {
         this.execute('cleanAll');
@@ -61,9 +59,9 @@ foam.POM({
     }],
     runBenchmarks: ['run-benchmarks', 'Run all or specified benchmarks. ex: runBenchmarks[:Benchmark1,Benchmark2]', ['pomEnvs'], function runBenchmarks(args) {
       if ( args ) {
-        OPTIONS['benchmarks'][5](args);
+        OPTIONS['benchmarks'].f(args);
       } else {
-        OPTIONS['benchmark'][5]();
+        OPTIONS['benchmark'].f();
       }
       if ( CLEAN_ALL ) {
         this.execute('cleanAll');

@@ -20,34 +20,28 @@ exports.init = function() {
     // example: ['name'] = 'APP_NAME'
     envs[kv[1]] = kv[0];
     verbose(`[Env] init ${kv[1]} = ${kv[0]}`);
-    if ( globalThis[kv[0]] ) {
-      envs[kv[0]] = globalThis[kv[0]];
-      console.log(`[Env] not overriding ${kv[0]} = ${envs[kv[0]]}`);
-    }
   });
 };
 
 exports.visitPOM = function(pom) {
   pom.envs && Object.keys(pom.envs).forEach(e => {
-    verbose(`[Env] pom ${pom.name} testing ${e} = ${pom.envs[e]}`);
     if ( envs[e] ) {
       warning(`[Env] pom ${pom.name} ignoring duplicate ${e} = ${pom.envs[e]}`);
       return;
     }
-    console.log(`[Env] pom ${pom.name} setting ${e} = ${pom.envs[e]}`);
+    verbose(`[Env] pom ${pom.name} recording ${e} = ${pom.envs[e]}`);
     envs[e] = pom.envs[e];
   });
 
   Object.keys(envs).forEach(k => {
     if ( envs[envs[k]] ) return;
 
-    verbose(`[Env] ${pom.name} testing ${k}`);
+    verbose(`[Env] pom ${pom.name} testing ${k}`);
     var v = pom[k];
     if ( v && ! envs[envs[k]] ) {
-      console.log(`[Env] setting ${envs[k]} = ${v}`);
+      verbose(`[Env] pom ${pom.name} recording ${envs[k]} = ${v}`);
       // example: envs['APP_NAME'] = 'foam'
       envs[envs[k]] = v;
-      // console.log(`[Env] deleting ${k}`);
       delete envs[k];
     }
   });
@@ -58,7 +52,7 @@ exports.end = function() {
   X.envs && X.envs.split(',').forEach(e => {
     var kv = e.split('=');
     if ( ! envs[kv[0]] ) {
-      warning(`[Env] ${kv[0]} not set`);
+      // warning(`[Env] ${kv[0]} not set`);
       delete envs[kv[1]];
     }
   });

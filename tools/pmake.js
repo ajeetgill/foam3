@@ -43,34 +43,10 @@ var pmake = function(...args) {
   var [argv, X, flags] = require('./processArgs')(
     args,
     {
-      d:           './build/classes',
-      builddir:    './build',
-      pom:         'pom',
-      makers:      '', // TODO: doc, swift,
       path:        './'
     },
     {
       verbose:     false   // print extra status information
-    },
-    {
-      usage: function() {
-        // Include list of available Makers in 'usage' output.
-        // TODO: load from dir where pmake is also
-        var files = fs_.readdirSync('.');
-
-        console.log('\nMakers:');
-        files.forEach(f => {
-          if ( f.endsWith('Maker.js') ) {
-            var maker = require('./' + f.substring(0, f.length-3));
-            console.log('  ' + f.substring(0, f.length-8).padEnd(14, ' '), maker.description || '');
-            ( maker.args || []).forEach(a => {
-              var desc = a.description || '';
-              var def  = a.value ? ( ( desc ? ', ' : '' ) + 'default: ' + a.value ) : '';
-              console.log('     ' + a.name.padEnd(12, ' ') + desc + def);
-            });
-          }
-        });
-      }
     }
   );
 
@@ -86,7 +62,7 @@ var pmake = function(...args) {
     var loc = path_.join(__dirname, X.path, makerName + "Maker.js");
 
     if (!fs_.existsSync(loc)) {
-      loc = path_.join(process.cwd(), x.path, makerName + "Maker.js");
+      loc = path_.join(process.cwd(), X.path, makerName + "Maker.js");
     }
     maker = require(loc);
     if ( maker ) maker.name = m;

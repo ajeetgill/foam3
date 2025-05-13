@@ -4,6 +4,10 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
+/**
+   Example tooling
+   usage: node tools/build.js -Oexample/Example -c
+*/
 foam.POM({
   name: 'example',
   envs: {
@@ -11,21 +15,31 @@ foam.POM({
   },
 
   options: {
-    example: [ 'e', 'example', 'EXAMPLE', 'Enable example.', false, () => { EXAMPLE = true; } ],
-    exampleRelease: [ '', 'example-release', 'EXAMPLE_RELEASE', 'Set example release', '', () => EXAMPLE_RELEASE = args ]
+    example: [ 'e', 'example', 'EXAMPLE', 'Enable example.', false, arg => EXAMPLE = arg && arg !== undefined ? arg : false ],
+    exampleRelease: [ '', 'example-release', 'EXAMPLE_RELEASE', 'Set example release', '', arg => EXAMPLE_RELEASE = arg ],
+    clean: [ 'c', 'clean', 'CLEAN', 'Clean generated code before building.  Required if generated classes have been removed. Use -XcleanAll to remove build/ directory. NOTE: if compilation fails after option c is issued, clean is again required until a succesful build.', false, arg => CLEAN = arg && arg !== undefined ? arg : true ]
   },
 
   tasks: {
-    example: ['Run example', [], function example() {
+    runExample: ['run-example', 'Run example', [], function example() {
       console.log(`[Example] enabled ${EXAMPLE}, release ${EXAMPLE_RELEASE || EXAMPLE_RELEASE_DEFAULT}`); } ],
-    examplePOMs: ['Show POM structure.', [], function examplePOMs() {
+    examplePOMs: ['example-poms', 'Show POM structure.', [], function examplePOMs() {
       this.pmake.bind(this, `-makers=Verbose -flags=${this.flag('web,java')} -pom=${POMS} -builddir=${BUILD_DIR}`)();
     }],
-    clean: ['Clean', [], function clean() {
+    clean: ['clean', 'Clean', [], function clean() {
       console.log('[Example] clean');
     }],
-    cleanAll: ['CleanAll', [], function cleanAll() {
+    cleanAll: ['clean-all', 'CleanAll', ['clean'], function cleanAll() {
       console.log('[Example] cleanAll');
+    }],
+    all: ['all', 'Run example tasks.', [], function all() {
+      console.log('[Example] all');
+      this.execute('runExample');
+      this.execute('examplePOMs');
+    }],
+    usage: ['usage', 'Example usage examples', [], function usage() {
+      console.log('node tools/build.js -Oexample/Example -c');
+      console.log('node tools/build.js -Oexample/Example -c --example:true --run-example');
     }]
   }
 });

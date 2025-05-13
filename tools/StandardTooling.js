@@ -6,15 +6,13 @@
 
 foam.POM({
   name: 'standard',
-  envs: {
-    APP_HOME:          ['Application root directory. To symultaniously deploy multiple applications, give each a unique APP_NAME and WEB_PORT',() => APP_NAME ? APP_ROOT + '/' + APP_NAME : 'APP_ROOT/APP_NAME'],
-    APP_ROOT:          ['Application root directory','/opt']
-  },
 
   options: {
+    appHome: [ '','app-home', 'APP_HOME', 'Application root directory. To symultaniously deploy multiple applications, give each a unique APP_NAME and WEB_PORT',() => APP_NAME ? APP_ROOT + '/' + APP_NAME : 'APP_ROOT/APP_NAME', arg => APP_HOME = arg ],
     appName: [ 'N', 'app-name', 'APP_NAME', "Name used to construct a unique deployment directory, '/opt/NAME', to support multiple running applications.  Also requires a unique WEB_PORT.", '', args => APP_NAME = args ],
-    clean: [ 'c', 'clean', 'CLEAN', 'Clean generated code before building.  Required if generated classes have been removed. Use -XcleanAll to remove build/ directory. NOTE: if compilation fails after option c is issued, clean is again required until a succesful build.', false, () => CLEAN = true ],
-    cleanAll: [ '', 'clean-all', 'CLEAN_ALL', 'Clean application lib/, and remove build/ directory.',false, () => CLEAN_ALL = true ]
+    appRoot: [ '', 'app-root', 'APP_ROOT', 'Application root directory','/opt', arg => APP_ROOT = arg ],
+    clean: [ 'c', 'clean', 'CLEAN', 'Clean generated code before building.  Required if generated classes have been removed. Use -XcleanAll to remove build/ directory. NOTE: if compilation fails after option c is issued, clean is again required until a succesful build.', false, arg => CLEAN = arg && arg !== undefined ? arg : true ],
+    cleanAll: [ '', 'clean-all', 'CLEAN_ALL', 'Clean application lib/, and remove build/ directory.',false, arg => CLEAN_ALL = arg && arg !== undefined ? arg : true ]
   },
 
   tasks: {
@@ -53,7 +51,7 @@ foam.POM({
     // ############################
     // # Build steps
     // ############################
-    all: ['all', 'Build everything specified by flags.', ['pomEnvs'], function all() {
+    all: ['all', 'Execute \'standard\' build tasks.', ['pomEnvs'], function all() {
       if ( ! ( TAR || BUILD_ONLY ) ) {
         this.execute('stopCORE');
       }
