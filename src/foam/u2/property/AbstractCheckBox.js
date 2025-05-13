@@ -55,6 +55,10 @@ foam.CLASS({
       name: 'label'
     },
     {
+      class: 'String',
+      name: 'description'
+    },
+    {
       name: 'labelFormatter'
     }
   ],

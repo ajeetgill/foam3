@@ -22,11 +22,15 @@ foam.CLASS({
     {
       class: 'Boolean',
       name: 'sheetsCompatibleDates',
-      value: true
+      label: '',
+      view: { class: 'foam.u2.CheckBox',  label: 'Sheets Compatible Dates'},
+      value: true,
     },
     {
       class: 'Boolean',
       name: 'addUnits',
+      label: '',
+      view: { class: 'foam.u2.CheckBox',  label: 'Add Units'},
       value: true
     },
     {
