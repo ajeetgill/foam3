@@ -41,7 +41,7 @@ Install Maven
 
 Git Clone
 
-    https://github.com/kgrgreer/foam3.git
+    git clone https://github.com/kgrgreer/foam3.git
 
 Setup /opt Directory
 
