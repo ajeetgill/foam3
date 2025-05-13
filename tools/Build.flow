@@ -150,3 +150,6 @@ $ node tools/build.js -EJAVA_OPTS:"-Xms12g -Xmx12g"
 <h4>Creating a POM Option</h4>
 
 <h4>Creating a POM Tasks</h4>
+
+<h1>Test Cases and Benchmarks</h1>
+Using -EFLAGS:test will include all source and configuration flagged as 'test' to allow using test and benchmark logic form a normally built application.

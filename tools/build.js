@@ -307,7 +307,7 @@ function pom() {
 var ENVS = {
   BUILD_DIR:         ['Build directory, relative to project root','build'],
   EXPORTS:           ['Build environment variables which will be exported to pom tasks.', {}],
-  FLAGS:             ['Flags passed to pmake. ex. verbose, test, ... '],
+  FLAGS:             ['Flags passed to pmake. Explicitly set with -EFLAGS:TEST, for example.'],
   HOST_NAME:         ['Hostname set in JVM', () => hostname()],
   OPTIONS:           ['Build options determined during tooling which can be configured to by CLI and POM arguments to control the build', {}],
   POM_ENVS:          ['Supports translating top level POM parameters to build parameters, such as pom.name -> APP_NAME, pom.version -> VERSION.  Also provides legacy support to POMs still using top level POM parametes for Java Manifest and Javac Parameters. Java Manifest property \'vendor\' should be set in POM task \'javaManifest\' and \'java\' should be set in POM task \'javacParameters\'.', 'APP_NAME=name,VERSION=version,JAVA_RELEASE=java,JAVA_MANIFEST_VENDOR=vendor'],
@@ -383,7 +383,7 @@ OPTIONS = addOptions({
                if ( option.name !== option.gnuopt ) {
                  opts += ', --'+option.gnuopt;
                }
-               var def = env && globalThis[env];
+               var def = option.env && globalThis[option.env];
                if ( ! def ) {
                  def = option.def ? option.def : '';
                  if ( def instanceof Function ) {
@@ -596,20 +596,24 @@ task('Capture POM arguments to environment values or options, and register POM t
 
   let envMaker = makers.get('Env');
   Object.keys(envMaker.envs || {}).forEach(e => {
-    if ( globalThis[e] ) {
-      globalThis[e] = envMaker.envs[e];
-      ENVS[e] = envMaker.envs[e];
-      return;
-    }
-    let env = ENVS[e];
-    if ( env ) {
-      globalThis[e] = envMaker.envs[e];
-      return;
-    }
     let option = findOption(OPTIONS, e);
     if ( option ) {
-      option.f(envMaker.envs[e]);
-      // info(`[build] set option ${e} = ${envMaker.envs[e]}`);
+      if ( option.def &&
+           globalThis[option.env] !== option.def ) {
+        console.log(`[build] setting ${e} ${globalThis[option.env]} with ${envMaker.envs[e]}`);
+        option.f(envMaker.envs[e]);
+      } else {
+        // console.log(`[build] NOT replacing ${e} ${globalThis[option.env]} with ${envMaker.envs[e]}`);
+      }
+      return;
+    }
+    if ( ENVS[e] ) {
+      if ( globalThis[e] ) {
+        console.log(`[build] replacing ${e} ${globalThis[e]} with ${envMaker.envs[e]}`);
+      } else {
+        console.log(`[build] setting ${e} with ${envMaker.envs[e]}`);
+      }
+      globalThis[e] = envMaker.envs[e];
       return;
     }
     warning(`[build] environment variable or option not found: ${e}`);
@@ -624,6 +628,9 @@ task('Capture POM arguments to environment values or options, and register POM t
       POM_TASKS[name] = pomList;
     });
   });
+  if ( SHOW_REPORT ) {
+    moreUsage();
+  }
 });
 
 task('Run pom copy[] tasks.', [], function copy() {
@@ -634,16 +641,19 @@ task('Show POM structure.', [], function showPOMs() {
   pmake.bind(Object.assign({}, EXPORTS), `-makers=Verbose -flags=${flag('web,java')} -pom=${POMS} -builddir=${BUILD_DIR}`)();
 });
 
+// Phase I - process tooling poms
 processToolingArgs.bind(Object.assign({}, EXPORTS), TOOLING_OPTIONS, moreUsage)();
 execute('tooling');
 
-// Process command line arguments
+// Phase II - process command line args,
 processBuildArgs.bind(Object.assign({}, EXPORTS), OPTIONS, moreUsage)();
+// process build pom for envs and task registration
+execute('pomEnvs');
 
 // build pom map for POM_TASKS, and ensure POMS list is viable
 pom();
 
-// start the build
+// Phase III - execute build tasks
 TASKS.split(',').forEach(t => {
   var s = t.split(':');
   execute(s[0], s[1]);
