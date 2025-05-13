@@ -5,6 +5,7 @@ Install java, nodejs and maven, if required. On Linux, you can do this with:
     sudo apt-get install default-jdk
     sudo apt-get install maven
     sudo apt-get install nodejs
+    sudo apt-get install npm
 
 ## MacOS
 Install java, nodejs, brew, nvm and maven, if required.
