@@ -27,6 +27,12 @@ foam.CLASS({
       name: 'description',
       width: 80
     },
+    {
+      class: 'Boolean',
+      name: 'openOnCreate',
+      value: false
+    },
+    { name: 'addUnits', hidden: true },
     { name: 'daoKey', hidden: true },
     { name: 'dao',    hidden: true },
     { name: 'of',     hidden: true },
@@ -76,7 +82,7 @@ foam.CLASS({
       }
     },
 
-    async function exportDAO(X, dao) {
+    function exportDAO(X, dao) {
       var propNames = this.getPropName(X, dao.of);
       var where     = '';
       var comp      = this.findComparator(dao);
@@ -112,8 +118,10 @@ foam.CLASS({
 ]
         `
       });
-      await this.flowDAO.put(flow);
-      return '/#reflow/' + this.name;
+      this.flowDAO.put(flow);
+      if ( this.openOnCreate )
+        this.__context__.routeTo('reflow/' + this.name + '?showPrompts=false');
+      return ''; // prevents redirect
     }
   ]
 });
