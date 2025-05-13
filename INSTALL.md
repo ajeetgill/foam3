@@ -5,6 +5,7 @@ Install java, nodejs and maven, if required. On Linux, you can do this with:
     sudo apt-get install default-jdk
     sudo apt-get install maven
     sudo apt-get install nodejs
+    sudo apt-get install npm
 
 ## MacOS
 Install java, nodejs, brew, nvm and maven, if required.
@@ -37,3 +38,24 @@ Install Java
 Install Maven
 
     brew install maven
+
+Git Clone
+
+    git clone https://github.com/kgrgreer/foam3.git
+
+Setup /opt Directory
+
+    sudo mkdir /opt/foam-full
+    sudo mkdir /opt/foam-full/logs
+    sudo mkdir /opt/foam-full/journals
+    sudo chown -R $USER /opt/foam-full
+    sudo chown -R $USER /opt/foam-full/logs
+    sudo chown -R $USER /opt/foam-full/journals
+
+Start Server
+
+    ./build.sh
+
+Test Server
+
+connect to [http://localhost:8080/](http://localhost:8080/) and use user username and password: foam-admin / foam-admin
