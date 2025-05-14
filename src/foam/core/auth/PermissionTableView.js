@@ -466,7 +466,7 @@ foam.CLASS({
       if ( this.rolesOnly ) {
         this.query = '@' + this.ROLE_PREFIX;
         this.groupDAO = this.groupDAO.where(this.NOT(this.CONTAINS(this.Group.ID, this.ROLE_PREFIX)));
-        this.groupDAO = this.groupDAO.where(this.NOT(this.IN(this.Group.ID, ['foam', 'system', 'admin', 'anonymous'])));
+        this.groupDAO = this.groupDAO.where(this.NOT(this.IN(this.Group.ID, ['foam', 'system', 'admin', 'anonymous', 'reseller'])));
       }
       this.groupDAO.orderBy(this.Group.ID).select().then(function(gs) {
         gs = gs.array;
