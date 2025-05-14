@@ -36,6 +36,26 @@
   // create capabilities of all the roles
 
   methods: [
+    async function initMap() {
+      var self = this;
+      var pcjs = await this.prerequisiteCapabilityJunctionDAO.select();
+      pcjs.array.forEach(pcj => {
+        var spid = pcj.sourceId, cap = pcj.targetId;
+        var key = cap + ':' + spid;
+
+        var data = this.GroupPermission.create({
+          checked: true
+        });
+
+        data.checked$.sub(function() {
+          self.updateGroup(cap, spid, data.checked$, self);
+        });
+
+        this.gpMap[key] = data;
+      });
+
+    },
+
     async function getColumns() {
       this.serviceProviderDAO = this.serviceProviderDAO.where(this.NOT(this.IN(this.ServiceProvider.ID, ['*', 'foam'])));
       var gs = (await this.serviceProviderDAO.orderBy(this.ServiceProvider.ID).select()).array;

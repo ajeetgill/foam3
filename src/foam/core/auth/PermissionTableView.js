@@ -238,8 +238,7 @@ foam.CLASS({
   ],
 
   methods: [
-    async function matrix() {
-      var ps   = this.filteredPs, gs = this.filteredPs;
+    async function initMap() {
       var self = this;
       var perms = await this.groupPermissionJunctionDAO.select();
       perms.array.forEach(perm => {
@@ -256,6 +255,12 @@ foam.CLASS({
 
         this.gpMap[key] = data;
       });
+    },
+
+    async function matrix() {
+      var ps   = this.filteredPs, gs = this.filteredPs;
+      var self = this;
+      await this.initMap();
 
       this
         .addClass(this.myClass())
