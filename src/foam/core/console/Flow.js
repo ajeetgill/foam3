@@ -139,7 +139,7 @@ foam.CLASS({
     {
       name: 'reflow',
       code: function(X) {
-        X.routeTo('reflow/' + this.name + '?showPrompts=false');
+        X.routeTo('reflow/' + this.name + '?flowMode=view');
       },
       isAvailable: function() {
         // Enable in Console
