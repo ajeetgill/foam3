@@ -23,7 +23,13 @@ foam.CLASS({
       class: 'Boolean',
       name: 'sheetsCompatibleDates',
       label: 'Date Format',
-      view: { class: 'foam.u2.view.ChoiceView',  choices: [[false, 'DD/MM/YYYY'], [true, 'MM/DD/YYYY']]},
+      view: {
+        class: 'foam.u2.view.ChoiceView',
+        choices: [
+          [ false, 'Ddd MMM DD YYYY' ],
+          [ true,  'MM/DD/YYYY' ]
+        ]
+      },
       value: true,
       help: "The date will follow the system's default format."
     },
