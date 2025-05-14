@@ -121,7 +121,7 @@ foam.CLASS({
       });
       this.flowDAO.put(flow);
       if ( this.openOnCreate )
-        this.__context__.routeTo('reflow/' + this.name + '?showPrompts=false');
+        this.__context__.routeTo('reflow/' + this.name + '?flowMode=view');
       return ''; // prevents redirect
     }
   ]
