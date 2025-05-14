@@ -20,6 +20,9 @@ foam.CLASS({
     function render() {
       var self = this;
 
+      // Temporary while detailview is hidden
+      this.data.where$.sub(this.rerun);
+
       this.
         addClass().
         add(this.data.dynamic(function(visible) {
@@ -27,6 +30,7 @@ foam.CLASS({
           this.start('h3').
             add(self.data.label$).
           end().
+            start('span').style({display: 'flex'}).start().style({marginTop: '6px'}).add('Query:').end().tag({class: 'foam.u2.TextField'}, {data$: self.data.where$}).end().br().
             //          add(self.data.dao.of.id). // TODO: link to describe
           start().
             add(self.data.dynamic(async function(version, skip) {
@@ -47,6 +51,12 @@ foam.CLASS({
       range.selectNode(this.content.element_);
       window.getSelection().empty();
       window.getSelection().addRange(range);
+    },
+    {
+      name: 'rerun',
+      isMerged: true,
+      delay: 200,
+      code: function() { this.data.run(); }
     }
   ]
 });
