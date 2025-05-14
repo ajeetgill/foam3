@@ -405,10 +405,26 @@ foam.CLASS({
       name: 'out'
     },
     {
-      // class: 'Boolean',
+      name: 'flowMode',
+      value: 'edit',
+      memorable: true
+    },
+    {
       name: 'showPrompts',
       value: true,
+      expression: function(flowMode) {
+        return flowMode == 'edit';
+      },
       preSet: function(_, n) { return n === 'false' ? '' : n; },
+      memorable: true
+    },
+    {
+      name: 'showInput',
+      value: true,
+      preSet: function(_, n) { return n === 'false' ? '' : n; },
+      expression: function(flowMode) {
+        return flowMode != 'view';
+      },
       memorable: true
     },
     {
@@ -554,18 +570,20 @@ foam.CLASS({
       this.
         addClass(self.myClass()).
         start('div', null, self.out$)
-        .addClass(self.myClass('output')).end().
-        start('span').
-          addClass(self.myClass('input-field')).
-          start('b').style({ display: 'flex', 'white-space': 'pre'}).
-            start(self.Link).add('help').on('click',    () => self.eval_('help'),    this).end()./*add(', ').
-            start(self.Link).add('history').on('click', () => self.eval_('history'), this).end().*/add(' >').
-          end().
+          .addClass(self.myClass('output')).end().
+          start('span').
+            addClass(self.myClass('input-field')).
+            start('b').style({ display: 'flex', 'white-space': 'pre'}).
+              show(self.showInput$).
+              start(self.Link).add('help').on('click',    () => self.eval_('help'),    this).end()./*add(', ').
+              start(self.Link).add('history').on('click', () => self.eval_('history'), this).end().*/add(' >').
+            end().
           start(self.INPUT, null, self.input_$).
+            show(self.showInput$).
             addClass(self.myClass('input')).
             on('keyup', e => { if ( e.key == 'Enter' || e.keyCode == 13 ) self.onInput(); }).
           end().
-          tag(self.ON_INPUT).
+          start(self.ON_INPUT).show(self.showInput$).end().
         end();
 
         // These observers might cause scroll issues later when queries in the console can be edited
@@ -651,7 +669,6 @@ foam.CLASS({
       var innerScope = {
         // shell: this,
         eval_: this.eval_.bind(this),
-        togglePrompts: this.togglePrompts.bind(this),
         addValue: block.addValue.bind(block),
         log: block.log.bind(block),
         out: block.out, start: block.out.start.bind(block.out),
@@ -754,9 +771,10 @@ foam.CLASS({
       keyboardShortcuts: [ 'ctrl-`' ]
     },
     {
-      name: 'togglePrompts',
+      name: 'toggleMode',
       // You can do this.showPrompts = true|false; from flow scripts
-      code: function() { this.showPrompts = ! this.showPrompts; },
+      // You can do this.showInput = true|false; from flow scripts
+      code: function() { console.log('***', this.flowMode); this.flowMode = { edit: 'view', view: 'console', console: 'edit' }[this.flowMode]; },
       keyboardShortcuts: [ 'escape' ]
     },
     {
