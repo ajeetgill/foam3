@@ -501,7 +501,6 @@ OPTIONS = addOptions({
     }
     process.exit(0);
   } ],
-  toolingPoms: [ 'O', 'tooling-poms', 'TOOLING_POMS', 'CSV list of tooling poms', 'Standard,Example,Java,JS,Maven,Npm,Test', arg => TOOLING_POMS = arg ],
   verbose: ['', 'verbose', 'VERBOSE', 'Enable VerboseMaker to log additional info during build',false, arg => VERBOSE = arg && arg !== undefined ? arg : true ],
 
 }, OPTIONS);
@@ -585,6 +584,9 @@ task('Prepare build environment', [], function tooling() {
       }
     });
   });
+  // copy tooling options to build options so command line doesn't complain
+  // REVIEW - remove tooling option f - so no side effects?
+  OPTIONS = Object.assign(OPTIONS, TOOLING_OPTIONS);
 });
 
 task('Capture POM arguments to environment values or options, and register POM tasks for later execution when the corresponding build tasks is executed.', [], function pomEnvs() {
