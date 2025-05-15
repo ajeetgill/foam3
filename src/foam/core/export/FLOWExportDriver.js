@@ -43,18 +43,21 @@ foam.CLASS({
     async function init() {
       this.SUPER();
 
-      // TODO: Make work when used from Data Management menus
-      this.daoKey = this.currentMenu.handler.config.daoKey;
-      this.dao    = this.__context__[this.daoKey];
-      this.of     = this.dao.of;
-      this.plural = this.of.model_.plural;
-
-      this.name = await this.suggestName(this.of);
+      try {
+        // TODO: Make work when used from Data Management menus
+        this.daoKey = this.currentMenu.handler.config.daoKey;
+        this.dao    = this.__context__[this.daoKey];
+        this.of     = this.dao.of;
+        this.plural = this.of.model_.plural;
+        this.name   = await this.suggestName(this.of);
+      } catch (x) {
+        this.name = 'Unsupported for Data Management Menus';
+      }
     },
 
     async function suggestName() {
       var prefix = this.plural + ' View ';
-      for ( var i = 1 ; i < 99 ; i++ ) {
+      for ( var i = 1 ; i < 199 ; i++ ) {
         var name = prefix + i;
         var count = await this.flowDAO.limit(1).where(this.EQ(this.Flow.ID, name)).select(this.COUNT());
         if ( count.value == 0 ) return name;
