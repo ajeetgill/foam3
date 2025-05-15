@@ -168,7 +168,7 @@ foam.CLASS({
       border-top: 1px solid #999;
     }
     ^output {
-      overflow-x: scroll;
+      overflow-x: auto;
     }
     ^hidePrompts ^toolbar {
       display: none;
@@ -188,7 +188,8 @@ foam.CLASS({
     ^:hover { background: $grey50; }
     ^ .foam-u2-ReadWriteView { padding-right: 8px; }
     ^content {
-      overflow-x: scroll;
+      padding: 10px;
+      overflow-x: auto;
       width: 100%;
     }
   `,
@@ -367,7 +368,6 @@ foam.CLASS({
       background: $grey50;
     }
     ^output {
-      font-family: monospace;
       text-align: left;
       align-content: flex-end;
       flex: 1;
@@ -555,10 +555,10 @@ foam.CLASS({
         this.tag(self.ReactiveDetailView, {data: selectedValue, showActions: true});
       }));
 
-      if ( this.params.flow ) {
+      if ( this.params.flow && this.params.flow !== 'Unnamed') {
         await this.eval_(`load("${decodeURIComponent(this.params.flow)}")`);
         this.selected = this.currentBlock;
-      } else {
+      } else if ( this.flowName !== 'Unnamed' ) {
         await this.eval_(`load("${decodeURIComponent(this.flowName)}")`);
         this.selected = this.currentBlock;
       }
