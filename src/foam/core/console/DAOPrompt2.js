@@ -55,8 +55,11 @@ foam.CLASS({
     {
       name: 'rerun',
       isMerged: true,
-      delay: 200,
-      code: function() { this.data.run(); }
+      delay: 500,
+      code: function() {
+        console.log('rerun', this.data.where);
+        this.data.run();
+      }
     }
   ]
 });
