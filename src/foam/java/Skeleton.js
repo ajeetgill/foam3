@@ -90,6 +90,7 @@ foam.CLASS({
       return;
     }
 
+    long                start    = System.currentTimeMillis();
     foam.box.RPCMessage rpc      = (foam.box.RPCMessage) message.getObject();
     foam.box.Box        replyBox = (foam.box.Box) message.getAttributes().get("replyBox");
     <%
@@ -149,6 +150,9 @@ foam.CLASS({
 
     if ( replyBox != null ) {
       foam.box.RPCReturnMessage reply = (foam.box.RPCReturnMessage)getX().create(foam.box.RPCReturnMessage.class);
+
+      reply.setExecutionTime(System.currentTimeMillis() - start);
+
       <% if ( anyHasReturn ) { %>if ( result != null ) {
         // foam.core.logger.Loggers.logger(getMessageX(message), this).debug(((foam.core.boot.CSpecFactory)getDelegateFactory()).getCSpecName(), rpc.getName(), result);
         reply.setData(result);
