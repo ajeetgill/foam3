@@ -21,6 +21,7 @@ foam.CLASS({
       borderRadius: 4px;
       border: 1px solid $grey500;
       color: $black;
+      height: 100%;
     }
     ^filter-selection {
       max-height: 50vh;
