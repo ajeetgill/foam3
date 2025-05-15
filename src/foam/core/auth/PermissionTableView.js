@@ -15,6 +15,8 @@ foam.CLASS({
   name: 'PermissionTableView',
   extends: 'foam.u2.Controller',
 
+  implements: [ 'foam.mlang.Expressions' ],
+
   requires: [
     'foam.graphics.ScrollCView',
     'foam.core.auth.Group',
@@ -32,7 +34,8 @@ foam.CLASS({
 
   constants: {
     COLS: 26,
-    ROWS: 19
+    ROWS: 19,
+    ROLE_PREFIX: 'Role'
   },
 
   css: `
@@ -60,11 +63,11 @@ foam.CLASS({
     }
 
     ^ .foam-u2-md-CheckBox:hover {
-      background: #FFCCCC;
+      background: $primary400;
     }
 
     ^hovered {
-      background: #ccc !important;
+      background: $grey200 !important;
     }
 
     ^ table {
@@ -74,17 +77,32 @@ foam.CLASS({
       }
 
     ^header {
-      box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+      box-shadow: 0 6px 6px rgba(0,0,0,0.23);
       background:$white;
       padding: 8px;
       margin: 8px 0;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
-
+    ^header span {
+      font-size: 16x;
+      font-weight: bold;
+    }
     ^ .permissionHeader {
-      background:$white;
-      color: #444;
+      background-color: $grey100;
+      border: 1px solid $grey200;
+      padding: 8px;
+      color: $black;
+      font-weight: 500;
       text-align: left;
-      padding-left: 6px;
+    }
+    ^table-wrapper table {
+      border-collapse: collapse;
+    }
+    ^table-wrapper tbody td {
+      border: 1px solid $grey400;
     }
 
     ^table-wrapper {
@@ -104,16 +122,33 @@ foam.CLASS({
     }
 
     ^groupLabel {
+      background-color: $grey100;
+      border: 1px solid $grey400;
       font-weight: normal;
       padding-top: 4px;
+      padding-inline: 8px;
       writing-mode: vertical-lr;
       white-space: nowrap;
-      background: white;
+      color: $black;
+      font-weight: 500;
     }
-
+    ^x {
+      color: $destructive500;
+      font-weight: bold;
+    }
   `,
 
   properties: [
+    {
+      class: 'Boolean',
+      name: 'showSearch',
+      value: true
+    },
+    {
+      class: 'Boolean',
+      name: 'rolesOnly',
+      value: false
+    },
     {
       class: 'String',
       name: 'query',
@@ -203,8 +238,7 @@ foam.CLASS({
   ],
 
   methods: [
-    async function matrix() {
-      var ps   = this.filteredPs, gs = this.filteredPs;
+    async function initMap() {
       var self = this;
       var perms = await this.groupPermissionJunctionDAO.select();
       perms.array.forEach(perm => {
@@ -221,6 +255,12 @@ foam.CLASS({
 
         this.gpMap[key] = data;
       });
+    },
+
+    async function matrix() {
+      var ps   = this.filteredPs, gs = this.filteredPs;
+      var self = this;
+      await this.initMap();
 
       this
         .addClass(this.myClass())
@@ -228,16 +268,16 @@ foam.CLASS({
           'padding-left':  '16px',
           'padding-top':   '0',
           'padding-right': '16px',
-        })
+        }).
 
-        .start()
+        callIf(this.showSearch, function() { this.start()
           .addClass(this.myClass('header'))
           .start('span')
             .style({padding: '8px'})
             .add('Permission Matrix')
           .end()
           .add(this.G_QUERY, ' ', this.QUERY)
-        .end()
+        .end(); })
 
         .add(this.slot(this.table))
 
@@ -313,7 +353,7 @@ foam.CLASS({
               // removed mouseout because it just caused flicker
               .enableClass(self.myClass('hovered'), self.slot(function(currentGroup, currentPermission) { return currentGroup == g || currentPermission == p; }))
 //              .attrs({title: g.id + ' : ' + p.id}) // Not needed becasue with scrollbars, col&row labels are always visible
-              .tag(self.createCheckBox(p, g))
+              .tag(self.createCheckBox(p, g)).addClass(self.myClass('x'))
             .end();
           })
         .end();
@@ -321,6 +361,7 @@ foam.CLASS({
     },
 
     function count(self) {
+      if ( self.rolesOnly ) return;
       var msg = self.filteredRows + ' of ' + self.ps.length + ' permissions, ';
       msg += self.filteredCols + ' of ' + self.gs.length + ' groups';
 
@@ -423,41 +464,53 @@ foam.CLASS({
       });
     },
 
-    function render() {
-      this.SUPER();
-      var self = this;
-
-      this.groupDAO.orderBy(this.Group.ID).select().then(function(gs) {
-        gs = gs.array;
-
-        var gs2 = [];
-        function findChildren(parent, prefix) {
-          for ( var i = 0 ; i < gs.length ; i ++ ) {
-            var g = gs[i];
-            if ( g.parent === parent ) {
-              gs2.push(g);
-              g.displayName_ = prefix ? prefix + '┌ ' + g.id : g.id;
-              findChildren(g.id, prefix + '   ');
-            }
+    async function getColumns() {
+      if ( this.rolesOnly ) {
+        this.groupDAO = this.groupDAO.where(this.NOT(this.CONTAINS(this.Group.ID, this.ROLE_PREFIX)));
+        this.groupDAO = this.groupDAO.where(this.NOT(this.IN(this.Group.ID, ['foam', 'system', 'admin', 'anonymous', 'reseller'])));
+      }
+      var gs = (await this.groupDAO.orderBy(this.Group.ID).select()).array;
+      var gs2 = [];
+      function findChildren(parent, prefix) {
+        for ( var i = 0 ; i < gs.length ; i ++ ) {
+          var g = gs[i];
+          if ( g.parent === parent ) {
+            gs2.push(g);
+            g.displayName_ = prefix ? prefix + '┌ ' + g.id : g.id;
+            findChildren(g.id, prefix + '   ');
           }
         }
-        findChildren('', '');
-        gs = gs2;
-        for ( var i = 0 ; i < gs.length ; i++ ) {
-          self.gMap[gs[i].id] = gs[i];
-        }
-        self.permissionDAO.orderBy(self.Permission.ID).select().then(function(ps) {
-          for ( var i = 0 ; i < ps.array.length ; i++ ) {
-            self.pMap[ps.array[i].id] = ps.array[i];
-          }
-          self.gs = gs;
-          self.ps = ps.array;
-          self.matrix();
-        })
-      });
+      }
+      findChildren('', '');
+      return gs2;
     },
 
-    function updateGroup(p_, g_, data, self) {
+    async function getRows() {
+      return (await this.permissionDAO.orderBy(this.Permission.ID).select()).array;
+    },
+
+    async function render() {
+      this.SUPER();
+
+      if ( this.rolesOnly ) {
+        this.query = '@' + this.ROLE_PREFIX;
+      }
+
+      var gs = await this.getColumns();
+      for ( var i = 0 ; i < gs.length ; i++ ) {
+        this.gMap[gs[i].id] = gs[i];
+      }
+
+      var ps = await this.getRows();
+      for ( var i = 0 ; i < ps.length ; i++ ) {
+        this.pMap[ps[i].id] = ps[i];
+      }
+      this.gs = gs;
+      this.ps = ps;
+      this.matrix();
+    },
+
+    function updateGroup(p_, g_, data) {
       var dao = this.groupPermissionJunctionDAO;
       var obj = this.GroupPermissionJunction.create({sourceId: g_.id, targetId: p_.id});
 
@@ -528,9 +581,9 @@ foam.CLASS({
       name: 'GroupPermissionView',
       extends: 'foam.u2.View',
       css: `
-        ^:hover { background: #f55 }
-        ^checked { color: #4885ff }
-        ^implied { color: gray }
+        ^:hover { background: $primary400!important }
+        ^checked { color: $primary700!important; font-weight: bold; }
+        ^implied { color: $grey700!important; font-weight: bold; }
       `,
       methods: [
         function init() {

@@ -18,7 +18,7 @@ foam.CLASS({
   imports: [ 'flowDAO' ],
 
   ids: [ 'name' ],
-
+/*
   axioms: [
     {
       class: 'foam.comics.v2.CannedQuery',
@@ -31,8 +31,11 @@ foam.CLASS({
       predicateFactory: function(e, cls) { return e.EQ(cls.IS_PUBLIC, false); }
     }
   ],
+    */
 
-  tableColumns: [ 'name', 'description', 'status', 'isPublic', 'readOnly', 'reflow' ],
+  tableColumns: [ 'name', 'source', 'description', 'status', /* 'isPublic', 'readOnly', */ 'reflow' ],
+
+  searchColumns: [ 'name', 'status', 'source' ],
 
   properties: [
     {
@@ -107,12 +110,12 @@ foam.CLASS({
     {
       class: 'String',
       name: 'mementoStr',
-      label: 'Source',
+      label: 'JSON',
       postSet: function(o, n) {
         if ( this.feedback_ ) return;
         this.feedback_ = true;
         try {
-          console.log('*********** FLOW mementoStr change:', n);
+          // console.log('*********** FLOW mementoStr change:', n);
           var memento = this.memento = foam.json.parseString(n, this.__context__);
           console.log('mementos:', memento.length);
 
@@ -129,12 +132,20 @@ foam.CLASS({
       name: 'save',
       code: function() {
         this.flowDAO.put(this);
+      },
+      isAvailable: function() {
+        // Disable in Console
+        return this.__context__.flow;
       }
     },
     {
       name: 'reflow',
       code: function(X) {
-        X.routeTo("reflow/" + this.name);
+        X.routeTo('reflow/' + this.name + '?flowMode=view');
+      },
+      isAvailable: function() {
+        // Enable in Console
+        return ! this.__context__.flow;
       }
     }
   ]
