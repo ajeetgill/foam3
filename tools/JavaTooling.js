@@ -37,6 +37,8 @@ foam.POM({
     javaManifestVendorId: ['', 'java-manifiest-vendor-id', 'JAVA_MANIFEST_VENDOR_ID', 'Java Manifest Vendor ID', '', args => JAVA_MANIFEST_VENDOR_ID = args ],
     javaOpts: ['', 'java-opts', 'JAVA_OPTS', 'Additional JVM options','', arg => JAVA_OPTS = arg ],
     logLevel: ['l', 'log-level', 'LOG_LEVEL', 'Set JVM Log level for TEST cases. Defaults to ERROR. example: --log-level:INFO',null, arg => LOG_LEVEL = arg ],
+    javaMainClass: ['', 'java-main-class', 'JAVA_MAIN_CLASS', 'Java \'main\' class', 'foam.core.boot.Boot', arg => JAVA_MAIN_CLASS = arg ],
+    javaMainArgs: ['', 'java-main-args', 'JAVA_MAIN_ARGS', 'Comma separated key[:value] arguments passed to the Java \'main\' class', '', arg => JAVA_MAIN_ARGS = arg ],
     restart: [ 'r', 'restart', 'RESTART', 'Restart CORE Server using last build.', false, function(arg) { RESTART = this.arg ? bool(arg) : true; } ],
     runArgs: ['', 'run-args', 'RUN_ARGS', 'Arguments which will be passed to run.sh to when starting CORE server from JAR','', arg => RUN_ARGS = arg ],
     suspend: [ 's', 'suspend', 'SUSPEND', 'Start JDPA debugging in suspend state.', false, function(arg) { DEBUG = this.arg ? bool(arg) : true; SUSPEND = this.arg ? bool(arg) : true; } ],
@@ -59,17 +61,9 @@ foam.POM({
         JAVA_OPTS += ` -Dhostname=${HOST_NAME}`;
       }
 
-      // JAVA_OPTS += ` -Dorg.slf4j.simpleLogger.defaultLogLevel=info`;
-
-      if ( DEBUG ) {
-        JAVA_OPTS += ` -agentlib:jdwp=transport=dt_socket,server=y,suspend=${SUSPEND ? 'y' : 'n'},address=127.0.0.1:${DEBUG_PORT}`;
-      }
-
       if ( WEB_PORT ) {
         JAVA_OPTS += ` -Dhttp.port=${WEB_PORT}`;
       }
-
-      JAVA_OPTS += ` -Dcore.webroot=${PROJECT_HOME}`;
     }],
 
     buildRunArgs: ['set-run-args', 'Set arguments which will be passed to run.sh to start CORE server', [], function buildRunArgs() {
@@ -203,7 +197,8 @@ foam.POM({
           .replaceAll(`${BUILD_DIR}/lib/`, '  ').trim();
       var m = `
 Manifest-Version: 1.0
-Main-Class: foam.core.boot.Boot
+Main-Class: ${JAVA_MAIN_CLASS}
+Args: ${JAVA_MAIN_ARGS}
 Class-Path: ${jars}
 Implementation-Title: ${APP_NAME}
 Implementation-Version: ${FOAM_BIN_VERSION}
@@ -225,7 +220,7 @@ Implementation-Vendor: ${JAVA_MANIFEST_VENDOR}
     javaTests: ['java-tests', 'Run all or specified test cases. ex: javaTests[:Test1,Test2]', ['stopCORE','cleanTest'], function javaTests(args) {
       APP_ROOT='/tmp';
       FLAGS = this.comma(FLAGS, 'test');
-      FLAGS = this.comma(FLAGS, 'java');
+      // FLAGS = this.comma(FLAGS, 'java');
       this.addJournal('test');
       this.execute('pomEnvs');
       this.execute('buildJar');
@@ -251,15 +246,25 @@ Implementation-Vendor: ${JAVA_MANIFEST_VENDOR}
       }
     }],
 
-    startCORE: ['start-core', 'Start CORE server (CLASSPATH).', [ 'stopCORE', 'setupDirs', 'deployJournals', 'deployDocuments', 'deployLib', 'buildJavaOpts', 'showSummary' ], function startCORE() {
+    startCORE: ['start-core', 'Start CORE server (CLASSPATH).', [ 'stopCORE', 'setupDirs', 'deployJournals', 'deployDocuments', 'deployLib', 'buildJavaOpts' ], function startCORE() {
+
+      JAVA_OPTS += ` -Dcore.webroot=${PROJECT_HOME}`;
+
+      if ( DEBUG )
+        JAVA_OPTS += ` -agentlib:jdwp=transport=dt_socket,server=y,suspend=${SUSPEND ? 'y' : 'n'},address=127.0.0.1:${DEBUG_PORT}`;
+
+      this.showSummary();
       if ( BUILD_ONLY ) return;
+
       this.info(`Starting CORE ${APP_NAME}`);
       // Acquires environment variables via JAVA_TOOL_OPTIONS (JAVA_OPTS)
-      this.exec(`java -cp "${BUILD_DIR}/lib/\*:${BUILD_DIR}/classes" foam.core.boot.Boot`);
+      this.exec(`java -cp "${BUILD_DIR}/lib/\*:${BUILD_DIR}/classes" ${JAVA_MAIN_CLASS} "${JAVA_MAIN_ARGS}"`);
     }],
 
     startCOREJar: ['start-core-jar', 'Start CORE server (JAR).', ['stopCORE', 'setupDirs', 'deployBin', 'deployLib', 'buildJavaOpts', 'buildRunArgs', 'showSummary'], function startCOREJar() {
       if ( BUILD_ONLY ) return;
+
+      // see etc/shrc.local for jdwp configuration
       this.exec(`${APP_HOME}/bin/run.sh -N${APP_NAME} -V${VERSION} ${RUN_ARGS}`);
     }],
 
@@ -282,9 +287,7 @@ Implementation-Vendor: ${JAVA_MANIFEST_VENDOR}
       }
 
       this.showSummary();
-
-      if ( BUILD_ONLY )
-        return;
+      if ( BUILD_ONLY ) return;
 
       this.info(MESSAGE);
 

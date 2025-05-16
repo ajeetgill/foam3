@@ -131,12 +131,12 @@ var pmake = function(...args) {
   if ( ! foam.flags.loadFiles ) foam.loadFiles = function() {};
 
   X.pom.split(',').forEach(function(pom) {
+    verbose(`[pmake] pom ${pom}`);
     try {
       var path = path_.resolve(foam.cwd, pom) + '.js';
       foam.require(pom, false, true);
     } catch (e) {
-      this.warning('[pmake] Unable to load POM', pom);
-      this.error('[pmake]', e);
+      this.error('[pmake] Unable to load POM', pom, '\n', e);
     }
   }.bind(this));
 

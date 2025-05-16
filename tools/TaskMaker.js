@@ -13,6 +13,12 @@ exports.visitPOM = function(pom) {
 
   pom.tasks.forEach(t => {
     verbose(`[Task] registering task ${t.name} from ${pom.name}`);
+    let existing = this.findTask(ALL_TASKS, t.name);
+    if ( ! existing ) {
+      // Not associated with a tooling task. This task can be executed
+      // explicitly with -Xname or --name
+      verbose(`[Task] pom ${pom} - stand-alone pom task ${t.name}\n${t}`);
+    }
     var task = tasks[t.name] || [];
     task.push(t);
     tasks[t.name] = task;

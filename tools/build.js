@@ -74,7 +74,7 @@ process.on('unhandledRejection', e => {
 var depth   = 1;
 var running = {};
 var summary = [];
-var tasks   = [];
+let ALL_TASKS = {};
 
 function task() {
   var name, gnuopt, desc = '', dep = [], f;
@@ -106,10 +106,10 @@ function task() {
       msg += key +': ' + arguments[key] + '\n';
     });
     error(msg);
-  }
 
-  if ( ! tasks[name] ) {
-    tasks[name] = {
+}
+  if ( ! ALL_TASKS[name] ) {
+    ALL_TASKS[name] = {
       name: name,
       gnuopt: gnuopt,
       desc: desc,
@@ -138,7 +138,7 @@ function task() {
     }
 
     // execute task dependencies
-    let task = tasks[name];
+    let task = ALL_TASKS[name];
     let dep = task.dep;
     dep.forEach(d => {
       if ( d instanceof Function ) {
@@ -190,7 +190,7 @@ function execute(t, ...args) {
   // console.log(`execute t: ${t} args: ${args}`);
   var f = globalThis[t];
   if ( ! f ) {
-    let task = findTask(tasks, t);
+    let task = findTask(ALL_TASKS, t);
     if ( task ) {
       f = globalThis[task.name];
       if ( ! f && task.f ) {
@@ -212,7 +212,7 @@ function execute(t, ...args) {
   } else {
     var extra = '';
     if ( t.length > 1 ) {
-      let similar = findSimilarTasks(tasks, t);
+      let similar = findSimilarTasks(ALL_TASKS, t);
       if ( similar.length > 0 ) {
         extra += '\n  Possible Task matches: \n';
       }
@@ -234,7 +234,7 @@ function execute(t, ...args) {
 function showSummary() {
   if ( HELP ) return;
 
-  if ( SHOW_REPORT ) {
+  if ( SHOW_ENVS ) {
     moreUsage();
   }
 
@@ -268,13 +268,8 @@ function error(...args) {
   process.exit(1);
 }
 
-// arg === report is used internally to output the envs report,
-// regarless of user selecting --show-report
 function moreUsage(arg) {
-  let report = SHOW_REPORT ||
-      ( arg && arg === 'report' );
-
-  if ( ! report ) {
+  if ( ! SHOW_ENVS ) {
     info('Usage: build.js [OPTIONS] (see --usage for examples)');
     if( ! arg || arg === 'options' ) {
       info('\nOptions are:');
@@ -306,15 +301,15 @@ function moreUsage(arg) {
 
     if ( ! arg || arg === 'tasks' ) {
       info('\nTasks: (invoke with -XtaskName or --task-name)');
-      var ts = { ...tasks };
+      var ts = Object.assign({}, ALL_TASKS);
       var depth = 1;
       function printTask(t) {
         if ( ! ts[t] ) return;
         delete ts[t];
-        var task = findTask(tasks, t);
+        var task = findTask(ALL_TASKS, t);
         var dep2 = task.dep.filter(d => ! ts[d]); // list of dependencies which appear elsewhere in tree
         var dstr = dep2.length ? ' [ ' + dep2.join(', ') + ' ]': '';
-        let desc = report ? '' : task.desc;
+        let desc = SHOW_ENVS ? '' : task.desc;
         console.log(''.padEnd(depth*2) + t.padEnd(27-depth*2) + desc + dstr);
         depth++;
         task.dep.forEach(printTask);
@@ -325,18 +320,18 @@ function moreUsage(arg) {
       });
     }
   }
-  if ( report ||
+  if ( SHOW_ENVS ||
        ! arg ||
        arg === 'envs' ) {
-    if ( report ) {
-      info('Build report');
+    if ( SHOW_ENVS ) {
+      info('\nEnvironment variable report:');
     } else {
       info('\nEnvironment variables: (set with -E)');
     }
     depth = 1;
 
     Object.keys(ENVS).sort().forEach(k => {
-      if ( NO_REPORT_ENVS[k] ) {
+      if ( NO_SHOW_ENVS[k] ) {
         // console.log(`moreUsage skipping ${k}`);
         return;
       }
@@ -347,13 +342,13 @@ function moreUsage(arg) {
       else
         v = v.toString();
       console.log(''.padStart(0), k+':', ''.padStart(20-k.length), '\x1b[0;35m', v, '\x1b[0;0m',);
-      if ( ! report && desc ) {
+      if ( ! SHOW_ENVS && desc ) {
         console.log(''.padStart(3), desc);
       }
     });
   }
   console.log('');
-  if ( ! report ) {
+  if ( ! SHOW_ENVS ) {
     info('See --usage for examples, and documentation #flowdoc/Build.)');
   }
 }
@@ -363,11 +358,12 @@ var ENVS = {
   EXPORTS:           ['Build environment variables which will be exported to pom tasks.', {}],
   OPTIONS:           ['Build options determined during tooling which can be configured to by CLI and POM arguments to control the build', {}],
   POM_ENVS:          ['Supports translating top level POM parameters to build parameters, such as pom.name -> APP_NAME, pom.version -> VERSION.  Also provides legacy support to POMs still using top level POM parametes for Java Manifest and Javac Parameters. Java Manifest property \'vendor\' should be set in POM task \'javaManifest\' and \'java\' should be set in POM task \'javacParameters\'.', 'APP_NAME=name,VERSION=version,JAVA_RELEASE=java,JAVA_MANIFEST_VENDOR=vendor'],
-  POM_TASKS:         ['Map of named tasks captured from build POMs. Will be executed when same named build task is executed.', []],
+  POM_TASKS:         ['Map of named tasks captured from build POMs. Will be executed when same named build task is executed.', {}],
   PROJECT:           ['Top-Level Loaded POM Object, not be be confused with variable \'POMS\', which is the name of the POM(s) to be processed by the build'],
   TOOLING_OPTIONS:   ['Options which control the tooling phase of the build', {}],
 };
-let NO_REPORT_ENVS = Object.assign({}, ENVS);
+ENVS['ALL_TASKS'] = ['Tasks defined in Tooling poms and this build itself', ALL_TASKS];
+let NO_SHOW_ENVS = Object.assign({}, ENVS);
 globalThis['ENVS'] = ENVS;
 
 // Configure build variables
@@ -388,6 +384,8 @@ EXPORTS = Object.assign(EXPORTS, {
   execute,
   execSync,
   existsSync,
+  findOption,
+  findTask,
   flag,
   hostname,
   info,
@@ -444,12 +442,14 @@ OPTIONS = addOptions({
   hostname: ['', 'hostname', 'HOST_NAME', 'Hostname to set in JVM', hostname(), args => HOST_NAME = args ],
   poms: [ 'P', 'poms', 'POMS', "comma seperated list of pom files. Defaults to 'pom' at the root of the project.", '', arg => POMS = arg ],
   projectHome: ['', 'project-home', 'PROJECT_HOME', 'Project directory', process.cwd(), arg => PROJECT_HOME = arg ],
-  showReport: [ '', 'show-report', 'SHOW_REPORT', 'Report final build information for environment variables (envs), options, and tasks.  Narrow output with --dump:tasks, for example.', false, function(arg) { SHOW_REPORT = arg ? bool(arg) : true; }],
-  tasks: [ 'X', 'tasks', 'TASKS', 'Explicitly execute tasks. Comma seperated list of task names. Parameters to each demarcated with : symbol. Ex: -XcheckDeps:9', 'all',
+  showEnvs: [ '', 'show-envs', 'SHOW_ENVS', 'Output environment variable values.', false, function(arg) { SHOW_ENVS = arg ? bool(arg) : true; }],
+  tasks: [ 'X', 'tasks', 'TASKS', 'Register task for execution during the build phase. Comma seperated list of task names. Parameters to each demarcated with : symbol. Ex: -XcheckDeps:9', 'all',
            arg => {
+             // cli will pass tasks as either --task1,task2 or -Xtask1,task2
+             let t = arg.replaceAll(',', TASK_SEPERATOR);
              if ( TASKS === 'all' )
                TASKS = '';
-             TASKS = TASKS ? TASKS + TASK_SEPERATOR + arg : arg;
+             TASKS = TASKS ? TASKS + TASK_SEPERATOR + t : t;
            } ],
   timestamp: [ '', 'timestamp', 'TIMESTAMP', 'Build date, used to timestamp generated files', Date.now(), arg => TIMESTAMP = arg ],
   topic: [ 'H', 'topic-help', '', 'Help on a particular environment variable, option, or task', '', arg => {
@@ -476,7 +476,7 @@ OPTIONS = addOptions({
       let desc = option.desc;
       console.log('(OPTION)', ''.padStart(0), opts+':', '\x1b[0;35m', def,'\x1b[0;0m', desc);
     } else {
-      let t = findTask(tasks, arg);
+      let t = findTask(ALL_TASKS, arg);
       if ( t ) {
         var msg = arg;
         if ( arg !== t.name ) msg += ' '+t.name;
@@ -487,7 +487,7 @@ OPTIONS = addOptions({
           console.log('(ENV)', arg,': ',e[0]);
         } else {
           var extra = '';
-          let similar = findSimilarTasks(tasks, arg);
+          let similar = findSimilarTasks(ALL_TASKS, arg);
           if ( similar.length > 0 ) {
             extra += '\n  Possible Task matches: \n';
           }
@@ -507,19 +507,20 @@ OPTIONS = addOptions({
     }
     process.exit(0);
   } ],
-  verbose: ['', 'verbose', 'VERBOSE', 'Enable VerboseMaker to log additional info during build',false, function(arg) { VERBOSE = arg ? bool(arg) : true; } ],
+  verbose: ['', 'verbose', 'VERBOSE', 'Enable VerboseMaker to log additional info during build. ', '', function(arg) {
+    // TODO: incomplete, working towards: Restrict set of makers with --verbose:Java,Journal.
+    VERBOSE = arg || '*'; }]
 
 }, OPTIONS);
 
-function addPOM(pom) {
-    if ( ! existsSync(pom + '.js') )
-      error('File not found ' + pom + '.js');
-    else
-      POMS = comma(POMS, pom);
-}
-
+// explicitly add journal to POM list, intented to be called
+// after pom() has setup the initial list
 function addJournal(name) {
-  addPOM(`${PROJECT_HOME}/deployment/${name}/pom`);
+  let pom = name && `${PROJECT_HOME}/deployment/${name}/pom`;
+  if ( ! existsSync(pom + '.js') )
+    error('POM file not found ' + pom + '.js');
+  else
+    POMS = comma(POMS, pom);
 }
 
 // build pom map and ensure the POMS list is viable
@@ -553,8 +554,7 @@ function pom() {
   }
 
   if ( globalThis['JOURNALS'] )
-    JOURNALS.split(',').forEach(c => addJournal(c));
-                                //addPom(c && `${PROJECT_HOME}/deployment/${c}/pom`));
+    JOURNALS.split(',').forEach(c => addPom(c && `${PROJECT_HOME}/deployment/${c}/pom`));
 
   POMS = poms.join(',');
 }
@@ -592,7 +592,7 @@ task('tooling', 'Prepare build environment', [], function tooling() {
         warning(`[build] tooling name: ${name} != f.name ${f.name}`);
       }
       // TODO: refactor to register against top level and also run dependencies
-      if ( ! tasks[name] ) {
+      if ( ! ALL_TASKS[name] ) {
         task(name, gnuopt, desc, dep, f);
       } else {
         let pomList = POM_TASKS[name] || [];
@@ -607,8 +607,7 @@ task('tooling', 'Prepare build environment', [], function tooling() {
 });
 
 task('pom-envs', 'Capture POM arguments to environment values or options, and register POM tasks for later execution when the corresponding build tasks is executed.', [], function pomEnvs() {
-  let makers = pmake.bind(Object.assign({}, EXPORTS), `-makers=Env,Task -flags=${flag()} -pom=${POMS} -builddir=${BUILD_DIR} -envs=${POM_ENVS}`)();
-
+  let makers = pmake.bind(Object.assign({}, EXPORTS), `-makers=Env,Task -flags=${flag()} -pom=${POMS} -builddir=${BUILD_DIR} -envs=${POM_ENVS} -tasks=${ALL_TASKS} -options=${Object.assign({}, OPTIONS)}`)();
   let envMaker = makers.get('Env');
   Object.keys(envMaker.envs).forEach(e => {
     let option = findOption(OPTIONS, e);
@@ -665,12 +664,14 @@ processBuildArgs.bind(Object.assign({}, EXPORTS), OPTIONS, moreUsage)();
 // build pom map for POM_TASKS, and ensure POMS list is viable
 pom();
 
+// NOTE: pomEnvs needs to be run early. Commented out so tasks such as
+// JavaTooling javaTests can set flags and journals before calling pomEnvs.
 // process build pom for envs and task registration
 // execute('pomEnvs');
 
 // Phase III - execute build tasks
-// if ( SHOW_REPORT ) {
-//   moreUsage('report');
+// if ( SHOW_ENVS ) {
+//   moreUsage();
 // }
 
 TASKS.split(TASK_SEPERATOR).forEach(t => {

@@ -224,6 +224,7 @@ function comma(list, value) {
   return list ? list + ',' + value : value;
 }
 
+// TOOD: test for true, y, yes, ... and false, no,...
 function bool(val) {
   return String(val).toLowerCase() === 'true';
 }
@@ -237,7 +238,7 @@ function info(...args) {
   // cyan: 36m - may be too light on white background
 }
 
-function verbose(args) {
+function verbose(...args) {
   if ( globalThis['VERBOSE'] ) {
     console.log(args);
   }
@@ -261,7 +262,9 @@ function hyphenate(str) {
 }
 // Build flag string with global and argument flags
 function flag(flgs) {
-  var f = globalThis['VERBOSE'] ? 'verbose' : '';
+  var verbose = globalThis['VERBOSE'];
+  var f = verbose ? `verbose:${verbose}` : '';
+
   if ( globalThis['FLAGS'] )
     f = ( f ? f + ',' : '' ) + FLAGS;
 
@@ -376,16 +379,20 @@ function processBuildArgs(options, moreUsage) {
     var arg = args[i];
     if ( arg.startsWith('--') ) {
       arg = arg.substring(2);
-      var [opt, val] = arg.split(':');
-      if ( opt === 'help' ) {
-        options['help'].f(val);
-      } else {
-        let option = findOption(options, opt);
-        if ( option ) {
-          this.bool(a);
-          option.f.bind(this, val)();
+      // support --task1,task
+      let as = arg.split(',');
+      for ( var k = 0; k < as.length; k++ ) {
+        arg = as[k];
+        var [opt, val] = arg.split(':');
+        if ( opt === 'help' ) {
+          options['help'].f(val);
         } else {
-          options['tasks'].f.bind(this, arg)();
+          let option = findOption(options, opt);
+          if ( option ) {
+            option.f.bind(this, val)();
+          } else {
+            options['tasks'].f.bind(this, arg)();
+          }
         }
       }
     } else if ( arg.startsWith('-') ) {
