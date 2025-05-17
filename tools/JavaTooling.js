@@ -51,9 +51,26 @@ foam.POM({
       JAR_INCLUDES += ` -C ${BUILD_DIR} webroot `;
       this.execSync(`jar cfm ${BUILD_DIR}/lib/${JAR_NAME} ${BUILD_DIR}/MANIFEST.MF ${JAR_INCLUDES}`, { stdio: VERBOSE ? 'inherit' : 'ignore' });
     }],
+
     buildJavaMainArgs: ['build-java-main-args', 'Collection all options which should be passed to Java main', [], function buildJavaMainArgs() {
       JAVA_MAIN_ARGS = this.comma(JAVA_MAIN_ARGS, `boot.script:${BOOT_SCRIPT}`);
     }],
+
+    buildJavaManifest: ['build-java-manifest', 'Contribute to Java Manifest', [], function buildJavaManifest() {
+      JAVA_MANIFEST += `\nImplementation-Title: ${APP_NAME}`;
+      JAVA_MANIFEST += `\nImplementation-Timestamp: ${TIMESTAMP}`;
+      JAVA_MANIFEST += `\nImplementation-Vendor: ${JAVA_MANIFEST_VENDOR}`;
+      if ( JAVA_MANIFEST_VENDOR_ID ) {
+        JAVA_MANIFEST += `\nImplementation-Vendor-Id: ${JAVA_MANIFEST_VENDOR_ID}`;
+      }
+      JAVA_MANIFEST += `\nMain-Class: ${JAVA_MAIN_CLASS}`;
+      JAVA_MANIFEST += `\nArgs: ${JAVA_MAIN_ARGS}`;
+
+      var jars = this.execSync(`find ${BUILD_DIR}/lib -type f -name "*.jar"`).toString()
+          .replaceAll(`${BUILD_DIR}/lib/`, '  ').trim();
+      JAVA_MANIFEST += `\nClass-Path: ${jars}`;
+    }],
+
     buildJavaOpts: ['build-java-opts', 'Set Java environmental variables.', [], function buildJavaOpts() {
       JAVA_OPTS += ` -DJOURNAL_HOME=${JOURNAL_HOME}`;
       JAVA_OPTS += ` -DDOCUMENT_HOME=${DOCUMENT_HOME}`;
@@ -64,6 +81,7 @@ foam.POM({
         JAVA_OPTS += ` -Dhttp.port=${WEB_PORT}`;
       }
     }],
+
     buildJavaTestOpts: ['build-java-test-ops', 'Add test specific JAVA_OPTS', ['buildJavaOpts'], function buildJavaTestOpts() {
       JAVA_OPTS += ' -enableassertions';
       JAVA_OPTS += ' -Dresource.journals.dir=journals';
@@ -72,6 +90,7 @@ foam.POM({
       if ( DEBUG )
         JAVA_OPTS += ` -agentlib:jdwp=transport=dt_socket,server=y,suspend=${SUSPEND ? 'y' : 'n'},address=127.0.0.1:${DEBUG_PORT}`;
     }],
+
     buildRunArgs: ['set-run-args', 'Set arguments which will be passed to run.sh to start CORE server', [], function buildRunArgs() {
       if ( WEB_PORT ) RUN_ARGS += ` -W${WEB_PORT}`;
       if ( DEBUG ) RUN_ARGS += ` -D${DEBUG_PORT}`;
@@ -188,30 +207,10 @@ foam.POM({
       }
     }],
 
-    // TODO: build piece-meal so each tooling pom can it's contribution
-    genJavaManifest: ['gen-java-manifest', 'Generate Java Manifest', ['versions', 'genFoamBinVersion', 'buildJavaMainArgs'], function genJavaManifest() {
-      var jars = this.execSync(`find ${BUILD_DIR}/lib -type f -name "*.jar"`).toString()
-          .replaceAll(`${BUILD_DIR}/lib/`, '  ').trim();
-      var m = `
-Manifest-Version: 1.0
-Main-Class: ${JAVA_MAIN_CLASS}
-Args: ${JAVA_MAIN_ARGS}
-Class-Path: ${jars}
-Implementation-Title: ${APP_NAME}
-Implementation-Version: ${FOAM_BIN_VERSION}
-Specification-Version: ${PROJECT_REVISION}
-Implementation-Timestamp: ${TIMESTAMP}
-${APP_NAME}-Revision: ${PROJECT_REVISION}
-FOAM-Revision: ${FOAM_REVISION}
-Implementation-Vendor: ${JAVA_MANIFEST_VENDOR}
-`.trim() + '\n';
-
-      if ( JAVA_MANIFEST_VENDOR_ID ) {
-        m += `Implementation-Vendor-Id: ${JAVA_MANIFEST_VENDOR_ID}\n`;
-      }
-      JAVA_MANIFEST = m;
-      this.writeFileSync(BUILD_DIR + '/MANIFEST.MF', m);
-      return m;
+    genJavaManifest: ['gen-java-manifest', 'Generate Java Manifest File', ['buildJavaManifest'], function genJavaManifest() {
+      JAVA_MANIFEST = 'Manifest-Version: 1.0' + JAVA_MANIFEST;
+      this.writeFileSync(BUILD_DIR + '/MANIFEST.MF', JAVA_MANIFEST);
+      return JAVA_MANIFEST;
     }],
 
     javaTests: ['java-tests', 'Run all or specified test cases. ex: javaTests[:Test1,Test2]', [/*'stopCORE'*/], function javaTests(args) {
@@ -227,7 +226,7 @@ Implementation-Vendor: ${JAVA_MANIFEST_VENDOR}
       this.execute('startCORETest', 'test', args);
     }],
 
-    showJavaManifest: ['show-java-manifest', 'Display generated Java Manifest file.', ['genJavaManifest'], function showJavaManifest() {
+    showJavaManifest: ['show-java-manifest', 'Display generated Java Manifest file.', ['buildJavaManifest'], function showJavaManifest() {
       console.log('Manifest:', JAVA_MANIFEST);
     }],
 

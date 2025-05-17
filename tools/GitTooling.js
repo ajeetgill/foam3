@@ -28,6 +28,12 @@ foam.POM({
         this.warning('Cannot determine project revision', e);
       }
     }],
+    buildJavaManifest: ['gen-java-manifest', 'Contribute to  Java Manifest', ['getProjectRevision', 'getFOAMRevision'], function buildJavaManifest() {
+      JAVA_MANIFEST += `\nImplementation-Version: ${FOAM_BIN_VERSION}`;
+      JAVA_MANIFEST += `\nSpecification-Version: ${PROJECT_REVISION}`;
+      JAVA_MANIFEST += `\n${APP_NAME}-Revision: ${PROJECT_REVISION}`;
+      JAVA_MANIFEST += `\nFOAM-Revision: ${FOAM_REVISION}`;
+    }],
     versions: ['versions', 'Show version information.', ['getProjectRevision', 'getFOAMRevision'], function versions() {
       console.log(`${APP_NAME} revision: ${PROJECT_REVISION}`);
       console.log(`FOAM revision:       ${FOAM_REVISION}`);
