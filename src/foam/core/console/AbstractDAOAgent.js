@@ -173,7 +173,7 @@ foam.CLASS({
 
   methods: [
     function execute(e) {
-      e.tag({class: 'foam.u2.table.TableView', data: this.unlimitedDAO});
+      e.start({class: 'foam.u2.table.TableView', data: this.unlimitedDAO}).style({height: '700px', maxHeight: '700px'});
     }
   ]
 });
