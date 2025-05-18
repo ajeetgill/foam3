@@ -229,7 +229,7 @@ foam.CLASS({
       view: function(_, X) { return foam.core.console.SinkView.create({sinksOnly: false}, X.data); }
     },
     { class: 'Long', name: 'rowCount', visibility: 'RO' },
-    { class: 'String', name: 'executionTime', value: '-', visibility: 'RO', transient: true },
+    { class: 'String', name: 'executionTime', value: '-', visibility: 'RO', transient: true, readPermissionRequired: true },
     { class: 'Int', name: 'version', hidden: true },
     { class: 'FObjectProperty', name: 'value', transient: true, visibility: 'RO' }
   ],
