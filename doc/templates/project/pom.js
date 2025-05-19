@@ -3,7 +3,7 @@ foam.POM({
 
   version: '1',
 
-  excludes: [ 'build', 'deployment', 'node_modules' ],
+  excludes: [ 'build', 'deployment', 'node_modules', 'foam3' ],
 
   licenses: [
     `
@@ -20,6 +20,7 @@ foam.POM({
   ],
 
   projects: [
+    { name: 'foam3/pom' }
     // { name: 'src/com/yourdomain/youproject/yoursubproject/pom' },
   ],
 
