@@ -252,9 +252,9 @@ function execute(t, ...args) {
 function showSummary() {
   if ( HELP ) return;
 
-  if ( SHOW_ENVS ) {
-    moreUsage();
-  }
+  // if ( SHOW_ENVS ) {
+    moreUsage('showEnvs');
+  // }
 
   var s = '';
   summary.forEach(e => {
@@ -287,7 +287,8 @@ function error(...args) {
 }
 
 function moreUsage(arg) {
-  if ( ! SHOW_ENVS ) {
+  let showEnvs = ( SHOW_ENVS || arg && arg === 'showEnvs' ) ? true : false;
+  if ( ! showEnvs ) {
     info('Usage: build.js [OPTIONS] (see --usage for examples)');
     if( ! arg || arg === 'options' ) {
       info('\nOptions are:');
@@ -328,7 +329,7 @@ function moreUsage(arg) {
         var dstr = '';
         var dep = [];
         if ( task ) {
-          let desc = SHOW_ENVS ? '' : task.desc;
+          let desc = showEnvs ? '' : task.desc;
           let tasks = TOOLING_TASKS[task.name];
           tasks.forEach(task => {
             var dep2 = task.dep.filter(d => ! ts[d]); // list of dependencies which appear elsewhere in tree
@@ -350,10 +351,10 @@ function moreUsage(arg) {
       });
     }
   }
-  if ( SHOW_ENVS ||
+  if ( showEnvs ||
        ! arg ||
        arg === 'envs' ) {
-    if ( SHOW_ENVS ) {
+    if ( showEnvs ) {
       info('\nEnvironment variable report:');
     } else {
       info('\nEnvironment variables: (set with -E)');
@@ -372,13 +373,13 @@ function moreUsage(arg) {
       else
         v = v.toString();
       console.log(''.padStart(0), k+':', ''.padStart(20-k.length), '\x1b[0;35m', v, '\x1b[0;0m',);
-      if ( ! SHOW_ENVS && desc ) {
+      if ( ! showEnvs && desc ) {
         console.log(''.padStart(3), desc);
       }
     });
   }
   console.log('');
-  if ( ! SHOW_ENVS ) {
+  if ( ! showEnvs ) {
     info('See --usage for examples, and documentation #flowdoc/Build.)');
   }
 }
