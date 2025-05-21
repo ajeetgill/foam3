@@ -25,6 +25,10 @@ foam.CLASS({
     'foam.core.crunch.UserCapabilityJunction'
   ],
 
+  messages: [
+    { name: 'SELECT_USER', message: 'Please select a user: ' }
+  ],
+
   properties: [
     {
       class: 'Boolean',
@@ -71,7 +75,10 @@ foam.CLASS({
       // add user dropdown;
       this.userDAO = this.userDAO.where(this.NOT(this.IN(this.User.GROUP, ['system', 'admin', 'anonymous', 'paytic-anonymous'])));
       this
-        .start().addClass('p-label').add('Please select a user').end()
+        .start().addClass('p-label-lg')
+          .style({ 'padding': '8px 0'})
+          .add(this.SELECT_USER)
+        .end()
         .start({
           class: 'foam.u2.view.RichChoiceView',
           search: true,
