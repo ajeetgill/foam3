@@ -25,10 +25,6 @@ foam.CLASS({
     'foam.core.crunch.UserCapabilityJunction'
   ],
 
-  messages: [
-    { name: 'SELECT_USER', message: 'Please select a user: ' }
-  ],
-
   properties: [
     {
       class: 'Boolean',
@@ -49,7 +45,8 @@ foam.CLASS({
           this.gs = [];
       }
     },
-    [ 'gs', []]
+    [ 'gs', []],
+    [ 'initCols', false ]
   ],
 
   css: `
@@ -69,32 +66,30 @@ foam.CLASS({
   `,
 
   methods: [
-    async function render() {
-      var SUPER = this.SUPER.bind(this);
+    function tableColumns(gs, matrix) {
+      var self = matrix;
+      self.userDAO = self.userDAO.where(self.NOT(self.IN(self.User.GROUP, ['system', 'admin', 'anonymous', 'paytic-anonymous'])));
 
-      // add user dropdown;
-      this.userDAO = this.userDAO.where(this.NOT(this.IN(this.User.GROUP, ['system', 'admin', 'anonymous', 'paytic-anonymous'])));
-      this
-        .start().addClass('p-label-lg')
-          .style({ 'padding': '8px 0'})
-          .add(this.SELECT_USER)
-        .end()
+      this.start('td')
+        .style({'white-space': 'pre'})
+        .addClass(self.myClass('groupLabel'))
         .start({
           class: 'foam.u2.view.RichChoiceView',
           search: true,
           sections: [
             {
               heading: 'Users',
-              dao: this.userDAO
+              dao: self.userDAO
             }
           ],
-          fullObject_$: this.selectedUser$
+          data: self.selectedUser?.id,
+          fullObject_$: self.selectedUser$
         }).style({
           'width': '100%'
         }).end()
-
-      SUPER();
+      .end();
     },
+
     async function initMap() {
       var self = this;
       var ucjs = await this.userCapabilityJunctionDAO.select();
@@ -115,7 +110,7 @@ foam.CLASS({
     },
 
     async function getColumns() {
-      if ( ! this.selectedUser ) return []
+      if ( ! this.selectedUser ) return [];
       var gs = (await this.userDAO.where(this.EQ(this.User.ID, this.selectedUser.id)).select()).array;
       if ( ! gs?.length ) gs = [ this.selectedUser ];
 
@@ -142,7 +137,7 @@ foam.CLASS({
 
     async function updateGroup(c_, u_, data) {
       var user = this.User.isInstance(u_) ? u_ :
-                  u_.id == this.selectedUser.id ? this.selectedUser :
+                  u_.id == this.selectedUser?.id ? this.selectedUser :
                     await this.userDAO.find(u_);
       var ucj = await this.crunchService.getJunctionFor(
         null, c_?.id || c_, user, user
