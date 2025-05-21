@@ -8,6 +8,7 @@ foam.POM({
   name: 'npm',
 
   tasks: {
+    // TODO: install - install node, npm itself. and use 'update' for current install.
     install: ['install', 'Install npm tools that foam and the build use.', [], function install() {
       process.chdir(PROJECT_HOME);
       this.execSync('npm install', { stdio: 'inherit'} );

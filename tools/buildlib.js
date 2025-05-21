@@ -114,7 +114,7 @@ function addBuildEnv(key, doc, val) {
 function buildEnv(m) {
   Object.keys(m).forEach(k => {
     let [doc, val] = m[k];
-    addBuildEnv(k, doc, val);
+    addBuildEnv.bind(this, k, doc, val)();
   });
 }
 

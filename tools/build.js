@@ -64,11 +64,12 @@ rm -rf ~/foam3/build
 ln -s /Volumes/RamDisk/build ~/foam3/build
 */
 
-const { existsSync,  readdirSync, readFileSync, writeFileSync } = require('fs');
-const { hostname }                                = require('os');
-const { join }                                    = require('path');
 const { bool, buildEnv, addOptions, comma, copyDir, copyFile, emptyDir, ensureDir, exec, execSync, exportEnvs, findOption, findSimilarOptions, findTask, findSimilarTasks, flag, hyphenate, info, isExcluded, processBuildArgs, processToolingArgs, rmdir, rmfile, spawn, warning, verbose } = require('./buildlib');
+const { existsSync, openSync, readdirSync, readFileSync, writeFileSync } = require('fs');
+const os = require('os');
+const { join }                                    = require('path');
 const pmake                                       = require('./pmake');
+
 const TASK_SEPERATOR                              = ' ';
 
 process.on('unhandledRejection', e => {
@@ -393,6 +394,7 @@ var ENVS = {
 };
 ENVS['TOOLING_TASKS'] = ['Tasks defined in Tooling poms and this build itself', TOOLING_TASKS];
 let NO_SHOW_ENVS = Object.assign({}, ENVS);
+
 globalThis['ENVS'] = ENVS;
 
 // Configure build variables
@@ -416,10 +418,10 @@ EXPORTS = Object.assign(EXPORTS, {
   findOption,
   findTask,
   flag,
-  hostname,
   info,
   isExcluded,
   join,
+  openSync,
   pmake,
   readdirSync,
   readFileSync,
@@ -432,8 +434,8 @@ EXPORTS = Object.assign(EXPORTS, {
 });
 
 TOOLING_OPTIONS = addOptions({
-  // TODO: other than -T, how to specify a set of tooling poms - perhaps first pom that is read?
-  toolingPoms: [ 'T', 'tooling-poms', 'TOOLING_POMS', 'Comma separated list of tooling poms', 'Standard,Npm,Maven,Git,JS,Java', arg => TOOLING_POMS = arg ]
+  platform: ['', 'platform', 'PLATFORM', 'Operation System Type', () => os.platform(), arg => PLATFORM = arg ],
+  toolingPoms: [ 'T', 'tooling-poms', 'TOOLING_POMS', 'Comma separated list of tooling poms. When not specified, build will look for tools/defaultTooling, and it not found, default to \'Standard,Npm,Maven,Git,JS,Java\'', '', arg => TOOLING_POMS = arg ]
 }, TOOLING_OPTIONS);
 
 OPTIONS = addOptions({
@@ -470,7 +472,7 @@ OPTIONS = addOptions({
     }
     process.exit(0);
   }],
-  hostname: ['', 'hostname', 'HOST_NAME', 'Hostname to set in JVM', hostname(), args => HOST_NAME = args ],
+  hostname: ['', 'hostname', 'HOST_NAME', 'Hostname to set in JVM', () => os.hostname(), arg => HOST_NAME = org ],
   nop: ['', 'nop', 'NOP', 'List of task NOT to run. ex: --nop:genJS,genJava', '', arg => NOP = comma(NOP, arg) ],
   poms: [ 'P', 'poms', 'POMS', "comma seperated list of pom files. Defaults to 'pom' at the root of the project.", '', arg => POMS = arg ],
   projectHome: ['', 'project-home', 'PROJECT_HOME', 'Project directory', process.cwd(), arg => PROJECT_HOME = arg ],
@@ -597,7 +599,20 @@ function pom() {
 
 task('tooling', 'Prepare build environment', [], function tooling() {
   var tps = '';
-  (TOOLING_POMS || '').split(',').forEach(name => {
+  if ( ! TOOLING_POMS ) {
+    var toolingPOMs;
+    var fn = join(process.cwd(),`tools/defaultTooling`);
+    if ( existsSync(fn) ) {
+      toolingPOMs = readFileSync(fn).toString().trim();
+      console.log(`[build] using project tooling: ${toolingPOMs}`);
+    }
+    if ( ! toolingPOMs ) {
+      toolingPOMs = 'Standard,Npm,Maven,Git,JS,Java';
+      console.log(`[build] using default tooling: ${toolingPOMs}`);
+    }
+    TOOLING_POMS = toolingPOMs;
+  }
+  (TOOLING_POMS).split(',').forEach(name => {
     var fn = join(__dirname,`${name}Tooling`);
     if ( existsSync(fn + '.js') ) {
       tps = comma(tps, fn);
