@@ -411,9 +411,12 @@ function processBuildArgs(options, moreUsage) {
           a = 'h';
         var option = findOption(options, a);
         if ( option ) {
-          option.f.bind(this, arg.substring(j+1))();
-          if ( a >= 'A' && a <= 'Z' )
+          if ( a >= 'A' && a <= 'Z' ) {
+            option.f.bind(this, arg.substring(j+1))();
             break;
+          } else {
+            option.f.bind(this, null)();
+          }
         } else {
           let msg = 'Unknown argument "' + a + '"';
           // output warning message after usage as the usage is so long
