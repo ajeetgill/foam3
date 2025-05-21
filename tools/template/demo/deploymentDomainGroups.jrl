@@ -1,0 +1,7 @@
+p({
+  "class":"foam.core.auth.Group",
+  "id":"{domain}",
+  "enabled":true,
+  "description":"Main user group of ${domain} users",
+  "parent":"basicUser"
+})

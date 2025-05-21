@@ -1,0 +1,6 @@
+p({class:"foam.core.auth.GroupPermissionJunction",sourceId:"{domain}",targetId:"service.{subDomain}DAO"})
+p({class:"foam.core.auth.GroupPermissionJunction",sourceId:"{domain}",targetId:"{subDomain}.create"})
+p({class:"foam.core.auth.GroupPermissionJunction",sourceId:"{domain}",targetId:"{subDomain}.read.*"})
+p({class:"foam.core.auth.GroupPermissionJunction",sourceId:"{domain}",targetId:"{subDomain}.update.*"})
+p({class:"foam.core.auth.GroupPermissionJunction",sourceId:"{domain}",targetId:"{subDomain}.delete.*"})
+p({class:"foam.core.auth.GroupPermissionJunction",sourceId:"{domain}",targetId:"menu.read.{domain}.{SubDomain}"})

@@ -1,0 +1,18 @@
+p({class:"foam.core.auth.GroupPermissionJunction",sourceId:"{domain}",targetId:"user.readByGroup.{domain}"})
+
+// FOAM
+// simple password management
+p({class:"foam.core.auth.GroupPermissionJunction",sourceId:"{domain}",targetId:"menu.read.reset-password"})
+
+// spid
+p({class:"foam.core.auth.GroupPermissionJunction",sourceId:"{domain}",targetId:"serviceprovider.read.foam"})
+
+// Password
+p({class:"foam.core.auth.GroupPermissionJunction",sourceId:"{domain}",targetId:"service.passwordDAO"})
+p({class:"foam.core.auth.GroupPermissionJunction",sourceId:"{domain}",targetId:"menu.read.password"})
+p({class:"foam.core.auth.GroupPermissionJunction",sourceId:"{domain}",targetId:"password.create"})
+p({class:"foam.core.auth.GroupPermissionJunction",sourceId:"{domain}",targetId:"password.read.*"})
+p({class:"foam.core.auth.GroupPermissionJunction",sourceId:"{domain}",targetId:"password.update.*"})
+
+// p({class:"foam.core.auth.GroupPermissionJunction",sourceId:"{domain}",targetId:"menu.read.{domain}Admin"})
+p({class:"foam.core.auth.GroupPermissionJunction",sourceId:"{domain}",targetId:"menu.read.{domain}.crunch.personalsettings"})

@@ -153,4 +153,6 @@ Using --flags:test will include all source and configuration flagged as 'test' t
 <h2>Project</h2>
 <p>Project tooling provides a task for creating a new FOAM based project. It will create the default directory layout along with required poms.</p>
 Usage:
-<code>node foam3/tools/build.js -Ttemplate/standard/Project --createProject:net.foo</code>
+<code>node foam3/tools/build.js -Ttemplate/demo/Project --createProject:net.foo</code>
+<p>A fully functional <i>demo</i> can also be setup with the following.  The important bit is the subdomain <b>demo</b> at --createProject. With this the tooling will create an example model Demo along with all required journal configuration to deploy it.</p>
+<code>node foam3/tools/build.js -Ttemplate/demo/Project --createProject:net.foo.demo</code>

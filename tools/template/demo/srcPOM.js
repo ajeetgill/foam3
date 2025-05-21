@@ -1,5 +1,5 @@
 foam.POM({
-  name: 'src/{package}',
+  name: 'src/{packagePath}',
   // files: [
   // ]
 });
