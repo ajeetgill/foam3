@@ -4,6 +4,10 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
+/**
+   Support for creating new FOAM based projects.
+   usage: node foam3/tools/build.js -TProject --createProject:net.foo
+ */
 foam.POM({
   name: 'project',
   description: 'Options and Tasks to create a new project using FOAM',
@@ -11,25 +15,25 @@ foam.POM({
   tasks: {
     createProject: ['create-project', 'Create directories and creates root and src/ POMs for a new FOAM based project', [], function createProject(arg) {
       var dir = process.cwd();
-      var name = arg;
-
       // if called from foam3/ directory, move up one level.
-      var currentDirName = dir.substring(dir.lastIndexOf('/')+1);
-      if ( currentDirName === 'foam3' ) {
+      if ( dir.substring(dir.lastIndexOf('/')+1) === 'foam3' ) {
         dir = dir.substring(0, dir.lastIndexOf('/'));
       }
 
+      var name = arg;
       if ( ! name ) {
         name = dir.substring(dir.lastIndexOf('/')+1);
       }
 
-      console.log(`[Project] creating project ${name} at ${dir}`);
+      var tld, domain, packagePath;
+      if ( name.indexOf('.') > 1 ) {
+        [tld, domain] = name.split('.');
+        if ( domain ) {
+          packagePath = this.join(tld, domain);
+        }
+      }
 
-      // default directories layout
-      this.ensureDir(`${dir}/src`);
-      this.ensureDir(`${dir}/journals`);
-      this.ensureDir(`${dir}/tools`);
-      this.ensureDir(`${dir}/deployment/${name}`, { recursive: true });
+      console.log(`[Project] creating project ${domain} at ${dir}`);
 
       function writeOutput(fn, output) {
         console.log(`[Project] creating file ${fn}`);
@@ -43,27 +47,65 @@ foam.POM({
       // create root pom
       var output = [];
       output.push('foam.POM({');
-      output.push(`  name: '${name}'`);
-      output.push(`  excludes: [ 'build', 'foam3', 'deployment', 'node_modules']`);
+      output.push(`  name: '${domain}',`);
+      output.push(`  excludes: [ 'build', 'foam3', 'deployment', 'node_modules'],`);
       output.push('  projects: [');
       output.push(`    { name: 'foam3/pom'},`);
-      output.push(`  //  { name: 'src/package/pom'}`);
-      output.push('  ]');
-      output.push('})');
+      output.push(`    { name: 'src/${packagePath}/pom'}`);
+      output.push('  ],');
+      output.push(`  licenses: \``);
+      output.push('    // Add your license header here');
+      output.push(`  \`,`);
+      output.push('  envs: {');
+      output.push(`    // javaMainArgs: 'spid:${domain}'`);
+      output.push('  },');
+      if ( tld && domain ) {
+        output.push(`  tasks: [`);
+        output.push('    function javaManifest() {');
+        output.push(`      JAVA_MANIFEST_VENDOR_ID = '${name}';`);
+        output.push('    }');
+        output.push('  ]');
+      }
+      output.push('});');
       writeOutput.bind(this, `${dir}/pom.js`, output)();
 
       // create src pom
+      this.ensureDir(`${dir}/src/${packagePath}`);
       output = [];
       output.push('foam.POM({');
-      output.push(`  name: 'src',`);
+      output.push(`  name: 'src/${packagePath}',`);
       output.push('  files: [');
       output.push('  ]');
-      output.push('})');
-      writeOutput.bind(this, `${dir}/src/pom.js`, output)();
+      output.push('});');
+      writeOutput.bind(this, `${dir}/src/${packagePath}/pom.js`, output)();
+
+      // default deployment pom
+      this.ensureDir(`${dir}/deployment/${domain}`, { recursive: true });
+      output = [];
+      output.push('foam.POM({');
+      output.push(`  name: '${domain}'`);
+      output.push('});');
+      writeOutput.bind(this, `${dir}/deployment/${domain}/pom.js`, output)();
+
+      // test deployment pom
+      this.ensureDir(`${dir}/deployment/test`, { recursive: true });
+      output = [];
+      output.push('foam.POM({');
+      output.push(`  name: 'test'`);
+      output.push('});');
+      writeOutput.bind(this, `${dir}/deployment/test/pom.js`, output)();
+
+      // Additional directories and poms
+      this.ensureDir(`${dir}/journals`);
+      output = [];
+      output.push('foam.POM({');
+      output.push(`  name: 'journals'`);
+      output.push('});');
+      writeOutput.bind(this, `${dir}/journals/pom.js`, output)();
     }],
 
     usage: ['usage', 'Example usage', [], function usage() {
-      console.log('./build.sh -TProject --createProject:foo');
+      console.log('./build.sh -TProject --createProject:net.foo');
     }]
   }
 });

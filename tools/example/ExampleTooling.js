@@ -6,7 +6,7 @@
 
 /**
    Example tooling
-   usage: node tools/build.js -Oexample/Example -c
+   usage: node tools/build.js -Texample/Example -c
 */
 foam.POM({
   name: 'example',
@@ -15,9 +15,9 @@ foam.POM({
   },
 
   options: {
-    example: [ 'e', 'example', 'EXAMPLE', 'Enable example.', false, function(arg) { EXAMPLE = arg ? bool(arg) : true; } ],
+    example: [ 'e', 'example', 'EXAMPLE', 'Enable example.', false, function(arg) { EXAMPLE = arg ? this.bool(arg) : true; } ],
     exampleRelease: [ '', 'example-release', 'EXAMPLE_RELEASE', 'Set example release', '', arg => EXAMPLE_RELEASE = arg ],
-    clean: [ 'c', 'clean', 'CLEAN', 'Clean generated code before building.  Required if generated classes have been removed. Use -XcleanAll to remove build/ directory. NOTE: if compilation fails after option c is issued, clean is again required until a succesful build.', false, function(arg) { CLEAN = arg ? bool(arg) : true; } ]
+    clean: [ 'c', 'clean', 'CLEAN', 'Clean generated code before building.  Required if generated classes have been removed. Use -XcleanAll to remove build/ directory. NOTE: if compilation fails after option c is issued, clean is again required until a succesful build.', false, function(arg) { CLEAN = arg ? this.bool(arg) : true; } ]
   },
 
   tasks: {
@@ -38,8 +38,8 @@ foam.POM({
       this.execute('examplePOMs');
     }],
     usage: ['usage', 'Example usage examples', [], function usage() {
-      console.log('node tools/build.js -Oexample/Example -c');
-      console.log('node tools/build.js -Oexample/Example -c --example:true --run-example');
+      console.log('node tools/build.js -Texample/Example -c');
+      console.log('node tools/build.js -Texample/Example -c --example:true --run-example');
     }]
   }
 });

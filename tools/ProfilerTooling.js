@@ -8,16 +8,13 @@ foam.POM({
   name: 'profiler',
 
   options: {
-    profiler: [ '', 'profiler', 'PROFILER', 'Enable JVM profiling', false, () => PROFILER = true ],
+    profiler: [ '', 'profiler', 'PROFILER', 'Enable JVM profiling', false, function(arg) { PROFILER = arg ? this.bool(arg) : true; }],
     profilerPort: [ '', 'profiler-port', 'PROFILER_PORT', 'Port JVM will listen on for profiler to connect', 8849, () => PROFILER_PORT = args ]
   },
 
   tasks: {
-    setRunArgs: ['set-run-args', 'Set profiler port',[], function setRunArgs(args) {
+    buildRunArgs: ['build-run-args', 'Add profiler port',[], function buildRunArgs() {
       if ( PROFILER ) RUN_ARGS += ` -P${PROFILER_PORT}`;
-      if ( args ) {
-        RUN_ARGS += ` ${args}`;
-      }
     }]
   }
 });
