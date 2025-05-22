@@ -1,14 +1,14 @@
 p({
   "class":"foam.core.menu.Menu",
-  "id":"{domain}.{SubDomain}",
-  "label":"{SubDomain}",
+  "id":"{app}.{model}",
+  "label":"{Model}",
   "authenticate":true,
   "keywords":[""],
   "handler":{
     "class":"foam.core.menu.DAOMenu2",
     "config":{
       "class":"foam.comics.v2.DAOControllerConfig",
-      "daoKey":"{subDomain}DAO"
+      "daoKey":"{model}DAO"
     }
   }
 })

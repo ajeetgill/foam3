@@ -1,18 +1,18 @@
 p({
   "class": "foam.core.boot.CSpec",
-  "name": "{subDomain}DAO",
+  "name": "{model}DAO",
   "description": "",
   "serve": true,
   "authenticate": true,
-  "keywords": [ "{subDomain}" ],
+  "keywords": [ "{model}" ],
   "serviceScript": """
     return new foam.dao.EasyDAO.Builder(x)
-      .setOf({tld}.{domain}.{SubDomain}.getOwnClassInfo())
+      .setOf({package}.{Model}.getOwnClassInfo())
       .setPm(true)
       .setFuid(true)
       .setAuthorize(false)
       .setJournalType(foam.dao.JournalType.SINGLE_JOURNAL)
       .build();
   """,
-  "client": `{"of":"{tld}.{domain}.{SubDomain}"}`
+  "client": `{"of":"{package}.{Model}"}`
 })

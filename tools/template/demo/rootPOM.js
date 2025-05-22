@@ -1,17 +1,18 @@
 foam.POM({
-  name: '{domain}',
+  name: '{app}',
   // excludes: [ 'build', 'foam3', 'deployment', 'node_modules', 'tools'],
   excludes: [ '*' ],
   projects: [
     { name: 'foam3/pom'},
-    { name: 'src/{packagePath}/pom'}
+    { name: 'src/{packagePath}/pom'},
+    { name: 'journals/pom' }
   ],
   licenses: `
     // Add your license header here
   `,
   envs: {
     VERSION: '1.0.0',
-    // javaMainArgs: 'spid:{domain}'
+    // javaMainArgs: 'spid:{app}'
   },
   tasks: [
     function javaManifest() {

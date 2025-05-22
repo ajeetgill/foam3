@@ -34,13 +34,14 @@ foam.POM({
     }],
 
     usage: ['usage', 'Build usage examples', [], function usage() {
-      console.log('./build.sh -c');
+      console.log('CLI examples:');
+      console.log('  ./build.sh -c');
       console.log('    Remove previously generated code, before rebuilding.');
-      console.log('./build.sh -cj');
+      console.log('  ./build.sh -cj');
       console.log('    Remove previously generated code and runtime journals, before rebuilding.');
-      console.log('./build.sh --cleanAll,all');
+      console.log('  ./build.sh --cleanAll,all');
       console.log('    Perform an extra deep clean before building normally.');
-      console.log('./build.sh --topic:foo');
+      console.log('  ./build.sh --topic:foo');
       console.log('    Print usage for \'topic\'. Ex: ./build.sh --topic:cleanAll  or  ./xobuild.sh -Ha');
     }],
 

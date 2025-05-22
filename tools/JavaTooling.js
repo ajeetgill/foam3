@@ -35,7 +35,7 @@ foam.POM({
     javaManifestVendor: ['', 'java-manifest-vendor', 'JAVA_MANIFEST_VENDOR', 'Java Manifest Vendor', () => APP_NAME ? `${APP_NAME}` : 'APP_NAME', args => JAVA_MANIFEST_VENDOR = args ],
     javaManifestVendorId: ['', 'java-manifiest-vendor-id', 'JAVA_MANIFEST_VENDOR_ID', 'Java Manifest Vendor ID', '', args => JAVA_MANIFEST_VENDOR_ID = args ],
     javaOpts: ['', 'java-opts', 'JAVA_OPTS', 'Additional JVM options','', arg => JAVA_OPTS = arg ],
-    logLevel: ['l', 'log-level', 'LOG_LEVEL', 'Set JVM Log level for TEST cases. Defaults to ERROR. example: --log-level:INFO',null, arg => LOG_LEVEL = arg ],
+    logLevel: ['l', 'log-level', 'LOG_LEVEL', 'Set JVM Log level for TEST cases. Defaults to ERROR. example: --log-level:INFO',null, arg => LOG_LEVEL = arg.toUpperCase() ],
     javaMainClass: ['', 'java-main-class', 'JAVA_MAIN_CLASS', 'Java \'main\' class', 'foam.core.boot.Boot', arg => JAVA_MAIN_CLASS = arg ],
     javaMainArgs: ['', 'java-main-args', 'JAVA_MAIN_ARGS', 'Comma separated key[:value] arguments passed to the Java \'main\' class', '', function(arg) { JAVA_MAIN_ARGS = this.comma(JAVA_MAIN_ARGS, arg); } ],
     restart: [ 'r', 'restart', 'RESTART', 'Restart CORE Server using last build.', false, function(arg) { RESTART = arg ? this.bool(arg) : true; } ],
@@ -329,21 +329,22 @@ foam.POM({
     }],
 
     usage: ['usage', 'Build usage examples', [], function usage() {
-      console.log('All builds will still start a Java web server (CORE), unless directed otherwise.');
-      console.log('./build.sh -aJhttps -EJAVA_OPTS:\"-Xms4g -Xmx8g\"');
+      console.log('CLI examples specific to Java builds and deployments:');
+      console.log('NOTE: All builds will still start a Java web server (CORE), unless directed otherwise.');
+      console.log('  ./build.sh -aJhttps -EJAVA_OPTS:\"-Xms4g -Xmx8g\"');
       console.log('    Start CORE with additional memory, launch from JAR, start HTTPS web server, set JVM max and min memory.');
-      console.log('./build.sh -Ndemo -W8300 -aJhttps');
+      console.log('  ./build.sh -Ndemo -W8300 -aJhttps');
       console.log('    Build into a unique path \'demo\', launch from JAR, start HTTPS web server on port \'8300\'.');
-      console.log('./build.sh --appName:demo --webPort:8300 --jar --journals:https');
+      console.log('  ./build.sh --appName:demo --webPort:8300 --jar --journals:https');
       console.log('    Build into a unique path \'demo\', launch from JAR, start HTTPS web server on port \'8300\'.');
-      console.log('./build.sh --app-name:demo --web-port:8300 --jar --journals:https');
+      console.log('  ./build.sh --app-name:demo --web-port:8300 --jar --journals:https');
       console.log('    Build into a unique path \'demo\', launch from JAR, start HTTPS web server on port \'8300\'.');
-      console.log('./build.sh -EAPP_NAME:demo,WEB_PORT:8300,JAR:true,JOURNALS:https');
+      console.log('  ./build.sh -EAPP_NAME:demo,WEB_PORT:8300,JAR:true,JOURNALS:https');
       console.log('    Build into a unique path \'demo\', launch from JAR, start HTTPS web server on port \'8300\'.');
       // Testing
-      console.log('./build.sh --java-tests');
+      console.log('  ./build.sh --java-tests');
       console.log('    Run all Java test cases.');
-      console.log('./build.sh --java-tests:SequenceNumberDAO,MapDAOTest');
+      console.log('  ./build.sh --java-tests:SequenceNumberDAO,MapDAOTest');
       console.log('    Run specified Java test cases.');
     }],
 

@@ -6,11 +6,17 @@
 
 /**
    Support for creating new FOAM based projects.
-   usage: node foam3/tools/build.js -Tproject/standard/Project --createProject:net.foo
+   usage: node foam3/tools/build.js -Tproject/standard/Project --createProject:[net.foo.]app[.model]
  */
 foam.POM({
   name: 'project',
   description: 'Options and Tasks to create a new project using FOAM',
+
+  options: {
+    appName: ['N', 'app-name', 'APP_NAME', 'Identifier of application, used for root pom and default deployment directory:  /opt/APP_NAME', '', arg => APP_NAME = arg ],
+    package: ['P', 'package', 'PACKAGE', 'Source code path - typically following Java package naming conventions which takes a FQDN inverts it and drops the sub-domain. Ex: www.foamdev.com -> com.foamdev.  This will become the source directory structure under src/. For the purposes of this Project creation the result would be src/com/foamdev/APP_NAME/', '', arg => PACKAGE = arg ],
+    modelName: ['M', 'model-name', 'MODEL_NAME', 'If a model name is provided, the project creation processs will also setup a complete working application, with user, group, menu, permissions, and service journals based on the model name', '', arg => MODEL_NAME = arg ]
+  },
 
   tasks: {
     createProject: ['create-project', 'Create directories and creates root and src/ POMs for a new FOAM based project', [], function createProject(arg) {
@@ -25,32 +31,35 @@ foam.POM({
         dir = dir.substring(0, dir.lastIndexOf('/'));
       }
 
-      var name = arg;
-      if ( ! name ) {
-        name = dir.substring(dir.lastIndexOf('/')+1);
-      }
+      var appName = arg || APP_NAME;
+      var AppName;
+      var package = PACKAGE;
+      var modelName = MODEL_NAME;
+      var ModelName;
+      var packagePath;
 
-      var tld, domain, subDomain, SubDomain, package, packagePath;
-      if ( name.indexOf('.') > 1 ) {
-        [tld, domain, subDomain] = name.split('.');
-        if ( domain ) {
-          package = tld + '.' + domain;
-          packagePath = this.join(tld, domain);
+      if ( ! appName ) {
+        appName = dir.substring(dir.lastIndexOf('/')+1);
+        package = package || appName;
+      } else if ( appName.indexOf('.') > 1 ) {
+        var domain, tld;
+        [modelName, appName, domain, tld] = appName.split('.').reverse();
+        if ( tld ) {
+          package = tld.toLowerCase() + '.' + domain.toLowerCase() + '.' + appName.toLowerCase() ;
+        } else if ( domain ) {
+          package = domain.toLowerCase() + '.' + appName.toLowerCase();;
         } else {
-          domain = name;
-          package = name;
-          packagePath = name;
+          package = appName.toLowerCase();
         }
-        if ( subDomain ) {
-          SubDomain = subDomain[0].toUpperCase() + subDomain.substring(1);
-        }
-      } else {
-        domain = name;
-        package = name;
-        packagePath = name;
+      }
+      packagePath = package.replaceAll('.', '/');
+      AppName = appName[0].toUpperCase() + appName.substring(1);
+      if ( modelName ) {
+        ModelName = modelName[0].toUpperCase() + modelName.substring(1);
+        modelName = modelName[0].toLowerCase() + modelName.substring(1);
       }
 
-      console.log(`[Project] creating project ${domain} at ${dir}`);
+      console.log(`[Project] creating project ${AppName} at ${dir}`);
 
       function readWrite(inDir, templateFn, outDir, outFn = 'pom.js') {
         let fn = this.join(inDir, templateFn);
@@ -62,11 +71,12 @@ foam.POM({
           this.error(`[Project] template file empty ${fn}`);
         }
 
-        text = text.replaceAll("{name}", name);
-        text = text.replaceAll("{tld}", tld);
-        text = text.replaceAll("{domain}", domain);
-        text = text.replaceAll("{subDomain}", subDomain);
-        text = text.replaceAll("{SubDomain}", SubDomain);
+        text = text.replaceAll("{app}", appName);
+        text = text.replaceAll("{App}", AppName);
+        if ( modelName ) {
+          text = text.replaceAll("{model}", modelName);
+          text = text.replaceAll("{Model}", ModelName);
+        }
         text = text.replaceAll("{package}", package);
         text = text.replaceAll("{packagePath}", packagePath);
 
@@ -83,40 +93,50 @@ foam.POM({
       // create root pom
       readWrite.bind(this, templateDir, 'rootPOM.js', `${dir}`)();
 
-      // create src pom
-      if ( ! subDomain ) {
-        readWrite.bind(this, templateDir, 'srcPOM.js', `${dir}/src/${packagePath}`, 'pom.js')();
-      } else {
-        readWrite.bind(this, templateDir, 'srcSubDomainPOM.js', `${dir}/src/${packagePath}`, 'pom.js')();
-      }
       // default deployment pom
-      readWrite.bind(this, templateDir, 'deploymentDomainPOM.js', `${dir}/deployment/${domain}`, 'pom.js')();
+      readWrite.bind(this, templateDir, 'deploymentAppPOM.js', `${dir}/deployment/${appName}`, 'pom.js')();
+      readWrite.bind(this, templateDir, 'journalPOM.js', `${dir}/journals`, 'pom.js')();
 
-      // test deployment pom
-      readWrite.bind(this, templateDir, 'testPOM.js', `${dir}/deployment/test`, 'pom.js')();
+      if ( ! modelName) {
+        readWrite.bind(this, templateDir, 'srcPOM.js', `${dir}/src/${packagePath}`, 'pom.js')();
+        readWrite.bind(this, templateDir, 'testPOM.js', `${dir}/deployment/test`, 'pom.js')();
+      } else {
+        readWrite.bind(this, templateDir, 'journalGroups.jrl', `${dir}/journals`, `groups.jrl`)();
+        readWrite.bind(this, templateDir, 'journalGroupPermissionJunctions.jrl', `${dir}/journals`, `groupPermissionJunctions.jrl`)();
+        readWrite.bind(this, templateDir, 'journalMenus.jrl', `${dir}/journals`, `menus.jrl`)();
+        readWrite.bind(this, templateDir, 'journalServices.jrl', `${dir}/journals`, `services.jrl`)();
+
+        readWrite.bind(this, templateDir, 'deploymentDemoPOM.js', `${dir}/deployment/demo`, `pom.js`)();
+        readWrite.bind(this, templateDir, 'deploymentDemoUsers.jrl', `${dir}/deployment/demo`, `users.jrl`)();
+
+        // model
+        readWrite.bind(this, templateDir, 'modelPOM.js', `${dir}/src/${packagePath}`, 'pom.js')();
+        readWrite.bind(this, templateDir, 'model.js', `${dir}/src/${packagePath}`, `${ModelName}.js`)();
+        readWrite.bind(this, templateDir, 'modelCategory.js', `${dir}/src/${packagePath}`, `${ModelName}Category.js`)();
+
+        // test
+        readWrite.bind(this, templateDir, 'modelTestPOM.js', `${dir}/src/${packagePath}/test`, 'pom.js')();
+        readWrite.bind(this, templateDir, 'modelTest.js', `${dir}/src/${packagePath}/test`, `${ModelName}Test.js`)();
+        readWrite.bind(this, templateDir, 'deploymentModelTestPOM.js', `${dir}/deployment/test`, 'pom.js')();
+        readWrite.bind(this, templateDir, 'deploymentModelTests.jrl', `${dir}/deployment/test`, 'tests.jrl')();
+
+        // run script
+        readWrite.bind(this, templateDir, 'run.sh', `${dir}/deployment/demo`, `run.sh`)();
+        this.execSync(`chmod u+x ${dir}/deployment/demo/run.sh`);
+      }
 
       // Additional directories and poms
       readWrite.bind(this, templateDir, 'emptyPOM.js', `${dir}/journals`, 'pom.js')();
 
       // this.execSync('sudo chown -R $USER /opt')
-
-      if ( subDomain) {
-        readWrite.bind(this, templateDir, 'modelSubDomain.js', `${dir}/src/${packagePath}`, `${SubDomain}.js`)();
-        readWrite.bind(this, templateDir, 'deploymentDomainGroups.jrl', `${dir}/deployment/${domain}`, `groups.jrl`)();
-        readWrite.bind(this, templateDir, 'deploymentDomainGroupPermissionJunctions.jrl', `${dir}/deployment/${domain}`, `groupPermissionJunctions.jrl`)();
-        readWrite.bind(this, templateDir, 'deploymentSubDomainPOM.js', `${dir}/deployment/${subDomain}`, 'pom.js')();
-        readWrite.bind(this, templateDir, 'deploymentSubDomainMenus.jrl', `${dir}/deployment/${subDomain}`, `menus.jrl`)();
-        readWrite.bind(this, templateDir, 'deploymentSubDomainServices.jrl', `${dir}/deployment/${subDomain}`, `services.jrl`)();
-        readWrite.bind(this, templateDir, 'deploymentSubDomainGroupPermissionJunctions.jrl', `${dir}/deployment/${subDomain}`, `groupPermissionJunctions.jrl`)();
-        readWrite.bind(this, templateDir, 'deploymentDomainUsers.jrl', `${dir}/deployment/${domain}`, `users.jrl`)();
-
-        readWrite.bind(this, templateDir, 'run.sh', `${dir}/deployment/${subDomain}`, `run.sh`)();
-        this.execSync(`chmod u+x ${dir}/deployment/${subDomain}/run.sh`);
-      }
     }],
 
     usage: ['usage', 'Example usage', [], function usage() {
-      console.log('./build.sh -TProject --createProject:net.foo.demo');
+      console.log('Project creation examples:');
+      console.log('  ./build.sh -Ttemplate/demo/Project --createProject:com.foamdev.cook.recipe');
+      console.log('  ./build.sh -Ttemplate/demo/Project --createProject --appName:cook --modelName:Recipe --package:dev.foamdev');
+      console.log('  ./build.sh -Ttemplate/demo/Project --createProject:net.foo.app.demo');
+      console.log('  ./build.sh -Ttemplate/demo/Project --createProject --appName:app --modelName:Demo --package:net.foo');
     }]
   }
 });
