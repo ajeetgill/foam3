@@ -53,8 +53,6 @@ var pmake = function(...args) {
 
   globalThis.X       = X;
   globalThis.flags   = flags;
-  // globalThis.verbose = this.verbose;
-  // globalThis.log = this.log;
 
   /** 'makers' format: task1,task2,task3(args),... where args are optional **/
   var makers = X.makers.split(',').map(m => {
