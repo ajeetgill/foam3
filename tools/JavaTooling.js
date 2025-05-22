@@ -329,7 +329,7 @@ foam.POM({
     }],
 
     usage: ['usage', 'Build usage examples', [], function usage() {
-      console.log('CLI examples specific to Java builds and deployments:');
+      console.log('Running Java application server:');
       console.log('NOTE: All builds will still start a Java web server (CORE), unless directed otherwise.');
       console.log('  ./build.sh -aJhttps -EJAVA_OPTS:\"-Xms4g -Xmx8g\"');
       console.log('    Start CORE with additional memory, launch from JAR, start HTTPS web server, set JVM max and min memory.');
@@ -341,7 +341,7 @@ foam.POM({
       console.log('    Build into a unique path \'demo\', launch from JAR, start HTTPS web server on port \'8300\'.');
       console.log('  ./build.sh -EAPP_NAME:demo,WEB_PORT:8300,JAR:true,JOURNALS:https');
       console.log('    Build into a unique path \'demo\', launch from JAR, start HTTPS web server on port \'8300\'.');
-      // Testing
+      console.log('Running Java Test Cases:');
       console.log('  ./build.sh --java-tests');
       console.log('    Run all Java test cases.');
       console.log('  ./build.sh --java-tests:SequenceNumberDAO,MapDAOTest');

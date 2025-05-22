@@ -1,6 +1,5 @@
 foam.POM({
   name: '{app}',
-  // excludes: [ 'build', 'foam3', 'deployment', 'node_modules', 'tools'],
   excludes: [ '*' ],
   projects: [
     { name: 'foam3/pom'},

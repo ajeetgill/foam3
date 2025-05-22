@@ -155,4 +155,19 @@ Using --flags:test will include all source and configuration flagged as 'test' t
 Usage:
 <code>node foam3/tools/build.js -Ttemplate/demo/Project --createProject:net.foo</code>
 <p>A fully functional <i>demo</i> can also be setup with the following.  The important bit is the subdomain <b>demo</b> at --createProject. With this the tooling will create an example model Demo along with all required journal configuration to deploy it.</p>
-<code>node foam3/tools/build.js -Ttemplate/demo/Project --createProject:net.foo.demo</code>
+Example 1
+<code>
+  node foam3/tools/build.js -Ttemplate/demo/Project --createProject:com.foamdev.cook.recipe
+  # then build with
+  node foam3/tools/build.js deployment/demo/run.sh
+  # login with demo user - username: demo, password: demopassword
+  # or admin user - username: foam-admin, password: foam-admin
+</code>
+Example 2
+<code>
+  node foam3/tools/build.js -Ttemplate/demo/Project --createProject:net.foo.app.demo
+  # then build with
+  node foam3/tools/build.js deployment/demo/run.sh
+  # login with demo user - username: demo, password: demopassword
+  # or admin user - username: foam-admin, password: foam-admin
+</code>

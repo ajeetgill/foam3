@@ -586,8 +586,22 @@ function pom() {
     warning('Added /pom');
   }
 
-  if ( globalThis['JOURNALS'] )
-    JOURNALS.split(',').forEach(c => addPom(c && `${PROJECT_HOME}/deployment/${c}/pom`));
+  if ( globalThis['JOURNALS'] ) {
+    JOURNALS.split(',').forEach(c => {
+      if ( ! c ) return;
+      let fn = `${PROJECT_HOME}/deployment/${c}/pom`;
+      if ( ! existsSync(fn + '.js') ) {
+        let fn2 = `foam3/deployment/${c}/pom`;
+        if ( ! existsSync(fn2 + '.js') ) {
+          warning('File not found ' + fn + '.js');
+          fn = null;
+        } else {
+          fn = fn2;
+        }
+      }
+      if ( fn ) addPom(fn);
+    });
+  }
 
   POMS = poms.join(',');
 }
