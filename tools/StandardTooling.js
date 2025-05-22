@@ -16,7 +16,7 @@ foam.POM({
   },
 
   tasks: {
-    clean: ['clean', 'Remove generated files', [], function clean(args) {
+    clean: ['clean', 'Remove generated files', [], function(args) {
       if ( args === 'all') { // -Xclean:all
         this.execute('cleanAll');
       }
@@ -33,7 +33,7 @@ foam.POM({
       }
     }],
 
-    usage: ['usage', 'Build usage examples', [], function usage() {
+    usage: ['usage', 'Build usage examples', [], function() {
       console.log('CLI examples:');
       console.log('  ./build.sh -c');
       console.log('    Remove previously generated code, before rebuilding.');
@@ -48,7 +48,7 @@ foam.POM({
     // ############################
     // # Build steps
     // ############################
-    all: ['all', 'Execute \'standard\' build tasks.', ['pomEnvs'], function all() {
+    all: ['all', 'Execute \'standard\' build tasks.', ['pomEnvs'], function() {
       if ( ! ( TAR || BUILD_ONLY ) ) {
         this.execute('stopCORE');
       }

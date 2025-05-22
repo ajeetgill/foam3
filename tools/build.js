@@ -84,10 +84,12 @@ let TOOLING_TASKS = {};
 function task() {
   var name, gnuopt, desc = '', dep = [], f, pom = 'build';
   if ( arguments.length == 1 ) {
+    // tasks from build poms
     f = arguments[0];
     name = f.name;
     gnuopt = hyphenate(f.name);
   } else if ( arguments.length == 3 ) {
+    // tasks from build.js itself
     f = arguments[2];
     name = f.name;
     gnuopt = hyphenate(f.name);
@@ -100,6 +102,7 @@ function task() {
     desc = arguments[1];
     dep = arguments[2];
   } else if ( arguments.length == 6 ) {
+    // tasks from tooling
     name = arguments[0];
     gnuopt = arguments[1];
     desc = arguments[2];
@@ -651,11 +654,8 @@ task('tooling', 'Prepare build environment', [], function tooling() {
     let list = maker.tasks[name];
     list.forEach(t => {
       var [gnuopt, desc, dep, f] = t;
-      if ( ! f || ! f.name ) {
+      if ( ! f ) {
         error(`[build] task missing function ${name} ${t}`);
-      }
-      if ( f.name !== name ) {
-        warning(`[build] tooling name: ${name} != f.name ${f.name}`);
       }
       task(name, gnuopt, desc, dep, f, t.pom);
     });
