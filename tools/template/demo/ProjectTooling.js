@@ -135,10 +135,8 @@ foam.POM({
 
     usage: ['usage', 'Example usage', [], function usage() {
       this.log('Project creation examples:');
-      this.log('  ./build.sh -Ttemplate/demo/Project --createProject:com.foamdev.cook.recipe');
-      this.log('  ./build.sh -Ttemplate/demo/Project --createProject --appName:cook --modelName:Recipe --package:dev.foamdev');
+      this.log('  ./build.sh -Ttemplate/demo/Project --createProject --appName:Recipe --modelName:Recipe --package:com.foamdev.cook.recipe');
       this.log('  ./build.sh -Ttemplate/demo/Project --createProject:net.foo.app.demo');
-      this.log('  ./build.sh -Ttemplate/demo/Project --createProject --appName:app --modelName:Demo --package:net.foo');
     }]
   }
 });
