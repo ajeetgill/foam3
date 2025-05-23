@@ -36,19 +36,11 @@ foam.POM({
       var packagePath;
       var srcDir;
 
-      if ( ! appName ) {
+      if ( ! package ) {
         appName = dir.substring(dir.lastIndexOf('/')+1);
         package = package || appName;
-      } else if ( appName.indexOf('.') > 1 ) {
-        var domain, tld;
-        [modelName, appName, domain, tld] = appName.split('.').reverse();
-        if ( tld ) {
-          package = tld.toLowerCase() + '.' + domain.toLowerCase() + '.' + appName.toLowerCase() + '.' + modelName.toLowerCase();
-        } else if ( domain ) {
-          package = domain.toLowerCase() + '.' + appName.toLowerCase() + '.' + modelName.toLowerCase();
-        } else {
-          package = appName.toLowerCase() + '.' + modelName.toLowerCase();
-        }
+      } else if ( package.indexOf('.') > 1 ) {
+        [modelName, appName, _, _] = package.split('.').reverse();
       }
       packagePath = package.replaceAll('.', '/');
 
@@ -64,7 +56,7 @@ foam.POM({
         modelName = modelName[0].toLowerCase() + modelName.substring(1);
       }
 
-      console.log(`[Project] creating project ${AppName} at ${dir}`);
+      this.log(`[Project] creating project ${AppName} at ${dir}`);
 
       function readWrite(inDir, templateFn, outDir, outFn = 'pom.js') {
         let fn = this.join(inDir, templateFn);
@@ -86,7 +78,7 @@ foam.POM({
         text = text.replaceAll("{packagePath}", packagePath);
 
         fn = this.join(outDir, outFn);
-        console.log(`[Project] creating file ${fn}`);
+        this.log(`[Project] creating file ${fn}`);
         if ( ! this.existsSync(fn) ) {
           this.ensureDir(outDir);
           this.writeFileSync(fn, text);
@@ -123,7 +115,7 @@ foam.POM({
         readWrite.bind(this, templateDir, 'modelTestPOM.js', `${dir}/src/${packagePath}/test`, 'pom.js')();
         readWrite.bind(this, templateDir, 'modelTest.js', `${dir}/src/${packagePath}/test`, `${ModelName}Test.js`)();
         readWrite.bind(this, templateDir, 'deploymentModelTestPOM.js', `${dir}/deployment/test`, 'pom.js')();
-        readWrite.bind(this, templateDir, 'deploymentModelTests.jrl', `${dir}/deployment/test`, 'tests.jrl')();
+        readWrite.bind(this, templateDir, 'tests.jrl', `${dir}/src/${packagePath}/test`, 'tests.jrl')();
 
         // run script
         readWrite.bind(this, templateDir, 'run.sh', `${dir}/deployment/demo`, `run.sh`)();
@@ -142,11 +134,9 @@ foam.POM({
     }],
 
     usage: ['usage', 'Example usage', [], function usage() {
-      console.log('Project creation examples:');
-      console.log('  ./build.sh -Ttemplate/demo/Project --createProject:com.foamdev.cook.recipe');
-      console.log('  ./build.sh -Ttemplate/demo/Project --createProject --appName:cook --modelName:Recipe --package:dev.foamdev');
-      console.log('  ./build.sh -Ttemplate/demo/Project --createProject:net.foo.app.demo');
-      console.log('  ./build.sh -Ttemplate/demo/Project --createProject --appName:app --modelName:Demo --package:net.foo');
+      this.log('Project creation examples:');
+      this.log('  ./build.sh -Ttemplate/demo/Project --createProject --appName:Recipe --modelName:Recipe --package:com.foamdev.cook.recipe');
+      this.log('  ./build.sh -Ttemplate/demo/Project --createProject:net.foo.app.demo');
     }]
   }
 });
