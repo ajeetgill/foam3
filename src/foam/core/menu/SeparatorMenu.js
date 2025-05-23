@@ -16,12 +16,35 @@ foam.CLASS({
       name: 'SeparatorView',
       extends: 'foam.u2.View',
 
+      cssTokens: [
+        {
+          name: 'separatorColor',
+          value: '$grey300',
+          fallback: '#e0e0e0'
+        },
+        {
+          name: 'separatorMargin',
+          value: '8px',
+          fallback: '8px'
+        },
+        {
+          name: 'separatorHeight',
+          value: '1px',
+          fallback: '1px'
+        },
+        {
+          name: 'separatorWidth',
+          value: '100%',
+          fallback: '100%'
+        }
+      ],
+
       css: `
         ^ {
-          height: 1px;
-          width: 100%;
-          background: #e0e0e0;
-          margin: 8px 0;
+          height: $separatorHeight;
+          width: $separatorWidth;
+          background: $separatorColor;
+          margin: $separatorMargin 0;
           pointer-events: none;
         }
       `,
