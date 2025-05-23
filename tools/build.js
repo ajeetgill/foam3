@@ -191,7 +191,7 @@ function task() {
 
       // execute tasks
       if ( ! DRY_RUN || name === 'pomEvns' || name === 'all' ) {
-        task.f.apply(Object.assign({ SUPER }, EXPORTS), args);
+        task.f && task.f.apply(Object.assign({ SUPER }, EXPORTS), args);
       }
       // only run first 'all'
       return name !== 'all';

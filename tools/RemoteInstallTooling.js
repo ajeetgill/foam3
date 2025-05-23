@@ -32,9 +32,7 @@ foam.POM({
     remoteOutput: ['', 'remote-output', 'REMOTE_OUTPUT', 'Working directory on remote host to upload to and install from.', '/tmp', arg => REMOTE_OUTPUT = arg],
     remoteUser: ['', 'remote-user', 'REMOTE_USER', 'User with which to connect via ssh/scp to perform the upload and installation.', '', arg => REMOTE_USER = arg],
     sshId: ['', 'ssh-id', 'SSH_ID', 'ssh id from .ssh/ to use for connection. Will default to that specified in .ssh/config when a matching host is found, otherwise to .ssh/id_rsa', '', arg => SSH_ID = arg],
-    sshOpt: ['', 'ssh-opt', 'SSH_OPT', '', () => SSH_ID ? '-i ' + HOME_DIR + '/.ssh/' + SSH_ID : '', arg => SSH_OPT = arg],
-    tarball: ['', 'tarball', 'TARBALL', 'desc', () => APP_NAME + '-deploy-' + VERSION + '.tar.gz', arg => TARBALL = arg],
-    tarballPath: ['', 'tarball-path', 'TARBALL_PATH', 'Path to the tarball to upload. Defaults to the last tar built.', () => BUILD_DIR + '/package/' + TARBALL, arg => TARBALL_PATH = arg]
+    sshOpt: ['', 'ssh-opt', 'SSH_OPT', '', () => SSH_ID ? '-i ' + HOME_DIR + '/.ssh/' + SSH_ID : '', arg => SSH_OPT = arg]
   },
 
   tasks: {
