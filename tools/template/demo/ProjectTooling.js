@@ -57,7 +57,6 @@ foam.POM({
       }
 
       this.log(`[Project] creating project ${AppName} at ${dir}`);
-      // process.exit(1);
 
       function readWrite(inDir, templateFn, outDir, outFn = 'pom.js') {
         let fn = this.join(inDir, templateFn);
