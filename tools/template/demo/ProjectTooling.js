@@ -128,13 +128,15 @@ foam.POM({
         // run script
         readWrite.bind(this, templateDir, 'run.sh', `${dir}/deployment/demo`, `run.sh`)();
         this.execSync(`chmod u+x ${dir}/deployment/demo/run.sh`);
-
-        readWrite.bind(this, templateDir, 'build.sh', `${dir}`, `build.sh`)();
-        this.execSync(`chmod u+x ${dir}/build.sh`);
       }
 
       // Additional directories and poms
       readWrite.bind(this, templateDir, 'emptyPOM.js', `${dir}/journals`, 'pom.js')();
+
+      readWrite.bind(this, templateDir, 'build.sh', `${dir}`, `build.sh`)();
+      this.execSync(`chmod u+x ${dir}/build.sh`);
+
+      readWrite.bind(this, templateDir, 'gitignore', `${dir}`, `.gitignore`)();
 
       // this.execSync('sudo chown -R $USER /opt')
     }],
