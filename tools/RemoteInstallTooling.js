@@ -80,7 +80,7 @@ foam.POM({
     }],
     usages: ['usage', 'Examples', [], function() {
       this.log('Remote installation examples:');
-      this.log('  ./build.sh -TStandard,RemoteInstall,Java --user:foam user-id:3636 --backup:false --remote-hostname:moosehead --deploy');
+      this.log('  ./build.sh -TStandard,RemoteInstall,Java --user:foam user-id:3636 --backup:false --remote-hostname:moosehead');
     }],
     validate: ['validate', 'Verify required information is available before proceeding with main build tasks', ['pomEnvs'], function() {
       if ( REMOTE_PLATFORM !== 'linux' ) {

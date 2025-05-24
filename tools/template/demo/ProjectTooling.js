@@ -136,9 +136,9 @@ foam.POM({
 
     usage: ['usage', 'Example usage', [], function usage() {
       this.log('Project creation examples:');
-      this.log('  ./build.sh -Ttemplate/demo/Project --createProject --appName:Recipe --modelName:Recipe --package:com.foamdev.cook.recipe');
-      this.log('  ./build.sh -Ttemplate/demo/Project --appName:Recipe --modelName:Recipe --package:com.foamdev.cook.recipe');
-      this.log('  ./build.sh -Ttemplate/demo/Project --createProject:net.foo.app.demo');
+      this.log('  node foam3/tools/build.js -Ttemplate/demo/Project --createProject --appName:Recipe --modelName:Recipe --package:com.foamdev.cook.recipe');
+      this.log('  node foam3/tools/build.js -Ttemplate/demo/Project --appName:Recipe --modelName:Recipe --package:com.foamdev.cook.recipe');
+      this.log('  node foam3/tools/build.js -Ttemplate/demo/Project --createProject:net.foo.app.demo');
     }]
   }
 });
