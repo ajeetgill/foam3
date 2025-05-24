@@ -208,7 +208,11 @@ foam.CLASS({
       name: 'daoLoading',
       value: true
     },
-    ['isInit', true]
+    ['isInit', true],
+    {
+      class: 'Map',
+      name: 'collapsedGroups'
+    },
   ],
 
   methods: [
@@ -332,13 +336,24 @@ foam.CLASS({
           if ( self.groupBy ) {
             var group = self.groupBy.f(args.data);
             if ( ! foam.util.equals(group, self.currGroup_) || index == 1 ) {
-              e.tag(self.groupHeaderView, { ...args, groupLabel: group, groupBy: self.groupBy });
+              e.tag(self.groupHeaderView, 
+                { ...args, 
+                  groupLabel: group, 
+                  groupBy: self.groupBy, 
+                  collapsed: self.collapsedGroups$[group],
+                  toggleCollapsed: function() {
+                    self.collapsedGroups[group].set(!self.collapsedGroups[group].get());
+                  } 
+              }
+              );
             }
             self.currGroup_ = group;
           }
+
           var isEven = (index + 1) % 2 !== 0 ;
-          var rowEl = self.E().tag(self.rowView, args).attr('data-idx', index).attr('data-even', isEven);;
-          e.add(rowEl)
+          var rowEl = self.E().tag(self.rowView, args).attr('data-idx', index).attr('data-even', isEven);
+          if (!self.collapsedGroups[group]) self.collapsedGroups[group] = foam.lang.SimpleSlot.create({value: true});
+          e.start(rowEl).show(self.collapsedGroups[group]);
           rowEl.el().then(a => {
             self.rowObserver.observe(a)
           });

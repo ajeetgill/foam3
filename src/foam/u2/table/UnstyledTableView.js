@@ -328,6 +328,11 @@ foam.CLASS({
       name: 'showPagination',
       value: true
     },
+    {
+      class: 'Map',
+      name: 'collapsedGroups',
+      factory: function() { return {}; }
+    },
     'tableEl_',
     'scrollEl_',
     ['tableHeadHeight', 52]
@@ -482,7 +487,8 @@ foam.CLASS({
                 ctx: view,
                 prepDAO: view.prepDAO,
                 groupBy$: view.groupBy$,
-                offsetTop: view.tableHeadHeight
+                offsetTop: view.tableHeadHeight,
+                collapsedGroups$: view.collapsedGroups$
             }, view.scrollEl_$)
           .end()
         .end().end()

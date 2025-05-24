@@ -29,6 +29,15 @@ foam.CLASS({
 
   properties: [
     'projection',
+    {
+      class: 'Boolean',
+      name: 'collapsed',
+      value: false
+    },
+    {
+      class: 'Function',
+      name: 'toggleCollapsed'
+    }
   ],
 
   methods: [
@@ -88,7 +97,21 @@ foam.CLASS({
             this.add(self.EMPTY_MSG + ' ' + prop.label);
           }
         });
-      this.add(elmt);
+      this.add(this.dynamic(function(collapsed) {
+        this.start().addClass(self.table.myClass('group-content'))
+        .start('span')
+          .add(elmt)
+        .end()
+        .start(foam.u2.tag.Button, {
+          buttonStyle: foam.u2.ButtonStyle.TERTIARY,
+          icon: collapsed ?  '/images/dropdown-icon.svg' : '/images/expand-less.svg',
+          embedSVG: true
+        })
+          .addClass('expand-btn') 
+          .on('click', self.toggleCollapsed)
+        .end()
+      .end();
+      }))
     }
-  ]
+  ],
 });
