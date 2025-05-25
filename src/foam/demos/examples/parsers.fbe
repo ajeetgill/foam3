@@ -963,6 +963,7 @@ const interp = BinaryInterpreter.create({x: 1, y: 10, z: 100});
 testP(interp, input);
 
 ## Error Reporting
+<pre>
 All of the examples until now have simply returned undefined if the input could not be
 parsed, but it would be much better to be able to report an error message which
 explained why the input could not be parsed. We do this with the ErrorReportingPStream.
@@ -970,9 +971,9 @@ explained why the input could not be parsed. We do this with the ErrorReportingP
 Recall that PStream is an interface, but notice that the StringPStream is the
 only implementation that we've seen so far. The ErrorReportingPStream is a PStream
 decorator that wraps another PStream (probably a StringPStream in JS) and figures
-out where a parse error occured and provides an error message explaining what
-and where the parse failed.
-
+out where a parse error occured and provides an error message explaining where the
+parse failed and what was expected.
+</pre>
 --
 // TODO: The JS ErrorReportingPStream isn't as useful as the Java version and should be improved
 // TODO: finish this example
