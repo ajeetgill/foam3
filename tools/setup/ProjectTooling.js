@@ -103,15 +103,10 @@ foam.POM({
         }
       }
 
-      // create root pom
+      // base setup
       readWrite.bind(this, templateDir, 'rootPOM.js', `${dir}`)();
-
-      // default deployment pom
       readWrite.bind(this, templateDir, 'deploymentAppPOM.js', `${dir}/deployment/${appName}`, 'pom.js')();
       readWrite.bind(this, templateDir, 'journalPOM.js', `${dir}/journals`, 'pom.js')();
-
-      // base setup
-      readWrite.bind(this, templateDir, 'emptyPOM.js', `${dir}/journals`, 'pom.js')();
       readWrite.bind(this, templateDir, 'journalGroups.jrl', `${dir}/journals`, `groups.jrl`)();
       readWrite.bind(this, templateDir, 'journalGroupPermissionJunctions.jrl', `${dir}/journals`, `groupPermissionJunctions.jrl`)();
 
