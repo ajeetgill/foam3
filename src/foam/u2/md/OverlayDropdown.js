@@ -177,7 +177,7 @@ foam.CLASS({
         this.ro_?.unobserve(this.parentEl.element_);
       }
       else {
-        this.ro_?.observe(this.parentEl);
+        this.ro_?.unobserve(this.parentEl);
       }
     },
 
