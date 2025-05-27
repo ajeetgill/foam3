@@ -67,26 +67,60 @@ foam.CLASS({
   name: 'reflowHeader',
   extends: 'foam.u2.View',
 
+  imports: [
+    'stack'
+  ],
+
   css: `
     ^navigator {
       display: flex;
       align-items: center;
       gap: 5px;
+      color: $grey700;
+      font-weight: bold;
+    }
+    ^header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     ^chevron {
        color: $grey700;
+    }
+    ^title {
+      color: $black;
     }
   `,
 
   methods: [
     function render() {
+      let self = this;
+      console.log('this.data.shwPrompts ===>', this.data.showPrompts$)
       this.addClass()
-        .start().addClass(this.myClass('navigator'))
-          .tag(this.HOME)
-          .start(foam.u2.tag.Image, {
-            data: 'images/right-chevron.svg',
-            embedSVG: true
-          }).addClass(this.myClass('chevron'))
+        .start().addClass(this.myClass('header-container'))
+          .start().addClass(this.myClass('navigator'))
+            .tag(this.HOME)
+            .start(foam.u2.tag.Image, {
+              data: 'images/right-chevron.svg',
+              embedSVG: true
+            }).addClass(this.myClass('chevron')).end()
+            .startContext({data: this})
+              .tag(this.REFLOWS)
+            .endContext()
+            .start(foam.u2.tag.Image, {
+              data: 'images/right-chevron.svg',
+              embedSVG: true
+            }).addClass(this.myClass('chevron')).end()
+            .start('span').addClass(this.myClass('title')).add(this.data.flowName$).end()
+          .end()
+
+          .start().addClass(this.myClass('header-actions'))
+            callIf(this.data.showPrompts$, function() {
+              this.start().addClass(self.myClass('save-text'))
+                .add('The Flow is saved automatically')
+              .end();
+            })
+          .end()
         .end();
     }
   ],
@@ -97,8 +131,18 @@ foam.CLASS({
       label: '',
       buttonStyle: foam.u2.ButtonStyle.TERTIARY,
       themeIcon: 'home',
+      size: 'SMALL',
       code: function() {
 
+      }
+    },
+    {
+      name: 'reflows',
+      label: 'Reflows',
+      buttonStyle: foam.u2.ButtonStyle.LINK,
+      size: 'SMALL',
+      code: function() {
+        window.location.hash = '#flows';
       }
     }
   ]
