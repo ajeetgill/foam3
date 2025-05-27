@@ -24,7 +24,7 @@ foam.CLASS({
   ],
 
   messages: [
-    { name: 'EMPTY_MSG',  message: 'Empty' }
+    { name: 'EMPTY_MSG',  message: 'empty' }
   ],
 
   properties: [
@@ -80,7 +80,7 @@ foam.CLASS({
         .call(function() {
           this.add(prop.columnLabel + ': ');
           if( ! objReturned || prop.f(objReturned) === '' || prop.f(objReturned) === 0) {
-            this.start('i').add(self.EMPTY_MSG.toLowerCase()).end()
+            this.start('i').add(self.EMPTY_MSG).end()
           } else {
             prop.tableCellFormatter.format(
               this,
