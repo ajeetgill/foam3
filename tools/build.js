@@ -65,7 +65,7 @@ ln -s /Volumes/RamDisk/build ~/foam3/build
 */
 
 const { adaptOrCreateArgs, bool, buildEnv, addOptions, comma, copyDir, copyFile, emptyDir, ensureDir, exec, execSync, exportEnvs, findOption, findSimilarOptions, findTask, findSimilarTasks, flag, hyphenate, info, isExcluded, log, processBuildArgs, processToolingArgs, rmdir, rmfile, spawn, warning, writeFileIfUpdated, verbose } = require('./buildlib');
-const { existsSync, openSync, readdirSync, readFileSync, writeFileSync } = require('fs');
+const { appendFileSync, existsSync, openSync, readdirSync, readFileSync, writeFileSync } = require('fs');
 const os = require('os');
 const { join }                                    = require('path');
 const pmake                                       = require('./pmake');
@@ -413,6 +413,7 @@ buildEnv(ENVS);
 EXPORTS = Object.assign(EXPORTS, {
   adaptOrCreateArgs,
   addJournal,
+  appendFileSync,
   bool,
   buildEnv,
   comma,
