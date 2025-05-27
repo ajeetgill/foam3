@@ -18,23 +18,64 @@ foam.CLASS({
     {
       name: 'of',
       factory: function() { return this.referenceDAO.of; }
-    }
+    },
+    'props',
+    [ 'useProjection', false ]
   ],
 
   methods: [
     function value(s) { return null; },
     function createSink() { return foam.dao.ArraySink.create(); },
-    function execute(e) {
-      return this.dao.select(this.createSink()).then(s => {
+    function getSinkWithProjectionData(s) { return s; },
+    async function execute(e) {
+      if ( e.__subContext__.data.columns ) {
+        this.props = e.__subContext__.data.columns.split(',');
+        this.useProjection = true;
+      }
+      var sink = this.useProjection ? this.getProjectionSink() : this.createSink();
+      return this.dao.select(sink).then(s => {
+        var ret = this.useProjection ? this.getSinkWithProjectionData(s) : s;
         if ( this.block.value && this.block.value.VALUE ) {
           this.block.value.value = this.value(s);
         } else {
           this.block.value = this.value(s);
         }
-        e.add(s);
+        e.add(ret);
       });
     },
-    function addToE() {}
+    
+    function getProjectionSink() {
+      var exprArray = [];
+      for ( var propName of this.props ) {
+        var expr = this.of.getAxiomByName(propName) || foam.core.column.NestedPropertiesExpression.create({ objClass: this.of, nestedProperty: propName });
+        if ( foam.dao.DAOProperty.isInstance(expr) ||
+            foam.dao.OneToManyRelationshipProperty.isInstance(expr) ||
+            foam.dao.ManyToManyRelationshipProperty.isInstance(expr) )
+          continue
+        if ( expr )
+          exprArray.push(expr);
+      }
+
+      return this.Projection.create({ exprs: exprArray, useProjection: true });
+    },
+
+    function getSinkWithProjectionData(s) {
+      if ( this.Projection.isInstance(s) ) {
+        var data = [];
+        s.projection.forEach(p => {
+          var objSpec = {};
+          i = 0;
+          s.exprs.forEach(e => {
+            objSpec[e.name] = p[i++];
+          });
+          data.push(this.of.create(objSpec));
+        })
+        var sink = this.createSink();
+        sink.array = data;
+        return sink;
+      }
+      return s;
+    },
   ]
 });
 
@@ -198,6 +239,8 @@ foam.CLASS({
   requires: [ 'foam.dao.CSVSink' ],
 
   methods: [
+    function getSinkWithProjectionData(s) { return s; },
+    function getProjectionSink() { return this.CSVSink.create({ of: this.of, props: this.props }); },
     function createSink() { return this.CSVSink.create({of: this.of}); }
   ]
 });
