@@ -26,7 +26,6 @@ foam.CLASS({
   methods: [
     function value(s) { return null; },
     function createSink() { return foam.dao.ArraySink.create(); },
-    function getSinkWithProjectionData(s) { return s; },
     async function execute(e) {
       if ( e.__subContext__.data.columns ) {
         this.props = e.__subContext__.data.columns.split(',');
