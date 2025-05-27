@@ -6,11 +6,15 @@
 
 /**
    Support for creating new FOAM based projects.
-   usage: node foam3/tools/build.js -Tproject/standard/Project --createProject:[net.foo.]app[.model]
+   usage: node tools/build.js -Tproject/standard/Project --createProject:[net.foo.]app[.model]
 */
 foam.POM({
   name: 'project',
   description: 'Options and Tasks to create a new project using FOAM',
+
+  envs: {
+    ADMIN_PASSWORD_HASH: ['Hashed admin password']
+  },
 
   options: {
     adminPassword: ['P', 'admin-password', 'ADMIN_PASSWORD', 'Initial password admin user', '', arg => ADMIN_PASSWORD = arg],
@@ -19,7 +23,6 @@ foam.POM({
       if ( arg && arg > 2 && arg < 1000) ADMIN_USER_ID = arg;
       else this.error(`Invalid adminUserId. Expecting value between in range [3..999]`);
     }],
-    appName: ['N', 'app-name', 'APP_NAME', 'Identifier of application, used for root pom and default deployment directory:  /opt/APP_NAME', '', arg => APP_NAME = arg ],
     package: ['', 'package', 'PACKAGE', 'Source code path - typically following Java package naming conventions which takes a FQDN inverts it and drops the sub-domain. Ex: www.foamdev.com -> com.foamdev.  This will become the source directory structure under src/. For the purposes of this Project creation the result would be src/com/foamdev/APP_NAME/', '', arg => PACKAGE = arg ],
     modelName: ['M', 'model-name', 'MODEL_NAME', 'If a model name is provided, the project creation processs will also setup a complete working application, with user, group, menu, permissions, and service journals based on the model name', '', arg => MODEL_NAME = arg ],
     spid: ['', 'spid', 'SPID', 'Default spid', 'foam', arg => SPID = arg],
@@ -38,8 +41,9 @@ foam.POM({
       // if called from foam3/ directory, move up one level.
       if ( dir.substring(dir.lastIndexOf('/')+1) === 'foam3' ) {
         dir = dir.substring(0, dir.lastIndexOf('/'));
+      } else {
+        this.error(`[Project] must be run from foam3/ directory`);
       }
-
 
       var appName = arg || APP_NAME;
       if ( ! appName ) {
@@ -47,12 +51,14 @@ foam.POM({
       }
       appName = appName.toLowerCase();
 
-      var adminPassword = ADMIN_PASSWORD;
+      this.execute('hashAdminPassword');
+      var adminPasswordHash = ADMIN_PASSWORD_HASH;
       var adminUser = ADMIN_USER;
       var adminUserId = ADMIN_USER_ID;
       var AppName = appName[0].toUpperCase() + appName.substring(1);
       var group = appName;
       var package = PACKAGE || appName;
+      var domain = package.split('.').reverse().join('.'); // for email
       var modelName = MODEL_NAME || appName;
       modelName = modelName[0].toLowerCase() + modelName.substring(1);
       var ModelName = modelName[0].toUpperCase() + modelName.substring(1);
@@ -77,13 +83,14 @@ foam.POM({
           this.error(`[Project] template file empty ${fn}`);
         }
 
-        text = text.replaceAll("{adminPassword}", adminPassword);
+        text = text.replaceAll("{adminPassword}", adminPasswordHash);
         text = text.replaceAll("{adminUser}", adminUser);
         text = text.replaceAll("{adminUserId}", adminUserId);
         text = text.replaceAll("{app}", appName);
         text = text.replaceAll("{appName}", appName);
         text = text.replaceAll("{App}", AppName);
         text = text.replaceAll("{AppName}", AppName);
+        text = text.replaceAll("{domain}", domain);
         text = text.replaceAll("{group}", group);
         text = text.replaceAll("{model}", modelName);
         text = text.replaceAll("{modelName}", modelName);
@@ -156,23 +163,35 @@ foam.POM({
       // this.execSync('sudo chown -R $USER /opt')
     }],
 
+    hashAdminPassword: ['hash-admin-password', 'Execute FOAM to hash a password', [], function() {
+      if ( ! this.existsSync('pom.xml') ) {
+        // build foam  - don't rebuild for subsequent runs
+        this.execute('genJava');
+        // TODO: just compile foam.util.Password.java and foam.util.SecurityUtil.java
+      }
+      ADMIN_PASSWORD_HASH = this.execSync(`java -cp "${BUILD_DIR}/lib/\*:${BUILD_DIR}/classes" foam.util.Password ${ADMIN_PASSWORD.trim()}`).toString().trim();
+    }],
+
     info: ['info', 'Documentation for this Tooling', [], function() {
       this.log('Project Tooling');
     }],
+
     usage: ['usage', 'Example usage', [], function() {
       this.log('Project creation examples:');
-      this.log('  node foam3/tools/build.js -Tsetup/Project --appName:Recipe --package:com.foamdev.cook');
+      this.warning('must be run from foam3/ directory)');
+      this.log('  node tools/build.js -T+setup/Project --appName:Recipe --package:com.foamdev.cook');
       this.log('      Will generate a project matchin the FOAM-Recipes tutorial');
-      this.log('  node foam3/tools/build.js -Tsetup/Project --appName:Simple --package:com.foamdev');
+      this.log('  node tools/build.js -T+setup/Project --appName:Simple --package:com.foamdev');
       this.log('      Will generate a project with a very simple model.');
-      this.log('  node foam3/tools/build.js -Tsetup/Project --type:demo --appName:Example --package:com.foamdev');
+      this.log('  node tools/build.js -T+setup/Project --type:demo --appName:Example --package:com.foamdev');
       this.log('      Will generate a project with a more elaborate model demonstrating more FOAM features..');
+      this.log();
     }],
 
     validate: ['validate', 'Validate tooling parameters before execution', [], function() {
-      // if ( ! ADMIN_PASSWORD ) {
-      //   this.error(`[Project] option --adminPassword required.`);
-      // }
+      if ( ! ADMIN_PASSWORD ) {
+        this.error(`[Project] option --adminPassword required.`);
+      }
     }]
   }
 });
