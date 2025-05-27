@@ -102,16 +102,23 @@ foam.CLASS({
         .start('span')
           .add(elmt)
         .end()
-        .start(foam.u2.tag.Button, {
-          buttonStyle: foam.u2.ButtonStyle.TERTIARY,
-          icon: collapsed ?  '/images/dropdown-icon.svg' : '/images/expand-less.svg',
-          embedSVG: true
-        })
-          .addClass('expand-btn') 
-          .on('click', self.toggleCollapsed)
-        .end()
+        .startContext({data: self})
+          .tag(self.EXPAND)
+        .endContext()
       .end();
       }))
     }
   ],
+
+  actions: [
+    {
+      name: 'expand',
+      label: '',
+      icon: '/images/dropdown-icon.svg',
+      buttonStyle: foam.u2.ButtonStyle.TERTIARY,
+      code: function() {
+        this.toggleCollapsed();
+      }
+    }
+  ]
 });
