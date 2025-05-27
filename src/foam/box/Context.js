@@ -25,10 +25,6 @@ foam.CLASS({
     'foam.box.NamedBox',
     'foam.box.ClassWhitelistContext',
     'foam.box.LoggedLookupContext',
-    {
-      path: 'foam.net.WebSocketService',
-      flags: ['js'],
-    }
   ],
 
   exports: [
@@ -37,8 +33,7 @@ foam.CLASS({
     'messagePortService',
     'registry',
     'root',
-    'socketService',
-    'webSocketService'
+    'socketService'
   ],
 
   properties: [
@@ -71,15 +66,6 @@ return __context__.lookup("foam.swift.net.SocketService")!.create(args: [
   "delegate$": registry$,
 ], x: __subContext__)
       `,
-    },
-    {
-      name: 'webSocketService',
-      hidden: true,
-      factory: function() {
-        return this.WebSocketService.create({
-          delegate: this.registry
-        });
-      }
     },
     {
       class: 'FObjectProperty',

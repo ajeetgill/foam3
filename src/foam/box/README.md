@@ -96,9 +96,6 @@ entities exported to the box context's FOAM context:
 - `socketService`: A service for establishing UNIX socket connections to
   other box contexts;
 
-- `webSocketService`: A service for establishing client/server `WebSocket`
-  connections to other box contexts;
-
 - `me`: A box that encapsulates a root service name for this box context.
 
 ### Named boxes and name services
