@@ -140,6 +140,14 @@
       background: $grey50;
     }
 
+    ^group-content{
+      padding: 10px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
     ^resizeButton {
       padding: 4px;
       position: sticky;
