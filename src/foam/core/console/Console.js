@@ -64,6 +64,49 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.core.console',
+  name: 'reflowHeader',
+  extends: 'foam.u2.View',
+
+  css: `
+    ^navigator {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    ^chevron {
+       color: $grey700;
+    }
+  `,
+
+  methods: [
+    function render() {
+      this.addClass()
+        .start().addClass(this.myClass('navigator'))
+          .tag(this.HOME)
+          .start(foam.u2.tag.Image, {
+            data: 'images/right-chevron.svg',
+            embedSVG: true
+          }).addClass(this.myClass('chevron'))
+        .end();
+    }
+  ],
+
+  actions: [
+    {
+      name: 'home',
+      label: '',
+      buttonStyle: foam.u2.ButtonStyle.TERTIARY,
+      themeIcon: 'home',
+      code: function() {
+
+      }
+    }
+  ]
+
+});
+
+foam.CLASS({
+  package: 'foam.core.console',
   name: 'FlowableTree',
   extends: 'foam.u2.View',
 
@@ -266,21 +309,39 @@ foam.CLASS({
   css: `
     ^ {
       display: flex;
+      flex-direction: column;
       height: 100%;
+    }
+    ^flex-container {
+      display: flex;
+      flex-direction: row;
+      height: 100%;
+    }
+    ^header {
+      padding: 10px;
+      background-color: $white;
+      border-bottom: 1px solid $grey200;
     }
     ^l {
       padding: 4px;
-      width: 350px;
+      width: 20%;
+      background-color: $white;
+    }
+    ^middle-holder {
+      padding: 10px;
+      overflow-x: auto;
+      width: 100%;
     }
     ^m {
-      overflow-x: auto;
-      border-left: 2px solid $grey200;
-      border-right: 2px solid $grey200;
+       border: 2px dashed $grey200;
+       overflow-x: auto;
+       background-color: $white;
     }
     ^r {
       overflow-y: auto;
       padding: 4px 4px 4px 8px;
-      width: 60%;
+      width: 20%;
+      background-color: $white;
     }
     ^ .foam-u2-RangeView-skip { width: 266px; }
   `,
@@ -288,18 +349,25 @@ foam.CLASS({
   properties: [
     'showLeft',
     'showRight',
+    'showHeader',
     'left',
     'middle',
-    'right'
+    'right',
+    'header'
   ],
 
   methods: [
     function render() {
       this.
         addClass().
-        start('div', {}, this.left$  ).addClass(this.myClass('l')).show(this.showLeft$).end().
-        start('div', {}, this.middle$).addClass(this.myClass('m')).end().
-        start('div', {}, this.right$ ).addClass(this.myClass('r')).show(this.showRight$).end();
+        start('div', {}, this.header$).addClass(this.myClass('header')).show(this.showHeader$).end().
+        start().addClass(this.myClass('flex-container')).
+          start('div', {}, this.left$  ).addClass(this.myClass('l')).show(this.showLeft$).end().
+          start().addClass(this.myClass('middle-holder')).
+            start('div', {}, this.middle$).addClass(this.myClass('m')).end().
+          end().
+          start('div', {}, this.right$ ).addClass(this.myClass('r')).show(this.showRight$).end().
+        end();
     }
   ]
 });
@@ -317,6 +385,7 @@ foam.CLASS({
     'foam.core.console.Flow',
     'foam.core.console.FlowableTree',
     'foam.core.console.Layout',
+    'foam.core.console.reflowHeader',
     'foam.core.console.ReactiveDetailView',
     // 'foam.u2.DetailView as ReactiveDetailView',
     'foam.dao.ArrayDAO',
@@ -548,12 +617,14 @@ foam.CLASS({
 
       layout.showLeft$  = this.showPrompts$;
       layout.showRight$ = this.showPrompts$;
+      layout.showHeader$ = this.showPrompts$;
 
       layout.left.tag(this.FlowableTree, {data: this, selected$: this.selected$});
       layout.middle.call(this.renderSelf, [this]);
       layout.right.add(this.dynamic(function(selectedValue) {
         this.tag(self.ReactiveDetailView, {data: selectedValue, showActions: true});
       }));
+      layout.header.tag(this.reflowHeader, {data: this});
 
       if ( this.params.flow && this.params.flow !== 'Unnamed') {
         await this.eval_(`load("${decodeURIComponent(this.params.flow)}")`);
