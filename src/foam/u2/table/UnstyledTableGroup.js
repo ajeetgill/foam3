@@ -88,8 +88,8 @@ foam.CLASS({
         .endContext()
         .start('span')
           .style({ flex: '3 0 0' })
+          .add(prop.columnLabel + ': ')
           .call(function() {
-            this.add(prop.columnLabel + ': ');
             if( ! prop.f(objReturned) ) {
               this.start('i').add(self.EMPTY_MSG).end()
             } else {
@@ -99,7 +99,7 @@ foam.CLASS({
                 objReturned,
                 prop
               );
-          }
+            }
           })
         .end()
       .end();
