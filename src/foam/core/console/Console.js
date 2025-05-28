@@ -90,12 +90,23 @@ foam.CLASS({
     ^title {
       color: $black;
     }
+    ^header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    ^save-text {
+      color: $grey700;
+    }
+    ^ .foam-u2-ActionView-reset {
+      color: $black;
+    }
   `,
 
   methods: [
     function render() {
       let self = this;
-      console.log('this.data.shwPrompts ===>', this.data.showPrompts$)
+      console.log('this.data.shwPrompts ===>', this.data)
       this.addClass()
         .start().addClass(this.myClass('header-container'))
           .start().addClass(this.myClass('navigator'))
@@ -115,11 +126,17 @@ foam.CLASS({
           .end()
 
           .start().addClass(this.myClass('header-actions'))
-            callIf(this.data.showPrompts$, function() {
-              this.start().addClass(self.myClass('save-text'))
-                .add('The Flow is saved automatically')
-              .end();
-            })
+            .start().addClass(self.myClass('save-text'))
+              .add('The Flow is saved automatically')
+            .end()
+            .tag(this.PREVIEW)
+            .tag(this.SAVE)
+            .tag(this.RESET)
+            // callIf(this.data.showPrompts$, function() {
+            //   this.start().addClass(self.myClass('save-text'))
+            //     .add('The Flow is saved automatically')
+            //   .end();
+            // })
           .end()
         .end();
     }
@@ -143,6 +160,33 @@ foam.CLASS({
       size: 'SMALL',
       code: function() {
         window.location.hash = '#flows';
+      }
+    },
+    {
+      name: 'preview',
+      label: 'Preview',
+      buttonStyle: foam.u2.ButtonStyle.SECONDARY,
+      size: 'SMALL',
+      code: function() {
+
+      }
+    },
+    {
+      name: 'save',
+      label: 'Save',
+      buttonStyle: foam.u2.ButtonStyle.PRIMARY,
+      size: 'SMALL',
+      code: function() {
+
+      }
+    },
+    {
+      name: 'reset',
+      label: 'Reset',
+      buttonStyle: foam.u2.ButtonStyle.TEXT,
+      size: 'SMALL',
+      code: function() {
+
       }
     }
   ]
@@ -186,19 +230,66 @@ foam.CLASS({
       background: $destructive50;
       color: $destructive600;
     }
+    ^left-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid $grey200;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    ^ .foam-u2-ActionView-menuControl {
+      color: $black;
+    }
+    ^icon-holder {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
   `,
 
   properties: [
-    'selected'
+    'selected',
+    {
+      class: 'Boolean',
+      name: 'isMenuOpen',
+      value: true
+    }
   ],
 
   methods: [
+    function renderClosed(e) {
+      var self = this;
+      e.start().addClass(this.myClass('icon-holder'))
+          .startContext({ data: this })
+            .tag(this.MENU_CONTROL)
+          .endContext()
+        .end();
+    },
+    function renderOpened(e) {
+        e.start().addClass(this.myClass('left-container'))
+          .start().addClass(this.myClass('left-header'))
+            .start('span').add('Layers').end()
+            .startContext({ data: this })
+              .tag(this.MENU_CONTROL)
+            .endContext()
+          .end()
+          .start('table')
+            .attr('cellpadding', '4')
+            .call(this.branch, [this, this.data, 0])
+        .end()
+    },
     function render() {
-      this.
-        addClass().
-        start('table').
-        attr('cellpadding', '4').
-        call(this.branch, [this, this.data, 0]);
+      var self = this;
+      this.addClass();
+      this.add(this.dynamic(function(isMenuOpen) {
+        if (isMenuOpen) {
+          self.renderOpened(this);
+        } else {
+          self.renderClosed(this);
+        }
+      }))
     },
 
     function branch(self, data, depth) {
@@ -231,6 +322,17 @@ foam.CLASS({
       buttonStyle: 'TEXT',
       size: 'SMALL',
       code: function() { this.flowParent.removeFlowChild(this); }
+    },
+    {
+      name: 'menuControl',
+      label: '',
+      ariaLabel: 'Open/Close Menu',
+      themeIcon: 'sidebar',
+      buttonStyle: 'TERTIARY',
+      size: 'SMALL',
+      code: function() {
+        this.isMenuOpen = ! this.isMenuOpen;
+      }
     }
   ]
 });
@@ -359,17 +461,18 @@ foam.CLASS({
     ^flex-container {
       display: flex;
       flex-direction: row;
-      height: 100%;
+      height: 90%;
     }
     ^header {
       padding: 10px;
       background-color: $white;
       border-bottom: 1px solid $grey200;
+      height: 10%:
     }
     ^l {
       padding: 4px;
-      width: 20%;
       background-color: $white;
+      width: 20%;
     }
     ^middle-holder {
       padding: 10px;
@@ -388,12 +491,17 @@ foam.CLASS({
       background-color: $white;
     }
     ^ .foam-u2-RangeView-skip { width: 266px; }
+
+    ^menuClosed {
+     width: 4% !important;
+   }
   `,
 
   properties: [
     'showLeft',
     'showRight',
     'showHeader',
+    'isMenuOpen',
     'left',
     'middle',
     'right',
@@ -406,14 +514,19 @@ foam.CLASS({
         addClass().
         start('div', {}, this.header$).addClass(this.myClass('header')).show(this.showHeader$).end().
         start().addClass(this.myClass('flex-container')).
-          start('div', {}, this.left$  ).addClass(this.myClass('l')).show(this.showLeft$).end().
+        start('div', {}, this.left$)
+          .addClass(this.myClass('l'))
+          .enableClass(this.myClass('menuClosed'), this.isMenuOpen$.map(open => !open))
+          .show(this.showLeft$)
+        .end().
           start().addClass(this.myClass('middle-holder')).
             start('div', {}, this.middle$).addClass(this.myClass('m')).end().
           end().
           start('div', {}, this.right$ ).addClass(this.myClass('r')).show(this.showRight$).end().
         end();
     }
-  ]
+  ],
+
 });
 
 
@@ -663,7 +776,9 @@ foam.CLASS({
       layout.showRight$ = this.showPrompts$;
       layout.showHeader$ = this.showPrompts$;
 
-      layout.left.tag(this.FlowableTree, {data: this, selected$: this.selected$});
+      var flowableTree = this.FlowableTree.create({data: this, selected$: this.selected$});
+      layout.isMenuOpen$ = flowableTree.isMenuOpen$;
+      layout.left.tag(flowableTree);
       layout.middle.call(this.renderSelf, [this]);
       layout.right.add(this.dynamic(function(selectedValue) {
         this.tag(self.ReactiveDetailView, {data: selectedValue, showActions: true});
