@@ -177,7 +177,8 @@ foam.CLASS({
   methods: [
     function execute(e) {
       e.start({class: 'foam.u2.table.TableView', data: this.unlimitedDAO}).style({height: '700px', maxHeight: '700px'});
-    }
+    },
+    function value(s) { return s; }
   ]
 });
 
@@ -188,7 +189,8 @@ foam.CLASS({
   extends: 'foam.core.console.AbstractDAOAgent',
 
   methods: [
-    function createSink() { return foam.u2.mlang.Table.create({}, this); }
+    function createSink() { return foam.u2.mlang.Table.create({}, this); },
+    function value(s) { return s; }
   ]
 });
 
