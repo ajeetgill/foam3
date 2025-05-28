@@ -44,6 +44,10 @@ foam.CLASS({
       factory: function() {
         return foam.u2.theme.ThemeGlyphs.create({}, this);
       }
+    },
+    {
+      class: 'Map',
+      name: 'activeVariants'
     }
   ]
 });
