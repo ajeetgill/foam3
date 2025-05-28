@@ -187,7 +187,6 @@ return sink
           return foam.lang.FObject.create();
         }
 
-        debugger;
         this.SUPER(null, foam.dao.RemoteSink.create({delegate: sink}, x), predicate);
         return foam.lang.FObject.create();
 

@@ -34,12 +34,13 @@ foam.CLASS({
   methods: [
     {
       name: 'send',
-      code: function(msg) {
-        msg.object = this.SubBoxMessage.create({
-          name: this.name,
-          object: msg.object
-        });
-        this.delegate.send(msg);
+      code: function(envelope) {
+        this.delegate.send(foam.box.Envelope({
+          contents: envelope,
+          headers: {
+            name
+          }
+        }));
       },
       swiftCode: `
 msg?.object = SubBoxMessage_create([
@@ -47,11 +48,11 @@ msg?.object = SubBoxMessage_create([
   "object": msg?.object
 ])
 try delegate.send(msg);`,
-      javaCode: `foam.box.SubBoxMessage subBoxMessage = getX().create(foam.box.SubBoxMessage.class);
-subBoxMessage.setName(getName());
-subBoxMessage.setObject(msg.getObject());
-msg.setObject(subBoxMessage);
-getDelegate().send(msg);`
+      javaCode: `foam.box.Message subBoxMessage = getX().create(foam.box.Message.class);
+subBoxMessage.getAttributes().put("name", getName());
+subBoxMessage.setObject(msg);
+getDelegate().send(subBoxMessage);
+`
     }
   ]
 });

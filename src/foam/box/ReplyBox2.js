@@ -2,9 +2,6 @@ foam.CLASS({
   package: 'foam.box',
   name: 'ReplyBox2',
   extends: 'foam.box.ProxyBox',
-  requires: [
-    'foam.box.ReturnBox'
-  ],
   properties: [
     {
       class: 'Boolean',

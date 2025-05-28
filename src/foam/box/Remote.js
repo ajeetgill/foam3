@@ -43,13 +43,18 @@ foam.CLASS({
             throw new Error('Expected stub property to be named "delegate" for ' + cls.id);
           }
 
+          // HOW?  A remote object needs to address us back, normally we have a global "me"
+          // address that we could serialize, and remote endpoints could look this up to find
+          // all the ways to address me
+
+          // For now we can use a special ReplyBox that register a subBox and serializes to a return box when being sent
           var X = this.__subContext__;
-          var box = foam.box.SkeletonBox.create({ data: this }, X);
-          var obj = cls.create(null, X);
-          obj.delegate = foam.box.ReplyBox2.create({
-            delegate: box,
-            once: false
-          });
+          var obj = cls.create({
+            delegate: foam.box.ReplyBox2.create({
+              delegate: foam.box.SkeletonBox.create({ data: this }, X),
+              once: false
+            })
+          }, X);
 
           outputter.output(obj);
         }

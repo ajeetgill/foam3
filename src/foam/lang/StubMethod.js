@@ -39,17 +39,13 @@ foam.CLASS({
           // what context the request should be handled in.
           if ( isContextOriented ) args[0] = null;
 
-          var msg = this.Message.create({
-            object: this.RPCMessage.create({
-              name: name,
-              args: args
+          var msg = this.Envelope.create({
+            replyBox: rpcReturnBox,
+            contents: this.RPCMessage.create({
+              name,
+              args
             })
           });
-
-          msg.attributes.replyBox = this.ReplyBox2.create({
-            delegate: rpcReturnBox
-          });
-
           this[boxPropName].send(msg);
 
           return ret;

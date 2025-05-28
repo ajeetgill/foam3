@@ -198,10 +198,16 @@ foam.CLASS({
 
     {
       name: 'send',
-      code: function(msg) {
+      code: function(envelope) {
         var self = this;
-        msg.attributes[this.SESSION_KEY] = this.jsSessionID;
-        var payload = this.outputter.stringify(msg);
+        var outgoing = foam.box.Envelope.create({
+          headers: envelope.headers,
+          replyBox: this.getReplyBox(),
+          contents: envelope.contents
+        });
+        envelope.headers[this.SESSION_KEY] = this.jsSessionID;
+        var payload = this.outputter.stringify(outgoing.toMessage());
+        
         var headers = {
           'Content-Type': 'application/json; charset=utf-8',
           'Origin': this.origin
@@ -221,8 +227,8 @@ foam.CLASS({
           return resp.payload;
         }).then((p) => {
           return this.parser.aparse(p);
-        }).then((rmsg) => {
-          rmsg && msg.attributes?.replyBox?.send(rmsg);
+        }).then((response) => {
+          envelope.replyBox?.send(response.toEnvelope())
         }, function(r) {
           var msg;
           if ( r ) {
@@ -240,7 +246,7 @@ foam.CLASS({
               msg = self.FETCH_ERROR;
             } else msg = r.message;
           }
-          replyBox && replyBox.send(foam.box.Message.create({ object: foam.box.HTTPException.create({ response: r, message: msg }) }));
+          envelope.replyBox?.send(foam.box.Envelope.create({ contents: foam.box.HTTPException.create({ response: r, message: msg }) }));
         });
       },
       swiftCode: `

@@ -21,28 +21,12 @@ foam.CLASS({
 
   requires: [
     'foam.net.web.WebSocket',
-    'foam.json.Parser',
-    'foam.box.Message',
-    'foam.box.SubBox',
-    'foam.box.SubBoxMessage',
-    'foam.box.ReturnBox',
     'foam.box.RawWebSocketBox',
     'foam.net.ConnectionFailedException'
   ],
 
   imports: [
     'window'
-  ],
-
-  exports: [
-    'subBox'
-  ],
-
-  constants: [
-    {
-      name: 'NEXT_ID',
-      value: [0]
-    }
   ],
 
   axioms: [
@@ -56,23 +40,6 @@ foam.CLASS({
       name: 'uri',
     },
     {
-      name: 'replyBoxes',
-      factory: function() {
-        return {};
-      }
-    },
-    {
-      class: 'FObjectProperty',
-      of: 'foam.json.Parser',
-      name: 'parser',
-      generateJava: false,
-      factory: function() {
-        return this.Parser.create({
-          strict:          true,
-        });
-      },
-    },
-    {
       name: 'delegate',
       factory: function() {
         /* ignoreWarning */
@@ -80,21 +47,10 @@ foam.CLASS({
           uri: this.prepareURL(this.uri),
         });
 
-        ws.message.sub(this.onMessage);
-
         return ws.connect().then(function(ws) {
           ws.disconnected.sub(function(sub) {
             sub.detach();
-            this.delegate = undefined;
-            
-            var replyBoxes = this.replyBoxes;
-            for ( let box of Object.values(replyBoxes) ) {
-              box.send(foam.box.Message({
-                object: this.ConnectionFailedException.create()
-              }));
-            }
-            
-            this.replyBoxes
+            this.delegate = undefined;            
           }.bind(this));
 
           return this.RawWebSocketBox.create({ socket: ws });
@@ -108,26 +64,6 @@ foam.CLASS({
   ],
 
   methods: [
-    {
-      name: 'subBox',
-      code: function(dst, once = true) {
-        var name = this.NEXT_ID[0]++;
-        
-        var box = this.SubBox.create({
-          name,
-          delegate: this.ReturnBox.create()
-        });
-        
-        this.replyBoxes[name] = once ? {
-          send: (msg) => {
-            this.replyBoxes[name] = undefined;
-            dst.send(msg);
-          }
-        } : dst;
-        
-        return box;
-      }
-    },
     function prepareURL(url) {
       /* Add window's origin if url is not complete. */
       if ( this.window && url.indexOf(':') == -1 ) {
@@ -152,44 +88,6 @@ foam.CLASS({
         }.bind(this), function(e) {
           replyBox?.send(foam.box.Message.create({ object: e }));
         });
-      }
-    }
-  ],
-
-  listeners: [
-    {
-      name: 'onMessage',
-      code: function(s, _, msgStr) {
-        try {
-          var msg = this.parser.parseString(msgStr, this.__context__);
-
-          if ( ! this.Message.isInstance(msg) ) {
-            console.warn('Got non-message', msg.cls_.id);
-            console.warn('  payload was: ', msgStr);
-            return;
-          }
-
-          if ( !this.SubBoxMessage.isInstance(msg.object) ) {
-            console.warn('Got a non sub box message from the weboscket,', msgStr);
-            return;
-          }
-          
-          var name = msg.object.name;
-          var delegate = this.replyBoxes[name]
-          if ( delegate ) {
-            msg.object = msg.object.object;
-            delegate.send(msg);
-          } else {
-            if ( msg.attributes.replyBox ) {
-              msg.attributes.replyBox.send(
-                this.Message.create({
-                  object: this.NoSuchNameException.create({ name: name })
-                }));
-            }
-          }
-        } catch (e) {
-          console.error("WSS Error:", e);
-        }
       }
     }
   ]

@@ -6,90 +6,6 @@
 
 foam.CLASS({
   package: 'foam.box',
-  name: 'SessionReplyBox',
-  extends: 'foam.box.ProxyBox',
-
-  requires: [
-    'foam.box.RPCErrorMessage'
-  ],
-
-  imports: [
-    'auth?',
-    'ctrl',
-    'group',
-    'loginSuccess?',
-    'requestLogin?',
-    'sessionTimer',
-    'subject',
-    'window'
-  ],
-
-  messages: [
-    {
-      name: 'REFRESH_MSG',
-      message: 'Your session has expired. The page will now be refreshed so that you can log in again.',
-    }
-  ],
-
-  properties: [
-    {
-      class: 'FObjectProperty',
-      name: 'msg',
-      type: 'foam.box.Message'
-    },
-  ],
-
-  methods: [
-    {
-      name: 'send',
-      code: async function send(msg) {
-        var self = this;
-        if (
-          this.RPCErrorMessage.isInstance(msg.object) &&
-          msg.object.data.id === 'foam.core.auth.AuthenticationException'
-        ) {
-          if (!this.auth$) {
-            return;
-          }
-          // If the user is already logged in when this happens, then we know
-          // that something occurred on the backend to destroy this user's
-          // session. Therefore we reset the client state and ask them to log
-          // in again.
-          var promptlogin = await this.auth.check(null, 'auth.promptlogin');
-          var authResult  = await this.auth.check(null, '*');
-
-          if ( this.loginSuccess && ( ! promptlogin || authResult ) ) {
-            if ( this.ctrl ) this.ctrl.remove();
-            // Set loginSuccess to false so that if multiple requests are sent with no authentication, alert is called only once
-            this.loginSuccess = false;
-            alert(this.REFRESH_MSG);
-            (this.window || window).location.reload();
-            return;
-          }
-
-          this.requestLogin().then(function() {
-            self.delegate.send(self.msg);
-          });
-        } else {
-          // fetch the soft session limit from group, and then start the timer
-          if ( this.group && this.group.id !== '' && this.group.softSessionLimit !== 0 ) {
-            this.sessionTimer.startTimer(this.group.softSessionLimit);
-          }
-
-          this.delegate.send(msg);
-        }
-      }
-    },
-    function outputJSON(outputter) {
-      // this is a client only decorator, just send the delegate when serializing
-      return outputter.output(this.delegate);
-    }
-  ]
-});
-
-
-foam.CLASS({
-  package: 'foam.box',
   name: 'SessionClientBox',
   extends: 'foam.box.ProxyBox',
 
@@ -118,16 +34,16 @@ foam.CLASS({
   methods: [
     {
       name: 'send',
-      code: function send(originalMessage) {
-        msg = originalMessage.clone();
+      code: function send(originalEnvelope) {
+        var envelope = originalEnvelope.shallowClone();
         
-        msg.attributes[this.SESSION_KEY] = this.sessionID;
-        msg.attributes.replyBox = this.SessionReplyBox.create({
-          msg:       originalMessage,
-          delegate:  msg.attributes.replyBox
+        envelope.headers[this.SESSION_KEY] = this.sessionID;
+        envelope.replyBox = this.SessionReplyBox.create({
+          delegate: envelope.replyBox,
+          originalEnvelope,
         });
 
-        this.delegate.send(msg);
+        this.delegate.send(envelope);
       },
       swiftCode: `
 let msg = msg!

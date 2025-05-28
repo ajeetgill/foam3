@@ -27,7 +27,7 @@ foam.CLASS({
   properties: [
     {
       class: 'FObjectProperty',
-      name: 'msg',
+      name: 'originalEnvelope',
       type: 'foam.box.Message'
     },
     {
@@ -40,31 +40,27 @@ foam.CLASS({
   methods: [
     {
       name: 'send',
-      code: function send(msg) {
+      code: function send(envelope) {
         var self = this;
         if (
-          this.RPCErrorMessage.isInstance(msg.object) &&
-          this.RemoteException.isInstance(msg.object.data) &&
-          this.CapabilityIntercept.isInstance(msg.object.data.exception)
+          this.RPCErrorMessage.isInstance(envelope.contents) &&
+          this.RemoteException.isInstance(envelope.contents.data) &&
+          this.CapabilityIntercept.isInstance(envelope.contents.data.exception)
         ) {
-          var intercept = msg.object.data.exception;
-          intercept.message = msg.object.data.message;
+          var intercept = envelope.contents.data.exception;
+          intercept.message = envelope.contents.data.message;
 
           // Configure events CapabilityIntercept completion
           intercept.resolve = function (value) {
-            var newMsg = msg.clone();
-            newMsg.object = self.RPCReturnMessage.create({
-              data: value
-            });
-            self.delegate.send(newMsg);
+            self.delegate.send(foam.box.Envelop.create({
+              contents: self.RPCReturnMessage.create({ data: value })
+            }));
           };
           intercept.reject = function (value) {
-            var newMsg = msg.clone();
-            newMsg.object = new Error(value);
-            self.delegate.send(newMsg);
+            self.delegate.send(foam.box.Envelope.create({ contents: new Error(value) }));
           };
           intercept.resend = function () {
-            self.clientBox.send(self.msg);
+            self.clientBox.send(self.originalEnvelope);
           };
 
           // Ask CrunchController to handle the intercept
@@ -72,7 +68,7 @@ foam.CLASS({
           return;
         }
 
-        this.delegate.send(msg);
+        this.delegate.send(envelope);
       }
     },
     function outputJSON(outputter) {

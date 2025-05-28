@@ -21,12 +21,26 @@ foam.CLASS({
   implements: ['foam.box.Box'],
   requires: [
     'foam.box.ReplyBox',
+    {
+      path: 'foam.box.ReplyBox2',
+      flags: ['js']
+    },
+    {
+      path: 'foam.json.Parser',
+      flags: ['js']
+    },
     'foam.box.ReturnBox',
     'foam.box.SubBox',
+    'foam.net.ConnectionFailedException',
+    'foam.net.NotConnectedException',
     {
       path: 'foam.json.Outputter',
       flags: ['js']
     }
+  ],
+
+  exports: [
+    'subBox'
   ],
 
   javaCode: `
@@ -57,12 +71,30 @@ foam.CLASS({
       }
     };
   `,
+  
+  constants: [
+    {
+      name: 'NEXT_ID',
+      value: [0]
+    }
+  ],
 
   properties: [
     {
       class: 'Object',
       name: 'socket',
       javaType: 'foam.net.WebSocket'
+    },
+    {
+      class: 'FObjectProperty',
+      of: 'foam.json.Parser',
+      name: 'parser',
+      generateJava: false,
+      factory: function() {
+        return this.Parser.create({
+          strict:          true,
+        });
+      },
     },
     {
       class: 'FObjectProperty',
@@ -74,18 +106,56 @@ foam.CLASS({
         return this.Outputter.create().copyFrom(foam.json.Network);
       }
     },
+    {
+      class: 'Map',
+      name: 'replies',
+    }
   ],
 
   methods: [
+    function init() {
+      this.socket.disconnected.sub(() => {
+        for ( let box of Object.values(this.replies) ) {
+          box.send(foam.box.Envelope.create({
+            contents: this.ConnectionFailedException.create()
+          }));
+        }
+      });
+
+      this.socket.message.sub(this.onMessage);
+    },
+    function subBox(delegate, once = true) {
+      var self = this;
+      var name = this.NEXT_ID[0]++;
+      
+      this.replies[name] = {
+        send: function(envelope) {
+          if ( once ) delete self.replies[name]
+          delegate.send(envelope);
+        }
+      };
+
+      return this.SubBox.create({
+        name,
+        delegate: this.ReturnBox.create(),
+      });
+    },
     {
       name: 'send',
-      code: function send(msg) {
-        var payload = this.outputter.stringify(msg);
-        try {
-          this.socket.send(payload);
-        } catch(e) {
-          replyBox && replyBox.send(foam.box.Message.create({ object: e }));
+      code: function send(envelope) {
+        if ( this.socket.isConnected ) {
+          envelope.replyBox?.send(foam.box.Envelope.create({ contents: this.NotConnectedException.create() }));
+          return;
         }
+            
+        var outgoing = foam.box.Envelope.create({
+          headers: envelope.headers,
+          replyBox: this.subBox(envelope.replyBox, true),
+          contents: envelope.contents
+        });
+
+        var payload = this.outputter.stringify(outgoing.toMessage());
+        this.socket.send(payload);
       },
       javaCode: `
 // TODO: Clone message or something when it clones safely.
@@ -119,4 +189,27 @@ try {
 `
     }
   ],
+  
+  listeners: [
+    {
+      name: 'onMessage',
+      code: function(s, _, msgStr) {
+        try {
+          var msg = this.parser.parseString(msgStr, this.__context__);
+          var envelope = msg.toEnvelope();
+
+          // unpack a wrapped envelope by name
+          var name = envelope.headers.name;
+          var delegate = this.replies[name]
+          if ( delegate ) {
+            delegate.send(envelope.contents.toEnvelope());
+          } else {
+            console.log("Failed to find reply box for message, payload was", msgStr);
+          }
+        } catch (e) {
+          console.error("WSS Error:", e);
+        }
+      }
+    }
+  ]
 });

@@ -118,7 +118,7 @@ foam.CLASS({
         'foam.box.ReplyBox2',
         'foam.box.RPCMessage',
         'foam.box.OneTimeBox',
-        'foam.box.Message'
+        'foam.box.Envelope'
       ].map(function(s) {
         var path = s.split('.');
         return foam.lang.Requires.create({
@@ -224,8 +224,8 @@ foam.CLASS({
         var name        = this.name;
 
         return function() {
-          var msg = this.Message.create({
-            object: this.RPCMessage.create({
+          var msg = this.Envelope.create({
+            contents: this.RPCMessage.create({
               name: name,
               args: Array.from(arguments)
             })

@@ -28,7 +28,7 @@ foam.CLASS({
   extends: 'foam.box.ProxyBox',
   requires: [
     'foam.box.TimeoutException',
-    'foam.box.Message'
+    'foam.box.Envelope'
   ],
   properties: [
     {
@@ -47,43 +47,38 @@ foam.CLASS({
     }
   ],
   methods: [
-    function send(msg) {
-      var replyBox = msg.attributes.replyBox;
+    function send(originalEnvelope) {
+      var replyBox = originalEnvelope.replyBox;
 
       if ( ! replyBox ) {
-        this.delegate.send(msg);
+        this.delegate.send(originalEnvelope);
         return;
       }
-
-      msg = msg.clone();
 
       var tooLate = false;
       var timer = setTimeout(function() {
         tooLate = true;
-        replyBox.send(this.Message.create({
-          object: this.TimeoutException.create()
+        replyBox.send(this.Envelope.create({
+          contents: this.TimeoutException.create()
         }));
       }.bind(this), this.timeout);
 
       var self = this;
 
-      msg.attributes.replyBox = {
-        delegate: replyBox,
+      var envelope = originalEnvelope.shallowClone();
+      envelope.replyBox = {
         send: function(msg) {
           if ( ! tooLate ) {
             clearTimeout(timer);
-            this.delegate.send(msg);
+            replyBox.send(msg);
             return;
           }
 
           self.timeout *= 2;
-        },
-        outputJSON: function(o) {
-          o.output(this.delegate);
         }
       };
 
-      this.delegate.send(msg);
+      this.delegate.send(envelope);
     }
   ]
 });

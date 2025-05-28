@@ -60,17 +60,17 @@ foam.CLASS({
   methods: [
     {
       name: 'send',
-      code: function send(msg) {
-        if ( this.RPCReturnMessage.isInstance(msg.object) ) {
-          this.resolve_(msg.object.data);
+      code: function send(envelope) {
+        if ( this.RPCReturnMessage.isInstance(envelope.contents) ) {
+          this.resolve_(envelope.contents.data);
           return;
         }
-        if ( foam.lang.Exception.isInstance(msg.object) ) {
-          this.reject_(msg.object);
+        if ( foam.lang.Exception.isInstance(envelope.contents) ) {
+          this.reject_(envelope.contents);
           return;
         }
-        if ( msg.object instanceof Error ) {
-          this.reject_(msg.object);
+        if ( envelope.object instanceof Error ) {
+          this.reject_(envelope.contents);
           return;
         }
 

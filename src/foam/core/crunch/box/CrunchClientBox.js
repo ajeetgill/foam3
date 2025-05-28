@@ -21,16 +21,16 @@ foam.CLASS({
   methods: [
     {
       name: 'send',
-      code: function send(msg) {
-        msg = msg.clone();
-        msg.attributes.replyBox =
-          this.CrunchClientReplyBox.create({
-            msg:       msg,
+      code: function send(originalEnvelope) {
+        this.delegate.send(foam.box.Envelope.create({
+          replyBox: this.CrunchClientReplyBox.create({
+            originalEnvelope,
             clientBox: this,
-            delegate:  msg.attributes.replyBox
-          });
-
-        this.delegate.send(msg);
+            delegate:  originalEnvelope.replyBox
+          }),
+          contents: originalEnvelope.contents,
+          headers: originalEnvelope.headers
+        }))
       }
     }
   ]

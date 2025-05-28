@@ -63,6 +63,20 @@ foam.CLASS({
 
         replyBox.send(replyMessage);
       `
+    },
+    {
+      name: 'toEnvelope',
+      code: function() {
+        var headers = foam.Object.shallowClone(this.attributes);
+        delete headers.replyBox
+        var replyBox = this.attributes.replyBox;
+        var contents = this.object;
+        return foam.box.Envelope.create({
+          headers,
+          replyBox,
+          contents
+        });
+      }
     }
   ]
 });

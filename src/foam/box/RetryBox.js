@@ -85,39 +85,38 @@ foam.CLASS({
   ],
 
   methods: [
-    function send(originalMessage) {
-      var msg = originalMessage.clone();
-
-
+    function send(originalEnvelope) {
       var delay = 100;
       var maxDelay = this.maxDelay;
+      var maxAttempts = this.maxAttempts;
       var attempt = 0;
-      var self = this;
+      var replyBox = originalEnvelope.replyBox;
 
-      if ( msg.attributes.replyBox ) {
-        var delegate = this.delegate;
-        var originalReplyBox = msg.attributes.replyBox;
-        
-        msg = msg.shallowClone();
-        msg.attributes.replyBox = {
-          send: function(replyMsg) {
-            if ( foam.lang.Exception.isInstance(replyMsg.object) &&
-                 ( self.maxAttempts == -1 || ++attempt < self.maxAttempts ) ) {
-              setTimeout(function() {
-                delegate.send(msg);
-              }, delay);
-              delay = Math.min(delay * 2, maxDelay);
-              return;
-            }
-            originalReplyBox.send(replyMsg);
-          },
-          outputJSON: function(o) {
-            o.output(originalReplyBox)
-          }
-        }
+      if ( ! replyBox ) {
+        this.delegate.send(originalEnvelope);
+        return;
       }
+      
+      var delegate = this.delegate;
+      var envelope = originalEnvelope.shallowClone();
+      envelope.replyBox = {
+        send: function(replyEnvelope) {
+          if ( foam.lang.Exception.isInstance(replyEnvelope.contents) &&
+               ( maxAttempts == -1 || ++attempt < maxAttempts ) ) {
 
-      this.delegate.send(msg);
+            // retry original message after exponential backoff delay
+            setTimeout(function() {
+              delegate.send(envelope);
+            }, delay);
+            delay = Math.min(delay * 2, maxDelay);
+            return;
+          }
+          // not an error or we are out of retry attempts
+          replyBox.send(replyEnvelope);
+        }
+      };
+
+      this.delegate.send(envelope);
     }
   ]
 });

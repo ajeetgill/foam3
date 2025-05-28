@@ -23,9 +23,9 @@ foam.CLASS({
   methods: [
     {
       name: 'send',
-      code: function send(msg) {
-        msg.attributes[this.SESSION_KEY] = this.sessionID;
-        this.delegate.send(msg);
+      code: function send(envelope) {
+        envelope.headers[this.SESSION_KEY] = this.sessionID;
+        this.delegate.send(envelope);
       }
     }
   ]
