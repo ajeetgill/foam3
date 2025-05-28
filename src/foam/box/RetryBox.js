@@ -17,52 +17,6 @@
 
 foam.CLASS({
   package: 'foam.box',
-  name: 'RetryReplyBox',
-  extends: 'foam.box.ProxyBox',
-
-  requires: [
-    'foam.lang.Exception'
-  ],
-
-  properties: [
-    {
-      name: 'attempt',
-      value: 0
-    },
-    {
-      name: 'maxAttempts'
-    },
-    {
-      name: 'message'
-    },
-    {
-      name: 'destination'
-    }
-  ],
-  methods: [
-    {
-      name: 'send',
-      code: function send(msg) {
-        if ( this.Exception.isInstance(msg.object) && ( this.maxAttempts == -1 || this.attempt < this.maxAttempts ) ) {
-          // console.log('********************************************* ATTEMPT', this.attempt);
-          this.attempt++;
-          this.destination.send(this.message);
-          return;
-        }
-
-        this.delegate && this.delegate.send(msg);
-      }
-    },
-    function outputJSON(outputter) {
-      // this is a client only decorator, just send the delegate when serializing
-      return outputter.output(this.delegate);
-    }
-  ]
-});
-
-
-foam.CLASS({
-  package: 'foam.box',
   name: 'RetryBox',
   extends: 'foam.box.ProxyBox',
 
