@@ -218,7 +218,8 @@ foam.LIB({
       var [r, g, b] = [colorObj.red, colorObj.green, colorObj.blue];
       let l = foam.Color.rgbToGrey([r, g, b])*1000;
       let scale;
-      if ( l > 186 ) {
+      l = Math.max(150, l);
+      if ( l > 200 ) {
        scale = l + (l*(value/100));
       } else {
         scale = l - (l*(value/100));

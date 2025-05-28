@@ -64,7 +64,7 @@ foam.CLASS({
         let newObj = {};
         Object.entries(a).forEach(args => {
           let [k, v] = args;
-          newObj[k] = foam.lang.FObject.isInstance(v) ? v : this.cls_.create(v, this.__context__);
+          newObj[k] = foam.lang.FObject.isInstance(v) ? v : this.clone().copyFrom(v);
         });
         return newObj;
       }
