@@ -27,9 +27,12 @@ foam.CLASS({
     function value(s) { return null; },
     function createSink() { return foam.dao.ArraySink.create(); },
     async function execute(e) {
-      if ( e.__subContext__.data.columns ) {
+      if ( e.__subContext__.data.columns?.length ) {
         this.props = e.__subContext__.data.columns.split(',');
         this.useProjection = true;
+      } else {
+        this.props = null;
+        this.useProjection = false;
       }
       var sink = this.useProjection ? this.getProjectionSink() : this.createSink();
       return this.dao.select(sink).then(s => {
@@ -233,7 +236,10 @@ foam.CLASS({
   extends: 'foam.core.console.AbstractDAOAgent',
 
   methods: [
-    function getSinkWithProjectionData(s) { return s; },
+    function getSinkWithProjectionData(s) {
+      s.columns = this.props;
+      return s;
+    },
     function getProjectionSink() { return foam.u2.mlang.Table.create({ columns: this.props }, this); },
     function createSink() { return foam.u2.mlang.Table.create({}, this); },
     function value(s) { return s; }
