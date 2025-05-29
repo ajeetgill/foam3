@@ -533,7 +533,6 @@ foam.CLASS({
       // Don't save the 'save' command
       this.currentBlock.del();
 
-
       var ret = this.flowDAO.put(this.flow);
       this.flow.copyFrom(ret);
     }
