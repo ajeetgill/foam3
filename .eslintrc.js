@@ -160,8 +160,12 @@ module.exports = {
     // CONTROL FLOW AND BRACES
     // =============================================================================
 
-    // FOAM3 allows single-line if/for/while without braces (under 80 chars)
-    'curly': ['error', 'multi-line', 'consistent'], // Allow single-line without braces
+    // FOAM3 Style Guide: One-statement if, while, and for statements that can fit
+    // on a single line (less than 80 characters) do NOT NEED braces, but braces are allowed
+    // Examples: if ( ! found ) return false;  ✓ (no braces)
+    //           if ( ! found ) { return false; }  ✓ (with braces, also fine)
+    //           for ( var i = 0 ; i < a.length ; i++ ) a[i] = '';  ✓ (no braces)
+    'curly': 'off', // Allow both with and without braces for single-line statements
 
     // Be permissive about brace style
     'brace-style': 'off',

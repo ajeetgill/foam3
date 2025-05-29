@@ -47,7 +47,7 @@ The ESLint configuration (`.eslintrc.js`) is designed around the FOAM3 Style Gui
 2. **No Trailing Commas**: Enforced as `error`
 3. **Object Key Quoting**: Only when necessary (`as-needed`)
 4. **Semicolons**: Required for all statements
-5. **Single-line Control Flow**: Allowed without braces if under 80 characters
+5. **Single-line Control Flow**: Braces optional for single statements under 80 characters (FOAM3 flexibility)
 6. **Equality Operators**: `==` and `!=` allowed (FOAM3 pattern)
 
 ### Currently Disabled Rules (Ready for Future Enablement)
@@ -199,12 +199,26 @@ var lastName  = 'Smith';
 var age       = 42;
 ```
 
-### Single-line Control Flow (Allowed)
+### Single-line Control Flow (Flexible)
 
 ```javascript
-// These are allowed under 80 characters:
+// Both styles are allowed for single statements under 80 characters:
+
+// Without braces (FOAM3 style guide example):
 if ( ! found ) return false;
 for ( var i = 0 ; i < a.length ; i++ ) a[i] = '';
+while ( processing ) doWork();
+
+// With braces (also acceptable):
+if ( ! found ) { return false; }
+for ( var i = 0 ; i < a.length ; i++ ) { a[i] = ''; }
+while ( processing ) { doWork(); }
+
+// Multi-line statements can use either style:
+if ( condition ) {
+  doSomething();
+  doSomethingElse();
+}
 ```
 
 ### FOAM3 Model Patterns (Allowed)
@@ -243,6 +257,7 @@ var obj = {
 2. **Trailing comma**: Remove trailing commas from objects and arrays
 3. **Unnecessary quotes**: Remove quotes from object keys unless required
 4. **Missing semicolon**: Add semicolons to all statements
+5. **Brace style**: Both with and without braces are fine for single-line statements
 
 ### Disabling Rules Temporarily
 
