@@ -423,7 +423,7 @@ foam.CLASS({
       value: true,
       preSet: function(_, n) { return n === 'false' ? '' : n; },
       expression: function(flowMode) {
-        return flowMode != 'view';
+        return flowMode != 'view' && flowMode != 'readonly';
       },
       memorable: true
     },
@@ -761,7 +761,12 @@ foam.CLASS({
   actions: [
     {
       name: 'helpKey',
-      isAvailable: function(input_) { return input_.element_ == document.activeElement; },
+      isAvailable: function(input_) {
+        if (this.flowMode == 'readonly') {
+          return false;
+        }
+        return input_.element_ == document.activeElement;
+      },
       code: function() { this.help(); },
       keyboardShortcuts: [ 'f1' ]
     },
@@ -774,7 +779,11 @@ foam.CLASS({
       name: 'toggleMode',
       // You can do this.showPrompts = true|false; from flow scripts
       // You can do this.showInput = true|false; from flow scripts
-      code: function() { console.log('***', this.flowMode); this.flowMode = { edit: 'view', view: 'console', console: 'edit' }[this.flowMode]; },
+      code: function() { 
+        if (this.flowMode != 'readonly') {
+        console.log('***', this.flowMode); this.flowMode = { edit: 'view', view: 'console', console: 'edit' }[this.flowMode]; 
+      }
+      },
       keyboardShortcuts: [ 'escape' ]
     },
     {
