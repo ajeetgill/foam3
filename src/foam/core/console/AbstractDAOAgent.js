@@ -25,7 +25,7 @@ foam.CLASS({
     function value(s) { return null; },
     function createSink() { return foam.dao.ArraySink.create(); },
     async function execute(e) {
-      var sink = this.getSink();
+      var sink = this.createSink();
       return this.dao.select(sink).then(s => {
         if ( this.block.value && this.block.value.VALUE ) {
           this.block.value.value = this.value(s);
@@ -39,7 +39,6 @@ foam.CLASS({
       e.add(s);
     },
     function addToE() {},
-    function getSink() { this.createSink(); }
   ]
 });
 
@@ -62,8 +61,8 @@ foam.CLASS({
   ],
 
   methods: [
-    function getSink() {
-      return this.useProjection ? this.getProjectionSink() : this.createSink();
+    function createSink() {
+      return this.useProjection ? this.getProjectionSink() : this.getSink();
     },
     function addSinkToE(e, s) {
       s = this.useProjection ? this.getSinkWithProjectionData(s) : s;
@@ -107,7 +106,7 @@ foam.CLASS({
           });
           data.push(of.create(objSpec));
         })
-        var sink = this.createSink();
+        var sink = this.getSink();
         sink.of = of;
         sink.array = data;
         return sink;
@@ -256,7 +255,7 @@ foam.CLASS({
       return s;
     },
     function getProjectionSink() { return foam.u2.mlang.Table.create({ columns: this.props }, this); },
-    function createSink() { return foam.u2.mlang.Table.create({}, this); },
+    function getSink() { return foam.u2.mlang.Table.create({}, this); },
     function value(s) { return s; }
   ]
 });
@@ -272,7 +271,7 @@ foam.CLASS({
   methods: [
     function getSinkWithProjectionData(s) { return s; },
     function getProjectionSink() { return this.CSVSink.create({ of: this.of, props: this.props }); },
-    function createSink() { return this.CSVSink.create({of: this.of}); },
+    function getSink() { return this.CSVSink.create({of: this.of}); },
     function addSinkToE(e, s) { e.start(this.CopyFromBorder).add(s); }
   ]
 });
@@ -286,7 +285,7 @@ foam.CLASS({
   requires: [ 'foam.core.console.XMLSink', 'foam.core.console.CopyFromBorder' ],
 
   methods: [
-    function createSink() { return this.XMLSink.create({of: this.of}); },
+    function getSink() { return this.XMLSink.create({of: this.of}); },
     function addSinkToE(e, s) {
       s = this.useProjection ? this.getSinkWithProjectionData(s) : s;
       e.start(this.CopyFromBorder).add(s);
@@ -303,7 +302,7 @@ foam.CLASS({
   requires: [ 'foam.core.console.JSONSink', 'foam.core.console.CopyFromBorder' ],
 
   methods: [
-    function createSink() { return this.JSONSink.create({of: this.of}); },
+    function getSink() { return this.JSONSink.create({of: this.of}); },
     function addSinkToE(e, s) {
       s = this.useProjection ? this.getSinkWithProjectionData(s) : s;
       e.start(this.CopyFromBorder).add(s);
@@ -543,7 +542,7 @@ foam.CLASS({
   requires: [ 'foam.core.console.CellsSink' ],
 
   methods: [
-    function createSink() { return this.CellsSink.create({of: this.of}); }
+    function getSink() { return this.CellsSink.create({of: this.of}); }
   ]
 });
 
