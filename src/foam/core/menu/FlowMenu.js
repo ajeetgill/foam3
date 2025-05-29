@@ -11,6 +11,9 @@ foam.CLASS({
 
   documentation: 'A menu item which contains a flow.',
 
+  requires: [
+    'foam.core.console.FlowMode'
+  ],
 
   properties: [
     {
@@ -25,7 +28,7 @@ foam.CLASS({
       var view = {
         class: 'foam.core.console.Console',
         flowName: this.flow,
-        flowMode: 'readonly'
+        flowMode: this.FlowMode.READONLY
       };
 
       return view;
