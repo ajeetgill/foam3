@@ -18,34 +18,68 @@ foam.CLASS({
     {
       name: 'of',
       factory: function() { return this.referenceDAO.of; }
-    },
-    'props',
-    [ 'useProjection', false ]
+    }
   ],
 
   methods: [
     function value(s) { return null; },
     function createSink() { return foam.dao.ArraySink.create(); },
     async function execute(e) {
-      if ( e.__subContext__.data.columns?.length ) {
-        this.props = e.__subContext__.data.columns.split(',');
-        this.useProjection = true;
-      } else {
-        this.props = null;
-        this.useProjection = false;
-      }
-      var sink = this.useProjection ? this.getProjectionSink() : this.createSink();
+      var sink = this.getSink();
       return this.dao.select(sink).then(s => {
-        var ret = this.useProjection ? this.getSinkWithProjectionData(s) : s;
         if ( this.block.value && this.block.value.VALUE ) {
           this.block.value.value = this.value(s);
         } else {
           this.block.value = this.value(s);
         }
-        this.addSinkToE(e, ret);
+        this.addSinkToE(e, s);
       });
     },
-    
+    function addSinkToE(e, s) {
+      e.add(s);
+    },
+    function addToE() {},
+    function getSink() { this.createSink(); }
+  ]
+});
+
+foam.CLASS({
+  package: 'foam.core.console',
+  name: 'AbstractColumnAwareDAOAgent',
+  extends: 'foam.core.console.AbstractDAOAgent',
+
+  imports: [
+    'block',
+    'dao as referenceDAO',
+    'sinkDAO as dao',
+    'sinkUnlimitedDAO as unlimitedDAO',
+    'columns'
+  ],
+
+  properties: [
+    'props',
+    [ 'useProjection', false ]
+  ],
+
+  methods: [
+    function getSink() {
+      return this.useProjection ? this.getProjectionSink() : this.createSink();
+    },
+    function addSinkToE(e, s) {
+      s = this.useProjection ? this.getSinkWithProjectionData(s) : s;
+      e.add(s);
+    },
+    async function execute(e) {
+      var SUPER = this.SUPER.bind(this);
+      if ( this.columns?.length ) {
+        this.props = this.columns.split(',');
+        this.useProjection = true;
+      } else {
+        this.props = null;
+        this.useProjection = false;
+      }
+      SUPER(e);
+    },
     function getProjectionSink() {
       var exprArray = [];
       for ( var propName of this.props ) {
@@ -60,7 +94,6 @@ foam.CLASS({
 
       return this.Projection.create({ exprs: exprArray, useProjection: true });
     },
-
     function getSinkWithProjectionData(s) {
       if ( this.Projection.isInstance(s) ) {
         var data = [];
@@ -80,14 +113,10 @@ foam.CLASS({
         return sink;
       }
       return s;
-    },
-    function addSinkToE(e, s) {
-      e.add(s);
-    },
-    function addToE() {}
+    }
   ]
-});
 
+})
 
 foam.CLASS({
   package: 'foam.core.console',
@@ -233,7 +262,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.console',
   name: 'TableDAOAgent',
-  extends: 'foam.core.console.AbstractDAOAgent',
+  extends: 'foam.core.console.AbstractColumnAwareDAOAgent',
 
   methods: [
     function getSinkWithProjectionData(s) {
@@ -250,7 +279,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.console',
   name: 'CSVDAOAgent',
-  extends: 'foam.core.console.AbstractDAOAgent',
+  extends: 'foam.core.console.AbstractColumnAwareDAOAgent',
 
   requires: [ 'foam.dao.CSVSink', 'foam.core.console.CopyFromBorder' ],
 
@@ -266,13 +295,16 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.console',
   name: 'XMLDAOAgent',
-  extends: 'foam.core.console.AbstractDAOAgent',
+  extends: 'foam.core.console.AbstractColumnAwareDAOAgent',
 
   requires: [ 'foam.core.console.XMLSink', 'foam.core.console.CopyFromBorder' ],
 
   methods: [
     function createSink() { return this.XMLSink.create({of: this.of}); },
-    function addSinkToE(e, s) { e.start(this.CopyFromBorder).add(s); }
+    function addSinkToE(e, s) {
+      s = this.useProjection ? this.getSinkWithProjectionData(s) : s;
+      e.start(this.CopyFromBorder).add(s);
+    }
   ]
 });
 
@@ -280,13 +312,16 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.console',
   name: 'JSONDAOAgent',
-  extends: 'foam.core.console.AbstractDAOAgent',
+  extends: 'foam.core.console.AbstractColumnAwareDAOAgent',
 
   requires: [ 'foam.core.console.JSONSink', 'foam.core.console.CopyFromBorder' ],
 
   methods: [
     function createSink() { return this.JSONSink.create({of: this.of}); },
-    function addSinkToE(e, s) { e.start(this.CopyFromBorder).add(s); }
+    function addSinkToE(e, s) {
+      s = this.useProjection ? this.getSinkWithProjectionData(s) : s;
+      e.start(this.CopyFromBorder).add(s);
+    }
   ]
 });
 
@@ -517,7 +552,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.console',
   name: 'CellsDAOAgent',
-  extends: 'foam.core.console.AbstractDAOAgent',
+  extends: 'foam.core.console.AbstractColumnAwareDAOAgent',
 
   requires: [ 'foam.core.console.CellsSink' ],
 

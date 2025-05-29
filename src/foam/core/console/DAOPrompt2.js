@@ -40,7 +40,7 @@ foam.CLASS({
           end().
           br().
             //          add(self.data.dao.of.id). // TODO: link to describe
-          start().startContext({ data: self }).
+          start().
             add(self.data.dynamic(async function(version, skip) {
               if ( ! version ) return;
               var startTime = Date.now();
@@ -49,7 +49,7 @@ foam.CLASS({
               var select    = self.data.select.clone(self.data.__subContext__);
               await select.execute(this);
               self.data.executionTime = foam.lang.Duration.duration(Date.now() - startTime);
-            })).endContext().
+            })).
           end();
         }));
     }
@@ -94,7 +94,8 @@ foam.CLASS({
     'block',
     'dao',
     'limitedDAO as sinkDAO',
-    'filteredDAO as sinkUnlimitedDAO'
+    'filteredDAO as sinkUnlimitedDAO',
+    'columns'
   ],
 
   properties: [
