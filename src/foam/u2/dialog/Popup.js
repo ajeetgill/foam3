@@ -97,7 +97,7 @@ foam.CLASS({
   properties: [
     { 
       name: 'backgroundColor',
-      // factory: function() { return foam.CSS.returnTokenValue('$backgroundDefault', this.cls_, this.__subContext__)} 
+      factory: function() { return foam.CSS.returnTokenValue('$backgroundDefault', this.cls_, this.__subContext__)} 
     },
     {
       class: 'Boolean',
