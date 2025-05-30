@@ -83,6 +83,7 @@ foam.CLASS({
       border-radius: 3px;
       box-shadow: 0 24px 24px 0 rgba(0, 0, 0, 0.12), 0 0 24px 0 rgba(0, 0, 0, 0.15);
       overflow: auto;
+      background: $backgroundDefault;
       /* The following line fixes a stacking problem in certain browsers. */
       will-change: opacity;
     }
@@ -96,8 +97,7 @@ foam.CLASS({
 
   properties: [
     { 
-      name: 'backgroundColor',
-      factory: function() { return foam.CSS.returnTokenValue('$backgroundDefault', this.cls_, this.__subContext__)} 
+      name: 'backgroundColor'
     },
     {
       class: 'Boolean',
