@@ -11,9 +11,110 @@ foam.CLASS({
 
   documentation: 'Table View for GridBy mLang.',
 
+  cssTokens: [
+    {
+      name: 'backgroundTransition',
+      value: 'background-color 0.15s ease'
+    },
+    {
+      name: 'borderSize',
+      value: '1px solid #D1D5D8'
+    },
+    {
+      name: 'borderRadius',
+      value: '4px'
+    },
+    {
+      name: 'cellPadding',
+      value: '.8rem 1rem'
+    },
+    {
+      name: 'hoverColor',
+      value: '#E1EFFE'
+    },
+    {
+      name: 'headerBgColor',
+      value: '#EEF2F6'
+    },
+    {
+      name: 'rowHoverColor',
+      value: '#F3F4F6'
+    }
+  ],
+
   css: `
-    ^td { text-align: right; }
-    ^ table { border-collapse: collapse; }
+    /* Base table styling */
+    ^table { 
+      border-collapse: separate; 
+      border-spacing: 0;
+      border-radius: $borderRadius;
+      width: 100%;
+      border: $borderSize;
+    }
+    
+    /* Row styling */
+    ^tr {
+      border-bottom: $borderSize;
+      transition: background-color 0.2s ease;
+    }
+    
+    ^tr:hover {
+      background-color: $rowHoverColor;
+    }
+    
+    ^tr:last-child {
+      border-bottom: none;
+    }
+
+    /* Header row */
+    ^tr:first-child {
+      background-color: $headerBgColor;
+    }
+    
+    /* Cell styling - both TH and TD */
+    ^th, ^td {
+      padding: $cellPadding;
+      transition: $backgroundTransition;
+    }
+    
+    /* Header cells */
+    ^th {
+      font-weight: bold;
+      background-color: $headerBgColor;
+    }
+    
+    /* Data cells */
+    ^td {
+      border: none;
+    }
+    
+    /* First column-cells styling */
+    ^tr > ^th:first-child {
+      border-right: $borderSize;
+    }
+    
+    /* First row cells */
+    ^tr:first-child > ^th {
+      border-right: $borderSize;
+    }
+    
+    ^tr:first-child > ^th:last-child {
+      border-right: none;
+    }
+    
+    /* Hover effects */
+    ^th:hover, ^td:hover {
+      background-color: $hoverColor;
+      z-index: 1;
+    }
+    
+    ^td:hover {
+      font-weight: 600;
+    }
+    
+    ^tr > ^th:first-child:hover {
+      background-color: $rowHoverColor;
+    }
   `,
 
   properties: [
@@ -30,18 +131,17 @@ foam.CLASS({
 
       var cols = data.cols.sortedKeys();
       this.start('table').
-        attrs({border: '1', cellspacing: 10, cellpadding: 4}).
-        start('tr').
-          tag('th').
+        addClass(this.myClass('table')).
+        start('tr').addClass(this.myClass('tr')).
+          start('th').addClass(this.myClass('th')).end().
           forEach(cols, function(c) {
-            this.start('th').add(c.toString()).on('click', () => self.x = c);
+            this.start('th').addClass(this.myClass('th')).add(c.toString()).on('click', () => self.x = c);
           }).
         end().
         forEach(data.rows.sortedKeys(), function(r) {
           var row = data.rows.groups[r];
-          this.start('tr').
-            on('click', () => self.y = r).
-            start('th').style({textAlign: 'left'}).add(r).end().
+          this.start('tr').addClass(self.myClass('tr')).on('click', () => self.y = r).
+            start('th').addClass(self.myClass('th')).add(r).end().
             forEach(cols, function(c) {
               this.start('td').
                 on('click', () => self.x = c).
