@@ -186,34 +186,96 @@ return sink
         if ( ! sink ) {
           return foam.lang.FObject.create();
         }
-
-        this.SUPER(null, foam.dao.RemoteSink.create({delegate: sink}, x), predicate);
-        return foam.lang.FObject.create();
-
+        var self = this;
         var detached = false;
         var sub = foam.lang.FObject.create();
         sub.onDetach(() => {
           detached = true
         });
 
-        this.delegate.send(
-          foam.box.Message.create({
-            object: foam.dao.ClientSink.create({
-              delegate: foam.box.ReplyBox2.create({
-                delegate: {
-                  delegate: foam.box.SkeletonBox.create({
-                    data: sink
-                  }),
-                  send: function(msg) {
-                    if ( foam.net.ConnectionFailedException.isInstance(msg.object ) ) {
-                      sink.reset();
-                    } else {
-                      this.delegate.send(msg);
-                    }
+        function go() {
+          var box = foam.box.RetryBox.create({
+            maxAttempts: -1,
+            delegate: {
+              delegate: self.delegate,
+              send: function(envelope) {
+                if ( detached ) {
+                  return;
+                }
+                this.delegate.send(envelope);
+              }
+            }
+          });
+
+          var replyBox = foam.box.ReplyBox2.create({
+            delegate: {
+              delegate: foam.box.SkeletonBox.create({
+                data: sink
+              }),
+              send: function(msg) {
+                if ( foam.net.ConnectionFailedException.isInstance(msg.contents) ) {
+                  if ( ! detached ) {
+                    sink.reset();
+                    debugger;
+                    go();
                   }
-                },
-                once: false,
-              })
+                } else {
+                  this.delegate.send(msg);
+                }
+              }
+            },
+            once: false,
+          });
+
+          var remote = foam.dao.ClientSink.create({
+            delegate: replyBox,
+          });
+
+          var rpc = foam.box.RPCMessage.create({
+            name: 'listen_',
+            args: [
+              null,
+              remote,
+              predicate
+            ]
+          });
+
+          box.send(foam.box.Envelope.create({
+            contents: rpc,
+            replyBox: { send: function() {} }
+          }));
+        }
+
+        go();
+        
+        return sub;
+
+        this.delegate.send(
+          foam.box.Envelope.create({
+            contents: foam.box.RPCMessage.create({
+              name: 'listen_',
+              args: [
+                null,
+                foam.dao.ClientSink.create({
+                  delegate: foam.box.ReplyBox2.create({
+                    delegate: {
+                      delegate: foam.box.SkeletonBox.create({
+                        data: sink
+                      }),
+                      send: function(msg) {
+                        if ( foam.net.ConnectionFailedException.isInstance(msg.data) ) {
+                          if ( ! detached ) {
+                            sink.reset();
+                          }
+                        } else {
+                          this.delegate.send(msg);
+                        }
+                      }
+                    },
+                    once: false,
+                  })
+                })
+              ]
             })
           })
         )

@@ -58,6 +58,7 @@ foam.CLASS({
           // Failed to connect, clear the delegate so that the next send
           // will reconnect.
           this.delegate = undefined;
+          throw e;
         }.bind(this));
       }
     }
@@ -83,10 +84,11 @@ foam.CLASS({
     {
       name: 'send',
       code: function send(msg) {
+        var replyBox = msg.replyBox;
         this.delegate.then(function(d) {
           d.send(msg);
         }.bind(this), function(e) {
-          replyBox?.send(foam.box.Message.create({ object: e }));
+          replyBox?.send(foam.box.Envelope.create({ contents: e }));
         });
       }
     }

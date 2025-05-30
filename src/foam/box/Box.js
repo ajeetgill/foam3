@@ -22,7 +22,6 @@ foam.INTERFACE({
   methods: [
     {
       name: 'send',
-      async: true,
       type: 'Void',
       args: [
         {

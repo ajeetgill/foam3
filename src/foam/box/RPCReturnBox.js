@@ -69,7 +69,7 @@ foam.CLASS({
           this.reject_(envelope.contents);
           return;
         }
-        if ( envelope.object instanceof Error ) {
+        if ( envelope.contents instanceof Error ) {
           this.reject_(envelope.contents);
           return;
         }
