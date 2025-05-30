@@ -25,9 +25,7 @@ foam.CLASS({
   cssTokens: [
     {
       name: 'color',
-      value: 'red',
-      variants: { 'dark': { value: '$green500' }},
-variantGroup:'color'
+      value: 'red'
     },
     {
       name: 'fontSize',
@@ -70,8 +68,7 @@ foam.CLASS({
     },
     {
       name: 'color2',
-      value: 'blue',
-      variants: { 'dark': { value: '$green500' }}
+      value: 'blue'
     }
   ],
   properties: [
