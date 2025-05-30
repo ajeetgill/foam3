@@ -63,7 +63,8 @@ foam.CLASS({
       factory: function() {
         return this.GROUP_BY(this.xFunc);
       }
-    }
+    },
+    { name: 'selection' }
   ],
 
   methods: [
@@ -80,7 +81,7 @@ foam.CLASS({
     },
 
     function addToE(e) {
-      e.tag(this.GridByView, {data: this});
+      e.tag(this.GridByView, {data: this, selection$: this.selection$});
     }
   ]
 });
