@@ -162,7 +162,7 @@ foam.CLASS({
     { name: 'backgroundDestructiveTertiary', value: '$destructive50' },
 
     // TEXT
-    { name: 'textDefault', value: '$black', variants: { dark: { value: '$white' } } },
+    { name: 'textDefault', value: '$black', variants: { dark: { value: '$grey100' } } },
     { name: 'textSecondary', value: '$grey700', variants: { dark: { value: '$grey200' } } },
     { name: 'textTertiary', value: '$grey500',variants: { dark: { value: '$grey400' } } },
 
