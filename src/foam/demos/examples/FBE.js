@@ -309,9 +309,9 @@ foam.CLASS({
   ],
 
   css: `
-    ^ { background: white; }
+    ^ { background: $backgroundDefault; color: $textDefault; }
     ^index {
-      background: #f6f6f6;
+      background: $backgroundSecondary;
       margin-right: 20px;
       min-width: 400px;
       padding: 6px 0;

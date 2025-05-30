@@ -178,10 +178,13 @@ foam.CLASS({
     ^title {
       background: $backgroundDefault;
       border: 1px solid $borderDefault;
-      color: gray;
+      color: $textSecondary;
       font-weight: 500;
       margin-bottom: 10px;
       padding: 6px;
+    }
+    ^ {
+      color: $textDefault;
     }
 
     ^toolbar { margin-top: 4px; }
