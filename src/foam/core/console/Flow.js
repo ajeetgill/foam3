@@ -136,7 +136,7 @@ foam.CLASS({
       },
       isEnabled: function(name) { return name && name !== 'Unnamed'; },
       isAvailable: function() {
-        // Disable in Console
+        // Enable in Reflow, but disable in DAOController (because DAOController already has save feature)
         return this.__context__.flow;
       }
     },
@@ -146,7 +146,7 @@ foam.CLASS({
         X.routeTo('reflow/' + this.name + '?flowMode=view');
       },
       isAvailable: function() {
-        // Enable in Console
+        // Disable in Reflow, but enable in DAOController (because already in reflow)
         return ! this.__context__.flow;
       }
     }
