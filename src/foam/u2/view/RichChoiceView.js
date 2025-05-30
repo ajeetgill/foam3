@@ -259,7 +259,7 @@ foam.CLASS({
     }
 
     ^search {
-      border-bottom: 1px solid #f4f4f9;
+      border-bottom: 1px solid $borderDefault;
       display: flex;
     }
 

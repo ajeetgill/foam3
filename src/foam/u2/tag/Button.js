@@ -55,8 +55,8 @@ foam.CLASS({
       }
     },
     {
+      class: 'foam.u2.ColorToken',
       name: 'buttonPrimaryLightColor',
-      variantKey: 'color',
       value: function(e) { return e.FROM_HUE(e.TOKEN('$buttonPrimaryColor'), 41, 90) },
       variants: {
         dark: {
@@ -299,6 +299,7 @@ foam.CLASS({
 
     ^text:hover:not(:disabled) {
       background-color: $buttonPrimaryLightColor;
+      color: $buttonPrimaryLightColor$foreground;
     }
 
     ^text:active:not(:disabled) {
