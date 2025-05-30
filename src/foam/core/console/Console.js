@@ -431,7 +431,7 @@ foam.CLASS({
       value: true,
       preSet: function(_, n) { return n === 'false' ? '' : n; },
       expression: function(flowMode) {
-          return flowMode !== this.FlowMode.VIEW && flowMode !== this.FlowMode.READONLY;
+        return flowMode != this.FlowMode.VIEW && flowMode != this.FlowMode.RO;
       },
       memorable: true
     },
