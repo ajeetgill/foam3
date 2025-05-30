@@ -250,7 +250,7 @@ foam.LIB({
         var r, g, b;
         // Normalize arguments
         function percentageToDecimal(percentageString) {
-          if (typeof percentageString !== 'string') {
+          if ( typeof percentageString !== 'string' ) {
             return percentageString;
           } else if ( ! percentageString.indexOf('%') ) {
             return Number(percentageString)
@@ -264,16 +264,16 @@ foam.LIB({
         if ( typeof h == 'string' && h.indexOf('deg') != -1 ) 
           h = Number(h.slice(0, h.indexOf('deg')));
 
-        if(s == 0){
+        if ( s == 0 ) {
             r = g = b = l; // achromatic
-        }else{
+        } else {
             var hueToRGB = function(p, q, t){
-                if(t < 0) t += 1;
-                if(t > 1) t -= 1;
-                if(t < 1/6) return p + (q - p) * 6 * t;
-                if(t < 1/2) return q;
-                if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-                return p;
+              if( t < 0 ) t += 1;
+              if( t > 1 ) t -= 1;
+              if( t < 1/6 ) return p + (q - p) * 6 * t;
+              if( t < 1/2 ) return q;
+              if( t < 2/3 ) return p + (q - p) * (2/3 - t) * 6;
+              return p;
             }
 
             var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
