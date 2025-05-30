@@ -17,7 +17,8 @@ foam.CLASS({
   `,
 
   properties: [
-    { name: 'selection' }
+    { name: 'x', postSet: function(o,n) { console.log('***x', n); } },
+    { name: 'y', postSet: function(o,n) { console.log('***y', n); } }
   ],
 
   methods: [
@@ -33,16 +34,19 @@ foam.CLASS({
         start('tr').
           tag('th').
           forEach(cols, function(c) {
-            this.start('th').add(c.toString());
+            this.start('th').add(c.toString()).on('click', () => self.x = c);
           }).
         end().
         forEach(data.rows.sortedKeys(), function(r) {
           var row = data.rows.groups[r];
           this.start('tr').
-            on('click', () => self.selection = r).
+            on('click', () => self.y = r).
             start('th').style({textAlign: 'left'}).add(r).end().
             forEach(cols, function(c) {
-              this.start('td').addClass(self.myClass('td')).add(row.groups[c] || '');
+              this.start('td').
+                on('click', () => self.x = c).
+                addClass(self.myClass('td')).
+                add(row.groups[c] || '');
             }).
             end();
         });
