@@ -64,7 +64,9 @@ foam.CLASS({
         return this.GROUP_BY(this.xFunc);
       }
     },
-    { name: 'selection' }
+    {
+      name: 'selection', hidden: true
+    }
   ],
 
   methods: [
