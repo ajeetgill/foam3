@@ -317,7 +317,7 @@ foam.CLASS({
       padding: 6px 0;
     }
     ^ .selected {
-      background: #ddf;
+      background: $backgroundBrandTertiary;
     }
     ^ .error {
       color: red;
