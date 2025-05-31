@@ -103,20 +103,20 @@ foam.CLASS({
           // Dont send notifications to subs that are in denied state
           if ( SafetyUtil.equals(sub.getLastKnownState(), "DENIED") ) {
             return;
-          }
+          } 
 
           var cred = getCredentials(getX());
 
           final ApnsPayloadBuilder payloadBuilder = new SimpleApnsPayloadBuilder();
           payloadBuilder.setAlertBody((String) msg.get("body"));
           payloadBuilder.setAlertTitle((String) msg.get("title"));
+
           for ( var e : msg.entrySet() ) {
             var entry = (java.util.Map.Entry)e;
             if ( !((String)entry.getKey()).equals("body") && !((String)entry.getKey()).equals("title") ) {
               payloadBuilder.addCustomProperty((String)entry.getKey(), entry.getValue());
             }
           }
-
           String payload = payloadBuilder.build();
           // Add a ttl for notifications on the payload
           String token = TokenUtil.sanitizeTokenString(sub.getEndpoint());

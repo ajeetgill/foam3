@@ -7,9 +7,6 @@
 foam.POM({
   name: 'foam-full',
   version: 3,
-  envs: {
-    APP_NAME: 'foam',
-  },
   excludes: [ 'build', 'deployment', 'foam3', 'node_modules' ],
   projects: [
     { name: 'src/pom' },
@@ -38,9 +35,9 @@ foam.POM({
     'commons-net:commons-net:3.6',
     'jakarta.mail:jakarta.mail-api:2.1.2',
     'jakarta.activation:jakarta.activation-api:2.1.2',
-    'jakarta.json:jakarta.json-api:2.1.3',
     'jakarta.websocket:jakarta.websocket-api:2.0.0',
     'javax.json:javax.json-api:1.1.4',
+    'jakarta.json:jakarta.json-api:2.1.3',
     'javax.ws.rs:javax.ws.rs-api:2.1.1',
     'jstl:jstl:1.2',
     'org.apache-extras.beanshell:bsh:2.0b6',

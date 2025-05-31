@@ -24,19 +24,13 @@ foam.CLASS({
         var  userDAO = (foam.dao.DAO) getX().get("localUserDAO");
         var user    = (foam.core.auth.User) userDAO.find(id);
 
-        sendPush(user, title, body);
+        sendPush(user, title, body, extra);
 
         return true;
       `
     },
     {
       name: 'sendPush',
-      javaCode: `
-        return sendPushWithExtra(user, title, body, null);
-      `
-    },
-    {
-      name: 'sendPushWithExtra',
       javaCode: `
         if ( user == null || title.isEmpty() ) {
           throw new RuntimeException("Invalid Parameters: Missing user or title"); 
@@ -45,7 +39,7 @@ foam.CLASS({
         Loggers.logger(getX(), this).debug("Push to User", user.getId());
         var pushRegistrationDAO = user.getPushRegistrations(getX());
 
-        var subs = ((foam.dao.ArraySink) pushRegistrationDAO.select(new foam.dao.ArraySink())).getArray();
+        var   subs = ((foam.dao.ArraySink) pushRegistrationDAO.select(new foam.dao.ArraySink())).getArray();
         var msgMap = new java.util.HashMap();
         msgMap.put("title", title);
         msgMap.put("body", body);

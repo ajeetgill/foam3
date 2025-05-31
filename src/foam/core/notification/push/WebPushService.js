@@ -69,6 +69,12 @@ foam.CLASS({
       args: 'PushRegistration sub, Map msgMap',
       type: 'Void',
       javaCode: `
+      /*
+      System.err.println("  Sending:    " + msg);
+      System.err.println("    endpoint: " + sub.getEndpoint());
+      System.err.println("         key: " + sub.getKey());
+      System.err.println("        auth: " + sub.getAuth());
+      */
         try {
           if ( SafetyUtil.isEmpty(sub.getEndpoint()) ) {
             return;
@@ -76,6 +82,8 @@ foam.CLASS({
           var msg = jakarta.json.Json.createObjectBuilder(msgMap)
             .build()
             .toString();
+
+          var a = (nl.martijndwars.webpush.PushService) getPushService();
           Notification n = new Notification(
             sub.getEndpoint(),
             sub.getKey(),
@@ -83,7 +91,7 @@ foam.CLASS({
             msg
           );
 
-          ((nl.martijndwars.webpush.PushService) getPushService()).sendAsync(n);
+          a.sendAsync(n);
         } catch (Throwable t) {
           //TODO: add alarm
           t.printStackTrace();

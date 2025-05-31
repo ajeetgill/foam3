@@ -10,6 +10,7 @@ foam.CLASS({
   extends: 'foam.dao.ArraySink',
 
   requires: [
+    'foam.comics.v2.DAOControllerConfig',
     'foam.dao.MDAO',
     'foam.u2.table.TableView'
   ],
@@ -18,6 +19,9 @@ foam.CLASS({
     {
       class: 'StringArray',
       name: 'columns'
+    },
+    {
+      name: 'selection', hidden: true
     }
   ],
 
@@ -37,14 +41,23 @@ foam.CLASS({
           return;
         }
 
-        var view = self.TableView.create({ data: dao });
+        var config = {
+          data: dao,
+          config: self.DAOControllerConfig.create({dao: dao, disableSelection: false})
+        };
 
         if ( columns.length ) {
-          view.columns = columns.map(function(c) { return of.getAxiomByName(c) });
+          config.selectedColumnNames = columns;
         }
 
-        e.tag(view).style({width: '100%'});
+        this.startContext({click: self.click}).start(self.TableView, config);
       }));
+    }
+  ],
+
+  listeners: [
+    function click(_, id) {
+      this.selection = id;
     }
   ]
 });
