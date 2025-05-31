@@ -33,7 +33,7 @@ foam.CLASS({
 
   properties: [
     {
-      name: 'message',
+      name: 'envelope',
       type: 'Object'
     },
     {
@@ -44,11 +44,11 @@ foam.CLASS({
   methods: [
     {
       name: 'send',
-      code: async function send(message, replyBox) {
+      code: async function send(envelope) {
         var self = this;
         if (
-          this.RPCErrorMessage.isInstance(message) &&
-          message.data.id === 'foam.core.auth.AuthenticationException'
+          this.RPCErrorMessage.isInstance(envelope.message) &&
+          envelope.message.data.id === 'foam.core.auth.AuthenticationException'
         ) {
           if (!this.auth$) {
             return;
@@ -71,8 +71,7 @@ foam.CLASS({
           }
 
           this.requestLogin().then(function() {
-            debugger;
-            self.clientBox.send(self.message, self.delegate);
+            self.clientBox.send(self.envelope);
           });
         } else {
           // fetch the soft session limit from group, and then start the timer
@@ -80,7 +79,7 @@ foam.CLASS({
             this.sessionTimer.startTimer(this.group.softSessionLimit);
           }
 
-          this.delegate.send(message, replyBox);
+          this.delegate.send(envelope);
         }
       }
     }

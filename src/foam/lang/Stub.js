@@ -242,15 +242,13 @@ foam.CLASS({
         var args = this.args;
         var boxPropName = foam.String.capitalize(this.boxPropName);
 
-        var code =
-`foam.box.Message message = getX().create(foam.box.Message.class);
+        var code = `
 foam.box.RPCMessage rpc = getX().create(foam.box.RPCMessage.class);
 rpc.setName("${name}");
 Object[] args = { ${ args.map( a => a.name ).join(',') } };
 rpc.setArgs(args);
 
-message.setObject(rpc);
-get${boxPropName}().send(message);
+get${boxPropName}().send(new foam.box.Envelope.Builder(null).setMessage(rpc).build());
 `;
         if ( this.javaType && this.javaType !== 'void' ) {
           code += `return null;`;

@@ -83,11 +83,11 @@ foam.CLASS({
 
     {
       name: 'send',
-      code: function send(message, replyBox) {
+      code: function send(envelope) {
         this.delegate.then(function(d) {
-          d.send(message, replyBox);
-        }.bind(this), function(e) {
-          replyBox?.send(e);
+          d.send(envelope);
+        }.bind(this)).catch(function(e) {
+          envelope.replyBox?.send(foam.box.Envelope.create({ message: e }))
         });
       }
     }

@@ -16,7 +16,7 @@ foam.CLASS({
 
   javaImports: [
     'foam.box.Box',
-    'foam.box.Message',
+    'foam.box.Envelope',
     'foam.box.ReplyBox',
     'foam.box.RPCErrorMessage',
     'foam.lang.ContextAgent',
@@ -48,14 +48,6 @@ foam.CLASS({
     'java.util.concurrent.atomic.AtomicInteger',
     'java.util.concurrent.atomic.AtomicLong',
     'java.util.concurrent.atomic.AtomicBoolean'
-  ],
-
-  constants: [
-    {
-      name: 'REPLY_BOX_ID',
-      value: 'REPLY_BOX_ID',
-      type: 'String'
-    }
   ],
 
   properties: [
@@ -171,7 +163,8 @@ NOTE: duplicated in SocketConnectionReplyBox
       javaCode: `
       PM pm = PM.create(getX(), "SocketConnectionBox", getId(), "send");
       long pending = pending_.incrementAndGet();
-      Box replyBox = (Box) msg.getAttributes().get("replyBox");
+      Box replyBox = envelope.getReplyBox();
+      Envelope outgoing = new foam.box.Envelope.Builder(null).setMessage(envelope.getMessage()).build();
       String replyBoxId = null;
       if ( replyBox != null ) {
         PM pmBoxCreate = PM.create(getX(), "SocketConnectionBox", getId(), "send:replyBox:create");
@@ -182,7 +175,7 @@ NOTE: duplicated in SocketConnectionReplyBox
           ((ReplyBox)replyBox).setDelegate(box);
           // getLogger().debug("send", "replyBox.setDelegate");
         } else {
-          msg.getAttributes().put("replyBox", box);
+          outgoing.setReplyBox(box);
         }
         pmBoxCreate.log(getX());
       }
@@ -192,7 +185,7 @@ NOTE: duplicated in SocketConnectionReplyBox
         PM pmFormat = PM.create(getX(), "SocketConnectionBox", getId(), "send:format");
         foam.lib.formatter.FObjectFormatter formatter = formatter_.get();
         formatter.setX(getX());
-        formatter.output(msg);
+        formatter.output(outgoing);
         message = formatter.builder().toString();
         byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
         pmFormat.log(getX());
@@ -229,9 +222,7 @@ NOTE: duplicated in SocketConnectionReplyBox
         getLogger().error("Error sending message", message, t);
         if ( replyBox != null ) {
           pending_.decrementAndGet();
-          Message reply = new Message();
-          reply.getAttributes().put("replyBox", replyBox);
-          reply.replyWithException(t);
+          envelope.replyWithException(t);
           getReplyBoxes().remove(replyBoxId);
         } else {
           getValid().getAndSet(false);
@@ -264,12 +255,18 @@ NOTE: duplicated in SocketConnectionReplyBox
             int length = in_.readInt();
             byte[] bytes = readBytes(in_, length);
             String data = new String(bytes, 0, length, StandardCharsets.UTF_8);
-            Message msg = (Message) parser_.get().parseString(data);
-            if ( msg == null ) {
+            Envelope envelope = (Envelope) parser_.get().parseString(data);
+            if ( envelope == null ) {
               throw new IllegalArgumentException("Failed to parse. message: "+data);
             }
 
-            String replyBoxId = (String) msg.getAttributes().get(REPLY_BOX_ID);
+            String replyBoxId = null;
+            Object message = envelope.getMessage();
+            if ( message instanceof foam.box.SubBoxMessage subBoxMessage ) {
+              replyBoxId = subBoxMessage.getName();
+              message = subBoxMessage.getMessage();
+            }
+
             if ( replyBoxId != null ) {
               Box replyBox = null;
               BoxHolder holder = (BoxHolder) getReplyBoxes().get(replyBoxId);
@@ -279,7 +276,7 @@ NOTE: duplicated in SocketConnectionReplyBox
                 pm.log(x);
               } else {
                 getLogger().warning("BoxHolder not found", replyBoxId);
-                replyBox = (Box) msg.getAttributes().get("replyBox");
+                replyBox = envelope.getReplyBox();
               }
               if ( replyBox == null ) {
                 getLogger().error("ReplyBox not found", replyBoxId);
@@ -288,9 +285,9 @@ NOTE: duplicated in SocketConnectionReplyBox
               }
               getReplyBoxes().remove(replyBoxId);
               // getLogger().debug("receive", "replyBoxId", replyBoxId, data);
-              replyBox.send(msg);
+              replyBox.send(new foam.box.Envelope.Builder(null).setMessage(message).build());
             } else {
-              Object o = msg.getObject();
+              Object o = message;
               if ( o != null &&
                    o instanceof foam.box.RPCErrorMessage ) {
                 foam.box.RemoteException re = (foam.box.RemoteException) ((foam.box.RPCErrorMessage) o).getData();
@@ -336,9 +333,8 @@ NOTE: duplicated in SocketConnectionReplyBox
           BoxHolder holder = entry.getValue();
           Box replyBox = holder.getBox();
           if ( replyBox != null ) {
-            Message reply = new Message();
-            reply.getAttributes().put("replyBox", replyBox);
-            reply.replyWithException(t);
+            foam.box.Envelope envelope = new foam.box.Envelope(null, replyBox);
+            envelope.replyWithException(t);
           }
           getReplyBoxes().remove(entry.getKey());
           i++;

@@ -27,11 +27,7 @@ public class SocketWebAgent
 
   @Override
   public void execute(X x) {
-    try {
-      Message msg = (Message) x.get("requestMessage");
-      SessionServerBox.send(x, skeleton_, authenticate_, msg);
-    } catch ( Throwable t ) {
-      throw new RuntimeException(t.getMessage());
-    }
+    // TODO This is not actually used, SocketRouter uses this case but pulls the skeleton box out of it directly
+    throw new RuntimeException("unimplemented");
   }
 }

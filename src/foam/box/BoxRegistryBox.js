@@ -104,25 +104,7 @@ if let object = msg.object as? foam_box_SubBoxMessage {
         }
       },
       javaCode: `
-Object obj = msg.getObject();
-
-if ( obj instanceof foam.box.SubBoxMessage ) {
-  foam.box.SubBoxMessage sbm = (foam.box.SubBoxMessage)obj;
-  String name = sbm.getName();
-
-  foam.box.Box dest = (foam.box.Box)(getRegistry_().get(name));
-
-  if ( dest != null ) {
-    msg.setObject(sbm.getObject());
-    dest.send(msg);
-  } else if ( msg.getAttributes().containsKey("replyBox") ) {
-    foam.box.Box replyBox = (foam.box.Box)msg.getAttributes().get("replyBox");
-    foam.box.Message errorMessage = getX().create(foam.box.Message.class);
-    errorMessage.setObject(getX().create(foam.box.NoSuchNameException.class));
-
-    replyBox.send(errorMessage);
-  }
-}
+throw new RuntimeException("not implemented");
 `
     }
   ]

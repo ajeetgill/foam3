@@ -22,8 +22,7 @@ foam.CLASS({
   implements: [ 'foam.box.Box' ],
 
   requires: [
-    'foam.box.RPCReturnMessage',
-    'foam.box.RPCErrorMessage'
+    'foam.box.RPCReturnMessage'
   ],
 
   properties: [
@@ -52,15 +51,17 @@ foam.CLASS({
     },
     {
       class: 'Object',
-      name: 'message',
-      type: 'foam.box.Message'
+      name: 'envelope',
+      type: 'foam.box.Envelope'
     }
   ],
 
   methods: [
     {
       name: 'send',
-      code: function send(message, replyBox) {
+      code: function send(envelope) {
+        var message = envelope.message;
+        
         if ( this.RPCReturnMessage.isInstance(message) ) {
           this.resolve_(message.data);
           return;
@@ -77,7 +78,7 @@ foam.CLASS({
         this.__context__.warn('Invalid message to RPCReturnBox.');
       },
       javaCode: `
-setMessage(msg);
+setEnvelope(envelope);
 getSemaphore().release();
 `,
       swiftCode: `

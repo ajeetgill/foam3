@@ -25,6 +25,7 @@ foam.CLASS({
   extends: 'foam.box.ProxyBox',
 
   requires: [
+    'foam.box.Envelope',
     'foam.box.SessionReplyBox',
     'foam.box.SessionedMessage'
   ],
@@ -52,17 +53,15 @@ foam.CLASS({
   methods: [
     {
       name: 'send',
-      code: function send(message, replyBox) {
-        this.delegate.send(
-          this.SessionedMessage.create({
-            sessionId: this.sessionID,
-            message
-          }), this.SessionReplyBox.create({
-            message,
+      code: function send(envelope) {
+        this.delegate.send(this.Envelope.create({
+          message: this.SessionedMessage.create({ sessionId: this.sessionID, message: envelope.message }),
+          replyBox: this.SessionReplyBox.create({
+            envelope,
             clientBox: this,
-            delegate: replyBox,
+            delegate: envelope.replyBox
           })
-        );
+        }));
       },
       swiftCode: `
 let msg = msg!
@@ -75,8 +74,8 @@ msg.attributes["replyBox"] = SessionReplyBox_create([
 try delegate.send(msg)
       `,
       javaCode: `
-msg.getAttributes().put(SESSION_KEY, getSessionID());
-getDelegate().send(msg);`
+getDelegate().send(new foam.box.Envelope(new foam.box.SessionedMessage(getSessionID(), envelope.getMessage()), envelope.getReplyBox()));
+`
     }
   ]
 });

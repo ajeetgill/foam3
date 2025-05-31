@@ -55,16 +55,7 @@ foam.CLASS({
 
   imports: [
     'creationContext',
-    'sessionID as jsSessionID',
     'window'
-  ],
-
-  constants: [
-    {
-      name: 'SESSION_KEY',
-      value: 'sessionId',
-      type: 'String'
-    }
   ],
 
   messages: [
@@ -75,11 +66,6 @@ foam.CLASS({
   ],
 
   properties: [
-    {
-      documentation: `Explicitly set session ID when calling from Java. Use imported sessionID from javascript.`,
-      class: 'String',
-      name: 'sessionID'
-    },
     {
       class: 'String',
       name: 'url'
@@ -103,12 +89,6 @@ foam.CLASS({
       }
       return null;
       `
-    },
-    {
-      class: 'Enum',
-      of: 'foam.box.HTTPAuthorizationType',
-      name: 'authorizationType',
-      value: foam.box.HTTPAuthorizationType.NONE
     },
     {
       class: 'FObjectProperty',
@@ -198,21 +178,10 @@ foam.CLASS({
 
     {
       name: 'send',
-      code: function(message, replyBox) {
-        // Adapt to server expecting
-        var session = this.jsSessionID;
-        
-        if ( foam.box.SessionedMessage.isInstance(message) ) {
-          session = message.sessionId;
-          message = message.message;
-        }
-        
-        var payload = this.outputter.stringify(foam.box.Message.create({
-          attributes: {
-            [this.SESSION_KEY]: session,
-            replyBox: this.getReplyBox()
-          },
-          object: message
+      code: function(envelope) {
+        var payload = this.outputter.stringify(foam.box.Envelope.create({
+          message: envelope.message,
+          replyBox: this.getReplyBox()
         }));
         
         var headers = {
@@ -220,9 +189,6 @@ foam.CLASS({
           'Origin': this.origin
         };
 
-        if ( this.authorizationType === foam.box.HTTPAuthorizationType.BEARER ) {
-          headers['Authorization'] = 'BEARER ' + this.jsSessionID;
-        }
         var req = this.HTTPRequest.create({
           url:     this.prepareURL(this.url),
           method:  this.method,
@@ -235,7 +201,7 @@ foam.CLASS({
         }).then((p) => {
           return this.parser.aparse(p);
         }).then((response) => {
-          replyBox?.send(response.object, response.attributes.replyBox)
+          envelope.replyBox?.send(response);
         }, function(r) {
           var msg;
           if ( r ) {
@@ -253,7 +219,9 @@ foam.CLASS({
               msg = self.FETCH_ERROR;
             } else msg = r.message;
           }
-          replyBox?.send(foam.box.HTTPException.create({ response: r, message: msg }) );
+          envelope.replyBox?.send(foam.box.Envelope.create({
+            message: foam.box.HTTPException.create({ response: r, message: msg })
+          }));
         });
       },
       swiftCode: `
@@ -287,29 +255,23 @@ task.resume()
       // TODO: Go async and make request in a separate thread.
 
       java.net.HttpURLConnection conn;
-      foam.box.Box replyBox = (foam.box.Box) msg.getAttributes().get("replyBox");
+      foam.box.Box replyBox = envelope.getReplyBox();
 
       try {
         conn = getConnection();
         java.io.OutputStreamWriter output =
           new java.io.OutputStreamWriter(conn.getOutputStream(), java.nio.charset.StandardCharsets.UTF_8);
 
-        // TODO: Clone message or something when it clones safely.
-        msg.getAttributes().put("replyBox", getReplyBox());
-
         foam.lib.formatter.FObjectFormatter formatter = formatter_.get();
         formatter.setX(getX());
-        formatter.output(msg);
+        formatter.output(new foam.box.Envelope(envelope.getMessage(), getReplyBox()));
         StringBuilder builder = formatter.builder();
         output.append(builder);
-        msg.getAttributes().put("replyBox", replyBox);
         output.close();
 
-        replyBox.send((foam.box.Message) getResponseMessage(conn));
+        replyBox.send((foam.box.Envelope) getResponseMessage(conn));
       } catch(java.io.IOException e) {
-        foam.box.Message replyMessage = getX().create(foam.box.Message.class);
-        replyMessage.setObject(e);
-        replyBox.send(replyMessage);
+        replyBox.send(new foam.box.Envelope.Builder(null).setMessage(e).build());
       }
       `
     },
@@ -339,9 +301,6 @@ task.resume()
       conn.setRequestProperty("Content-Type", "application/json");
       if ( getOrigin() != null ) {
         conn.setRequestProperty("Origin", getOrigin());
-      }
-      if ( getAuthorizationType() == HTTPAuthorizationType.BEARER ) {
-        conn.setRequestProperty("Authorization", "BEARER "+getSessionID());
       }
       conn.setConnectTimeout(getConnectTimeout());
       conn.setReadTimeout(getReadTimeout());

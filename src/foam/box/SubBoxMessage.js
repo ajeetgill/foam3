@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-// TODO: Make this a message wrapper once java boxes are updated
 foam.CLASS({
   package: 'foam.box',
   name: 'SubBoxMessage',

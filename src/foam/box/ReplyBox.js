@@ -55,9 +55,9 @@ foam.CLASS({
   methods: [
     {
       name: 'send',
-      code: function send(msg) {
+      code: function send(envelope) {
         this.registry.unregister(this.id);
-        this.delegate.send(msg);
+        this.delegate.send(envelope);
       },
       swiftCode: `
 (registry as! foam_box_BoxRegistry).unregister(id)
@@ -65,7 +65,7 @@ try delegate.send(msg)
       `,
       javaCode: `
 getRegistry().unregister(getId());
-getDelegate().send(msg);
+getDelegate().send(envelope);
 `
     }
   ]

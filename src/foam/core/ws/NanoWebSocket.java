@@ -102,18 +102,16 @@ public class NanoWebSocket
           return;
         }
 
-        // check if instance of foam.box.Message
-        if ( ! ( request instanceof Message ) ) {
-          getLogger().warning("Request was not a box message.", message);
+        if ( ! ( request instanceof foam.box.Envelope ) ) {
+          getLogger().warning("Request was not a box envelope.", message);
           return;
         }
 
-        // put context into message
-        Message obj = (Message) request;
-        obj.getLocalAttributes().put("x", context);
-
+        // set context
+        foam.lang.XLocator.set(context);
+        
         // pass message to service via NanoRouter
-        getRouter().service(serviceKey, obj);
+        getRouter().service(serviceKey, (foam.box.Envelope)request);
       } else {
         getLogger().warning("WebSocket session not connected.");
       }

@@ -39,7 +39,10 @@ foam.CLASS({
           // what context the request should be handled in.
           if ( isContextOriented ) args[0] = null;
           
-          this[boxPropName].send(this.RPCMessage.create({ name, args }), rpcReturnBox);
+          this[boxPropName].send(foam.box.Envelope.create({
+            message: this.RPCMessage.create({ name, args }),
+            replyBox: rpcReturnBox
+          }));
 
           return ret;
         };

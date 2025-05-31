@@ -47,29 +47,34 @@ foam.CLASS({
     }
   ],
   methods: [
-    function send(message, replyBox) {
-      if ( ! replyBox ) {
-        this.delegate.send(message);
+    function send(envelope) {
+      if ( ! envelope.replyBox ) {
+        this.delegate.send(envelope);
         return;
       }
 
+      var replyBox = envelope.replyBox;
       var tooLate = false;
       var timer = setTimeout(function() {
         tooLate = true;
-        replyBox.send(this.TimeoutException.create())
+        replyBox.send(foam.box.Envelope.create({ message: this.TimeoutException.create() }))
       }.bind(this), this.timeout);
 
       var self = this;
 
-      this.delegate.send(message, {
-        send: function(message) {
-          if ( ! tooLate ) {
-            clearTimeout(timer);
-            replyBox.send(message);
-            return;
+      this.delegate.send(foam.box.Envelope.create({
+        message: envelope.message,
+        replyBox: {
+          send: function(envelope) {
+            if ( ! tooLate ) {
+              clearTimeout(timer);
+              replyBox.send(envelope);
+              return;
+            }
           }
         }
-      });
+      }));
+
     }
   ]
 });

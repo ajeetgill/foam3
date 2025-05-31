@@ -26,8 +26,9 @@ foam.CLASS({
 
   properties: [
     {
-      class: 'Object',
-      name: 'message',
+      class: 'FObjectProperty',
+      of: 'foam.box.Envelope',
+      name: 'envelope',
     },
     {
       class: 'FObjectProperty',
@@ -39,8 +40,9 @@ foam.CLASS({
   methods: [
     {
       name: 'send',
-      code: function send(message, replyBox) {
+      code: function send(envelope) {
         var self = this;
+        var message = envelope.message;
         if (
           this.RPCErrorMessage.isInstance(message) &&
           this.RemoteException.isInstance(message.data) &&
@@ -51,13 +53,13 @@ foam.CLASS({
 
           // Configure events CapabilityIntercept completion
           intercept.resolve = function (value) {
-            self.delegate.send(self.RPCReturnMessage.create({ data: value }))
+            self.delegate.send(foam.box.Envelope.create({ message: self.RPCReturnMessage.create({ data: value }) }));
           };
           intercept.reject = function (value) {
-            self.delegate.send(new Error(value));
+            self.delegate.send(foam.box.Envelope.create({ message: new Error(value) }));
           };
           intercept.resend = function () {
-            self.clientBox.send(self.message, self);
+            self.clientBox.send(self.envelope);
           };
 
           // Ask CrunchController to handle the intercept
@@ -65,7 +67,7 @@ foam.CLASS({
           return;
         }
 
-        this.delegate.send(message, replyBox);
+        this.delegate.send(envelope);
       }
     }
   ]

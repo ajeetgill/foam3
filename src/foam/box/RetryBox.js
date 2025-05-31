@@ -39,11 +39,9 @@ foam.CLASS({
   ],
 
   methods: [
-    function send(originalMessage, replyBox) {
-      this.delegate.send(originalMessage, replyBox);
-      return;
-      if ( ! replyBox ) {
-        this.delegate.send(originalMessage);
+    function send(envelope) {
+      if ( ! envelope.replyBox ) {
+        this.delegate.send(envelope);
         return;
       }
       
@@ -52,24 +50,32 @@ foam.CLASS({
       var maxAttempts = this.maxAttempts;
       var attempt = 0;
       var delegate = this.delegate;
+      var originalReplyBox = envelope.replyBox;
       var retryReplyBox = {
-        send: function(m2, r2) {
-          if ( foam.lang.Exception.isInstance(m2) &&
+        send: function(replyEnvelope) {
+          // TODO: This should probably also check instanceof Error for local JS exceptions
+          if ( foam.lang.Exception.isInstance(replyEnvelope.message) &&
                ( maxAttempts == -1 || ++attempt < maxAttempts ) ) {
 
             // retry original message after exponential backoff delay
             setTimeout(function() {
-              delegate.send(originalMessage, retryReplyBox);
+              delegate.send(envelope);
             }, delay);
             delay = Math.min(delay * 2, maxDelay);
             return;
           }
           // not an error or we are out of retry attempts
-          replyBox.send(m2, r2);
+          originalReplyBox.send(replyEnvelope);
         }
       }
+      envelope = foam.box.Envelope.create({
+        message: envelope.message,
+        replyBox: retryReplyBox
+      });
 
-      this.delegate.send(originalMessage, retryReplyBox);
-    }
+
+      this.delegate.send(envelope);
+    },
+    
   ]
 });

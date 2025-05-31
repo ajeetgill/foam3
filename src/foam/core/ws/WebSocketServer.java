@@ -92,14 +92,13 @@ public class WebSocketServer
         return;
       }
 
-      if ( ! ( request instanceof foam.box.Message ) ) {
-        log.warning("Request was not a box message.", message);
+      if ( ! ( request instanceof foam.box.Envelope ) ) {
+        log.warning("Request was not a box envelope.", message);
         return;
       }
 
-      foam.box.Message obj = (foam.box.Message)request;
-      obj.getLocalAttributes().put("x", requestContext);
-
+      foam.box.Envelope obj = (foam.box.Envelope)request;
+      foam.lang.XLocator.set(requestContext);
       getRouter().service(serviceKey, obj);
     } catch(java.lang.Exception e) {
       log.error("Error handling websocket request", e, message);

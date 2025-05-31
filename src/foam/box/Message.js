@@ -15,54 +15,8 @@
  * limitations under the License.
  */
 
+// TODO: Delete this once references are cleaned up
 foam.CLASS({
   package: 'foam.box',
   name: 'Message',
-
-  properties: [
-    {
-      class: 'Map',
-      name: 'attributes',
-      javaFactory: 'return new java.util.HashMap();'
-    },
-    {
-      class: 'Object',
-      name: 'object'
-    },
-    {
-      class: 'Map',
-      transient: true,
-      name: 'localAttributes',
-      javaFactory: 'return new java.util.HashMap();'
-    }
-  ],
-
-  methods: [
-    {
-      name: 'replyWithException',
-      type: 'Void',
-      args: 'Throwable t',
-      javaCode: `
-        Box replyBox = (Box) getAttributes().get("replyBox");
-
-        if ( replyBox == null ) return;
-
-        RemoteException wrapper = new RemoteException();
-        wrapper.setId(t.getClass().getName());
-        wrapper.setMessage(t.getMessage());
-        if ( t instanceof foam.lang.FOAMException ) {
-          wrapper.setException((foam.lang.Exception) t);
-        }
-        RPCErrorMessage reply = new RPCErrorMessage();
-        reply.setData(wrapper);
-
-        // Ensure replyMessage has a valid context, as ReplyBox acquires
-        // it's context from the message.
-        Message replyMessage = getX().create(foam.box.Message.class);
-        replyMessage.setObject(reply);
-
-        replyBox.send(replyMessage);
-      `
-    }
-  ]
 });

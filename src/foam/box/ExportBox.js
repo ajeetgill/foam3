@@ -42,7 +42,7 @@ foam.CLASS({
       code: function(msg) {
         this.localBox.send(msg);
       },
-      javaCode: `getLocalBox().send(msg);`,
+      javaCode: `getLocalBox().send(envelope);`,
       swiftCode: `try localBox!.send(msg)`
     }
   ]

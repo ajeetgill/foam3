@@ -109,6 +109,7 @@ foam.CLASS({
     {
       class: 'Map',
       name: 'replies',
+      javaFactory: `return new java.util.concurrent.ConcurrentHashMap<String, Box>();`,
     }
   ],
 
@@ -124,67 +125,64 @@ foam.CLASS({
 
       this.socket.message.sub(this.onMessage);
     },
-    function subBox(delegate, once = true) {
-      var self = this;
-      var name = this.NEXT_ID[0]++;
-      
-      this.replies[name] = {
-        send: function(message, replyBox) {
-          if ( once ) delete self.replies[name]
-          delegate.send(message, replyBox);
-        }
-      };
+    {
+      name: 'subBox',
+      args: [
+        { name: 'delegate', type: 'foam.box.Box' },
+        { name: 'once', type: 'Boolean' },
+      ],
+      code: function subBox(delegate, once = true) {
+        var self = this;
+        var name = this.NEXT_ID[0]++;
+        
+        this.replies[name] = {
+          send: function(message, replyBox) {
+            if ( once ) delete self.replies[name]
+            delegate.send(message, replyBox);
+          }
+        };
 
-      return this.SubBox.create({
-        name,
-        delegate: this.ReturnBox.create(),
-      });
+        return this.SubBox.create({
+          name,
+          delegate: this.ReturnBox.create(),
+        });
+      },
+      javaCode: `
+
+`
     },
     {
       name: 'send',
-      code: function send(message, replyBox) {
+      code: function send(envelope) {
         if ( this.socket.isConnected ) {
-          replyBox?.send(this.NotConnectedException.create());
+          envelope.replyBox?.send(this.NotConnectedException.create());
           return;
         }
-
-        var sessionId;
-        if ( foam.box.SessionedMessage.isInstance(message) ) {
-          sessionId = message.sessionId;
-          message = message.message;
-        }
         
-        var outgoing = foam.box.Message.create({
-          attributes: {
-            replyBox: this.subBox(replyBox, true),
-            sessionId,
-          },
-          object: message
+        var outgoing = foam.box.Envelope.create({
+          message: envelope.message,
+          replyBox: this.subBox(envelope.replyBox, true)
         });
 
         var payload = this.outputter.stringify(outgoing);
         this.socket.send(payload);
       },
       javaCode: `
-// TODO: Clone message or something when it clones safely.
-foam.box.Box replyBox = (foam.box.Box)msg.getAttributes().get("replyBox");
-
+foam.box.Envelope outgoing = envelope;
+foam.box.Box replyBox = envelope.getReplyBox();
 if ( replyBox != null ) {
   foam.box.Box exportReplyBox = new foam.box.SubBox.Builder(getX())
     .setName(uidGenerator_.get().generate())
     .setDelegate(new foam.box.ReturnBox())
     .build();
 
-  msg.getAttributes().put("replyBox", exportReplyBox);
+  outgoing = new foam.box.Envelope(outgoing.getMessage(), exportReplyBox);
 }
 
 
 foam.lib.formatter.FObjectFormatter formatter = formatter_.get();
 formatter.setX(getX());
-formatter.output(msg);
-
-// restore old reply box in case this message is in a retry box or something
-msg.getAttributes().put("replyBox", replyBox);
+formatter.output(outgoing);
 
 String payload = formatter.builder().toString();
 formatter.setX(null);
@@ -203,9 +201,9 @@ try {
       name: 'onMessage',
       code: function(s, _, msgStr) {
         try {
-          var msg = this.parser.parseString(msgStr, this.__context__);
-          var message = msg.object;
-          var replyBox = msg.attributes.replyBox
+          var envelope = this.parser.parseString(msgStr, this.__context__);
+          var message = envelope.message;
+          var replyBox = envelope.replyBox;
 
           if ( ! foam.box.SubBoxMessage.isInstance(message) ) {
             console.warn("Got a non sub box message to our websocket, ignoring");
@@ -218,7 +216,7 @@ try {
           
           var delegate = this.replies[name]
           if ( delegate ) {
-            delegate.send(message, replyBox);
+            delegate.send(foam.box.Envelope.create({ message, replyBox }));
           } else {
             console.log("Failed to find reply box for message, payload was", msgStr);
           }

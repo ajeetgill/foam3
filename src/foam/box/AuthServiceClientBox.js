@@ -27,11 +27,14 @@ foam.CLASS({
   methods: [
     {
       name: 'send',
-      code: function send(message, replyBox) {
-        this.delegate.send(this.SessionedMessage.create({
-          sessionId: this.sessionID,
-          message,
-        }), replyBox);
+      code: function send(envelope) {
+        this.delegate.send(foam.box.Envelope.create({
+          message: this.SessionedMessage.create({
+            sessionId: this.sessionID,
+            message: envelope.message,
+          }),
+          replyBox: envelope.replyBox
+        }));
       }
     }
   ]
