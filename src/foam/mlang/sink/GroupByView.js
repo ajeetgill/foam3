@@ -9,55 +9,23 @@ foam.CLASS({
   name: 'GroupByView',
   extends: 'foam.u2.View',
 
-  cssTokens: [
-    {
-      name: 'backgroundTransition',
-      value: 'background-color 0.15s ease'
-    },
-    {
-      name: 'borderSize',
-      value: '1px solid #D1D5DB'
-    },
-    {
-      name: 'borderRadius',
-      value: '4px'
-    },
-    {
-      name: 'cellPadding',
-      value: '.8rem 1rem'
-    },
-    {
-      name: 'hoverColor',
-      value: '#E1EFFE'
-    },
-    {
-      name: 'headerBgColor',
-      value: '#EEF2F6'
-    },
-    {
-      name: 'rowHoverColor',
-      value: '#F3F4F6'
-    }
-  ],
-
   css: `
     /* Base table styling */
     ^table { 
       border-collapse: separate; 
       border-spacing: 0;
-      border-radius: $borderRadius;
       width: 100%;
-      border: $borderSize;
+      border: 1px solid $grey300;
     }
     
     /* Row styling */
     ^tr {
-      border-bottom: $borderSize;
+      border-bottom: 1px solid $grey300;
       transition: background-color 0.2s ease;
     }
     
     ^tr:hover {
-      background-color: $rowHoverColor;
+      background-color: $primary200;
     }
     
     ^tr:last-child {
@@ -67,25 +35,25 @@ foam.CLASS({
     /* Cell styling - both TH and TD */
     ^td {
       border: none;
-      padding: $cellPadding;
-      transition: $backgroundTransition;
+      padding: .8rem 1rem;
+      transition: background-color 0.15s ease;
     }
     
     /* First column-cells styling */
     ^tr > ^td:first-child {
       font-weight: bold;
-      border-right: $borderSize;
-      background-color: $headerBgColor;
+      border-right: 1px solid $grey300;
+      background-color: $grey200;
     }
     
     /* Hover effects */
     ^td:hover {
-      background-color: $hoverColor;
+      background-color: $primary100;
       z-index: 1;
     }
     
     ^tr > ^td:first-child:hover {
-      background-color: $rowHoverColor;
+      background-color: $primary200;
     }
   `,
 
