@@ -66,12 +66,13 @@ public class NanoWebSocket
   public void onWebSocketMessage(String message) {
     try {
       if ( session_ != null && session_.isOpen() ) {
-        RemoteEndpoint remote     = session_.getRemote();
-        UpgradeRequest upgrade    = session_.getUpgradeRequest();
-        String         path       = upgrade.getRequestURI().getPath();
-        String         serviceKey = path.split("/")[2];
-        DAO            cSpecDAO   = (DAO) getX().get("cSpecDAO");
-        CSpec          spec       = (CSpec) cSpecDAO.find(serviceKey);
+        RemoteEndpoint          remote     = session_.getRemote();
+        UpgradeRequest          upgrade    = session_.getUpgradeRequest();
+        String                  path       = upgrade.getRequestURI().getPath();
+        String                  serviceKey = path.split("/")[2];
+        DAO                     cSpecDAO   = (DAO) getX().get("cSpecDAO");
+        CSpec                   spec       = (CSpec) cSpecDAO.find(serviceKey);
+        foam.util.UIDGenerator  uids       = new foam.util.AUIDGenerator(getX(), "websockets");
 
         if ( spec == null ) {
           getLogger().warning("Request for non-existent service.", serviceKey);
