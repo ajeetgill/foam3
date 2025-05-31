@@ -9,7 +9,6 @@ package foam.box.socket;
 import foam.lang.X;
 import foam.lang.FObject;
 import foam.box.Box;
-import foam.box.Message;
 import foam.box.SessionServerBox;
 import foam.core.logger.Logger;
 import foam.core.http.ServiceWebAgent;

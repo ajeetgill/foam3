@@ -17,7 +17,6 @@ foam.CLASS({
   javaImports: [
     'foam.box.Box',
     'foam.box.Envelope',
-    'foam.box.ReplyBox',
     'foam.box.RPCErrorMessage',
     'foam.lang.ContextAgent',
     'foam.lang.FObject',
@@ -171,12 +170,7 @@ NOTE: duplicated in SocketConnectionReplyBox
         replyBoxId = java.util.UUID.randomUUID().toString();
         getReplyBoxes().put(replyBoxId, new BoxHolder(replyBox, PM.create(getX(), "SocketConnectionBox", getId()+":roundtrip")));
         SocketClientReplyBox box = new SocketClientReplyBox(replyBoxId);
-        if ( replyBox instanceof ReplyBox ) {
-          ((ReplyBox)replyBox).setDelegate(box);
-          // getLogger().debug("send", "replyBox.setDelegate");
-        } else {
-          outgoing.setReplyBox(box);
-        }
+        outgoing.setReplyBox(box);
         pmBoxCreate.log(getX());
       }
       String message = null;

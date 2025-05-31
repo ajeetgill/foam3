@@ -7,7 +7,9 @@
 foam.CLASS({
   package: 'foam.box.socket',
   name: 'SocketClientReplyBox',
-  extends: 'foam.box.ReplyBox',
+  implements: [
+    'foam.box.Box'
+  ],
 
   documentation: `Provides for 'reply' socket box reuse via the SocketConnectionBoxManager.`,
 

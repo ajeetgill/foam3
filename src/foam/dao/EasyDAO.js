@@ -34,7 +34,6 @@ foam.CLASS({
   `,
 
   requires: [
-    'foam.box.Context',
     'foam.box.HTTPBox',
     'foam.box.RetryBox',
     'foam.box.SessionClientBox',

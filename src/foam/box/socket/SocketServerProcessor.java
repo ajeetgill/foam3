@@ -7,7 +7,6 @@
 package foam.box.socket;
 
 import foam.box.Box;
-import foam.box.ReplyBox;
 import foam.box.Envelope;
 import foam.box.socket.SocketRouter;
 import foam.lang.ContextAgent;
@@ -111,8 +110,8 @@ public class SocketServerProcessor
           pm.log(x);
 
           // NOTE: enable along with send and receive debug calls in SocketConnectionBox to monitor all messages.
-          // ReplyBox replyBox = (ReplyBox) envelope.getReplyBox()
-          // String replyId = replyBox != null ? replyBox.getId() : "na";
+          // SocketClientReplyBox replyBox = (SocketClientReplyBox) envelope.getReplyBox()
+          // String replyId = replyBox != null ? replyBox.getReplyBoxId() : "na";
           // logger_.debug("receive", "replyBoxId", replyId, (String) ((foam.box.SubBoxMessage)envelope.getMessage()).getName());
 
           socketRouter_.service(envelope);

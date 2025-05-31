@@ -23,7 +23,6 @@ foam.CLASS({
 
   requires: [
     'foam.box.InvalidMessageException',
-    'foam.box.Message',
     'foam.box.RPCErrorMessage',
     'foam.box.RPCMessage',
     'foam.box.RPCReturnMessage'
@@ -40,8 +39,8 @@ foam.CLASS({
       name: 'call',
       args: [
         {
-          name: 'message',
-          type: 'foam.box.Message'
+          name: 'envelope',
+          type: 'foam.box.Envelope',
         },
       ],
       code: function(envelope) {

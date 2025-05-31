@@ -41,8 +41,7 @@ foam.CLASS({
       flags: ['swift'],
     },
     'foam.box.HTTPReplyBox',
-    'foam.box.HTTPException',
-    'foam.box.Message',
+    'foam.box.HTTPException'
   ],
 
   exports: [
@@ -54,7 +53,6 @@ foam.CLASS({
   ],
 
   imports: [
-    'creationContext',
     'window'
   ],
 
@@ -341,8 +339,8 @@ task.resume()
         ((foam.core.logger.Logger) getX().get("logger")).error("HTTPBox", "Error parsing response.", str);
         throw new RuntimeException("Error parsing response.");
       }
-      if ( ! ( responseMessage instanceof foam.box.Message ) ) {
-        throw new RuntimeException("Invalid response type: " + responseMessage.getClass().getName() + " expected foam.box.Message.");
+      if ( ! ( responseMessage instanceof foam.box.Envelope ) ) {
+        throw new RuntimeException("Invalid response type: " + responseMessage.getClass().getName() + " expected foam.box.Envelope.");
       }
       return responseMessage;
       `

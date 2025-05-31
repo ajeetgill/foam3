@@ -133,8 +133,8 @@ public class ServiceWebAgent
 
       if ( ! ( result instanceof foam.box.Envelope ) ) {
         resp.setStatus(resp.SC_BAD_REQUEST);
-        logger.error("Expected instance of foam.box.Message");
-        out.print("Expected instance of foam.box.Message");
+        logger.error("Expected instance of foam.box.Envelope");
+        out.print("Expected instance of foam.box.Envelope");
         out.flush();
         return;
       }

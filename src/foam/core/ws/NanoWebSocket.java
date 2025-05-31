@@ -6,7 +6,6 @@
 
 package foam.core.ws;
 
-import foam.box.Message;
 import foam.box.RawWebSocketBox;
 import foam.lang.ContextAwareSupport;
 import foam.lang.FObject;
