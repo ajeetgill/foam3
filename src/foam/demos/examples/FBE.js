@@ -165,7 +165,7 @@ foam.CLASS({
             br().
             add(this.Example.CODE).
             start().
-              show(self.showOutput$).
+              show(self.showOutput$.or(this.data$.dot('error'))).
               br().
               start('span').style({'font-weight': 500}).add('Output:').end().
               start().
@@ -204,7 +204,7 @@ foam.CLASS({
                     args.push(arguments[i]);
                 }
 
-                self.dom.add.apply(self.dom, args);
+                self.dom.add(args);
                 self.dom.br();
               },
               print: function() {
