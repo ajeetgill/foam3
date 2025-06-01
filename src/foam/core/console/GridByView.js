@@ -13,23 +13,23 @@ foam.CLASS({
 
   css: `
     /* Base table styling */
-    ^table { 
-      border-collapse: collapse;  
+    ^table {
+      border-collapse: collapse;
       border-spacing: 0;
       border: 1px solid $grey300;
       width: 100%;
     }
-    
+
     /* Row styling */
     ^tr {
       border-bottom: 1px solid $grey300;
       transition: background-color 0.2s ease;
     }
-    
+
     ^tr:hover {
       background-color: $primary50;
     }
-    
+
     ^tr:last-child {
       border-bottom: none;
     }
@@ -38,56 +38,56 @@ foam.CLASS({
     ^tr:first-child {
       background-color: $grey200;
     }
-    
+
     /* Cell styling - both TH and TD */
     ^th, ^td {
       padding: .8rem 1rem;
       transition: background-color 0.15s ease;
     }
-    
+
     /* Header cells */
     ^th {
       font-weight: bold;
       background-color: $grey200;
     }
-    
+
     /* Data cells */
     ^td {
       border: none;
     }
-    
+
     /* First column-cells styling */
     ^tr > ^th:first-child {
       border-right: 1px solid $grey300;
     }
-    
+
     /* First row cells */
     ^tr:first-child > ^th {
       border-right: 1px solid $grey300;
     }
-    
+
     ^tr:first-child > ^th:last-child {
       border-right: none;
     }
-    
+
     /* Hover effects */
     ^th:hover, ^td:hover {
       background-color: $primary200;
       z-index: 1;
     }
-    
+
     ^td:hover {
       font-weight: 600;
     }
-    
+
     ^tr > ^th:first-child:hover {
       background-color: $primary200;
     }
   `,
 
   properties: [
-    { name: 'x', postSet: function(o,n) { console.log('***x', n); } },
-    { name: 'y', postSet: function(o,n) { console.log('***y', n); } }
+    { name: 'x' },
+    { name: 'y' }
   ],
 
   methods: [
