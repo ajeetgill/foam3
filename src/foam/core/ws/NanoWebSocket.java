@@ -20,6 +20,7 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.UpgradeRequest;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketError;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import java.io.IOException;
@@ -60,6 +61,11 @@ public class NanoWebSocket
   public void onWebSocketClose(int code, String reason) {
     session_ = null;
     getLogger().info("WebSocket session closed.");
+  }
+
+  @OnWebSocketError
+  public void onWebSocketError(Throwable t) {
+    getLogger().error("Web socket error", t);
   }
 
   @OnWebSocketMessage
