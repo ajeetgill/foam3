@@ -240,11 +240,19 @@ foam.CLASS({
     },
     { class: 'Long',            name: 'rowCount', visibility: 'RO' },
     { class: 'String',          name: 'executionTime', value: '-', visibility: 'RO', transient: true, readPermissionRequired: true },
+    { class: 'Boolean',         name: 'autoRun' },
     { class: 'Int',             name: 'version', hidden: true },
     { class: 'FObjectProperty', name: 'value', transient: true, hidden: true, visibility: 'RO' }
   ],
 
   methods: [
+    function init() {
+      this.SUPER();
+
+      this.where$.sub(this.maybeAutoRun);
+      this.order$.sub(this.maybeAutoRun);
+    },
+
     async function addToE(e) {
       this.rowCount = (await this.dao.select(this.COUNT())).value;
 
@@ -264,6 +272,15 @@ foam.CLASS({
   ],
 
   listeners: [
+    {
+      name: 'maybeAutoRun',
+      isMerged: true,
+      delay: 200,
+      code: function maybeAutoRun() {
+        if ( this.autoRun ) this.run();
+      }
+    },
+
     function describe() {
       this.eval_('describe ' + this.dao.of.id);
     },
