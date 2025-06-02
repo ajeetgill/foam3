@@ -72,8 +72,8 @@ foam.CLASS({
       hidden: true,
       expression: function(x, y) {
         var query = '';
-        if ( this.x !== null ) query += this.xFunc + '="' + x + '"';
-        if ( this.y !== null ) query += ( query ? ' AND ' : '' ) + this.yFunc + '="' + y + '"';
+        if ( this.x !== null && this.x !== undefined ) query += this.xFunc.name + '="' + x + '"';
+        if ( this.y !== null && this.y !== undefined ) query += ( query ? ' AND ' : '' ) + this.yFunc.name + '="' + y + '"';
         return query;
       }
     }
