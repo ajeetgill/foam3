@@ -521,15 +521,39 @@ foam.CLASS({
     }
     ^r {
       overflow-y: auto;
-      padding: 4px 4px 4px 8px;
+      padding: 20px;
       width: 30%;
       background-color: $white;
     }
-    ^ .foam-u2-RangeView-skip { width: 266px; }
+    ^r .foam-u2-PropertyBorder {
+      flex-direction: row;
+      align-items: center;
+      width: 100%;
+    }
+    ^r .foam-u2-PropertyBorder .foam-u2-PropertyBorder-label {
+      width: 50%;
+    }
+    ^r .foam-u2-PropertyBorder-view {
+      min-height: 0px;
+    }
+    ^r .foam-core-console-PropertyListView {
+      gap: 5px;
+    }
+    ^r .foam-u2-PropertyBorder-view > div > span {
+      align-items: center;
+      gap: 5px;
+    }
+    ^ .foam-u2-RangeView-skip { 
+      width: 100%; 
+      accent-color: $primary500;     
+    }
 
     ^menuClosed {
      width: 4% !important;
    }
+    .foam-u2-ActionView-run {
+      width: 100%;
+    }
   `,
 
   properties: [
@@ -817,7 +841,7 @@ foam.CLASS({
       layout.left.tag(flowableTree);
       layout.middle.call(this.renderSelf, [this]);
       layout.right.add(this.dynamic(function(selectedValue) {
-        this.tag(self.SectionedDetailView, {data: selectedValue, showActions: true});
+        this.tag(self.SectionedDetailView, {data: selectedValue, showActions: true, showHeader: true});
       }));
       layout.header.tag(this.reflowHeader, {data: this});
 

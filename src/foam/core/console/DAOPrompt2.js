@@ -138,7 +138,8 @@ foam.CLASS({
       name: 'visible',
       section: 'general',
       label: 'Visibility',
-      value: true
+      value: true,
+      view: { class: 'foam.u2.Switch' }
     },
     {
       class: 'foam.dao.DAOProperty',
@@ -217,8 +218,8 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'skip',
+      label: 'Offset',
       section: 'scroll',
-      displayWidth: 8,
       view: function(_, X) {
         return {
           class: 'foam.u2.view.DualView',
@@ -265,6 +266,7 @@ foam.CLASS({
     },
     {
       name: 'select',
+      label: 'Format',
       section: 'output',
       view: function(_, X) { return foam.core.console.SinkView.create({sinksOnly: false}, X.data); }
     },
