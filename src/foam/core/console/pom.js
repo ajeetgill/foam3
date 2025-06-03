@@ -20,6 +20,7 @@ foam.POM({
     { name: 'GridByView',              flags: 'js' },
     { name: 'Header',                  flags: 'js' },
     { name: 'JSONSink',                flags: 'js|java' },
+    { name: 'ReflowToolBar',           flags: 'js' },
     { name: 'ModelDAO',                flags: 'js' },
     { name: 'PropertyChoiceView',      flags: 'js' },
     { name: 'ComparatorView',          flags: 'js' },

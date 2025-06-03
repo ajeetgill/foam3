@@ -255,7 +255,7 @@ foam.CLASS({
     {
       class: 'String',
       name: 'columns',
-      section: 'output',
+      section: 'filter',
       displayWidth: 60,
       view: function(_, X) {
         return {
@@ -265,16 +265,35 @@ foam.CLASS({
       }
     },
     {
-      name: 'select',
+      name: 'format',
       label: 'Format',
       section: 'output',
-      view: function(_, X) { return foam.core.console.SinkView.create({sinksOnly: false}, X.data); }
+      view: function(_, X) {
+        return foam.core.console.SinkView.create({sinksOnly: true}, X.data); 
+      }
     },
-    { class: 'Long',        section: 'output',    name: 'rowCount', visibility: 'RO' },
-    { class: 'String',      section: 'output',    name: 'executionTime', value: '-', visibility: 'RO', transient: true, readPermissionRequired: true },
-    { class: 'Boolean',     section: 'output',    name: 'autoRun' },
-    { class: 'Int',         section: 'output',    name: 'version', hidden: true },
-    { class: 'FObjectProperty', section: 'output', name: 'value', transient: true, hidden: true, visibility: 'RO' }
+    {
+      name: 'select',
+      label: 'Structure',
+      section: 'output',
+      view: function(_, X) { 
+        console.log('SELECT DATA ==>', X.data);
+        return foam.core.console.SinkView.create({sinksOnly: false}, X.data); 
+      }
+    },
+    {
+      name: 'calculation',
+      label: 'Calculation',
+      section: 'output',
+      view: function(_, X) {
+        return foam.core.console.SinkView.create({sinksOnly: false}, X.data); 
+      }
+    },
+    { class: 'Long',       hidden: true,    name: 'rowCount', visibility: 'RO' },
+    { class: 'String',     hidden: true,   name: 'executionTime', value: '-', visibility: 'RO', transient: true, readPermissionRequired: true },
+    { class: 'Boolean',    hidden: true,    name: 'autoRun', view: { class: 'foam.u2.Switch' } },
+    { class: 'Int',        hidden: true,  name: 'version', hidden: true },
+    { class: 'FObjectProperty',  name: 'value', transient: true, hidden: true, visibility: 'RO' }
   ],
 
   methods: [

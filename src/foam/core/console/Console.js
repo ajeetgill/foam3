@@ -103,10 +103,13 @@ foam.CLASS({
     }
   `,
 
+  properties: [
+    'showPrompts'
+  ],
+
   methods: [
     function render() {
       let self = this;
-      console.log('this.data.shwPrompts ===>', this.data)
       this.addClass()
         .start().addClass(this.myClass('header-container'))
           .start().addClass(this.myClass('navigator'))
@@ -129,9 +132,12 @@ foam.CLASS({
             .start().addClass(self.myClass('save-text'))
               .add('The Flow is saved automatically')
             .end()
-            .tag(this.PREVIEW)
-            .tag(this.SAVE)
-            .tag(this.RESET)
+            .startContext({data: this})
+              .tag(this.CANCEL)
+              .tag(this.SAVE)
+              .tag(this.RESET)
+              .tag(this.EDIT)
+            .endContext()
             // callIf(this.data.showPrompts$, function() {
             //   this.start().addClass(self.myClass('save-text'))
             //     .add('The Flow is saved automatically')
@@ -163,12 +169,27 @@ foam.CLASS({
       }
     },
     {
-      name: 'preview',
-      label: 'Preview',
+      name: 'edit',
+      label: 'Edit',
       buttonStyle: foam.u2.ButtonStyle.SECONDARY,
       size: 'SMALL',
+      isAvailable: function(showPrompts) {
+        return ! showPrompts;
+      },
       code: function() {
-
+        this.data.showPrompts = true;
+      }
+    },
+    {
+      name: 'cancel',
+      label: 'Cancel',
+      buttonStyle: foam.u2.ButtonStyle.SECONDARY,
+      size: 'SMALL',
+      isAvailable: function(showPrompts) {
+        return showPrompts;
+      },
+      code: function() {
+        this.data.showPrompts = false;
       }
     },
     {
@@ -176,8 +197,11 @@ foam.CLASS({
       label: 'Save',
       buttonStyle: foam.u2.ButtonStyle.PRIMARY,
       size: 'SMALL',
+      isAvailable: function(showPrompts) {
+        return showPrompts;
+      },
       code: function() {
-
+        this.data.showPrompts = false;
       }
     },
     {
@@ -185,8 +209,11 @@ foam.CLASS({
       label: 'Reset',
       buttonStyle: foam.u2.ButtonStyle.TEXT,
       size: 'SMALL',
+      isAvailable: function(showPrompts) {
+        return showPrompts;
+      },
       code: function() {
-
+        this.data.eval_('clear');
       }
     }
   ]
@@ -491,6 +518,7 @@ foam.CLASS({
       display: flex;
       flex-direction: column;
       height: 100%;
+      min-height: 90vh;
     }
     ^flex-container {
       display: flex;
@@ -501,7 +529,6 @@ foam.CLASS({
       padding: 10px;
       background-color: $white;
       border-bottom: 1px solid $grey200;
-      height: 10%:
     }
     ^l {
       padding: 4px;
@@ -513,6 +540,7 @@ foam.CLASS({
       padding: 10px;
       width: 100%;
       background-color: $grey100;
+      overflow: auto;
     }
     ^m {
        border: 2px dashed $grey200;
@@ -521,9 +549,12 @@ foam.CLASS({
     }
     ^r {
       overflow-y: auto;
-      padding: 20px;
       width: 30%;
       background-color: $white;
+    }
+    ^r .foam-u2-detail-SectionedDetailView-card-container {
+      padding: 20px;
+      border-top: 1px solid $grey200;
     }
     ^r .foam-u2-PropertyBorder {
       flex-direction: row;
@@ -542,6 +573,39 @@ foam.CLASS({
     ^r .foam-u2-PropertyBorder-view > div > span {
       align-items: center;
       gap: 5px;
+    }
+    ^r .foam-u2-borders-CardBorder {
+      padding: 0px;
+      border: none;
+    }
+    ^r .h600 {
+      font-size: 18px;
+    }
+    ^r .foam-u2-PropertyBorder-select {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px;
+      background-color: $grey100;
+      border-radius: 5px;
+      border: 1px solid $grey200;
+    }
+    ^r .property-select {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      width: 100%;
+    }
+    ^r .property-select .property-choice,
+    ^r .property-select .property-sink,
+    ^r .property-select .property-prop {
+      width: 100%;
+    }
+    ^r .property-select > div {
+      width: 100%;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
     }
     ^ .foam-u2-RangeView-skip { 
       width: 100%; 
@@ -603,6 +667,7 @@ foam.CLASS({
     'foam.core.console.Layout',
     'foam.core.console.reflowHeader',
     'foam.core.console.ReactiveDetailView',
+    'foam.core.console.ReflowToolBar',
     // 'foam.core.console.VerticalSectionedView',
     'foam.u2.detail.SectionedDetailView',
     // 'foam.u2.DetailView as ReactiveDetailView',
@@ -616,7 +681,8 @@ foam.CLASS({
     'params',
     'scope?',
     'setTimeout',
-    'window'
+    'window',
+    'showNav'
   ],
 
   exports: [
@@ -773,6 +839,7 @@ foam.CLASS({
     },
 
     async function render() {
+      this.showNav = false;
       this.SUPER();
 
       var self = this;
@@ -788,6 +855,7 @@ foam.CLASS({
 
       // Add commands to localScope
       var cmds = await this.commandDAO.select(); 
+
       cmds.array.forEach(c => {
         this.localScope[c.id] = (...args) => {
           var cmd = c.clone(this.currentBlock);
@@ -835,7 +903,7 @@ foam.CLASS({
 
       layout.showLeft$  = this.showPrompts$;
       layout.showRight$ = this.showPrompts$;
-      layout.showHeader$ = this.showPrompts$;
+      layout.showHeader = true;
       var flowableTree = this.FlowableTree.create({data: this, selected$: this.selected$});
       layout.isMenuOpen$ = flowableTree.isMenuOpen$;
       layout.left.tag(flowableTree);
@@ -843,7 +911,9 @@ foam.CLASS({
       layout.right.add(this.dynamic(function(selectedValue) {
         this.tag(self.SectionedDetailView, {data: selectedValue, showActions: true, showHeader: true});
       }));
-      layout.header.tag(this.reflowHeader, {data: this});
+      layout.header.add(this.dynamic(function(showPrompts) {
+        this.tag(self.reflowHeader, {data: self, showPrompts: showPrompts, resetFlow: self.clearFlow});
+      }));
 
       if ( this.params.flow && this.params.flow !== 'Unnamed') {
         await this.eval_(`load("${decodeURIComponent(this.params.flow)}")`);
@@ -874,6 +944,7 @@ foam.CLASS({
             on('keyup', e => { if ( e.key == 'Enter' || e.keyCode == 13 ) self.onInput(); }).
           end().
           start(self.ON_INPUT).show(self.showInput$).end().
+          tag(self.ReflowToolBar).
         end();
 
         // These observers might cause scroll issues later when queries in the console can be edited
