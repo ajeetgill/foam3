@@ -197,7 +197,8 @@ foam.CLASS({
   properties: [
     {
       class: 'String',
-      name: 'cmd'
+      name: 'cmd',
+      displayWidth: 80
     },
     [ 'value', null ],
     {
