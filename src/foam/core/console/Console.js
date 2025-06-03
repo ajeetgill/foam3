@@ -674,6 +674,7 @@ foam.CLASS({
     'foam.core.console.Layout',
     'foam.core.console.reflowHeader',
     'foam.core.console.ReactiveDetailView',
+    'foam.core.console.ReactiveSectionedDetailView',
     'foam.core.console.ReflowToolBar',
     // 'foam.core.console.VerticalSectionedView',
     'foam.u2.detail.SectionedDetailView',
@@ -918,7 +919,7 @@ foam.CLASS({
       layout.left.tag(flowableTree);
       layout.middle.call(this.renderSelf, [this]);
       layout.right.add(this.dynamic(function(selectedValue) {
-        this.tag(self.SectionedDetailView, {data: selectedValue, showActions: true, showHeader: true});
+        this.tag(self.ReactiveSectionedDetailView, {data: selectedValue, showActions: true, showHeader: true});
       }));
       layout.header.add(this.dynamic(function(showPrompts) {
         this.tag(self.reflowHeader, {data: self, showPrompts: showPrompts, resetFlow: self.clearFlow});
@@ -953,7 +954,7 @@ foam.CLASS({
             on('keyup', e => { if ( e.key == 'Enter' || e.keyCode == 13 ) self.onInput(); }).
           end().
           start(self.ON_INPUT).show(self.showInput$).end().
-          tag(self.ReflowToolBar).
+          tag(self.ReflowToolBar).show(self.showPrompts$).
         end();
 
         // These observers might cause scroll issues later when queries in the console can be edited

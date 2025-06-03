@@ -193,3 +193,30 @@ foam.CLASS({
     }
   ]
 });
+
+foam.CLASS({
+  package: 'foam.core.console',
+  name: 'ReactiveSectionedDetailView',
+  extends: 'foam.u2.detail.SectionedDetailView',
+
+  requires: [
+    'foam.core.console.ReactiveSectionView'
+  ],
+
+  // Use our custom SectionView for each section
+  properties: [
+    {
+      name: 'sectionView',
+      value: { class: 'foam.core.console.ReactiveSectionView' }
+    },
+    [ 'showActions', true ],
+    [ 'expandPropertyViews', false ]
+  ],
+
+  // If you want to keep the custom title logic from ReactiveDetailView:
+  methods: [
+    function renderTitle(self) {
+      // NOP or your custom logic
+    }
+  ]
+});
