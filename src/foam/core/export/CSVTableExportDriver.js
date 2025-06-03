@@ -21,7 +21,8 @@ foam.CLASS({
   messages: [
     { name: 'SPREADSHEET', message: 'Spreadsheet Compatible' },
     { name: 'LOCALE',      message: 'Current Locale' },
-    { name: 'LONG',        message: 'Long' }
+    { name: 'LONG',        message: 'Long' },
+    { name: 'DDMMYYYY',    message: 'Date Format' }
   ],
 
   properties: [
@@ -35,6 +36,13 @@ foam.CLASS({
               d => d.toLocaleTimeString('en-us')
             ],
             this.SPREADSHEET
+          ],
+          [ 
+            [
+              d => ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear(),
+              d => d.toLocaleTimeString('en-us')
+            ],
+            this.DDMMYYYY
           ],
           [ [
               d => d.toString().substring(0, 15),
