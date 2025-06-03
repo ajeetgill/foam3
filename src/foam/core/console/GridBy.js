@@ -63,6 +63,19 @@ foam.CLASS({
       factory: function() {
         return this.GROUP_BY(this.xFunc);
       }
+    },
+    { name: 'selection', hidden: true, expression: function(y) { return y; } },
+    { name: 'x', hidden: true },
+    { name: 'y', hidden: true },
+    {
+      name: 'query',
+      hidden: true,
+      expression: function(x, y) {
+        var query = '';
+        if ( this.x !== null && this.x !== undefined ) query += this.xFunc.name + '="' + x + '"';
+        if ( this.y !== null && this.y !== undefined ) query += ( query ? ' AND ' : '' ) + this.yFunc.name + '="' + y + '"';
+        return query;
+      }
     }
   ],
 
@@ -80,7 +93,7 @@ foam.CLASS({
     },
 
     function addToE(e) {
-      e.tag(this.GridByView, {data: this});
+      e.tag(this.GridByView, {data: this, x$: this.x$, y$: this.y$});
     }
   ]
 });
