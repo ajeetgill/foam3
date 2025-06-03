@@ -58,6 +58,12 @@ foam.CLASS({
         background-color: $backgroundDestructiveTertiary;
         border-color: $destructive400;
       }
+
+      @media (prefers-color-scheme: dark) {
+        input {
+          color-scheme: dark;
+        }
+      }
       `,
       name: 'CSS-TextInputCSS',
       expands_: false
