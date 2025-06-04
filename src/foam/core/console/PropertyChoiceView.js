@@ -25,7 +25,12 @@ foam.CLASS({
   extends: 'foam.u2.view.ChoiceView',
 
   properties: [
-    'of',
+    {
+      name: 'of',
+      postSet: function(_, value) {
+        this.choices = undefined;
+      }
+    },
     'predicate',
     'optionalChoice',
     {
