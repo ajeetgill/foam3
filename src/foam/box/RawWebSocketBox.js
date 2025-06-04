@@ -118,7 +118,7 @@ foam.CLASS({
       this.socket.disconnected.sub(() => {
         for ( let box of Object.values(this.replies) ) {
           box.send(foam.box.Envelope.create({
-            contents: this.ConnectionFailedException.create()
+            message: this.ConnectionFailedException.create()
           }));
         }
       });
@@ -155,7 +155,7 @@ foam.CLASS({
       name: 'send',
       code: function send(envelope) {
         if ( this.socket.isConnected ) {
-          envelope.replyBox?.send(this.NotConnectedException.create());
+          envelope.replyBox?.send(foam.box.Envelope.create({ message: this.NotConnectedException.create() }));
           return;
         }
         

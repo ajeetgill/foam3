@@ -65,7 +65,7 @@ public class NanoWebSocket
 
   @OnWebSocketError
   public void onWebSocketError(Throwable t) {
-    getLogger().error("Web socket error", t);
+    getLogger().error("Web socket error", t.getMessage());
   }
 
   @OnWebSocketMessage

@@ -86,7 +86,7 @@ foam.CLASS({
       code: function send(envelope) {
         this.delegate.then(function(d) {
           d.send(envelope);
-        }.bind(this)).catch(function(e) {
+        }.bind(this), function(e) {
           envelope.replyBox?.send(foam.box.Envelope.create({ message: e }))
         });
       }

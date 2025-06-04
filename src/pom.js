@@ -431,6 +431,7 @@ foam.POM({
     { name: "foam/net/test/CIDRTest",                                 flags: "js&test|java&test" },
     { name: "foam/net/Host",                                          flags: "js|java" },
     { name: "foam/net/Port",                                          flags: "js|java" },
+    { name: "foam/net/NetworkException",                              flags: "js" },
     { name: "foam/net/NotConnectedException",                         flags: "js" },
     { name: "foam/net/ConnectionFailedException",                     flags: "js" },
     { name: "foam/net/XForwardedForConfig",                           flags: "js|java" },
