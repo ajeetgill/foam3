@@ -61,7 +61,9 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute() {
+    function execute(q) {
+      if ( q ) q = q.toLowerCase();
+
       var self = this;
       var shortcuts = [
         [ 'F1',      'Help' ],
@@ -75,6 +77,8 @@ foam.CLASS({
       this.out.start('h3').add('Commands').end().
       start('table').style({width: 'max-content'}).
         select(this.commandDAO, function(c) {
+          if ( q && ( c.id + c.description ).toLowerCase().indexOf(q) == -1 ) return;
+
           this.start('tr').
             start('th').attr('width', '250').attr('align', 'left').call(function() {
               if ( c.linkable ) {
