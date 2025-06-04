@@ -75,7 +75,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.console',
   name: 'PropertyBorder',
-  extends: 'foam.u2.DetailView.PropertyBorder',
+  extends: 'foam.u2.PropertyBorder',
 
   imports: [ 'scope' ],
 
@@ -83,12 +83,16 @@ foam.CLASS({
     ^switch { color: #ccc; width: 12px !important; }
     ^switch.reactive {
       font-weight: 600;
-      color: red !important;
+      color: $primary500!important;
     }
     ^formulaInput input:focus {
-      outline: 1px solid red !important;
+      outline: 1px solid $primary500 !important;
     }
     ^label { width: 10%; }
+    ^element-icon {
+      width: 14px;
+      height: 14px;
+    }
   `,
 
   properties: [
@@ -126,18 +130,32 @@ foam.CLASS({
       this.start().
         addClass(self.myClass('switch')).
         enableClass('reactive', self.reactive$).
-        on('click', self.toggleMode).
-        add(' = ').
-      end();
+        on('click', self.toggleMode)
+        .add(self.dynamic(function(reactive) {
+          if ( reactive ) {
+            this.start(foam.u2.tag.Image, {
+              glyph: 'functionSign',
+              embedSVG: true
+            }).addClass(self.myClass('element-icon')).end()
+          } else {
+            this.start(foam.u2.tag.Image, {
+              glyph: 'equalSign',
+              embedSVG: true
+            }).addClass(self.myClass('element-icon')).end()
+          }
+        }))
+      .end();
 
       this.add(
         self.dynamic(function(reactive) {
           if ( reactive ) {
-            this.start(self.FORMULA, {data$: self.formula$}).
-              addClass(self.myClass('formulaInput')).
-              on('blur', function() { self.reactive = !! self.formula; }).
-              focus().
-            end().add(self.data.slot(self.prop.name));
+            this.start()
+              .start(self.FORMULA, {data$: self.formula$}).
+                addClass(self.myClass('formulaInput')).
+                on('blur', function() { self.reactive = !! self.formula; }).
+                focus().
+              end().add(self.data.slot(self.prop.name))
+            .end();
           } else {
             this.add(viewSlot);
           }
@@ -203,20 +221,14 @@ foam.CLASS({
     'foam.core.console.ReactiveSectionView'
   ],
 
-  // Use our custom SectionView for each section
   properties: [
-    {
-      name: 'sectionView',
-      value: { class: 'foam.core.console.ReactiveSectionView' }
-    },
     [ 'showActions', true ],
     [ 'expandPropertyViews', false ]
   ],
 
-  // If you want to keep the custom title logic from ReactiveDetailView:
   methods: [
     function renderTitle(self) {
-      // NOP or your custom logic
+      // NOP
     }
   ]
 });

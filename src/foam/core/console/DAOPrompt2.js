@@ -44,7 +44,11 @@ foam.CLASS({
             add(self.data.dynamic(async function(version, skip) {
               if ( ! version ) return;
               var startTime = Date.now();
-              if ( self.data.run ) await self.data.run();
+              // Clone is needed in case the select was loaded from a DAO and doesnt' have correct context.
+              // TODO: fix JSON parsing should setup context corectly
+              var select    = self.data.select.clone(self.data.__subContext__);
+      
+              await select.execute(this);
               self.data.executionTime = foam.lang.Duration.duration(Date.now() - startTime);
             })).
           end();
@@ -80,18 +84,27 @@ foam.CLASS({
     {
       name: 'general',
       title: 'General',
+      view: { class: 'foam.core.console.ReactiveSectionView' }
     },
     {
       name: 'output',
       title: 'Output',
+      view: { class: 'foam.core.console.ReactiveSectionView' }
     },
     {
       name: 'scroll',
       title: 'Scroll',
+      view: { class: 'foam.core.console.ReactiveSectionView' }
     },
     {
       name: 'filter',
-      title: 'Filter'
+      title: 'Filter',
+      view: { class: 'foam.core.console.ReactiveSectionView' }
+    },
+    {
+      name: 'actions',
+      title: 'Actions',
+      view: { class: 'foam.core.console.ReactiveSectionView' }
     }
   ],
 
@@ -265,27 +278,10 @@ foam.CLASS({
       }
     },
     {
-      name: 'format',
-      label: 'Format',
-      section: 'output',
-      view: function(_, X) {
-        return foam.core.console.SinkView.create({sinksOnly: true}, X.data); 
-      }
-    },
-    {
       name: 'select',
       label: 'Structure',
       section: 'output',
       view: function(_, X) { 
-        console.log('SELECT DATA ==>', X.data);
-        return foam.core.console.SinkView.create({sinksOnly: false}, X.data); 
-      }
-    },
-    {
-      name: 'calculation',
-      label: 'Calculation',
-      section: 'output',
-      view: function(_, X) {
         return foam.core.console.SinkView.create({sinksOnly: false}, X.data); 
       }
     },
@@ -316,6 +312,7 @@ foam.CLASS({
   actions: [
     {
       name: 'run',
+      section: 'actions',
       code: function() {
         this.version++;
       }

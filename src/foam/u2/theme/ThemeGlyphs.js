@@ -891,6 +891,50 @@ foam.CLASS({
           </svg>
         ` };
       }
+    },
+    {
+      name: 'grid',
+      class: 'GlyphProperty',
+      of: 'foam.lang.Glyph',
+      factory: () => {
+        return { template: `
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+	          <path fill="currentColor" d="M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v14q0 .825-.587 1.413T19 21zm5-2v-6H5v6zm2 0h7v-6h-7zm-7-8h14V5H5z" />
+          </svg>
+        ` };
+      }
+    },
+    {
+      name: 'rectangle',
+      class: 'GlyphProperty',
+      of: 'foam.lang.Glyph',
+      factory: () => {
+        return { template: `
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+	          <path fill="currentColor" d="M2 20V4h20v16zm2-2h16V6H4zm0 0V6z" />
+          </svg>
+        ` };
+      }
+    },
+    {
+      name: 'equalSign',
+      class: 'GlyphProperty',
+      of: 'foam.lang.Glyph',
+      factory: () => {
+        return { template: `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M5.5 17q-.625 0-1.062-.437T4 15.5t.438-1.062T5.5 14h13q.625 0 1.063.438T20 15.5t-.437 1.063T18.5 17zm0-7q-.625 0-1.062-.437T4 8.5t.438-1.062T5.5 7h13q.625 0 1.063.438T20 8.5t-.437 1.063T18.5 10z"/></svg>
+        ` };
+      }
+    },
+    {
+      name: 'functionSign',
+      class: 'GlyphProperty',
+      of: 'foam.lang.Glyph',
+      factory: () => {
+        return { template: `
+          <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24"><path fill="currentColor" d="M5.525 21Q4.4 21 3.7 20.4T3 18.8q0-.8.425-1.288t1.075-.487q.625 0 1.063.425T6 18.475q0 .125-.012.225t-.038.225q.125-.025.213-.138t.137-.312L7.85 10H6q-.425 0-.712-.287T5 9t.288-.712T6 8h2.225l.525-2.85q.175-.95.938-1.55T11.5 3q1.1 0 1.8.65t.7 1.625q0 .75-.425 1.238T12.5 7q-.625 0-1.062-.425T11 5.525q0-.125.013-.225t.037-.225q-.15.05-.225.15t-.125.3L10.275 8H14q.425 0 .712.288T15 9q0 .375-.238.65t-.587.325l1.325 1.5l1.325-1.5q-.35-.05-.587-.325T16 9q0-.425.288-.712T17 8h3q.425 0 .713.288T21 9t-.288.713T20 10h-.55l-2.625 3l2.625 3H20q.425 0 .713.288T21 17t-.288.713T20 18h-3q-.425 0-.712-.288T16 17q0-.375.238-.65t.587-.325L15.5 14.5l-1.325 1.525q.35.05.588.325T15 17q0 .425-.287.713T14 18h-3q-.425 0-.712-.288T10 17t.288-.712T11 16h.55l2.625-3l-2.625-3H9.9l-1.6 8.6q-.2 1.125-.925 1.763T5.525 21"/></svg>
+        ` };
+      }
     }
   ]
 });

@@ -16,28 +16,28 @@ foam.CLASS({
   constants: {
     AGENTS: [
       // Value  Label
-      [ 'CSV', 'CSV', true ],
-      [ 'JSON', 'JSON', true ],
-      [ 'XML', 'XML', true ],
-      [ 'Table', 'Table', true ],
-      [ 'GridBy', 'GridBy', true ],
-      [ 'GroupBy', 'GroupBy', true ],
-      [ 'Cells', 'Cells', true ],
-      [ 'Citation', 'Citation', true ],
-      [ 'Controller', 'Controller', false ],
-      [ 'Avg', 'AVG', true ],
-      [ 'Count', 'COUNT', true ],
-      [ 'Duplicate', 'Duplicate', true ],
-      [ 'Max', 'MAX', true ],
-      [ 'Min', 'MIN', true ],
-      [ 'Sum', 'SUM', true ],
-      [ 'Pie',   'Pie', true ],
-      [ 'Row', 'Row', true ],
-      [ 'Column', 'Column', true ],
-      [ 'Script', 'Script', true ],
-      [ 'View', 'View', true ],
-      [ 'Edit', 'Edit', true ],
-      [ 'All', 'All', false ]
+      [ 'CSV', 'CSV', true, 'format' ],
+      [ 'JSON', 'JSON', true, 'format' ],
+      [ 'XML', 'XML', true, 'format' ],
+      [ 'Table', 'Table', true, 'format' ],
+      [ 'GridBy', 'GridBy', true, 'structure' ],
+      [ 'GroupBy', 'GroupBy', true, 'structure' ],
+      [ 'Cells', 'Cells', true, 'structure' ],
+      [ 'Citation', 'Citation', true, 'structure' ],
+      [ 'Controller', 'Controller', false, 'structure' ],
+      [ 'Avg', 'AVG', true, 'calculation' ],
+      [ 'Count', 'COUNT', true, 'calculation' ],
+      [ 'Duplicate', 'Duplicate', true, 'calculation' ],
+      [ 'Max', 'MAX', true, 'calculation' ],
+      [ 'Min', 'MIN', true, 'calculation' ],
+      [ 'Sum', 'SUM', true, 'calculation' ],
+      [ 'Pie',   'Pie', true, 'structure' ],
+      [ 'Row', 'Row', true, 'structure' ],
+      [ 'Column', 'Column', true, 'structure' ],
+      [ 'Script', 'Script', true, 'structure' ],
+      [ 'View', 'View', true, 'structure' ],
+      [ 'Edit', 'Edit', true, 'structure' ],
+      [ 'All', 'All', false, 'structure' ]
     ]
         /*
         'SEQUENCE',
@@ -54,6 +54,10 @@ foam.CLASS({
 
   properties: [
     {
+      name: 'agentType',
+      value: undefined
+    },
+    {
       class: 'Boolean',
       name: 'sinksOnly',
       value: true
@@ -63,8 +67,10 @@ foam.CLASS({
       factory: function() { return this.AGENTS[0][0]; },
       postSet: function(o, n) { if ( ! this.feedback_ ) this.data = undefined; },
       view: function(_, X) {
-        var choices = X.data.sinksOnly ? X.AGENTS.filter(s => s[2]) : X.AGENTS;
-        return { class: 'foam.u2.view.ChoiceView', choices: choices };
+        var agents = X.AGENTS;
+        if ( X.data.sinksOnly ) agents = agents.filter(s => s[2]);
+        if ( X.data.agentType ) agents = agents.filter(s => s[3] === X.data.agentType);
+        return { class: 'foam.u2.view.ChoiceView', choices: agents };
       }
     },
     {

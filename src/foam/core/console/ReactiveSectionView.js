@@ -15,9 +15,7 @@ foam.CLASS({
   methods: [
     function render() {
       var self = this;
-      self.SUPER();
 
-      // Override property rendering to use our PropertyBorder
       self
         .addClass(self.myClass())
         .callIf(self.section, function() {
@@ -50,8 +48,8 @@ foam.CLASS({
                   this.start(self.GUnit, { columns$: p.gridColumns$, rwColumns$: p.rwGridColumns$, prop: p })
                     .show(shown$)
                     .add(shown$.map(shown => {
-                      // Use our custom PropertyBorder here
-                      return shown ? self.PropertyBorder.create({ data$: self.data$, prop: p }, self.__subContext__) : self.E();
+                      
+                      return shown ? self.PropertyBorder.create({ prop: p }) : self.E();
                     }))
                   .end();
                   propVisArray.push(shown$);

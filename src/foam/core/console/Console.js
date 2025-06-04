@@ -341,6 +341,7 @@ foam.CLASS({
     function branch(self, data, depth) {
       if ( data.flowParent ) {
         this.add(data.dynamic(function (flowName, cmd) {
+          console.log('CMD ==>', cmd)
           this.start('tr').
             enableClass(self.myClass('selected'), self.selected$.map(s => s === data)).
             on('click', () => self.selected = data).
@@ -353,12 +354,12 @@ foam.CLASS({
                 addClass(self.myClass('element-row-content')).
                 callIfElse(cmd.includes('dao'), function() {
                   this.start(foam.u2.tag.Image, {
-                    data: 'images/grid-icon.svg',
+                    glyph: 'grid',
                     embedSVG: true
                   }).addClass(self.myClass('element-row-icon')).end()
                 }, function() {
                   this.start(foam.u2.tag.Image, {
-                    data: 'images/rectangle.svg',
+                    glyph: 'rectangle',
                     embedSVG: true
                   }).addClass(self.myClass('element-row-icon')).end()
                 }).
@@ -552,26 +553,34 @@ foam.CLASS({
       overflow-y: auto;
       width: 30%;
       background-color: $white;
+      transition: width 0.1s;
     }
-    ^r .foam-u2-detail-SectionedDetailView-card-container {
+    ^resize-handle {
+      width: 6px;
+      cursor: ew-resize;
+      background: $primary100;
+      height: 100%;
+      z-index: 10;
+    }
+    ^r .foam-core-console-ReactiveSectionedDetailView-card-container {
       padding: 20px;
       border-top: 1px solid $grey200;
     }
-    ^r .foam-u2-PropertyBorder {
+    ^r .foam-core-console-PropertyBorder {
       flex-direction: row;
       align-items: center;
       width: 100%;
     }
-    ^r .foam-u2-PropertyBorder .foam-u2-PropertyBorder-label {
+    ^r .foam-core-console-PropertyBorder .foam-core-console-PropertyBorder-label {
       width: 50%;
     }
-    ^r .foam-u2-PropertyBorder-view {
+    ^r .foam-core-console-PropertyBorder-view {
       min-height: 0px;
     }
     ^r .foam-core-console-PropertyListView {
       gap: 5px;
     }
-    ^r .foam-u2-PropertyBorder-view > div > span {
+    ^r .foam-core-console-PropertyBorder-view > div > span {
       align-items: center;
       gap: 5px;
     }
@@ -582,7 +591,7 @@ foam.CLASS({
     ^r .h600 {
       font-size: 18px;
     }
-    ^r .foam-u2-PropertyBorder-select {
+    ^r .foam-core-console-PropertyBorder-select {
       flex-direction: column;
       align-items: flex-start;
       gap: 10px;
@@ -591,15 +600,19 @@ foam.CLASS({
       border-radius: 5px;
       border: 1px solid $grey200;
     }
-    ^r .property-select {
+    ^r .property-select , ^r .property-format {
       flex-direction: column;
       align-items: flex-start;
       gap: 10px;
       width: 100%;
     }
-    ^r .property-select .property-choice,
-    ^r .property-select .property-sink,
-    ^r .property-select .property-prop {
+    ^r .foam-core-console-SinkView {
+      width: 100%;
+    }
+    ^r .property-choice,
+    ^r .property-sink,
+    ^r .property-prop,
+    ^r .foam-u2-view-IntView {
       width: 100%;
     }
     ^r .property-select > div {
@@ -619,6 +632,7 @@ foam.CLASS({
     .foam-u2-ActionView-run {
       width: 100%;
     }
+      
   `,
 
   properties: [
@@ -629,27 +643,66 @@ foam.CLASS({
     'left',
     'middle',
     'right',
-    'header'
+    'header',
+    {
+      class: 'Int',
+      name: 'rightWidth',
+      value: 300 
+    }
   ],
 
   methods: [
     function render() {
+      var self = this;
       this.
         addClass().
         start('div', {}, this.header$).addClass(this.myClass('header')).show(this.showHeader$).end().
         start().addClass(this.myClass('flex-container')).
-        start('div', {}, this.left$)
-          .addClass(this.myClass('l'))
-          .enableClass(this.myClass('menuClosed'), this.isMenuOpen$.map(open => !open))
-          .show(this.showLeft$)
-        .end().
-          start().addClass(this.myClass('middle-holder')).
-            start('div', {}, this.middle$).addClass(this.myClass('m')).end().
-          end().
-          start('div', {}, this.right$ ).addClass(this.myClass('r')).show(this.showRight$).end().
-        end();
-    }
+          start('div', {}, this.left$)
+            .addClass(this.myClass('l'))
+            .enableClass(this.myClass('menuClosed'), this.isMenuOpen$.map(open => !open))
+            .show(this.showLeft$)
+          .end().
+          start().addClass(this.myClass('middle-holder'))
+            .style({ flex: '1 1 0%' })
+            .start('div', {}, this.middle$).addClass(this.myClass('m')).end()
+          .end()
+          // --- Resize handle ---
+          .start('div')
+            .addClass(this.myClass('resize-handle'))
+            .on('mousedown', this.onResizeStart)
+          .end()
+          // --- Right sidebar ---
+          .start('div', {}, this.right$)
+            .addClass(this.myClass('r'))
+            .style({ width: this.rightWidth$.map(w => w + 'px') })
+            .show(this.showRight$)
+          .end()
+        .end();
+    },
   ],
+  listeners: [
+    function onResizeStart(e) {
+      console.log('onResizeStart', e);
+      var self = this;
+      var startX = e.clientX;
+      var startWidth = this.rightWidth;
+  
+      function onMouseMove(e) {
+        var newWidth = startWidth - (e.clientX - startX);
+        newWidth = Math.max(200, Math.min(newWidth, 1000));
+        self.rightWidth = newWidth;
+      }
+  
+      function onMouseUp() {
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+      }
+  
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    }
+  ]
 
 });
 
@@ -675,6 +728,7 @@ foam.CLASS({
     'foam.core.console.reflowHeader',
     'foam.core.console.ReactiveDetailView',
     'foam.core.console.ReactiveSectionedDetailView',
+    'foam.core.console.RightSidebarOutputView',
     'foam.core.console.ReflowToolBar',
     // 'foam.core.console.VerticalSectionedView',
     'foam.u2.detail.SectionedDetailView',
@@ -921,6 +975,7 @@ foam.CLASS({
       layout.right.add(this.dynamic(function(selectedValue) {
         this.tag(self.ReactiveSectionedDetailView, {data: selectedValue, showActions: true, showHeader: true});
       }));
+      
       layout.header.add(this.dynamic(function(showPrompts) {
         this.tag(self.reflowHeader, {data: self, showPrompts: showPrompts, resetFlow: self.clearFlow});
       }));
