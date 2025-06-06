@@ -188,7 +188,7 @@ foam.CLASS({
     ^:hover { background: $grey50; }
     ^ .foam-u2-ReadWriteView { padding-right: 8px; }
     ^content {
-      padding: 10px;
+//      padding: 10px;
       overflow-x: auto;
       width: 100%;
     }
@@ -376,7 +376,7 @@ foam.CLASS({
     }
     ^output {
       text-align: left;
-      align-content: flex-end;
+//      align-content: flex-end;
       flex: 1;
       overflow: auto;
     }
@@ -545,7 +545,7 @@ foam.CLASS({
         } finally {
           feedback_ = false;
         }
-      });
+        });
       this.value.memento$.sub(() => {
         if ( feedback_ ) return;
         console.log('***** CONSOLE memento');
