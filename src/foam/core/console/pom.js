@@ -29,6 +29,8 @@ foam.POM({
     { name: 'PropertyOrderChoiceView', flags: 'js' },
     { name: 'ReactiveDetailView',      flags: 'js' },
     { name: 'ReactiveSectionView',      flags: 'js' },
+    { name: 'DynamicReflowData',        flags: 'js' },
+    { name: 'DynamicReflowComponents',  flags: 'js' },
     { name: 'Script',                  flags: 'js' },
     { name: 'Signature',               flags: 'js' },
     { name: 'SinkView',                flags: 'js' },

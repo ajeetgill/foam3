@@ -341,7 +341,6 @@ foam.CLASS({
     function branch(self, data, depth) {
       if ( data.flowParent ) {
         this.add(data.dynamic(function (flowName, cmd) {
-          console.log('CMD ==>', cmd)
           this.start('tr').
             enableClass(self.myClass('selected'), self.selected$.map(s => s === data)).
             on('click', () => self.selected = data).
@@ -928,6 +927,7 @@ foam.CLASS({
       this.flowName$.sub(() => this.refreshFlowScope());
       this.value$.sub(() => this.refreshFlowScope());
 
+
       globalThis.shell = this; // for debugging
 
       // Doesn't work for some reason. Gets detached when new flow loaded
@@ -1026,7 +1026,7 @@ foam.CLASS({
             on('keyup', e => { if ( e.key == 'Enter' || e.keyCode == 13 ) self.onInput(); }).
           end().
           start(self.ON_INPUT).show(self.showInput$).end().
-          tag(self.ReflowToolBar).show(self.showPrompts$).
+          tag(self.ReflowToolBar, { data: self }).show(self.showPrompts$).
         end();
 
         // These observers might cause scroll issues later when queries in the console can be edited

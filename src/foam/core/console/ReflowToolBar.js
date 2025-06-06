@@ -10,18 +10,34 @@ foam.CLASS({
   name: 'ReflowToolBar',
   extends: 'foam.u2.View',
 
+  requires: [
+    'foam.core.console.DynamicReflowData',
+    'foam.core.console.DynamicReflowComponents'
+  ],
+
   css: `
     ^ {
-      padding: 10px;
-      background-color: $white;
-      border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       position: absolute;
       left: 35%;
       bottom: 50;
-      border: 1px solid $grey200;
+      z-index: 100;
     }
-    ^ > div {
+    ^island-holder {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 100;
+    }
+    ^holder {
+      padding: 10px;
+      background-color: $white;
+      border-radius: 4px;
+      border: 1px solid $grey200;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+    }
+    
+    ^button-group {
       display: flex;
       gap: 10px;      
       align-items: center;
@@ -30,30 +46,69 @@ foam.CLASS({
       border: none;
       box-shadow: none;
     }
+    ^ .foam-u2-ActionView.selected {
+      background-color: $primary500;
+      color: $white!important;
+    }
+    ^ .foam-u2-ActionView.selected:hover {
+      background-color: $primary500;
+      color: $white!important;
+    }
   `,
+
+  properties: [
+    {
+      name: 'selected',
+      value: null
+    }
+  ],
 
   methods: [
     function render() {
       var self = this;
-      this.addClass().
-      start()
-        .tag(this.DATA_BUTTON)
-        .tag(this.COMPONENTS)
-        .tag(this.UTILITIES)
-        .tag(this.HELP)
+      const actions = this.cls_.getAxiomsByClass(foam.lang.Action);
+      this.addClass()
+      .start().addClass(this.myClass('island-holder'))
+        .add(this.dynamic(function(selected) {
+          if (selected == 'collections') {
+            this.start().addClass(self.myClass('expanded-island'), self.myClass('holder'))
+              .start(self.DynamicReflowData, { data: self.data })
+            .end();
+          }
+          if (selected == 'components') {
+            this.start().addClass(self.myClass('expanded-island'), self.myClass('holder'))
+              .start(self.DynamicReflowComponents, { data: self.data })
+            .end();
+          }
+        }))
+        .start().addClass(this.myClass('holder'))
+            .add(this.dynamic(function(selected) {
+              this.start().addClass(self.myClass('button-group'))
+                .startContext({ data: self })
+                  .forEach(actions, function(action) {
+                    this.start(action).enableClass('selected', selected === action.name).end();
+                  })
+                .endContext()
+              .end();
+            }))
+        .end()
       .end();
     }
   ],
 
   actions: [
     {
-      name: 'dataButton',
+      name: 'collections',
       label: 'Data',
       buttonStyle: foam.u2.ButtonStyle.SECONDARY,
       size: 'SMALL',
       themeIcon: 'file',
       code: function() {
-        console.log('data');
+        if ( this.selected === 'collections' ) {
+          this.selected = null;
+        } else {
+          this.selected = 'collections';
+        }
       }
     },
     {
@@ -63,7 +118,11 @@ foam.CLASS({
       size: 'SMALL',
       themeIcon: 'plus',
       code: function() {
-        console.log('components');
+        if ( this.selected === 'components' ) {
+          this.selected = null;
+        } else {
+          this.selected = 'components';
+        }
       }
     },
     {
@@ -73,7 +132,11 @@ foam.CLASS({
       size: 'SMALL',
       themeIcon: 'star',
       code: function() {
-        console.log('utilities');
+        if ( this.selected === 'utilities' ) {
+          this.selected = null;
+        } else {
+          this.selected = 'utilities';
+        }
       }
     },
     {
@@ -83,7 +146,11 @@ foam.CLASS({
       themeIcon: 'helpIcon',
       size: 'SMALL',
       code: function() {
-        console.log('help');
+        if ( this.selected === 'help' ) {
+          this.selected = null;
+        } else {
+          this.selected = 'help';
+        }
       }
     }
   ]
