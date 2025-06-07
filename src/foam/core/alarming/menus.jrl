@@ -17,7 +17,6 @@ p({
         limit: 4,
         citationView: "foam.core.alarming.AlarmCitationView",
         viewMore: true,
-        viewMoreMenuItem: "admin.alarms",
         emptyTitle: "No activity"
       },
       mode: "config"
