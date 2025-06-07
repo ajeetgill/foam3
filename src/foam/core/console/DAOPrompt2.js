@@ -42,7 +42,6 @@ foam.CLASS({
             //          add(self.data.dao.of.id). // TODO: link to describe
           start().
             add(self.data.dynamic(async function(version, skip) {
-              if ( ! version ) return;
               var startTime = Date.now();
               // Clone is needed in case the select was loaded from a DAO and doesnt' have correct context.
               // TODO: fix JSON parsing should setup context corectly
@@ -84,6 +83,7 @@ foam.CLASS({
   ],
 
   requires: [
+    'foam.core.console.TableDAOAgent',
     'foam.core.console.DAOPrompt2View',
     'foam.parse.QueryParser'
   ],
@@ -237,6 +237,7 @@ foam.CLASS({
     {
       name: 'select',
       view: function(_, X) { return foam.core.console.SinkView.create({sinksOnly: false, choice: 'Table'}, X.data); },
+      factory: function() { return this.TableDAOAgent.create(); }
     },
     { class: 'Long',            name: 'rowCount', visibility: 'RO' },
     { class: 'String',          name: 'executionTime', value: '-', visibility: 'RO', transient: true, readPermissionRequired: true },
