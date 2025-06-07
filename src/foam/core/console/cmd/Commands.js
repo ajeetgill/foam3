@@ -185,6 +185,7 @@ foam.CLASS({
       this.currentBlock.flowName = this.createFlowChildName(p.label.replaceAll(' ', '').toLowerCase());
       this.currentBlock.obj      = p;
       this.currentBlock.value    = p;
+      p.run();
     }
   ]
 });
