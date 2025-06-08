@@ -320,7 +320,7 @@ p({
 
 p({
   "class":"foam.core.menu.Menu",
-  "id":"reflow",
+  "id":"flow",
   "label":"REFLOW",
   "keyboardShortcut": "meta-k",
   "handler":{
