@@ -16,43 +16,47 @@ foam.CLASS({
     ^table {
       border-collapse: collapse;
       border-spacing: 0;
-      border: 1px solid $grey300;
+      border: 1px solid $backgroundTertiary;
     }
 
     /* Row styling */
     ^tr {
-      border-bottom: 1px solid $grey300;
       transition: background-color 0.2s ease;
     }
 
     /* Header row */
     ^tr:first-child {
-      background-color: $grey200;
+      background-color: $backgroundDefault;
     }
 
     /* Cell styling - both TH and TD */
     ^th, ^td {
       padding: .8rem 1rem;
       transition: background-color 0.15s ease;
-      border: 1px solid $grey300;
+      border: 1px solid $backgroundSecondary;
     }
 
     /* Header cells */
     ^th {
-      background-color: $grey200;
+      background-color: $backgroundDefault;
       font-weight: bold;
       text-align: left;
       text-wrap-mode: nowrap;
     }
+      
+    ^ td:hover {
+      font-weight: 600;
+      background-color: $backgroundBrandSecondary;
+    }
     
     /* Cell highlighting */
-    ^highlighted-cell {
-      background-color: $primary100;
+    ^highlighted-col {
+      background-color: $backgroundBrandTertiary;
     }
 
     /* Row highlighting */
     ^highlighted-row, ^highlighted-row > th, ^highlighted-row > td {
-      background-color: $primary100;
+      background-color: $backgroundBrandTertiary;
     }
   `,
 
@@ -82,7 +86,7 @@ foam.CLASS({
               .on('click', () => { self.x = c; self.y = undefined; })
               .on('mouseover', () => self.currentHoverCol = c)
               .on('mouseleave', function() { self.currentHoverCol = undefined; self.currentHoverRow = undefined; })
-              .enableClass(self.myClass('highlighted-cell'), self.slot((currentHoverCol) => currentHoverCol === c));
+              .enableClass(self.myClass('highlighted-col'), self.slot((currentHoverCol) => currentHoverCol === c));
           }).
         end().
         forEach(data.rows.sortedKeys(), function(r) {
@@ -97,7 +101,7 @@ foam.CLASS({
               .on('click', () => { self.y = r; self.x = undefined; })
               .on('mouseover', () => self.currentHoverRow = r)
               .addClass(self.myClass('th'))
-              .enableClass(self.myClass('highlighted-cell'), self.slot((currentHoverRow) => currentHoverRow === r))
+              .enableClass(self.myClass('highlighted-col'), self.slot((currentHoverRow) => currentHoverRow === r))
               .add(r)
             .end().
             forEach(cols, function(c) {
@@ -105,7 +109,8 @@ foam.CLASS({
                 .on('click', (e) => { self.x = c; self.y = r; e.stopPropagation(); })
                 .on('mouseover', function() { self.currentHoverCol = c; self.currentHoverRow = r; })
                 .on('mouseleave', function() { self.currentHoverCol = undefined; self.currentHoverRow = undefined; })
-                .enableClass(self.myClass('highlighted-cell'), self.slot((currentHoverCol, currentHoverRow) => currentHoverCol === c || currentHoverRow === r))
+                .addClass(self.myClass('td'))
+                .enableClass(self.myClass('highlighted-col'), self.slot((currentHoverCol, currentHoverRow) => currentHoverCol === c || currentHoverRow === r))
                 .add(row.groups[c] || '');
             }).
             end();
