@@ -421,14 +421,14 @@ foam.CLASS({
   
   requires: [
     'foam.u2.DetailView',  // View class for creating forms
-    'UserModel'           // Model class for data validation
+    'foam.core.auth.User'    // Model class for data validation
   ],
   
   methods: [
     function createUserForm() {
       // Use required class to create view
       return this.DetailView.create({
-        data: this.UserModel.create()  // Use required model
+        data: this.User.create()  // Use required model
       });
     },
     
