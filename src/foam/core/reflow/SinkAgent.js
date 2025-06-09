@@ -11,6 +11,11 @@ foam.CLASS({
 
   properties: [
     {
+      class: 'Long',
+      name: 'id',
+      hidden: true
+    },
+    {
       class: 'String',
       name: 'label'
     },
@@ -25,6 +30,16 @@ foam.CLASS({
     {
       class: 'String',
       name: 'type'
+    }
+  ],
+
+  methods: [
+    {
+      name: 'toSummary',
+      type: 'String',
+      code: function() {
+        return this.label;
+      },
     }
   ]
 });
