@@ -217,12 +217,24 @@ foam.CLASS({
 
 ### Without Dependency Injection (Tight Coupling)
 ```javascript
-// BAD: Going fishing for dependencies
+// BAD: Tight coupling - knowing application architecture explicitly
 foam.CLASS({
   name: 'BadExample',
   methods: [
     function init() {
-      // Tight coupling - class knows where to find dependencies
+      // Tight coupling - requires knowing the exact architecture path
+      this.userDAO = this.frame.controller.session.daoAccessor.userDAO;
+      // If the structure changes, all client code breaks
+    }
+  ]
+});
+
+// STILL LOOSE but more work:
+foam.CLASS({
+  name: 'LooseCouplingExample',
+  methods: [
+    function init() {
+      // Context lookup is still loose-coupling, just more work
       this.userDAO = this.__context__.lookup('userDAO');
       this.logger = this.__context__.lookup('log');
       // What if they're not there? What if they move?
