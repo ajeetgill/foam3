@@ -16,7 +16,7 @@ foam.CLASS({
     ^table {
       border-collapse: collapse;
       border-spacing: 0;
-      border: 1px solid $backgroundTertiary;
+      border: 1px solid $borderStrong;
     }
 
     /* Row styling */
@@ -33,7 +33,7 @@ foam.CLASS({
     ^th, ^td {
       padding: .8rem 1rem;
       transition: background-color 0.15s ease;
-      border: 1px solid $backgroundSecondary;
+      border: 1px solid $borderDefault;
     }
 
     /* Header cells */
