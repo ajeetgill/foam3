@@ -546,6 +546,7 @@ foam.POM({
     { name: "foam/dao/ClientSink",                                    flags: "js|java" },
     { name: "foam/u2/ViewFactory",                                    flags: "web" },
     { name: "foam/u2/DAOList",                                        flags: "web" },
+    { name: "foam/u2/DAOChoicesListView",                             flags: "web" },
     { name: "foam/u2/Progressable",                                   flags: "web" },
     { name: "foam/u2/GroupingDAOList",                                flags: "web" },
     { name: "foam/u2/TableView",                                      flags: "web" },
