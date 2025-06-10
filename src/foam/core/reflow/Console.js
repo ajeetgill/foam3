@@ -201,6 +201,7 @@ foam.CLASS({
         return showPrompts;
       },
       code: function() {
+        this.data.eval_(`save ${this.data.flowName}`);
         this.data.showPrompts = false;
       }
     },
