@@ -13,7 +13,11 @@ foam.CLASS({
     'foam.u2.view.RichChoiceViewSection',
   ],
 
-  imports: ['cSpecDAO'],
+  imports: [
+    'cSpecDAO',
+    'selected',
+    'flowChildren'
+  ],
   
   properties: [
     'of',
@@ -35,16 +39,11 @@ foam.CLASS({
     function init() {
       this.SUPER();
 
-      // var tmpDAO = foam.dao.MDAO.create({of: foam.core.boot.CSpec});
-      // tmpDAO.put(foam.core.boot.CSpec.create({
-      //   id: 'temp1',
-      //   name: 'temp1'
-      // }))
-
-      // var tmpSection = this.RichChoiceViewSection.create({
-      //   heading: 'Flow DAOs',
-      //   dao: tmpDAO
-      // });
+      var tmpDAO = foam.dao.MDAO.create({of: foam.core.boot.CSpec});
+      var flowSection = this.RichChoiceViewSection.create({
+        heading: 'Flow DAOs',
+        dao: tmpDAO
+      });
       var daoSection = this.RichChoiceViewSection.create({
         heading: 'DAOs',
         dao: this.cSpecDAO.where(
@@ -54,8 +53,20 @@ foam.CLASS({
           )
         )
       });
-      this.sections = [daoSection];
-      // this.sections = [tmpSection, daoSection];
+      
+      this.flowChildren.forEach(child =>{
+        if (child.flowName !== this.selected.flowName) 
+          child.value.cls_.getAxiomsByClass(foam.dao.DAOProperty).forEach(prop =>
+            tmpDAO.put(foam.core.boot.CSpec.create({
+              id: child.flowName + '.' + prop.name,
+              name: child.flowName + '.' + prop.name
+            }))
+          )
+      })
+      // Using flowChildren.length because for some reason : \ the first render of match commands was glitchy, wouldn't render cSpec DAOs if flowChildren was empty(not counting itself)"
+      // ?? probably there's better logic that can be used here
+      if(this.flowChildren.length > 1) this.sections = [flowSection, daoSection];
+      else this.sections = [daoSection];
     }
   ]
 });

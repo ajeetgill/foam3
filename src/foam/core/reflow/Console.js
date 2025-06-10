@@ -346,6 +346,7 @@ foam.CLASS({
     'createFlowChildName',
     'currentBlock',
     'eval_',
+    'flowChildren',
     'flowScope as scope',
     'history_',
     'log',
