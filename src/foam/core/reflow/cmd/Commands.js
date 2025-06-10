@@ -16,8 +16,7 @@ foam.CLASS({
 
   javaImports: [
     'foam.core.auth.AuthService',
-    'foam.core.auth.AuthorizationException',
-    'foam.util.SafetyUtil'
+    'foam.core.auth.AuthorizationException'
   ],
 
   imports: [ 'currentBlock', 'log', 'out', 'eval_' ],
@@ -29,7 +28,7 @@ foam.CLASS({
     { class: 'String',  name: 'description' },
     { class: 'Code',    name: 'script' },
     { class: 'Boolean', name: 'linkable', value: true },
-    { class: 'String',  name: 'permissionRequired' }
+    { class: 'Boolean', name: 'permissionRequired' }
   ],
 
   methods: [
@@ -57,7 +56,7 @@ foam.CLASS({
       args: 'Context x',
       javaThrows: ['AuthorizationException'],
       javaCode: `
-        if ( ! SafetyUtil.isEmpty(getPermissionRequired()) ) {
+        if ( getPermissionRequired() ) {
           AuthService auth = (AuthService) x.get("auth");
           if ( ! auth.check(x, "command.read."+getId()) ) {
             throw new AuthorizationException();
