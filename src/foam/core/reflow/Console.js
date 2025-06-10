@@ -110,8 +110,8 @@ foam.CLASS({
       this.
         addClass().
         start('table').
-        attr('cellpadding', '4').
-        call(this.branch, [this, this.data, 0]);
+          attr('cellpadding', '4').
+          call(this.branch, [this, this.data, 0]);
     },
 
     function branch(self, data, depth) {
@@ -136,6 +136,7 @@ foam.CLASS({
       }));
     }
   ],
+
   actions: [
     {
       name: 'close',
