@@ -119,7 +119,7 @@ foam.CLASS({
           // console.log('*********** FLOW mementoStr change:', n);
           var json    = JSON.parse(n);
           var memento = this.memento = foam.json.parse(json, null, this.__context__);
-          console.log('mementos:', memento.length);
+          console.log('mementos:', memento?.length);
         } finally {
           this.feedback_ = false;
         }
@@ -143,6 +143,7 @@ foam.CLASS({
       class: 'Int',
       name: 'revision',
       transient: true,
+      value: 1,
       xxxview: {
         class: 'foam.u2.view.DualView',
         viewa: { class: 'foam.u2.IntView' },
@@ -182,7 +183,7 @@ foam.CLASS({
     {
       name: 'reflow',
       code: function(X) {
-        X.routeTo('reflow/' + this.name + '?flowMode=view');
+        X.routeTo('flow/' + this.name + '?flowMode=view');
       },
       isAvailable: function() {
         // Disable in Reflow, but enable in DAOController (because already in reflow)
