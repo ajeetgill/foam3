@@ -8,7 +8,10 @@ foam.CLASS({
   package: 'foam.u2',
   name: 'DAOChoicesListView',
 
-  documentation: 'A view that provides a searchable list of all served DAOs and flowChildren if any available.',
+  documentation: `A view that provides a searchable list of all served DAOs and flowChildren if any available. 
+  For flowChildren, 
+  - all flow-DAOs would be shown irrespective of whether that fow was declared before or after the current selected block,
+  - current selected flowChild is not shown in list of dropdowns.`,
 
   extends: 'foam.u2.view.RichChoiceView',
 
