@@ -46,7 +46,7 @@ foam.CLASS({
       
     ^ td:hover {
       font-weight: 600;
-      background-color: $backgroundBrandSecondary;
+      background-color: $backgroundBrand;
     }
     
     /* Cell highlighting */
