@@ -351,8 +351,7 @@ foam.CLASS({
           }
 
           var isEven = (index + 1) % 2 !== 0 ;
-          var rowEl = self.E().tag(self.rowView, args).attr('data-idx', index).attr('data-even', isEven);
-          e.start(rowEl).hide(self.collapsedGroups[self.currGroup_] ?? false);
+          var rowEl = e.start(self.rowView, args).attr('data-idx', index).attr('data-even', isEven).hide(self.collapsedGroups[self.currGroup_] ?? false);
           rowEl.el().then(a => {
             self.rowObserver.observe(a)
           });
