@@ -48,7 +48,6 @@ foam.CLASS({
       if ( this.of ) {
         this.of.getAxiomsByClass(foam.lang.Property).forEach(p => {
           if ( ! p.showInPropertyChoice ) return;
-          if ( this.predicate && ! this.predicate(p) ) return;
           tempPropertiesDAO.put(foam.core.boot.CSpec.create({
             id: p,
             name: p.name
