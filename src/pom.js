@@ -575,6 +575,7 @@ foam.POM({
     { name: "foam/u2/CurrencyView",                                   flags: "web" },
     { name: "foam/u2/MDCurrencyView",                                 flags: "web" },
     { name: "foam/u2/CheckBox",                                       flags: "web" },
+    { name: "foam/u2/Switch",                                       flags: "web" },
     { name: "foam/u2/CitationView",                                   flags: "web" },
     { name: "foam/u2/PhoneCountryCodeCitationView",                   flags: "web" },
     { name: "foam/u2/TwoColumnCitationView",                          flags: "web" },
