@@ -34,7 +34,7 @@ foam.CLASS({
         if ( this.block.value && this.block.value.VALUE ) {
           this.block.value.value = this.value(s);
         } else {
-          this.block.value = this.value(s);
+          this.block.value = this.value(s); 
         }
         e.startContext({dao: this.dao});
           this.addSinkToE(e, s);

@@ -67,11 +67,13 @@ foam.CLASS({
     {
       class: 'Boolean',
       name: 'isPublic',
-      value: true
+      value: true,
+      view: { class: 'foam.u2.Switch' }
     },
     {
       class: 'Boolean',
-      name: 'readOnly'
+      name: 'readOnly',
+      view: { class: 'foam.u2.Switch' }
     },
     {
       name: 'lastModifiedByAgent',
@@ -118,8 +120,7 @@ foam.CLASS({
         try {
           // console.log('*********** FLOW mementoStr change:', n);
           var json    = JSON.parse(n);
-          var memento = this.memento = foam.json.parse(json, null, this.__context__);
-          console.log('mementos:', memento.length);
+          this.memento = foam.json.parse(json, null, this.__context__);
         } finally {
           this.feedback_ = false;
         }
@@ -176,13 +177,13 @@ foam.CLASS({
       isEnabled: function(name, revision) { return name && name !== 'Unnamed' && revision; },
       isAvailable: function() {
         // Enable in Reflow, but disable in DAOController (because DAOController already has save feature)
-        return this.__context__.flow;
+        return false;
       }
     },
     {
       name: 'reflow',
       code: function(X) {
-        X.routeTo('reflow/' + this.name + '?flowMode=view');
+        X.routeTo('flow/' + this.name + '?flowMode=view');
       },
       isAvailable: function() {
         // Disable in Reflow, but enable in DAOController (because already in reflow)

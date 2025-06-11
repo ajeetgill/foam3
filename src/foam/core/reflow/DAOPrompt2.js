@@ -78,6 +78,34 @@ foam.CLASS({
   package: 'foam.core.reflow',
   name: 'DAOPrompt2',
 
+  sections: [
+    {
+      name: 'general',
+      title: 'General',
+      view: { class: 'foam.core.reflow.ReactiveSectionView' }
+    },
+    {
+      name: 'output',
+      title: 'Output',
+      view: { class: 'foam.core.reflow.ReactiveSectionView' }
+    },
+    {
+      name: 'scroll',
+      title: 'Scroll',
+      view: { class: 'foam.core.reflow.ReactiveSectionView' }
+    },
+    {
+      name: 'filter',
+      title: 'Filter',
+      view: { class: 'foam.core.reflow.ReactiveSectionView' }
+    },
+    {
+      name: 'actions',
+      title: 'Actions',
+      view: { class: 'foam.core.reflow.ReactiveSectionView' }
+    }
+  ],
+
   implements: [
     'foam.mlang.Expressions'
   ],
@@ -103,11 +131,14 @@ foam.CLASS({
       name: 'block',
       factory: function() { return this.currentBlock; },
       hidden: true,
+      section: 'general',
       transient: true
     },
     {
       class: 'String',
       name: 'label',
+      section: 'general',
+      label: 'Name',
       onKey: true,
       factory: function() {
         return this.dao.of.model_.plural;
@@ -117,11 +148,15 @@ foam.CLASS({
     {
       class: 'Boolean',
       name: 'visible',
-      value: true
+      section: 'general',
+      label: 'Visibility',
+      value: true,
+      view: { class: 'foam.u2.Switch' }
     },
     {
       class: 'foam.dao.DAOProperty',
       name: 'dao',
+      section: 'general',
       hidden: true,
       transient: true,
       adapt: function(o, n, p) {
@@ -139,6 +174,7 @@ foam.CLASS({
     },
     {
       name: 'limitedDAO',
+      section: 'general',
       hidden: true,
       transient: true,
       expression: function(skip, limit, filteredDAO) {
@@ -149,6 +185,7 @@ foam.CLASS({
     },
     {
       name: 'filteredDAO',
+      section: 'general',
       hidden: true,
       transient: true,
       expression: function(dao, where, order) {
@@ -193,7 +230,8 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'skip',
-      displayWidth: 8,
+      label: 'Skip',
+      section: 'scroll',
       view: function(_, X) {
         return {
           class: 'foam.u2.view.DualView',
@@ -205,6 +243,7 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'limit',
+      section: 'scroll',
       value: 100,
       placeholder: '',
       displayWidth: 8
@@ -212,6 +251,7 @@ foam.CLASS({
     {
       class: 'String',
       name: 'where',
+      section: 'filter',
       displayWidth: 60,
       view: { class: 'foam.core.reflow.PredicateView' }
 //      view: { class: 'foam.u2.TextField', type: 'search' } // adds 'x' to clear field
@@ -219,6 +259,7 @@ foam.CLASS({
     {
       class: 'String',
       name: 'order',
+      section: 'filter',
       displayWidth: 60,
       view: { class: 'foam.core.reflow.ComparatorView' }
 //      view: { class: 'foam.u2.TextField', type: 'search' } // adds 'x' to clear field
@@ -226,6 +267,7 @@ foam.CLASS({
     {
       class: 'String',
       name: 'columns',
+      section: 'filter',
       displayWidth: 60,
       view: function(_, X) {
         return {
@@ -237,13 +279,15 @@ foam.CLASS({
     {
       name: 'select',
       view: function(_, X) { return foam.core.reflow.SinkView.create({sinksOnly: false, choice: 'Table'}, X.data); },
+      section: 'output',
+      label: '',
       factory: function() { return this.TableDAOAgent.create(); }
     },
-    { class: 'Long',            name: 'rowCount', visibility: 'RO' },
-    { class: 'String',          name: 'executionTime', value: '-', visibility: 'RO', transient: true, readPermissionRequired: true },
-    { class: 'Boolean',         name: 'autoRun' },
-    { class: 'Int',             name: 'version', hidden: true },
-    { class: 'FObjectProperty', name: 'value', transient: true, hidden: true, visibility: 'RO' }
+    { class: 'Long',       hidden: true,    name: 'rowCount', visibility: 'RO' },
+    { class: 'String',     hidden: true,   name: 'executionTime', value: '-', visibility: 'RO', transient: true, readPermissionRequired: true },
+    { class: 'Boolean',    hidden: true,    name: 'autoRun', view: { class: 'foam.u2.Switch' } },
+    { class: 'Int',        hidden: true,  name: 'version', hidden: true },
+    { class: 'FObjectProperty',  name: 'value', transient: true, hidden: true, visibility: 'RO' }
   ],
 
   methods: [
@@ -266,6 +310,9 @@ foam.CLASS({
   actions: [
     {
       name: 'run',
+      section: 'actions',
+      size: 'SMALL',
+      buttonStyle: foam.u2.ButtonStyle.PRIMARY,
       code: function() {
         this.version++;
       }
