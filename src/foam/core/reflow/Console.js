@@ -67,6 +67,10 @@ foam.CLASS({
   name: 'reflowHeader',
   extends: 'foam.u2.View',
 
+  requires: [
+    'foam.u2.dialog.ConfirmationModal'
+  ],
+
   imports: [
     'stack'
   ],
@@ -208,6 +212,18 @@ foam.CLASS({
       }
     },
     {
+      name: 'confirmReset',
+      label: 'Confirm',
+      buttonStyle: foam.u2.ButtonStyle.PRIMARY,
+      size: 'SMALL',
+      isAvailable: function(showPrompts) {
+        return showPrompts;
+      },
+      code: function() {
+        this.data.eval_('clear');
+      }
+    },
+    {
       name: 'reset',
       label: 'New',
       buttonStyle: foam.u2.ButtonStyle.TEXT,
@@ -216,7 +232,14 @@ foam.CLASS({
         return showPrompts;
       },
       code: function() {
-        this.data.eval_('clear');
+        let confirmationModal = this.ConfirmationModal.create({
+          title: `Are you sure you want to reset the view ?`,
+          primaryAction: this.CONFIRM_RESET,
+          showCancel: true,
+          modalStyle: 'DESTRUCTIVE',
+          data: this
+        })
+        this.add(confirmationModal);
       }
     }
   ]
