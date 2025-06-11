@@ -12,18 +12,19 @@ foam.CLASS({
   css: `
     /* Base table styling */
     ^table, ^td { 
-      border-collapse: separate; 
+      border-collapse: collapse; 
       border-spacing: 0;
-      border: 1px solid $grey300;
+      border: 1px solid $borderStrong;
     }
     
     /* Row styling */
     ^tr {
+      border: 1px solid $borderDefault;
       transition: background-color 0.2s ease;
     }
     
     ^tr:hover {
-      background-color: $primary200;
+      background-color: $backgroundBrandTertiary;
     }
     
     /* Cell styling - both TH and TD */
