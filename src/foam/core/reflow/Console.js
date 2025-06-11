@@ -123,7 +123,7 @@ foam.CLASS({
           start('td').
             enableClass(self.myClass('error'), flowName.startsWith('error')).
             style({'paddingLeft': (4 + depth * 12) + 'px'}).
-            add(flowName).
+            callIfElse(flowName, function() { this.add(flowName); }, function() { this.start('i').add('Unnamed'); }).
             callIf(data.flowParent, function() {
               this.start().addClass('close').startContext({ data: data }).tag(self.CLOSE).endContext().end();
             }).
@@ -414,12 +414,8 @@ foam.CLASS({
     {
       class: 'String',
       name: 'flowName',
-      preSet: function(o, n) {
-        return n || 'Unnamed';
-      },
       postSet: function(o, n) {
-        if ( n !== 'Unnamed' )
-          this.route = n;
+        this.route = n;
       }
     },
     {
@@ -507,7 +503,7 @@ foam.CLASS({
     {
       name: 'value',
       // The Console's Flow Value, which is the Flow object it is saved as
-      factory: function() { return this.Flow.create({name: 'Unnamed'}); }
+      factory: function() { return this.Flow.create(); }
     }
   ],
 
@@ -854,6 +850,7 @@ foam.CLASS({
       code: function() {
         this.clearFlow();
         this.focusInput();
+        this.flowName = '';
       },
       keyboardShortcuts: [ 'meta-k', 'ctrl-k' ]
     }
