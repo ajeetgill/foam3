@@ -118,8 +118,7 @@ foam.CLASS({
         try {
           // console.log('*********** FLOW mementoStr change:', n);
           var json    = JSON.parse(n);
-          var memento = this.memento = foam.json.parse(json, null, this.__context__);
-          console.log('mementos:', memento?.length);
+          this.memento = foam.json.parse(json, null, this.__context__);
         } finally {
           this.feedback_ = false;
         }
