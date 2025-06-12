@@ -1,5 +1,5 @@
 # Installation
-## Linux / Chromebook
+## Linux / Chromebook / WSL
 Install git, java, maven, npm, nvm, and nodejs, if required. On Linux, you can do this with:
 
     sudo apt install git
@@ -45,14 +45,18 @@ Install Maven
 
     brew install maven
 
-Git Clone
-
-    git clone https://github.com/kgrgreer/foam3.git
+# Environment
 
 Setup /opt Directory
 
     sudo chown -R $USER /opt
 
+# FOAM
+Git Clone
+
+    git clone https://github.com/kgrgreer/foam3.git
+
+# Application
 Create an example application
 
     ./build.sh -T+setup/Project --type:demo --appName:Example --package:com.foamdev --adminPassword:badpassword
