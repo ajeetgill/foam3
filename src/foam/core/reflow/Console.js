@@ -565,7 +565,7 @@ foam.CLASS({
     ^l {
       padding: 4px;
       background-color: $white;
-      width: 20%;
+      width: 15%;
       border-right: 1px solid $grey200;
     }
     ^middle-holder {
@@ -599,10 +599,11 @@ foam.CLASS({
       padding: 0px;
       border: none;
     }
-    ^r .h600 {
-      font-size: 18px;
-    }
-    ^r .property-select , ^r .property-format {
+    
+    ^r .property-select, 
+    ^r .property-format,
+    ^r .property-select1,
+    ^r .property-select2 {
       flex-direction: column;
       align-items: flex-start;
       gap: 10px;
@@ -617,7 +618,7 @@ foam.CLASS({
     ^r .foam-u2-view-IntView {
       width: 100%;
     }
-    ^r .property-select > div {
+    ^r .foam-core-reflow-SinkView > div {
       width: 100%;
       flex-direction: column;
       align-items: flex-start;
@@ -630,12 +631,15 @@ foam.CLASS({
 
     ^menuClosed {
      width: 4% !important;
-   }
+    }
     ^r .foam-core-reflow-ReactiveSectionView-actionDiv {
       gap: 10px;
     }
     .foam-u2-ActionView-run {
       width: 100%;
+    }
+    ^r .foam-u2-detail-SectionView-actionDiv {
+      gap: 10px;
     }
       
   `,
@@ -652,7 +656,7 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'rightWidth',
-      value: 300 
+      value: 400 
     }
   ],
 

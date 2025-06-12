@@ -95,7 +95,7 @@ foam.CLASS({
       align-items: center;
       gap: 5px;
     }
-    ^select {
+    ^select, ^select1, ^select2 {
       flex-direction: column;
       align-items: flex-start;
       gap: 10px;
