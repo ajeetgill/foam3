@@ -38,7 +38,7 @@ foam.CLASS({
     function init() {
       this.SUPER();
 
-      var tempPropertiesDAO = foam.dao.MDAO.create({ of: foam.core.boot.CSpec });
+      var tempPropertiesDAO = foam.dao.MDAO.create({ of: this.of });
 
       var propertiesSection = this.RichChoiceViewSection.create({
         heading: 'Properties',
