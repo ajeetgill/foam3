@@ -116,6 +116,15 @@ foam.CLASS({
       width: 14px;
       height: 14px;
     }
+    ^ .foam-core-reflow-SinkView {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 5px;
+    }
+    ^ .foam-core-reflow-SinkView > div > div {
+      width: 100%;
+    }
   `,
 
   properties: [
