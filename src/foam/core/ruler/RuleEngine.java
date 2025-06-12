@@ -120,7 +120,7 @@ public class RuleEngine extends ContextAwareSupport {
       var message = "CRITICAL UNEXPECTED EXCEPTION EXECUTING RULE(S): \n";
       for ( Rule rule : rules ) {
         message += rule.getId();
-        message += " "
+        message += " ";
         message += rule.getName();
         message += "\n";
       }
