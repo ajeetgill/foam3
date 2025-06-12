@@ -17,17 +17,11 @@ foam.CLASS({
   ],
 
   css: `
-    ^ {
-      position: absolute;
-      left: 35%;
-      bottom: 50;
-      z-index: 100;
-    }
     ^island-holder {
       display: flex;
       flex-direction: column;
       gap: 10px;
-      z-index: 100;
+      align-items: center;
     }
     ^holder {
       padding: 10px;
@@ -35,7 +29,6 @@ foam.CLASS({
       border-radius: 4px;
       border: 1px solid $grey200;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      z-index: 100;
     }
     
     ^button-group {

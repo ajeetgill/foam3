@@ -786,9 +786,16 @@ foam.CLASS({
     ^ .foam-u2-view-ValueView {
       min-width: 220px;
     }
-    .foam.core.reflow-Layout-l { overflow-y: auto; }
-    .foam.core.reflow-Layout-r .foam.core.reflow-PropertyBorder-richText .foam.core.reflow-PropertyBorder-propHolder { margin-left: -85px; }
+    .foam-core-reflow-Layout-l { overflow-y: auto; }
+    .foam-core-reflow-Layout-r .foam-core-reflow-PropertyBorder-richText .foam-core-reflow-PropertyBorder-propHolder { margin-left: -85px; }
     ^ .foam-u2-ProgressView { width: 600px; }
+    ^ .foam-core-reflow-ReflowToolBar {
+      position: absolute;
+      left: 0;
+      bottom: 50;
+      width: 100%;
+      z-index: 100;
+    }
   `,
 
   properties: [
