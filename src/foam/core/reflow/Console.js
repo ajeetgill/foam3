@@ -55,8 +55,8 @@ foam.CLASS({
       this.flowChildren = this.flowChildren.filter(c => c != f);
       this.removeFlowChild_ && this.removeFlowChild_(f);
       
-      if (this.selected === f) {
-        if (this.flowChildren.length > 0) {
+      if ( this.selected === f ) {
+        if ( this.flowChildren.length > 0 ) {
           var newIndex = Math.max(0, index - 1);
           this.selected = this.flowChildren[newIndex];
         } else {

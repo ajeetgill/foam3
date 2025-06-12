@@ -92,7 +92,7 @@ foam.CLASS({
               .start(self.DynamicReflowComponents, { data: self.data })
             .end();
           } 
-          if (selected == 'help') {
+          if ( selected == 'help' ) {
             this.start().addClass(self.myClass('expanded-island'), self.myClass('holder'))
               .start(self.DynamicReflowHelp, { data: self.data })
             .end();

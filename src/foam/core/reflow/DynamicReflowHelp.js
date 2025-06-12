@@ -84,14 +84,13 @@ foam.CLASS({
   `,
 
   properties: [
-    
   ],
 
   methods: [
     async function render() {
+
       var self = this;
       
-
       this.addClass()
         .start().addClass(this.myClass('container'))
           .forEach(this.COMMANDS, function(command) {
