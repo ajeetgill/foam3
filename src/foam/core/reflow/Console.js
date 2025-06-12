@@ -268,7 +268,7 @@ foam.CLASS({
     }
     ^ table td .close {
       font-size: 1.2rem;
-    } 
+    }
     .foam-u2-ActionView-text:hover:not(:disabled) {
       background-color: $grey400!important;
     }
@@ -611,9 +611,9 @@ foam.CLASS({
       align-items: flex-start;
       gap: 10px;
     }
-    ^ .foam-u2-RangeView-skip { 
-      width: 100%; 
-      accent-color: $primary500;     
+    ^ .foam-u2-RangeView-skip {
+      width: 100%;
+      accent-color: $primary500;
     }
 
     ^menuClosed {
@@ -625,7 +625,7 @@ foam.CLASS({
     .foam-u2-ActionView-run {
       width: 100%;
     }
-      
+
   `,
 
   properties: [
@@ -640,7 +640,7 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'rightWidth',
-      value: 300 
+      value: 300
     }
   ],
 
@@ -680,18 +680,18 @@ foam.CLASS({
       var self = this;
       var startX = e.clientX;
       var startWidth = this.rightWidth;
-  
+
       function onMouseMove(e) {
         var newWidth = startWidth - (e.clientX - startX);
         newWidth = Math.max(200, Math.min(newWidth, 1000));
         self.rightWidth = newWidth;
       }
-  
+
       function onMouseUp() {
         window.removeEventListener('mousemove', onMouseMove);
         window.removeEventListener('mouseup', onMouseUp);
       }
-  
+
       window.addEventListener('mousemove', onMouseMove);
       window.addEventListener('mouseup', onMouseUp);
     }
@@ -748,6 +748,7 @@ foam.CLASS({
     'history_',
     'log',
     'out',
+    'save',
     'scrollToBottom',
     'selected',
     'showPrompts',
@@ -935,7 +936,7 @@ foam.CLASS({
       // this.selectedValue$.follow(this.selected$.dot('value'));
 
       // Add commands to localScope
-      var cmds = await this.commandDAO.select(); 
+      var cmds = await this.commandDAO.select();
 
       cmds.array.forEach(c => {
         this.localScope[c.id] = (...args) => {
@@ -992,7 +993,7 @@ foam.CLASS({
       layout.right.add(this.dynamic(function(selectedValue) {
         this.tag(self.ReactiveSectionedDetailView, {data: selectedValue, showActions: true, showHeader: true});
       }));
-      
+
       layout.header.add(this.dynamic(function(showPrompts) {
         this.tag(self.ReflowHeader, {data: self, showPrompts: showPrompts, resetFlow: self.clearFlow});
       }));
@@ -1197,6 +1198,25 @@ foam.CLASS({
   ],
 
   actions: [
+    {
+      name: 'save',
+      code: function() {
+        // TODO: FIX
+        // This is a hackish solution to the bug that the memento is saved before
+        // the last block's name is set. Ideally the block would be named before
+        // being added to the flowChildren. Alternatively, the mementoStr could never
+        // be created until just before you save, but updating it for every update
+        // will make it easy to implement undo/redo in the future.
+        this.flow.MEMENTO.postSet.call(this, this.menento, this.memento);
+        this.flow.version++;
+        this.flow.mementoMgr.clear();
+        this.flow.flowDAO.put(this);
+      },
+      // TODO:
+//      isEnabled: function(flowName) { return flowName; },
+//      isEnabled: function(flowName, flow$revision) { return flowName && flow$revision; },
+//      isEnabled: function(name, revision) { return name && revision; },
+    },
     {
       name: 'helpKey',
       isAvailable: function(input_) {
