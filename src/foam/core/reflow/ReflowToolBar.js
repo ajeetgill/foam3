@@ -12,7 +12,8 @@ foam.CLASS({
 
   requires: [
     'foam.core.reflow.DynamicReflowData',
-    'foam.core.reflow.DynamicReflowComponents'
+    'foam.core.reflow.DynamicReflowComponents',
+    'foam.core.reflow.DynamicReflowHelp'
   ],
 
   css: `
@@ -25,6 +26,7 @@ foam.CLASS({
     ^island-holder {
       display: flex;
       flex-direction: column;
+      align-items: left;
       gap: 10px;
       z-index: 100;
     }
@@ -35,6 +37,7 @@ foam.CLASS({
       border: 1px solid $grey200;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       z-index: 100;
+      max-width: 320px;
     }
     
     ^button-group {
@@ -56,6 +59,23 @@ foam.CLASS({
   ],
 
   methods: [
+    function init() {
+      this.SUPER();
+      this.boundHandleClickOutside = this.handleClickOutside.bind(this);
+      window.addEventListener('click', this.boundHandleClickOutside);
+    },
+
+    function destroy() {
+      window.removeEventListener('click', this.boundHandleClickOutside);
+      this.SUPER();
+    },
+
+    function handleClickOutside(e) {
+      const islandHolder = document?.querySelector(`.${this.myClass('island-holder')}`);      if (islandHolder && !islandHolder.contains(e.target)) {
+        this.selected = null;
+      }
+    },
+
     function render() {
       var self = this;
       const actions = this.cls_.getAxiomsByClass(foam.lang.Action);
@@ -71,7 +91,13 @@ foam.CLASS({
             this.start().addClass(self.myClass('expanded-island'), self.myClass('holder'))
               .start(self.DynamicReflowComponents, { data: self.data })
             .end();
+          } 
+          if (selected == 'help') {
+            this.start().addClass(self.myClass('expanded-island'), self.myClass('holder'))
+              .start(self.DynamicReflowHelp, { data: self.data })
+            .end();
           }
+          
         }))
         .start().addClass(this.myClass('holder'))
             .add(this.dynamic(function(selected) {
