@@ -33,9 +33,9 @@ foam.CLASS({
   ],
     */
 
-  tableColumns: [ 'name', 'source', 'description', 'status', 'backgroundRunner', 'lastRun', /* 'isPublic', 'readOnly', */ 'reflow' ],
+  tableColumns: [ 'name', 'source', 'description', 'status', 'schedule', 'lastRun', 'nextRun', /* 'isPublic', 'readOnly', */ 'reflow' ],
 
-  searchColumns: [ 'name', 'status', 'source', 'backgroundRunner' ],
+  searchColumns: [ 'name', 'status', 'source', 'schedule' ],
 
   properties: [
     {
@@ -89,7 +89,7 @@ foam.CLASS({
       name: 'memento',
       hidden: true,
       transient: true,
-      postSet: function(o, n) {
+      postSet: function(_, n) {
         if ( this.feedback_ ) return;
         this.feedback_ = true;
         try {
@@ -100,7 +100,7 @@ foam.CLASS({
             formatDatesAsNumbers: false,
             outputDefaultValues: false,
             useShortNames: false,
-            propertyPredicate: function(o, p) { return ! p.externalTransient && ! p.networkTransient; }
+            propertyPredicate: function(_, p) { return ! p.externalTransient && ! p.networkTransient; }
           });
 //          this.mementoStr = foam.json.Short.stringify(n);
           this.mementoStr = json.stringify(n);
@@ -113,7 +113,7 @@ foam.CLASS({
       class: 'String',
       name: 'mementoStr',
       label: 'Script',
-      postSet: function(o, n) {
+      postSet: function(_, n) {
         if ( this.feedback_ ) return;
         this.feedback_ = true;
         try {
@@ -149,20 +149,30 @@ foam.CLASS({
         viewb: { class: 'foam.u2.RangeView', onKey: true }
       }
     },
-    // Background Runner Properties
+    // Schedule Properties
     {
-      class: 'Boolean',
-      name: 'backgroundRunner',
-      label: 'Background Runner',
-      documentation: 'Whether this flow should be run automatically in the background',
-      value: false,
-      view: { class: 'foam.u2.Switch' }
+      name: 'schedule',
+      class: 'FObjectProperty',
+      of: 'foam.core.cron.Schedule',
+      view: {
+        class: 'foam.u2.view.FObjectView',
+        of: 'foam.core.cron.Schedule'
+      },
+      section: 'scheduling',
+      javaFactory: `return new foam.core.cron.CronSchedule.Builder(getX()).build();`
     },
     {
       class: 'DateTime',
       name: 'lastRun',
       label: 'Last Run',
       documentation: 'Timestamp of the last execution of this flow'
+    },
+    {
+      class: 'DateTime',
+      name: 'nextRun',
+      label: 'Next Run',
+      documentation: 'Calculated timestamp for the next execution of this flow (computed server-side)',
+      transient: true
     }
   ],
 

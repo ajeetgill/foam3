@@ -10,8 +10,8 @@ p({
     "second": 0
   },
   "scheduledTime": "2025-01-01T00:00:00.000Z",
-  "id": "FlowBackgroundRunnerCron",
-  "description": "Cron for executing background flows - runs every 5 minutes to check for flows with backgroundRunner enabled.",
+  "id": "FlowSchedulerCron",
+  "description": "Cron for executing scheduled flows - runs every 5 minutes to check for flows with defined schedules that are ready to run.",
   "code":
   """
     import foam.dao.DAO;
@@ -23,8 +23,9 @@ p({
     import java.util.Date;
     import java.io.IOException;
 
-    // Headless flag - set to true to run Chrome in headless mode, false for visual debugging
-    boolean headless = true;
+    // Configuration
+    boolean headless = true; // Set to true to run Chrome in headless mode, false for visual debugging
+    int timeoutSeconds = 30; // Timeout for flow execution in seconds (configurable)
 
     DAO flowDAO = (DAO) x.get("flowDAO");
     
@@ -35,23 +36,42 @@ p({
 
     Date now = new Date();
     
-    // Find flows that have backgroundRunner enabled
+    // Find flows that have a schedule defined and should run
     ArraySink sink = (ArraySink) flowDAO
-      .where(MLang.EQ(Flow.BACKGROUND_RUNNER, true))
+      .where(MLang.NOT(MLang.EQ(Flow.SCHEDULE, null)))
       .select(new ArraySink());
 
     if ( sink.getArray().size() == 0 ) {
-      print("No background flows to run at " + now);
+      print("No scheduled flows found at " + now);
       return;
     }
 
-    print("Found " + sink.getArray().size() + " background flows to execute");
+    print("Found " + sink.getArray().size() + " scheduled flows to check");
 
+    int executedCount = 0;
     for ( Object flowObj : sink.getArray() ) {
       Flow flow = (Flow) flowObj;
       
       try {
-        print("Executing background flow: " + flow.getName());
+        // Check if flow should run based on its schedule and last run time
+        if ( flow.getSchedule() == null ) {
+          print("Flow '" + flow.getName() + "' has no schedule - skipping");
+          continue;
+        }
+        
+        Date lastRun = flow.getLastRun();
+        if ( lastRun == null ) {
+          lastRun = new Date(0); // Use epoch if never run
+        }
+        
+        Date nextScheduledTime = flow.getSchedule().getNextScheduledTime(x, lastRun);
+        if ( nextScheduledTime == null || nextScheduledTime.getTime() > now.getTime() ) {
+          print("Flow '" + flow.getName() + "' not ready to run - next run: " + nextScheduledTime + " - skipping");
+          continue;
+        }
+        
+        executedCount++;
+        print("Executing scheduled flow: " + flow.getName());
         
         // Clone the flow before making changes (object is frozen)
         Flow clonedFlow = (Flow) flow.fclone();
@@ -114,23 +134,48 @@ p({
           }
         }
         
-        // Build Chrome command with conditional headless flag
         String[] chromeCmd;
         if ( headless ) {
+          // Create a data URL that loads the flow and monitors for completion
+          String autoExitScript = 
+            "data:text/html,<html><head><title>Flow Monitor</title></head><body>" +
+            "<iframe id='flowFrame' src='" + flowURL + "' style='width:100%;height:90vh;border:none;'></iframe>" +
+            "<script>" +
+              "function checkForCompletion(){" +
+                "try{" +
+                  "var frame=document.getElementById('flowFrame');" +
+                  "var doc=frame.contentDocument||frame.contentWindow.document;" +
+                  "var text=doc.body.innerText||doc.body.textContent||'';" +
+                  "if(text.toLowerCase().indexOf('completed')>=0){" +
+                    "console.log('Found completion text - closing');" +
+                    "window.close();" +
+                  "}" +
+                "}catch(e){" +
+                  "console.log('Cross-origin check failed, using timeout');" +
+                "}" +
+              "}" +
+              "setInterval(checkForCompletion,2000);" +
+              "setTimeout(function(){window.close()}," + (timeoutSeconds * 1000) + ");" + // Configurable safety timeout
+            "</script>" +
+            "</body></html>";
+            
           chromeCmd = new String[] {
             chromeExe,
-            "--incognito",
-            "--new-window",
-            "--disable-gpu",
-            "--no-sandbox",
             "--headless",
-            flowURL
+            "--disable-gpu", 
+            "--no-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-web-security", // Allow iframe access
+            "--disable-features=VizDisplayCompositor",
+            "--run-all-compositor-stages-before-draw",
+            "--enable-automation",
+            autoExitScript
           };
         } else {
           chromeCmd = new String[] {
             chromeExe,
             "--incognito",
-            "--new-window",
+            "--new-window", 
             "--disable-gpu",
             "--no-sandbox",
             flowURL
@@ -144,27 +189,28 @@ p({
         pb.redirectErrorStream(true);
         Process process = pb.start();
         
-        // Wait for process to complete (with timeout)
-        boolean finished = process.waitFor(300, java.util.concurrent.TimeUnit.SECONDS);
+        // Wait for process to complete with configurable timeout
+        print("Running with " + timeoutSeconds + " second timeout...");
+        boolean finished = process.waitFor(timeoutSeconds, java.util.concurrent.TimeUnit.SECONDS);
         
         if ( finished ) {
           int exitCode = process.exitValue();
           if ( exitCode == 0 ) {
-            print("Successfully executed background flow: " + flow.getName());
+            print("Successfully executed scheduled flow: " + flow.getName());
           } else {
-            print("Background flow execution failed with exit code " + exitCode + ": " + flow.getName());
+            print("Scheduled flow execution failed with exit code " + exitCode + ": " + flow.getName());
           }
         } else {
-          print("Background flow execution timed out: " + flow.getName());
+          print("Scheduled flow execution timed out: " + flow.getName());
           process.destroyForcibly();
         }
       } catch (Exception e) {
-        print("Failed to execute background flow: " + flow.getName() + ", error: " + e.getMessage());
+        print("Failed to execute scheduled flow: " + flow.getName() + ", error: " + e.getMessage());
         e.printStackTrace();
       }
     }
     
-    print("Flow background runner completed");
+    print("Flow scheduler completed - executed " + executedCount + " flows");
   """,
   "enabled": true
 })
