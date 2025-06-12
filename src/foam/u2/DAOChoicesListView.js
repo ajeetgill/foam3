@@ -10,12 +10,12 @@ foam.CLASS({
 
   implements: [ 'foam.mlang.Expressions' ],
 
-  documentation: `A view that provides a searchable list of all served DAOs and flowChildren if any available. 
-  For flowChildren, 
-  - all flow-DAOs would be shown irrespective of whether that fow was declared before or after the current selected block,
-  - current selected flowChild is not shown in list of dropdowns.`,
-
   extends: 'foam.u2.TextField',
+  documentation: `An Input view that provides a dropdown list of all served DAOs and flowChildren if any available. 
+  The dropdown list gets filtered as user inputs their query.
+  For flowChildren, 
+  - all flow-DAOs would be shown irrespective of whether that flow was declared before or after the current selected block,
+  - current selected flowChild is not shown in list of dropdowns.`,
 
   imports: [
     'cSpecDAO',
@@ -34,22 +34,17 @@ foam.CLASS({
   methods: [
     function init() {
       var flowChoices = [];
+      var daoChoices = [];
 
-      this.flowChildren.forEach(child =>{
-        // if (child.flowName !== this.selected.flowName) {
-          child.value?.cls_ && child.value.cls_.getAxiomsByClass(foam.dao.DAOProperty).forEach(prop => flowChoices.push(child.flowName + '.' + prop.name))
-        // }
+      this.flowChildren.forEach( child => {
+          child.value?.cls_ && child.value.cls_.getAxiomsByClass(foam.dao.DAOProperty).forEach( prop => flowChoices.push(child.flowName + '.' + prop.name) )
       })
       
-      // this.choices = [...flowChoices]
-      // try removing below with above one
-      
-      var daoChoices = [];
-      
-      // Set initial choices to flowChoices (if any)
-      if (flowChoices.length > 0) {
-        this.choices = [...flowChoices];
-      }
+      // Question to ask/look into: 
+      // Why is setting of this.choices here(LN:47) important? Because if 
+      // - I remove Line::(`this.choices = [...flowChoices]`) then things stop working on first match command 
+      // If I filter flowChoices at Line:39 right before pushing, then first match command nothing renders
+      this.choices = [ ...flowChoices ]
       
       var allDAOs = this.cSpecDAO.where(
         this.AND(
@@ -58,23 +53,19 @@ foam.CLASS({
         )
       );
       
-      allDAOs.select().then(sink => {
-        sink.array.forEach(d => {
-          daoChoices.push(d.name);
+      allDAOs.select().then( sink => {
+        sink.array.forEach( d => {
+          daoChoices.push( d.name );
         });
 
-        // if( flowChoices ) this.choices = [...flowChoices, ...daoChoices];
-        // else this.choices = [...daoChoices];
-        // Update choices with combined array only after DAO query completes
-        if (flowChoices.length > 0) {
-          var currentSelectedRemovedArray = Array.from(flowChoices).filter(e => {
+        if ( flowChoices.length > 0 ) {
+          var currentSelectedRemovedArray = Array.from(flowChoices).filter( e => {
             const dotIndex = e.indexOf(".");
-            // Skip this check if there's no dot
             if (dotIndex === -1) return true;
-            return e.substring(0, dotIndex) !== this.selected.flowName;
+            return e.substring(0, dotIndex) !== this.selected.flowName; // e.g. extracts 'match1' from 'match1.data1' to check with current selected flowName
           })
-          this.choices = [...currentSelectedRemovedArray, ...daoChoices];
-        } 
+          this.choices = [ ...currentSelectedRemovedArray, ...daoChoices ];
+        }
       });
       
     }
