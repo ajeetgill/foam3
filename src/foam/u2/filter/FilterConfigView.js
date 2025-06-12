@@ -50,7 +50,11 @@ foam.CLASS({
     {
       class: 'String',
       name: 'filterSearch',
-      placeholder: 'Search...'
+      view : {
+        class: 'foam.u2.TextField',
+        onKey: true,
+        placeholder: 'Search...'
+      }
     },
     ['showDropdownIcon', false],
     ['themeIcon', 'settings'],
