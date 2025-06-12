@@ -33,9 +33,9 @@ foam.CLASS({
   ],
     */
 
-  tableColumns: [ 'name', 'source', 'description', 'status', /* 'isPublic', 'readOnly', */ 'reflow' ],
+  tableColumns: [ 'name', 'source', 'description', 'status', 'backgroundRunner', 'lastRun', /* 'isPublic', 'readOnly', */ 'reflow' ],
 
-  searchColumns: [ 'name', 'status', 'source' ],
+  searchColumns: [ 'name', 'status', 'source', 'backgroundRunner' ],
 
   properties: [
     {
@@ -148,6 +148,21 @@ foam.CLASS({
         viewa: { class: 'foam.u2.IntView' },
         viewb: { class: 'foam.u2.RangeView', onKey: true }
       }
+    },
+    // Background Runner Properties
+    {
+      class: 'Boolean',
+      name: 'backgroundRunner',
+      label: 'Background Runner',
+      documentation: 'Whether this flow should be run automatically in the background',
+      value: false,
+      view: { class: 'foam.u2.Switch' }
+    },
+    {
+      class: 'DateTime',
+      name: 'lastRun',
+      label: 'Last Run',
+      documentation: 'Timestamp of the last execution of this flow'
     }
   ],
 

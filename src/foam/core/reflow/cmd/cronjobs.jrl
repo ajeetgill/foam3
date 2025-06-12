@@ -1,0 +1,170 @@
+p({
+  "class": "foam.core.cron.Cron",
+  "schedule": {
+    "class": "foam.core.cron.CronSchedule",
+    "minute": 5,
+    "hour": -1,
+    "dayOfMonth": -1,
+    "month": -1,
+    "dayOfWeek": -1,
+    "second": 0
+  },
+  "scheduledTime": "2025-01-01T00:00:00.000Z",
+  "id": "FlowBackgroundRunnerCron",
+  "description": "Cron for executing background flows - runs every 5 minutes to check for flows with backgroundRunner enabled.",
+  "code":
+  """
+    import foam.dao.DAO;
+    import foam.mlang.MLang;
+    import foam.core.reflow.Flow;
+    import foam.dao.ArraySink;
+    import foam.core.User;
+    import foam.core.session.Session;
+    import java.util.Date;
+    import java.io.IOException;
+
+    // Headless flag - set to true to run Chrome in headless mode, false for visual debugging
+    boolean headless = true;
+
+    DAO flowDAO = (DAO) x.get("flowDAO");
+    
+    if ( flowDAO == null ) {
+      print("flowDAO not found - skipping flow background runner");
+      return;
+    }
+
+    Date now = new Date();
+    
+    // Find flows that have backgroundRunner enabled
+    ArraySink sink = (ArraySink) flowDAO
+      .where(MLang.EQ(Flow.BACKGROUND_RUNNER, true))
+      .select(new ArraySink());
+
+    if ( sink.getArray().size() == 0 ) {
+      print("No background flows to run at " + now);
+      return;
+    }
+
+    print("Found " + sink.getArray().size() + " background flows to execute");
+
+    for ( Object flowObj : sink.getArray() ) {
+      Flow flow = (Flow) flowObj;
+      
+      try {
+        print("Executing background flow: " + flow.getName());
+        
+        // Clone the flow before making changes (object is frozen)
+        Flow clonedFlow = (Flow) flow.fclone();
+        
+        // Update last run timestamp
+        clonedFlow.setLastRun(now);
+        flowDAO.put(clonedFlow);
+
+        // Get or create a real session for authentication using the flow's creator
+        String sessionID = null;
+        foam.dao.DAO sessionDAO = (foam.dao.DAO) x.get("sessionDAO");
+        foam.dao.DAO userDAO = (foam.dao.DAO) x.get("userDAO");
+        
+        if ( sessionDAO == null || userDAO == null ) {
+          print("Required DAOs not available - skipping flow: " + flow.getName());
+          continue;
+        }
+        
+        // Get the user who created this flow
+        Object flowCreator = null;
+        Long createdBy = flow.getCreatedBy();
+        
+        if ( createdBy != null && createdBy > 0 ) {
+          flowCreator = userDAO.find(createdBy);
+          print("Found flow creator with ID: " + createdBy);
+        }
+        
+        if ( flowCreator == null ) {
+          print("Flow creator not found for flow: " + flow.getName() + " - skipping");
+          continue;
+        }
+        
+        // Create a session for the flow creator  
+        session = x.create(foam.core.session.Session.class);
+        user = flowCreator;
+        
+        // Set session properties
+        userId = user.getId();
+        session.setUserId(userId);
+        session.setCreated(now);
+        session.setLastUsed(now);
+        session.setContext(x);
+        
+        // Put session in DAO and get the session ID
+        sessionDAO.put(session);
+        sessionID = session.getId();
+        print("Created session " + sessionID + " for flow creator: " + userId);
+        
+        // Build the chrome command for visual execution (no headless for debugging)
+        String flowURL = "http://localhost:8080/" + "?sessionId=" + sessionID + "#flow/" + flow.getName();
+        // Try different Chrome executable paths for macOS
+        String chromeExe = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+        java.io.File chromeFile = new java.io.File(chromeExe);
+        if ( !chromeFile.exists() ) {
+          // Try alternative paths
+          chromeExe = "/usr/bin/google-chrome";
+          chromeFile = new java.io.File(chromeExe);
+          if ( !chromeFile.exists() ) {
+            chromeExe = "google-chrome";  // Last resort - try PATH
+          }
+        }
+        
+        // Build Chrome command with conditional headless flag
+        String[] chromeCmd;
+        if ( headless ) {
+          chromeCmd = new String[] {
+            chromeExe,
+            "--incognito",
+            "--new-window",
+            "--disable-gpu",
+            "--no-sandbox",
+            "--headless",
+            flowURL
+          };
+        } else {
+          chromeCmd = new String[] {
+            chromeExe,
+            "--incognito",
+            "--new-window",
+            "--disable-gpu",
+            "--no-sandbox",
+            flowURL
+          };
+        }
+        
+        print("Executing: chrome " + flowURL);
+        
+        // Execute the chrome command
+        ProcessBuilder pb = new ProcessBuilder(chromeCmd);
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+        
+        // Wait for process to complete (with timeout)
+        boolean finished = process.waitFor(300, java.util.concurrent.TimeUnit.SECONDS);
+        
+        if ( finished ) {
+          int exitCode = process.exitValue();
+          if ( exitCode == 0 ) {
+            print("Successfully executed background flow: " + flow.getName());
+          } else {
+            print("Background flow execution failed with exit code " + exitCode + ": " + flow.getName());
+          }
+        } else {
+          print("Background flow execution timed out: " + flow.getName());
+          process.destroyForcibly();
+        }
+      } catch (Exception e) {
+        print("Failed to execute background flow: " + flow.getName() + ", error: " + e.getMessage());
+        e.printStackTrace();
+      }
+    }
+    
+    print("Flow background runner completed");
+  """,
+  "enabled": true
+})
