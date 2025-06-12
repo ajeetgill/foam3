@@ -639,7 +639,12 @@ foam.CLASS({
     ^r .foam-u2-detail-SectionView-actionDiv {
       gap: 10px;
     }
-      
+
+    ^r .foam-u2-view-TitledArrayView-value-view-container {
+      border: 1px solid $grey200;
+      padding: 10px;
+      border-radius: 4px;
+    }
   `,
 
   properties: [

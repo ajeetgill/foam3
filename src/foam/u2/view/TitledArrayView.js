@@ -21,14 +21,6 @@ foam.CLASS({
     ^header-row {
       align-items: center;
     }
-    ^value-view-container {
-      border: 1px solid $grey200;
-      padding: 10px;
-      border-radius: 5px;
-    }
-    ^ .foam-core-reflow-PropertyListView {
-      width: 100%;
-    }
   `,
 
   properties: [
