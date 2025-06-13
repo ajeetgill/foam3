@@ -162,8 +162,8 @@ public class SessionServerBox
       pm.log(x);
       delegate.send(new foam.box.Envelope(effectiveContext, message, replyBox));
     } catch (Throwable t) {
-      // t.printStackTrace(); // Uncomment to debug server-side exceptions
       logger.warning(t.getMessage());
+      // logger.warning(t.getMessage(), t); // Uncomment to debug server-side exceptions
       if ( t instanceof NullPointerException) {
         logger.error(t);
       }
