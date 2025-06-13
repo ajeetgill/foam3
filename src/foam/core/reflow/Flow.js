@@ -121,8 +121,10 @@ foam.CLASS({
             useShortNames: false,
             propertyPredicate: function(_, p) { return ! p.externalTransient && ! p.networkTransient; }
           });
-//          this.mementoStr = foam.json.Short.stringify(n);
-          this.mementoStr = json.stringify(n);
+          //          this.mementoStr = foam.json.Short.stringify(n);
+          // HACK: Console doesn't set name until after the block is added, so if we store the mementoStr
+          // now it will lack the name. Just delay a bit to allow name to be set.
+          setTimeout(() => this.mementoStr = json.stringify(n),1);
         } finally {
           this.feedback_ = false;
         }
