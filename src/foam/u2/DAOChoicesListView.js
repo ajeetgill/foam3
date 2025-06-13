@@ -46,7 +46,7 @@ foam.CLASS({
       // If I filter flowChoices at Line:39 right before pushing, then first match command nothing renders
       this.choices = [ ...flowChoices ]
       
-      var allDAOs = this.CSpecDAO.where(foam.core.boot.CSpec.SERVED_DAOS)
+      var allDAOs = this.cSpecDAO.where(foam.core.boot.CSpec.SERVED_DAOS)
       
       allDAOs.select().then( sink => {
         sink.array.forEach( d => {
