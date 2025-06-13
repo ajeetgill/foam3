@@ -7,11 +7,11 @@
 foam.CLASS({
   package: 'foam.u2',
   name: 'DAOChoicesListView',
-
   extends: 'foam.u2.TextField',
-  documentation: `An Input view that provides a dropdown list of all served DAOs and flowChildren if any available. 
+
+  documentation: `An Input view that provides a dropdown list of all served DAOs and flowChildren if any available.
   The dropdown list gets filtered as user inputs their query.
-  For flowChildren, 
+  For flowChildren,
   - all flow-DAOs would be shown irrespective of whether that flow was declared before or after the current selected block,
   - current selected flowChild is not shown in list of dropdowns.`,
 
@@ -20,15 +20,16 @@ foam.CLASS({
     'selected',
     'flowChildren'
   ],
-  
+
   properties: [
     'of',
     {
       name: 'choices',
-      factory: function() { 
-        return []; 
+      factory: function() {
+        return [];
       }
     },
+    [ 'size', 45 ]
   ],
 
   methods: [
@@ -39,15 +40,15 @@ foam.CLASS({
       this.flowChildren.forEach( child => {
           child.value?.cls_ && child.value.cls_.getAxiomsByClass(foam.dao.DAOProperty).forEach( prop => flowChoices.push(child.flowName + '.' + prop.name) )
       })
-      
-      // Question to ask/look into: 
-      // Why is setting of this.choices here(LN:47) important? Because if 
-      // - I remove Line::(`this.choices = [...flowChoices]`) then things stop working on first match command 
+
+      // Question to ask/look into:
+      // Why is setting of this.choices here(LN:47) important? Because if
+      // - I remove Line::(`this.choices = [...flowChoices]`) then things stop working on first match command
       // If I filter flowChoices at Line:39 right before pushing, then first match command nothing renders
       this.choices = [ ...flowChoices ]
-      
+
       var allDAOs = this.cSpecDAO.where(foam.core.boot.CSpec.SERVED_DAOS)
-      
+
       allDAOs.select().then( sink => {
         sink.array.forEach( d => {
           daoChoices.push( d.name );
@@ -62,7 +63,7 @@ foam.CLASS({
           this.choices = [ ...currentSelectedRemovedArray, ...daoChoices ];
         }
       });
-      
+
     }
   ]
 });
