@@ -37,7 +37,9 @@ public class SessionDAOSkeleton
     else if ( "cmd".equals(n)       ) { rpc.setName("cmd_"); }
 
     if ( "put_".equals(n) ) {
-      DAO delegate = (DAO) getDelegateFactory().create(foam.lang.XLocator.get());
+      // DAO delegate = (DAO) getDelegateFactory().create(foam.lang.XLocator.get()); // works
+      DAO delegate = (DAO) getDelegateFactory().create(envelope.getX()); // works
+      // DAO delegate = (DAO) getDelegateFactory().create(getX());  // works
 
       synchronized ( this ) {
         FObject obj = (foam.lang.FObject)(rpc.getArgs() != null && rpc.getArgs().length > 1 ? rpc.getArgs()[1] : null);

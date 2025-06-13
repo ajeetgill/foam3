@@ -160,7 +160,7 @@ public class SessionServerBox
       }
 
       pm.log(x);
-      delegate.send(new foam.box.Envelope(message, replyBox));
+      delegate.send(new foam.box.Envelope(effectiveContext, message, replyBox));
     } catch (Throwable t) {
       // t.printStackTrace(); // Uncomment to debug server-side exceptions
       logger.warning(t.getMessage());

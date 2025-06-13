@@ -1,6 +1,7 @@
 foam.CLASS({
   package: 'foam.box',
   name: 'Envelope',
+  implements: [ 'foam.lang.ContextAware' ],
   properties: [
     {
       class: 'Object',
@@ -13,7 +14,7 @@ foam.CLASS({
       adapt: function(_, v) {
         // Don't auto upgrade to real fobjects, sometimes people just want to make an
         // anonymous box with a plan js object.
-        return v
+        return v;
       }
     }
   ],

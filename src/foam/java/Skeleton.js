@@ -92,9 +92,7 @@ foam.CLASS({
 
     long                start    = System.currentTimeMillis();
     foam.box.RPCMessage rpc      = (foam.box.RPCMessage) envelope.getMessage();
-
-    // TODO: Should boxes be context oriented?
-    foam.lang.X         x        = foam.lang.XLocator.get();
+    foam.lang.X         x        = envelope.getX();
 
     <%
     var methods = this.of.getOwnAxiomsByClass(foam.lang.Method);
