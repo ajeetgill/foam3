@@ -194,7 +194,7 @@ foam.CLASS({
       class: 'DateTime',
       name: 'lastRun',
       label: 'Last Run',
-      hidden: true,
+      readPermissionRequired: true,
       documentation: 'Timestamp of the last execution of this flow. Works with this.schedule.'
     }
   ],

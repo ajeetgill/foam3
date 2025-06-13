@@ -22,7 +22,6 @@ foam.CLASS({
       of: 'foam.core.reflow.FlowAccess',
       name: 'accessLevel',
       view: function(_, X) {
-        debugger
         return {
           class: 'foam.u2.view.RadioView',
           isHorizontal: true,
