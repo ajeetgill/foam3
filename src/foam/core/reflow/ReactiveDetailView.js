@@ -31,7 +31,7 @@ foam.CLASS({
       toJSON: function(v) {
         var m = {};
         for ( key in v ) { m[key] = v[key].toString(); }
-       
+
         return m;
       }
     }
@@ -266,6 +266,10 @@ foam.CLASS({
   ],
 
   methods: [
+    function render() {
+      this.sections.forEach(s => s.view = 'foam.core.reflow.ReactiveSectionView');
+      this.SUPER();
+    },
     function renderTitle(self) {
       // NOP
     }
