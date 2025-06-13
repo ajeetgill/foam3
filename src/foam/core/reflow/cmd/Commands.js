@@ -276,6 +276,7 @@ foam.CLASS({
   ]
 });
 
+
 foam.CLASS({
   package: 'foam.core.reflow.cmd',
   name: 'DAOCreateSave',
