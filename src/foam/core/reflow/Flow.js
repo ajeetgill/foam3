@@ -136,10 +136,10 @@ foam.CLASS({
           // now it will lack the name. Just delay a bit to allow name to be set.
 
         } finally {
-          setTimeout(()=> {
+//          setTimeout(()=> {
             this.mementoStr = json.stringify(n)
             this.feedback_ = false;
-          }, 1);
+//          }, 1);
         }
       }
     },
@@ -241,7 +241,7 @@ foam.CLASS({
         if ( getAccessLevel() == FlowAccess.SHARED ) {
           // check user accesss
           if ( getSpecifiedUserAccess() != null ) {
-            var hasUserAccess = Arrays.stream(getSpecifiedUserAccess()).anyMatch(o -> 
+            var hasUserAccess = Arrays.stream(getSpecifiedUserAccess()).anyMatch(o ->
               ((UserFlowAccess) o).getUserId() == user.getId() &&
               (
                 ((UserFlowAccess) o).getAccessLevel() == foam.core.reflow.FlowAccess.PUBLIC_RO ||
@@ -280,7 +280,7 @@ foam.CLASS({
         if ( getAccessLevel() == FlowAccess.SHARED ) {
           // check user accesss
           if ( getSpecifiedUserAccess() != null ) {
-            var hasUserAccess = Arrays.stream(getSpecifiedUserAccess()).anyMatch(o -> 
+            var hasUserAccess = Arrays.stream(getSpecifiedUserAccess()).anyMatch(o ->
               ((UserFlowAccess) o).getUserId() == user.getId() && ((UserFlowAccess) o).getAccessLevel() == foam.core.reflow.FlowAccess.PUBLIC_RW
             );
             if ( hasUserAccess ) return;
@@ -314,7 +314,7 @@ foam.CLASS({
         if ( getAccessLevel() == FlowAccess.SHARED ) {
           // check user accesss
           if ( getSpecifiedUserAccess() != null ) {
-            var hasUserAccess = Arrays.stream(getSpecifiedUserAccess()).anyMatch(o -> 
+            var hasUserAccess = Arrays.stream(getSpecifiedUserAccess()).anyMatch(o ->
               ((UserFlowAccess) o).getUserId() == user.getId() && ((UserFlowAccess) o).getAccessLevel() == foam.core.reflow.FlowAccess.PUBLIC_RW
             );
             if ( hasUserAccess ) return;
