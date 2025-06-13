@@ -124,9 +124,12 @@ foam.CLASS({
           //          this.mementoStr = foam.json.Short.stringify(n);
           // HACK: Console doesn't set name until after the block is added, so if we store the mementoStr
           // now it will lack the name. Just delay a bit to allow name to be set.
-          setTimeout(() => this.mementoStr = json.stringify(n),1);
+   
         } finally {
-          this.feedback_ = false;
+          setTimeout(()=> {
+            this.mementoStr = json.stringify(n)
+            this.feedback_ = false;
+          }, 1);
         }
       }
     },
