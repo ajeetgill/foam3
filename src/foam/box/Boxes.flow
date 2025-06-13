@@ -39,7 +39,7 @@ box.send(foam.box.Envelope.create({
 
 <h1>How are Boxes used in FOAM</h1>
 
-<p>Boxes are primarily used to drive the Stub/Skeleton RPC system of FOAM.  For example, ClientDAO is a Stub DAO, it can be provided with a Box an will communicate over that Box to provide a DAO interface.</p>
+<p>Boxes are primarily used to drive the Stub/Skeleton RPC system of FOAM.  For example, ClientDAO is a Stub DAO, it can be provided with a Box and will communicate over that Box to provide a DAO interface.</p>
 
 <code>
 var dao = foam.dao.ClientDAO.create({
