@@ -21,7 +21,13 @@ foam.CLASS({
     'foam.core.auth.AuthorizationException',
     'foam.core.auth.Subject',
     'foam.core.auth.User',
+    'foam.lang.X',
+    'foam.core.auth.AuthService',
     'java.util.Arrays'
+  ],
+
+  requires: [
+    'foam.core.cron.CronSchedule',
   ],
 
   imports: [ 'flowDAO' ],
@@ -42,9 +48,9 @@ foam.CLASS({
   ],
     */
 
-  tableColumns: [ 'name', 'source', 'description', 'status', /* 'isPublic', 'readOnly', */ 'reflow' ],
+  tableColumns: [ 'name', 'source', 'description', 'status', 'schedule', 'lastRun', /* 'isPublic', 'readOnly', */ 'reflow' ],
 
-  searchColumns: [ 'name', 'status', 'source' ],
+  searchColumns: [ 'name', 'status', 'source', 'schedule' ],
 
   properties: [
     {
@@ -102,7 +108,7 @@ foam.CLASS({
       name: 'memento',
       hidden: true,
       transient: true,
-      postSet: function(o, n) {
+      postSet: function(_, n) {
         if ( this.feedback_ ) return;
         this.feedback_ = true;
         try {
@@ -113,7 +119,7 @@ foam.CLASS({
             formatDatesAsNumbers: false,
             outputDefaultValues: false,
             useShortNames: false,
-            propertyPredicate: function(o, p) { return ! p.externalTransient && ! p.networkTransient; }
+            propertyPredicate: function(_, p) { return ! p.externalTransient && ! p.networkTransient; }
           });
 //          this.mementoStr = foam.json.Short.stringify(n);
           this.mementoStr = json.stringify(n);
@@ -126,7 +132,7 @@ foam.CLASS({
       class: 'String',
       name: 'mementoStr',
       label: 'Script',
-      postSet: function(o, n) {
+      postSet: function(_, n) {
         if ( this.feedback_ ) return;
         this.feedback_ = true;
         try {
@@ -170,8 +176,20 @@ foam.CLASS({
     {
       class: 'Reference',
       of: 'foam.core.auth.ServiceProvider',
-      name: 'spid',
-      hidden: true
+      name: 'spid'
+    },
+    {
+      name: 'schedule',
+      class: 'FObjectProperty',
+      of: 'foam.core.cron.CronSchedule',
+      documentation: 'Schedule to run this flow.'
+    },
+    {
+      class: 'DateTime',
+      name: 'lastRun',
+      label: 'Last Run',
+      hidden: true,
+      documentation: 'Timestamp of the last execution of this flow. Works with this.schedule.'
     }
   ],
 
@@ -187,10 +205,20 @@ foam.CLASS({
       `
     },
     {
+      name: 'checkBypassAuthorization',
+      args: `X x`,
+      type: 'boolean',
+      javaCode: `
+        AuthService auth = (AuthService) x.get("auth");
+        return auth.check(x, "*" );
+      `
+    },
+    {
       name: 'authorizeOnRead',
       javaCode: `
         User user = ((Subject) x.get("subject")).getUser();
         if ( getCreatedBy() == user.getId() ) return;
+        if ( checkBypassAuthorization(x) ) return;
 
         if ( getAccessLevel() == FlowAccess.PRIVATE ) throw new AuthorizationException();
 
@@ -198,8 +226,8 @@ foam.CLASS({
           var hasAccess = Arrays.stream(getSpecifiedUserAccess()).anyMatch(o ->
             ((UserFlowAccess) o).getUserId() == user.getId() &&
             (
-              ((UserFlowAccess) o).getAccessLevel() == foam.core.reflow.FlowAccess.PUBLIC_RO ||
-              ((UserFlowAccess) o).getAccessLevel() == foam.core.reflow.FlowAccess.PUBLIC_RW
+              ((UserFlowAccess) o).getAccessLevel() == FlowAccess.PUBLIC_RO ||
+              ((UserFlowAccess) o).getAccessLevel() == FlowAccess.PUBLIC_RW
             )
           );
           if ( ! hasAccess ) throw new AuthorizationException();
@@ -211,12 +239,13 @@ foam.CLASS({
       javaCode: `
         User user = ((Subject) x.get("subject")).getUser();
         if ( getCreatedBy() == user.getId() ) return;
+        if ( checkBypassAuthorization(x) ) return;
 
         if ( getAccessLevel() == FlowAccess.PRIVATE || getAccessLevel() == FlowAccess.PUBLIC_RO ) throw new AuthorizationException();
 
         if ( getAccessLevel() == FlowAccess.SHARED ) {
-          var hasAccess = Arrays.stream(getSpecifiedUserAccess()).anyMatch(o ->
-            ((UserFlowAccess) o).getUserId() == user.getId() && ((UserFlowAccess) o).getAccessLevel() == foam.core.reflow.FlowAccess.PUBLIC_RW
+          var hasAccess = Arrays.stream(getSpecifiedUserAccess()).anyMatch(o -> 
+            ((UserFlowAccess) o).getUserId() == user.getId() && ((UserFlowAccess) o).getAccessLevel() == FlowAccess.PUBLIC_RW
           );
           if ( ! hasAccess ) throw new AuthorizationException();
         }
@@ -227,12 +256,13 @@ foam.CLASS({
       javaCode: `
         User user = ((Subject) x.get("subject")).getUser();
         if ( getCreatedBy() == user.getId() ) return;
-
+        if ( checkBypassAuthorization(x) ) return;
+        
         if ( getAccessLevel() == FlowAccess.PRIVATE || getAccessLevel() == FlowAccess.PUBLIC_RO ) throw new AuthorizationException();
 
         if ( getAccessLevel() == FlowAccess.SHARED ) {
-          var hasAccess = Arrays.stream(getSpecifiedUserAccess()).anyMatch(o ->
-            ((UserFlowAccess) o).getUserId() == user.getId() && ((UserFlowAccess) o).getAccessLevel() == foam.core.reflow.FlowAccess.PUBLIC_RW
+          var hasAccess = Arrays.stream(getSpecifiedUserAccess()).anyMatch(o -> 
+            ((UserFlowAccess) o).getUserId() == user.getId() && ((UserFlowAccess) o).getAccessLevel() == FlowAccess.PUBLIC_RW
           );
           if ( ! hasAccess ) throw new AuthorizationException();
         }
