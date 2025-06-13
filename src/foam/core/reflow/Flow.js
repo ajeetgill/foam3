@@ -21,6 +21,8 @@ foam.CLASS({
     'foam.core.auth.AuthorizationException',
     'foam.core.auth.Subject',
     'foam.core.auth.User',
+    'foam.lang.X',
+    'foam.core.auth.AuthService',
     'java.util.Arrays'
   ],
 
@@ -169,8 +171,7 @@ foam.CLASS({
     {
       class: 'Reference',
       of: 'foam.core.auth.ServiceProvider',
-      name: 'spid',
-      hidden: true
+      name: 'spid'
     },
     {
       name: 'schedule',
@@ -199,10 +200,20 @@ foam.CLASS({
       `
     },
     {
+      name: 'checkBypassAuthorization',
+      args: `X x`,
+      type: 'boolean',
+      javaCode: `
+        AuthService auth = (AuthService) x.get("auth");
+        return auth.check(x, "*" );
+      `
+    },
+    {
       name: 'authorizeOnRead',
       javaCode: `
         User user = ((Subject) x.get("subject")).getUser();
         if ( getCreatedBy() == user.getId() ) return;
+        if ( checkBypassAuthorization(x) ) return;
 
         if ( getAccessLevel() == FlowAccess.PRIVATE ) throw new AuthorizationException();
  
@@ -210,8 +221,8 @@ foam.CLASS({
           var hasAccess = Arrays.stream(getSpecifiedUserAccess()).anyMatch(o -> 
             ((UserFlowAccess) o).getUserId() == user.getId() &&
             (
-              ((UserFlowAccess) o).getAccessLevel() == foam.core.reflow.FlowAccess.PUBLIC_RO ||
-              ((UserFlowAccess) o).getAccessLevel() == foam.core.reflow.FlowAccess.PUBLIC_RW
+              ((UserFlowAccess) o).getAccessLevel() == FlowAccess.PUBLIC_RO ||
+              ((UserFlowAccess) o).getAccessLevel() == FlowAccess.PUBLIC_RW
             )
           );
           if ( ! hasAccess ) throw new AuthorizationException();
@@ -223,12 +234,13 @@ foam.CLASS({
       javaCode: `
         User user = ((Subject) x.get("subject")).getUser();
         if ( getCreatedBy() == user.getId() ) return;
+        if ( checkBypassAuthorization(x) ) return;
 
         if ( getAccessLevel() == FlowAccess.PRIVATE || getAccessLevel() == FlowAccess.PUBLIC_RO ) throw new AuthorizationException();
  
         if ( getAccessLevel() == FlowAccess.SHARED ) {
           var hasAccess = Arrays.stream(getSpecifiedUserAccess()).anyMatch(o -> 
-            ((UserFlowAccess) o).getUserId() == user.getId() && ((UserFlowAccess) o).getAccessLevel() == foam.core.reflow.FlowAccess.PUBLIC_RW
+            ((UserFlowAccess) o).getUserId() == user.getId() && ((UserFlowAccess) o).getAccessLevel() == FlowAccess.PUBLIC_RW
           );
           if ( ! hasAccess ) throw new AuthorizationException();
         }
@@ -239,12 +251,13 @@ foam.CLASS({
       javaCode: `
         User user = ((Subject) x.get("subject")).getUser();
         if ( getCreatedBy() == user.getId() ) return;
-
+        if ( checkBypassAuthorization(x) ) return;
+        
         if ( getAccessLevel() == FlowAccess.PRIVATE || getAccessLevel() == FlowAccess.PUBLIC_RO ) throw new AuthorizationException();
  
         if ( getAccessLevel() == FlowAccess.SHARED ) {
           var hasAccess = Arrays.stream(getSpecifiedUserAccess()).anyMatch(o -> 
-            ((UserFlowAccess) o).getUserId() == user.getId() && ((UserFlowAccess) o).getAccessLevel() == foam.core.reflow.FlowAccess.PUBLIC_RW
+            ((UserFlowAccess) o).getUserId() == user.getId() && ((UserFlowAccess) o).getAccessLevel() == FlowAccess.PUBLIC_RW
           );
           if ( ! hasAccess ) throw new AuthorizationException();
         }
