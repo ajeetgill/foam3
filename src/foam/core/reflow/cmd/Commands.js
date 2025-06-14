@@ -172,7 +172,7 @@ foam.CLASS({
       var self = this;
       var fns  = Object.keys(foam.core.reflow.lib).sort();
 
-      this.out.start('h3').add('Functionss').end().
+      this.out.start('h3').add('Functions').end().
       start('table').style({width: 'max-content'}).
         forEach(fns, function(f) {
           if ( q && f.toLowerCase().indexOf(q) == -1 ) return;
