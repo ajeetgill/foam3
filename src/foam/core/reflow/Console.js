@@ -569,7 +569,7 @@ foam.CLASS({
     ^flex-container {
       display: flex;
       flex-direction: row;
-      height: 90%;
+      height: 100%;
     }
     ^header {
       padding: 10px;
@@ -644,10 +644,7 @@ foam.CLASS({
     }
 
     ^menuClosed {
-     width: 4% !important;
-    }
-    ^r .foam-core-reflow-ReactiveSectionView-actionDiv {
-      gap: 10px;
+     width: fit-content;
     }
     .foam-u2-ActionView-run {
       width: 100%;

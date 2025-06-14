@@ -151,6 +151,13 @@ foam.CLASS({
   ],
 
   methods: [
+    function init() {
+      // Reset context property border to the default border
+      // This is done to prevent setting reactions on nested FObject props
+      const x = this.__context__.createSubContext();
+      x.register(foam.u2.PropertyBorder, 'foam.u2.PropertyBorder');
+      this.__context__ = x;
+    },
     function render() {
       this.data$.sub(this.onDataChange);
       this.onDataChange();
@@ -250,28 +257,25 @@ foam.CLASS({
   extends: 'foam.u2.detail.SectionedDetailView',
 
   requires: [
-    'foam.core.reflow.ReactiveSectionView'
+    'foam.core.reflow.PropertyBorder'
   ],
 
   css: `
     ^card-container {
-      padding: 20px;
-      border-top: 1px solid $grey200;
+      padding: 0 20px;
     }
   `,
 
   properties: [
-    [ 'showActions', true ],
-    [ 'expandPropertyViews', false ]
+    [ 'showActions', true ]
   ],
 
   methods: [
-    function render() {
-      this.sections.forEach(s => s.view = 'foam.core.reflow.ReactiveSectionView');
+    function init() {
+      const x = this.__context__.createSubContext();
+      x.register(this.PropertyBorder, 'foam.u2.PropertyBorder');
+      this.__context__ = x;
       this.SUPER();
-    },
-    function renderTitle(self) {
-      // NOP
     }
   ]
 });
