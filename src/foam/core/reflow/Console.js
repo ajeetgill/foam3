@@ -220,7 +220,7 @@ foam.CLASS({
     },
     {
       name: 'confirmReset',
-      label: 'Confirm',
+      label: 'Yes, Confirm',
       buttonStyle: foam.u2.ButtonStyle.PRIMARY,
       size: 'SMALL',
       isAvailable: function(showPrompts) {
@@ -246,7 +246,7 @@ foam.CLASS({
       },
       code: function() {
         let confirmationModal = this.ConfirmationModal.create({
-          title: `Are you sure you want to reset the view ?`,
+          title: `Unsaved changes will be lost, are you sure you want a New Reflow page?`,
           primaryAction: this.CONFIRM_RESET,
           showCancel: true,
           modalStyle: 'DESTRUCTIVE',
