@@ -125,11 +125,11 @@ foam.CLASS({
       this.addClass()
         .start().addClass(this.myClass('header-container'))
           .start().addClass(this.myClass('navigator'))
-            .tag(this.HOME)
-            .start(foam.u2.tag.Image, {
-              glyph: 'rightChevron',
-              embedSVG: true
-            }).addClass(this.myClass('chevron')).end()
+            // .tag(this.HOME)
+            // .start(foam.u2.tag.Image, {
+            //   glyph: 'rightChevron',
+            //   embedSVG: true
+            // }).addClass(this.myClass('chevron')).end()
             .startContext({data: this})
               .tag(this.REFLOWS)
             .endContext()
@@ -162,16 +162,16 @@ foam.CLASS({
   ],
 
   actions: [
-    {
-      name: 'home',
-      label: '',
-      buttonStyle: foam.u2.ButtonStyle.TERTIARY,
-      themeIcon: 'home',
-      size: 'SMALL',
-      code: function(X) {
-        X.pushDefaultMenu()
-      }
-    },
+    // {
+    //   name: 'home',
+    //   label: '',
+    //   buttonStyle: foam.u2.ButtonStyle.TERTIARY,
+    //   themeIcon: 'home',
+    //   size: 'SMALL',
+    //   code: function(X) {
+    //     X.pushDefaultMenu()
+    //   }
+    // },
     {
       name: 'reflows',
       label: 'Reflows',
