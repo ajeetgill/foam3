@@ -1,224 +1,150 @@
 ## Services
 
-FOAM services provide a clean way to implement distributed functionality with client-server communication. Services are typically implemented in Java and automatically generate client stubs, server skeletons, and handle network marshalling.
+FOAM services implement business logic that goes beyond simple CRUD operations. They coordinate between DAOs and handle complex workflows.
 
-## Service Architecture
+## Basic Service Pattern
 
-The typical FOAM service consists of:
+1. **Interface Definition** - Service contract
+2. **Java Implementation** - Business logic using DAOs
+3. **Service Registration** - Configure in services.jrl
+4. **Client Usage** - Import and use
 
-1. **Interface Definition** - Defines the service contract with optional default implementation
-2. **Java Server Implementation** - Contains business logic in Java  
-3. **Service Registration** - Configures deployment in services.jrl
-4. **Client Usage** - Import and use via context injection
+##  Simple Service Example
 
-##  Service Interface with Default Implementation
-
-Define a service interface using foam.INTERFACE() with default Java implementation:
+A calculator service that validates and processes calculations:
 --
 foam.INTERFACE({
   package: 'foam.demo.service',
-  name: 'TaskService',
+  name: 'CalculatorService',
   
   skeleton: true,
   client: true,
   
   methods: [
     {
-      name: 'createTask',
+      name: 'calculate',
       async: true,
-      type: 'String',  
-      args: 'String title, String description',
+      type: 'foam.demo.service.CalculationResult',
+      args: 'String operation, double a, double b',
       javaCode: `
-        String taskId = "task-" + System.currentTimeMillis();
-        Task task = Task.create()
-          .setId(taskId)
-          .setTitle(title)
-          .setDescription(description)
-          .setCreated(new java.util.Date());
-        
-        // Store task (simplified - use DAO in real implementation)
-        getTaskMap().put(taskId, task);
-        
-        System.out.println("Task created: " + taskId);
-        return taskId;
-      `
-    },
-    {
-      name: 'getTask',
-      async: true,
-      type: 'foam.demo.service.Task',
-      args: 'String taskId',
-      javaCode: `
-        Task task = (Task) getTaskMap().get(taskId);
-        System.out.println("Task retrieved: " + taskId + " " + (task != null ? "found" : "not found"));
-        return task;
-      `
-    },
-    {
-      name: 'deleteTask',
-      async: true, 
-      type: 'boolean',
-      args: 'String taskId',
-      javaCode: `
-        boolean existed = getTaskMap().containsKey(taskId);
-        getTaskMap().remove(taskId);
-        System.out.println("Task deleted: " + taskId + " " + (existed ? "success" : "not found"));
-        return existed;
-      `
-    },
-    {
-      name: 'getTaskMap',
-      type: 'java.util.Map',
-      javaCode: `
-        // In real implementation, use DAO or database
-        if ( taskMap_ == null ) {
-          taskMap_ = new java.util.concurrent.ConcurrentHashMap<>();
+        // Business logic: validate and calculate
+        if (operation == null || operation.isEmpty()) {
+          getLogger().warn("Invalid operation requested");
+          return CalculationResult.create(getX())
+            .setSuccess(false)
+            .setMessage("Operation is required");
         }
-        return taskMap_;
+        
+        double result;
+        switch (operation.toUpperCase()) {
+          case "ADD":
+            result = a + b;
+            break;
+          case "SUBTRACT":
+            result = a - b;
+            break;
+          case "MULTIPLY":
+            result = a * b;
+            break;
+          case "DIVIDE":
+            if (b == 0) {
+              getLogger().error("Division by zero attempted: " + a + " / " + b);
+              return CalculationResult.create(getX())
+                .setSuccess(false)
+                .setMessage("Division by zero not allowed");
+            }
+            result = a / b;
+            break;
+          default:
+            getLogger().warn("Unsupported operation: " + operation);
+            return CalculationResult.create(getX())
+              .setSuccess(false)
+              .setMessage("Unsupported operation: " + operation);
+        }
+        
+        // Log successful operation
+        getLogger().info("Calculation performed: " + a + " " + operation + " " + b + " = " + result);
+        
+        return CalculationResult.create(getX())
+          .setSuccess(true)
+          .setResult(result)
+          .setMessage("Calculation completed successfully");
       `
-    }
-  ],
-  
-  properties: [
-    {
-      class: 'Object',
-      name: 'taskMap',
-      javaType: 'java.util.Map<String, Task>',
-      visibility: 'HIDDEN'
     }
   ]
 });
 
-// Define Task model
+// Simple result model
 foam.CLASS({
   package: 'foam.demo.service',
-  name: 'Task',
+  name: 'CalculationResult',
   
   properties: [
-    { class: 'String', name: 'id' },
-    { class: 'String', name: 'title' },
-    { class: 'String', name: 'description' },
-    { class: 'DateTime', name: 'created' }
+    { class: 'Boolean', name: 'success' },
+    { class: 'Double', name: 'result' },
+    { class: 'String', name: 'message' }
   ]
 });
 
-log('TaskService interface with default Java implementation defined');
-
-##  Separate Java Implementation
-
-For more complex services, create a separate Java file implementing the interface:
---
-// ServerTaskService.java
-/*
-package foam.demo.service;
-
-import foam.core.ContextAwareSupport;
-import foam.dao.DAO;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
-
-public class ServerTaskService extends ContextAwareSupport implements TaskService {
-  
-  private final Map<String, Task> taskMap = new ConcurrentHashMap<>();
-  
-  @Override
-  public String createTask(String title, String description) {
-    String taskId = "task-" + System.currentTimeMillis();
-    Task task = (Task) Task.create(getX())
-      .setId(taskId)
-      .setTitle(title)
-      .setDescription(description)
-      .setCreated(new java.util.Date());
-    
-    taskMap.put(taskId, task);
-    
-    // In real implementation, use DAO:
-    // DAO taskDAO = (DAO) getX().get("taskDAO");
-    // taskDAO.put(task);
-    
-    getLogger().info("Task created: " + taskId);
-    return taskId;
-  }
-  
-  @Override
-  public Task getTask(String taskId) {
-    Task task = taskMap.get(taskId);
-    getLogger().info("Task retrieved: " + taskId + " " + (task != null ? "found" : "not found"));
-    return task;
-  }
-  
-  @Override
-  public boolean deleteTask(String taskId) {
-    boolean existed = taskMap.containsKey(taskId);
-    taskMap.remove(taskId);
-    getLogger().info("Task deleted: " + taskId + " " + (existed ? "success" : "not found"));
-    return existed;
-  }
-}
-*/
-
-log('Separate Java implementation example shown above');
+log('Simple CalculatorService defined');
 
 ##  Service Registration
 
-Register services in services.jrl using CSpec (Component Specification):
+Configure the service in services.jrl:
 --
-// Example services.jrl entry:
+// In services.jrl:
 /*
 p({
   "class": "foam.core.boot.CSpec",
-  "name": "taskService",
+  "name": "calculatorService",
   "serve": true,
   "authenticate": false,
-  "boxClass": "foam.demo.service.TaskServiceSkeleton",
-  "serviceScript": "return new foam.demo.service.ServerTaskService(x);",
+  "boxClass": "foam.demo.service.CalculatorServiceSkeleton",
+  "serviceScript": "return new foam.demo.service.ServerCalculatorService(x);",
   "client": """
     {
-      "class": "foam.box.SessionClientBox",
-      "delegate": {
-        "class": "foam.box.HTTPBox",
-        "url": "service/taskService"
-      }
+      "class": "foam.box.HTTPBox",
+      "url": "service/calculatorService"
     }
   """
 })
 */
 
-log('Service registration example shown above');
+log('Service registration example shown');
 
 ##  Client Usage
 
-Import and use services via context injection:
+Use the service in client code:
 --
 foam.CLASS({
   package: 'foam.demo.service',
-  name: 'TaskManager',
+  name: 'Calculator',
   
   imports: [
-    'taskService?'  // Optional import with ? suffix
+    'calculatorService?'
   ],
   
   methods: [
     {
-      name: 'manageTasks',
+      name: 'performCalculations',
       code: async function() {
-        if (!this.taskService) {
-          log('TaskService not available');
+        if (!this.calculatorService) {
+          log('Calculator service not available');
           return;
         }
         
         try {
-          // Create a task
-          var taskId = await this.taskService.createTask('Demo Task', 'Example description');
-          log('Created task:', taskId);
+          var result = await this.calculatorService.calculate('ADD', 5, 3);
+          if (result.success) {
+            log('5 + 3 =', result.result);
+          } else {
+            log('Error:', result.message);
+          }
           
-          // Retrieve the task
-          var task = await this.taskService.getTask(taskId);
-          log('Retrieved task:', task.title);
-          
-          // Delete the task
-          var deleted = await this.taskService.deleteTask(taskId);
-          log('Task deleted:', deleted);
+          var divResult = await this.calculatorService.calculate('DIVIDE', 10, 0);
+          if (!divResult.success) {
+            log('Expected error:', divResult.message);
+          }
           
         } catch (error) {
           log('Service error:', error.message);
@@ -228,209 +154,84 @@ foam.CLASS({
   ]
 });
 
-// Create and use task manager
-var manager = foam.demo.service.TaskManager.create();
-// Note: In real usage, taskService would be injected via context
-log('TaskManager created - would use injected taskService in practice');
+// Demo usage
+var calc = foam.demo.service.Calculator.create();
+log('Calculator created - service would be injected in real usage');
 
-##  Advanced Service Patterns
+##  Java Implementation
 
-##   Service Decorators
-
-Services can be decorated for additional functionality:
+For complex logic, implement in separate Java file:
 --
-foam.CLASS({
-  package: 'foam.demo.service',
-  name: 'LoggingTaskServiceDecorator',
-  
-  implements: ['foam.demo.service.TaskService'],
-  
-  properties: [
-    {
-      class: 'Object',
-      name: 'delegate'
-    }
-  ],
-  
-  methods: [
-    {
-      name: 'createTask',
-      code: async function(title, description) {
-        log('LoggingDecorator: Creating task -', title);
-        var result = await this.delegate.createTask(title, description);
-        log('LoggingDecorator: Task created with ID -', result);
-        return result;
-      }
-    },
-    {
-      name: 'getTask',
-      code: async function(taskId) {
-        log('LoggingDecorator: Getting task -', taskId);
-        return await this.delegate.getTask(taskId);
-      }
-    },
-    {
-      name: 'deleteTask', 
-      code: async function(taskId) {
-        log('LoggingDecorator: Deleting task -', taskId);
-        return await this.delegate.deleteTask(taskId);
-      }
-    }
-  ]
-});
-
-// Demo decorator usage
-var baseService = foam.demo.service.SimpleTaskService.create();
-var decoratedService = foam.demo.service.LoggingTaskServiceDecorator.create({
-  delegate: baseService
-});
-
-var taskId = decoratedService.createTask('Decorated Task', 'With logging');
-
-##   Error Handling
-
-Services should handle errors gracefully:
---
-foam.CLASS({
-  package: 'foam.demo.service',
-  name: 'SafeTaskService',
-  extends: 'foam.demo.service.SimpleTaskService',
-  
-  methods: [
-    {
-      name: 'createTask',
-      code: function(title, description) {
-        try {
-          if (!title || title.trim().length === 0) {
-            throw new Error('Task title is required');
-          }
-          return this.SUPER(title, description);
-        } catch (error) {
-          log('Error creating task:', error.message);
-          throw error;
-        }
-      }
-    },
-    {
-      name: 'getTask',
-      code: function(taskId) {
-        try {
-          if (!taskId) {
-            throw new Error('Task ID is required');
-          }
-          return this.SUPER(taskId);
-        } catch (error) {
-          log('Error getting task:', error.message);
-          throw error;
-        }
-      }
-    }
-  ]
-});
-
-// Demo error handling
-var safeService = foam.demo.service.SafeTaskService.create();
-
-try {
-  safeService.createTask('', 'Empty title test');
-} catch (error) {
-  log('Caught expected error:', error.message);
-}
-
-
-
-##  Service Best Practices
-
-##   Lifecycle Management
-
-Services should properly manage resources:
---
-foam.CLASS({
-  package: 'foam.demo.service', 
-  name: 'ManagedTaskService',
-  extends: 'foam.demo.service.SimpleTaskService',
-  
-  properties: [
-    {
-      name: 'isRunning',
-      class: 'Boolean',
-      value: false
-    }
-  ],
-  
-  methods: [
-    {
-      name: 'start',
-      code: function() {
-        if (this.isRunning) return;
-        this.isRunning = true;
-        log('TaskService started');
-        // Initialize resources, connections, etc.
-      }
-    },
-    {
-      name: 'stop', 
-      code: function() {
-        if (!this.isRunning) return;
-        this.isRunning = false;
-        this.tasks.clear();
-        log('TaskService stopped and cleaned up');
-        // Clean up resources, close connections, etc.
-      }
-    },
-    {
-      name: 'createTask',
-      code: function(title, description) {
-        if (!this.isRunning) {
-          throw new Error('Service is not running');
-        }
-        return this.SUPER(title, description);
-      }
-    }
-  ]
-});
-
-// Demo lifecycle management
-var managedService = foam.demo.service.ManagedTaskService.create();
-managedService.start();
-var taskId = managedService.createTask('Managed Task', 'Lifecycle demo');
-managedService.stop();
-
-##   Authentication Integration
-
-Services can integrate with FOAM's authentication system:
---
-// Example of service with authentication (conceptual)
+// ServerCalculatorService.java
 /*
-foam.CLASS({
-  package: 'foam.demo.service',
-  name: 'AuthenticatedTaskService',
-  extends: 'foam.demo.service.SimpleTaskService',
+package foam.demo.service;
+
+import foam.core.ContextAwareSupport;
+
+public class ServerCalculatorService extends ContextAwareSupport implements CalculatorService {
   
-  imports: ['auth?'],
-  
-  methods: [
-    {
-      name: 'createTask',
-      code: async function(title, description) {
-        if (this.auth && !await this.auth.check()) {
-          throw new Error('Authentication required');
-        }
-        return this.SUPER(title, description);
+  @Override
+  public CalculationResult calculate(String operation, double a, double b) {
+    try {
+      // Business validation
+      if (operation == null || operation.isEmpty()) {
+        getLogger().warn("Invalid operation requested");
+        return CalculationResult.create(getX())
+          .setSuccess(false)
+          .setMessage("Operation is required");
       }
+      
+      double result;
+      switch (operation.toUpperCase()) {
+        case "ADD":
+          result = a + b;
+          break;
+        case "SUBTRACT":
+          result = a - b;
+          break;
+        case "MULTIPLY":
+          result = a * b;
+          break;
+        case "DIVIDE":
+          if (b == 0) {
+            getLogger().error("Division by zero attempted");
+            return CalculationResult.create(getX())
+              .setSuccess(false)
+              .setMessage("Division by zero not allowed");
+          }
+          result = a / b;
+          break;
+        default:
+          getLogger().warn("Unsupported operation: " + operation);
+          return CalculationResult.create(getX())
+            .setSuccess(false)
+            .setMessage("Unsupported operation");
+      }
+      
+      // Log successful operation using FOAM's logger
+      getLogger().info("Calculation: " + a + " " + operation + " " + b + " = " + result);
+      
+      return CalculationResult.create(getX())
+        .setSuccess(true)
+        .setResult(result)
+        .setMessage("Success");
+        
+    } catch (Exception e) {
+      getLogger().error("Calculation failed", e);
+      return CalculationResult.create(getX())
+        .setSuccess(false)
+        .setMessage("Calculation error: " + e.getMessage());
     }
-  ]
-});
+  }
+}
 */
 
-log('Authentication integration example shown above');
+log('Java implementation example shown');
 
 ##  Summary
 
 FOAM services provide:
-- **Clean Architecture**: Clear separation of interface, implementation, and deployment
-- **Network Transparency**: Client calls look like local method calls  
-- **Automatic Marshalling**: JSON serialization handled automatically
-- **Decorator Support**: Easy to add cross-cutting concerns
-- **Context Integration**: Services injected via dependency injection
-- **Error Handling**: Proper error propagation across network boundaries
+- **Business Logic**: Operations with validation and processing
+- **Built-in Logging**: Use getLogger() for proper logging
+- **Client-Server**: Automatic network communication
+- **Context Injection**: Services injected via imports
