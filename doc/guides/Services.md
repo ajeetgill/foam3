@@ -59,7 +59,6 @@ this.auth.login("marc4@marc.com", "marc123").then(function(response) {
 For comprehensive service examples including advanced patterns like decorators, error handling, and lifecycle management, see:
 
 - **Interactive Examples**: [foam3/src/foam/demos/examples/services.fbe](../../src/foam/demos/examples/services.fbe)
-- **Real-world Example**: HeadlessRunnerService in [foam3/src/foam/core/reflow/headless/](../../src/foam/core/reflow/headless/)
 
 The services.fbe example demonstrates:
 - Basic service interface and implementation
