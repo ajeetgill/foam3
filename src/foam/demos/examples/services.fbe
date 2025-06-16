@@ -1,0 +1,435 @@
+## Services
+
+FOAM services provide a clean way to implement distributed functionality with client-server communication. Services automatically generate client stubs, server skeletons, and handle network marshalling.
+
+## Service Architecture
+
+The typical FOAM service consists of:
+
+1. **Interface Definition** - Defines the service contract
+2. **Server Implementation** - Contains business logic  
+3. **Service Registration** - Configures deployment in services.jrl
+4. **Client Usage** - Import and use via context injection
+
+##  Basic Service Interface
+
+Define a service interface using foam.INTERFACE() with key properties:
+- `skeleton: true` - Auto-generates server skeleton
+- `client: true` - Auto-generates client stub  
+- `async: true` - Required for methods returning values
+--
+foam.INTERFACE({
+  package: 'foam.demo.service',
+  name: 'TaskService',
+  
+  skeleton: true,
+  client: true,
+  
+  methods: [
+    {
+      name: 'createTask',
+      async: true,
+      type: 'String',  
+      args: 'String title, String description'
+    },
+    {
+      name: 'getTask',
+      async: true,
+      type: 'Object',
+      args: 'String taskId'
+    },
+    {
+      name: 'deleteTask',
+      async: true, 
+      type: 'boolean',
+      args: 'String taskId'
+    }
+  ]
+});
+
+log('TaskService interface defined');
+
+##  Server Implementation
+
+Implement the service interface with business logic:
+--
+foam.CLASS({
+  package: 'foam.demo.service',
+  name: 'SimpleTaskService',
+  
+  implements: ['foam.demo.service.TaskService'],
+  
+  properties: [
+    {
+      name: 'tasks',
+      factory: function() { return new Map(); }
+    }
+  ],
+  
+  methods: [
+    {
+      name: 'createTask',
+      code: function(title, description) {
+        var taskId = 'task-' + Date.now();
+        var task = { id: taskId, title: title, description: description, created: new Date() };
+        this.tasks.set(taskId, task);
+        log('Task created:', taskId);
+        return taskId;
+      }
+    },
+    {
+      name: 'getTask', 
+      code: function(taskId) {
+        var task = this.tasks.get(taskId);
+        log('Task retrieved:', taskId, task ? 'found' : 'not found');
+        return task || null;
+      }
+    },
+    {
+      name: 'deleteTask',
+      code: function(taskId) {
+        var existed = this.tasks.has(taskId);
+        this.tasks.delete(taskId);
+        log('Task deleted:', taskId, existed ? 'success' : 'not found');
+        return existed;
+      }
+    }
+  ]
+});
+
+// Demo usage
+var taskService = foam.demo.service.SimpleTaskService.create();
+var taskId = taskService.createTask('Learn FOAM', 'Study service patterns');
+log('Created task ID:', taskId);
+
+var task = taskService.getTask(taskId);
+log('Retrieved task:', task.title);
+
+var deleted = taskService.deleteTask(taskId);
+log('Task deleted:', deleted);
+
+##  Service Registration
+
+Register services in services.jrl using CSpec (Component Specification):
+--
+// Example services.jrl entry:
+/*
+p({
+  "class": "foam.core.boot.CSpec",
+  "name": "taskService",
+  "serve": true,
+  "authenticate": false,
+  "boxClass": "foam.demo.service.TaskServiceSkeleton",
+  "serviceScript": "return new foam.demo.service.SimpleTaskService(x);",
+  "client": {
+    "class": "foam.box.SessionClientBox",
+    "delegate": {
+      "class": "foam.box.HTTPBox",
+      "url": "service/taskService" 
+    }
+  }
+})
+*/
+
+log('Service registration example shown above');
+
+##  Client Usage
+
+Import and use services via context injection:
+--
+foam.CLASS({
+  package: 'foam.demo.service',
+  name: 'TaskManager',
+  
+  imports: [
+    'taskService?'  // Optional import with ? suffix
+  ],
+  
+  methods: [
+    {
+      name: 'manageTasks',
+      code: async function() {
+        if (!this.taskService) {
+          log('TaskService not available');
+          return;
+        }
+        
+        try {
+          // Create a task
+          var taskId = await this.taskService.createTask('Demo Task', 'Example description');
+          log('Created task:', taskId);
+          
+          // Retrieve the task
+          var task = await this.taskService.getTask(taskId);
+          log('Retrieved task:', task.title);
+          
+          // Delete the task
+          var deleted = await this.taskService.deleteTask(taskId);
+          log('Task deleted:', deleted);
+          
+        } catch (error) {
+          log('Service error:', error.message);
+        }
+      }
+    }
+  ]
+});
+
+// Create and use task manager
+var manager = foam.demo.service.TaskManager.create();
+// Note: In real usage, taskService would be injected via context
+log('TaskManager created - would use injected taskService in practice');
+
+##  Advanced Service Patterns
+
+##   Service Decorators
+
+Services can be decorated for additional functionality:
+--
+foam.CLASS({
+  package: 'foam.demo.service',
+  name: 'LoggingTaskServiceDecorator',
+  
+  implements: ['foam.demo.service.TaskService'],
+  
+  properties: [
+    {
+      class: 'Object',
+      name: 'delegate'
+    }
+  ],
+  
+  methods: [
+    {
+      name: 'createTask',
+      code: async function(title, description) {
+        log('LoggingDecorator: Creating task -', title);
+        var result = await this.delegate.createTask(title, description);
+        log('LoggingDecorator: Task created with ID -', result);
+        return result;
+      }
+    },
+    {
+      name: 'getTask',
+      code: async function(taskId) {
+        log('LoggingDecorator: Getting task -', taskId);
+        return await this.delegate.getTask(taskId);
+      }
+    },
+    {
+      name: 'deleteTask', 
+      code: async function(taskId) {
+        log('LoggingDecorator: Deleting task -', taskId);
+        return await this.delegate.deleteTask(taskId);
+      }
+    }
+  ]
+});
+
+// Demo decorator usage
+var baseService = foam.demo.service.SimpleTaskService.create();
+var decoratedService = foam.demo.service.LoggingTaskServiceDecorator.create({
+  delegate: baseService
+});
+
+var taskId = decoratedService.createTask('Decorated Task', 'With logging');
+
+##   Error Handling
+
+Services should handle errors gracefully:
+--
+foam.CLASS({
+  package: 'foam.demo.service',
+  name: 'SafeTaskService',
+  extends: 'foam.demo.service.SimpleTaskService',
+  
+  methods: [
+    {
+      name: 'createTask',
+      code: function(title, description) {
+        try {
+          if (!title || title.trim().length === 0) {
+            throw new Error('Task title is required');
+          }
+          return this.SUPER(title, description);
+        } catch (error) {
+          log('Error creating task:', error.message);
+          throw error;
+        }
+      }
+    },
+    {
+      name: 'getTask',
+      code: function(taskId) {
+        try {
+          if (!taskId) {
+            throw new Error('Task ID is required');
+          }
+          return this.SUPER(taskId);
+        } catch (error) {
+          log('Error getting task:', error.message);
+          throw error;
+        }
+      }
+    }
+  ]
+});
+
+// Demo error handling
+var safeService = foam.demo.service.SafeTaskService.create();
+
+try {
+  safeService.createTask('', 'Empty title test');
+} catch (error) {
+  log('Caught expected error:', error.message);
+}
+
+##  HeadlessRunner Service Example
+
+A real-world service example for managing headless flow execution:
+--
+// Interface Definition
+foam.INTERFACE({
+  package: 'foam.core.reflow.headless',
+  name: 'HeadlessRunnerService',
+  
+  skeleton: true,
+  client: true,
+  proxy: true,
+  
+  documentation: 'Service for managing headless flow runner instances',
+  
+  methods: [
+    {
+      name: 'addRunner',
+      documentation: 'Add a new headless runner and return its ID',
+      async: true,
+      type: 'String',
+      args: 'String flowName, String sessionId'
+    },
+    {
+      name: 'removeRunner',
+      documentation: 'Remove a headless runner by ID', 
+      async: true,
+      type: 'boolean',
+      args: 'String runnerId'
+    },
+    {
+      name: 'hasRunner',
+      documentation: 'Check if a runner exists',
+      async: true,
+      type: 'boolean', 
+      args: 'String runnerId'
+    },
+    {
+      name: 'getRunningCount',
+      documentation: 'Get the number of currently running instances',
+      async: true,
+      type: 'int'
+    }
+  ]
+});
+
+log('HeadlessRunnerService interface demonstrates real-world service patterns');
+
+##  Service Best Practices
+
+##   Lifecycle Management
+
+Services should properly manage resources:
+--
+foam.CLASS({
+  package: 'foam.demo.service', 
+  name: 'ManagedTaskService',
+  extends: 'foam.demo.service.SimpleTaskService',
+  
+  properties: [
+    {
+      name: 'isRunning',
+      class: 'Boolean',
+      value: false
+    }
+  ],
+  
+  methods: [
+    {
+      name: 'start',
+      code: function() {
+        if (this.isRunning) return;
+        this.isRunning = true;
+        log('TaskService started');
+        // Initialize resources, connections, etc.
+      }
+    },
+    {
+      name: 'stop', 
+      code: function() {
+        if (!this.isRunning) return;
+        this.isRunning = false;
+        this.tasks.clear();
+        log('TaskService stopped and cleaned up');
+        // Clean up resources, close connections, etc.
+      }
+    },
+    {
+      name: 'createTask',
+      code: function(title, description) {
+        if (!this.isRunning) {
+          throw new Error('Service is not running');
+        }
+        return this.SUPER(title, description);
+      }
+    }
+  ]
+});
+
+// Demo lifecycle management
+var managedService = foam.demo.service.ManagedTaskService.create();
+managedService.start();
+var taskId = managedService.createTask('Managed Task', 'Lifecycle demo');
+managedService.stop();
+
+##   Authentication Integration
+
+Services can integrate with FOAM's authentication system:
+--
+// Example of service with authentication (conceptual)
+/*
+foam.CLASS({
+  package: 'foam.demo.service',
+  name: 'AuthenticatedTaskService',
+  extends: 'foam.demo.service.SimpleTaskService',
+  
+  imports: ['auth?'],
+  
+  methods: [
+    {
+      name: 'createTask',
+      code: async function(title, description) {
+        if (this.auth && !await this.auth.check()) {
+          throw new Error('Authentication required');
+        }
+        return this.SUPER(title, description);
+      }
+    }
+  ]
+});
+*/
+
+log('Authentication integration example shown above');
+
+##  Summary
+
+FOAM services provide:
+- **Clean Architecture**: Clear separation of interface, implementation, and deployment
+- **Network Transparency**: Client calls look like local method calls  
+- **Automatic Marshalling**: JSON serialization handled automatically
+- **Decorator Support**: Easy to add cross-cutting concerns
+- **Context Integration**: Services injected via dependency injection
+- **Error Handling**: Proper error propagation across network boundaries
+
+Key files to reference:
+- Interface: `HeadlessRunnerService.js` 
+- Implementation: `ServerHeadlessRunnerService.java`
+- Registration: `services.jrl`
+- Usage: `Console.js`, `FlowSchedulerCron.java`
