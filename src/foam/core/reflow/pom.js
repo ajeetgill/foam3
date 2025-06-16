@@ -28,7 +28,6 @@ foam.POM({
     { name: 'ReflowToolBar',           flags: 'js' },
     { name: 'ModelDAO',                flags: 'js' },
     { name: 'PropertyChoiceView',      flags: 'js' },
-    { name: 'PropertyRichChoiceView',  flags: 'js' },
     { name: 'ComparatorView',          flags: 'js' },
     { name: 'PredicateView',           flags: 'js' },
     { name: 'PropertyListView',        flags: 'js' },

@@ -23,13 +23,34 @@ foam.CLASS({
     },
     {
       name: 'choice',
-      view: function(_, X) { return { class: 'foam.core.reflow.PropertyRichChoiceView', of: X.data.of } },
-      preSet: function(o, n) {
-        if ( n == '*' ) {
+      view: function (_, X) {
+        if (!X.data.of) return; // Maybe throw an error here? Unsure what error is best to throw. Gotta look into it.
+
+        let arr = X.data.of.getAxiomsByClass(foam.lang.Property)
+          .filter(p => p.showInPropertyChoice)
+          .map(p => foam.core.boot.CSpec.create({
+            id: p,
+            name: p.name
+          }, X));
+
+        return {
+          class: 'foam.u2.view.RichChoiceView',
+          search: true,
+          of: X.data.of,
+          sections: [
+            {
+              heading: 'Properties',
+              dao: foam.dao.ArrayDAO.create({ array: arr }, X)
+            }
+          ]
+        }
+      },
+      preSet: function (o, n) {
+        if (n == '*') {
           this.data = this.data || '';
         } else {
-          if ( this.data ) this.data += ',';
-          this.data += n.name;
+          if (this.data) this.data += ',';
+          this.data += n;
         }
         return n;
       }
@@ -41,8 +62,8 @@ foam.CLASS({
       var self = this;
       this.SUPER();
       this.addClass();
-      this.add(function(of) {
-        this.tag(self.DATA, {type: 'search'}).add(' ', self.CHOICE);
+      this.add(function (of) {
+        this.tag(self.DATA, { type: 'search' }).add(' ', self.CHOICE);
       });
     }
   ]
