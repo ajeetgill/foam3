@@ -224,7 +224,6 @@ foam.CLASS({
           this.data.eval_(`save ${this.data.flowName}`);
           this.data.showPrompts = false;
         } else {
-          console.log('this.ctrl ==>',  this.ctrl)
           this.notify(this.PROVIDE_NAME, '', this.LogLevel.ERROR, true);
         }
       }
