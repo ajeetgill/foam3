@@ -798,6 +798,7 @@ foam.CLASS({
       margin-bottom: 4px;
     }
     ^input-field {
+      position: relative;
       margin-block-end: 0;
       display: inline-flex;
       width: 100%;
@@ -826,10 +827,8 @@ foam.CLASS({
     ^ .foam-u2-ProgressView { width: 600px; }
     ^ .foam-core-reflow-ReflowToolBar {
       position: absolute;
-      left: 0;
+      left: 30%;
       bottom: 50;
-      width: 100%;
-      z-index: 100;
     }
   `,
 
@@ -934,7 +933,12 @@ foam.CLASS({
     'currentBlock',
     {
       name: 'selected',
-      postSet: function(o, n) { this.selectedValue = n ? n.value : null; },
+      postSet: function(o, n) { 
+        this.selectedValue = n ? n.value : null;
+        if (n && n.element_) {
+          n.element_.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      },
       factory: function() { return this; }
     },
     {
