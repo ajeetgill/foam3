@@ -1,237 +1,171 @@
-## Services
+## FOAM Services - PlaceService Example
 
-FOAM services implement business logic that goes beyond simple CRUD operations. They coordinate between DAOs and handle complex workflows.
+FOAM services implement business logic and coordinate between DAOs. This example shows the complete service architecture using foam.core.place.PlaceService.
 
-## Basic Service Pattern
+**Source Files:**
+- Interface: [PlaceService.js](https://github.com/kgrgreer/foam3/blob/development/src/foam/core/place/PlaceService.js)
+- Registration: [services.jrl](https://github.com/kgrgreer/foam3/blob/development/src/foam/core/place/services.jrl)
+- Client: [ClientPlaceService.js](https://github.com/kgrgreer/foam3/blob/development/src/foam/core/place/ClientPlaceService.js)
+- Implementation: [GooglePlaceService.js](https://github.com/kgrgreer/foam3/blob/development/src/foam/core/place/google/GooglePlaceService.js)
 
-1. **Interface Definition** - Service contract
-2. **Java Implementation** - Business logic using DAOs
-3. **Service Registration** - Configure in services.jrl
-4. **Client Usage** - Import and use
+## 1. Service Interface Definition
+**File:** [PlaceService.js](https://github.com/kgrgreer/foam3/blob/development/src/foam/core/place/PlaceService.js)
 
-##  Simple Service Example
-
-A calculator service that validates and processes calculations:
+Defines the contract that all implementations must follow:
 --
 foam.INTERFACE({
-  package: 'foam.demo.service',
-  name: 'CalculatorService',
-  
-  skeleton: true,
-  client: true,
-  
+  package: 'foam.core.place',
+  name: 'PlaceService',
+
+  skeleton: true,  // Generates server-side skeleton class automatically
+
   methods: [
     {
-      name: 'calculate',
+      name: 'placeAutocomplete',
+      async: true,  // Method returns Promise
+      args: 'Context x, String input, String preferCountry',
+      type: 'foam.core.place.PlaceAutocompleteResp',  // Return type
+    },
+    {
+      name: 'placeDetail',
       async: true,
-      type: 'foam.demo.service.CalculationResult',
-      args: 'String operation, double a, double b',
-      javaCode: `
-        // Business logic: validate and calculate
-        if (operation == null || operation.isEmpty()) {
-          getLogger().warn("Invalid operation requested");
-          return CalculationResult.create(getX())
-            .setSuccess(false)
-            .setMessage("Operation is required");
-        }
-        
-        double result;
-        switch (operation.toUpperCase()) {
-          case "ADD":
-            result = a + b;
-            break;
-          case "SUBTRACT":
-            result = a - b;
-            break;
-          case "MULTIPLY":
-            result = a * b;
-            break;
-          case "DIVIDE":
-            if (b == 0) {
-              getLogger().error("Division by zero attempted: " + a + " / " + b);
-              return CalculationResult.create(getX())
-                .setSuccess(false)
-                .setMessage("Division by zero not allowed");
-            }
-            result = a / b;
-            break;
-          default:
-            getLogger().warn("Unsupported operation: " + operation);
-            return CalculationResult.create(getX())
-              .setSuccess(false)
-              .setMessage("Unsupported operation: " + operation);
-        }
-        
-        // Log successful operation
-        getLogger().info("Calculation performed: " + a + " " + operation + " " + b + " = " + result);
-        
-        return CalculationResult.create(getX())
-          .setSuccess(true)
-          .setResult(result)
-          .setMessage("Calculation completed successfully");
-      `
+      args: 'Context x, String placeId',
+      type: 'foam.core.place.PlaceDetailResp',
     }
   ]
 });
 
-// Simple result model
-foam.CLASS({
-  package: 'foam.demo.service',
-  name: 'CalculationResult',
-  
-  properties: [
-    { class: 'Boolean', name: 'success' },
-    { class: 'Double', name: 'result' },
-    { class: 'String', name: 'message' }
-  ]
-});
+log('PlaceService interface defined');
 
-log('Simple CalculatorService defined');
+**Key Components:**
+- `package` - Namespace for the service
+- `name` - Service interface name
+- `skeleton: true` - Auto-generates PlaceServiceSkeleton class for server
+- `methods` - Service operations with signatures and return types
+- `async: true` - Enables Promise-based calls
+- `args` - Method parameters (Context x is always first)
+- `type` - Return type specification
 
-##  Service Registration
+## 2. Service Registration
+**File:** [services.jrl](https://github.com/kgrgreer/foam3/blob/development/src/foam/core/place/services.jrl)
 
-Configure the service in services.jrl:
+Configures the service for client-server communication:
 --
-// In services.jrl:
-/*
 p({
   "class": "foam.core.boot.CSpec",
-  "name": "calculatorService",
-  "serve": true,
-  "authenticate": false,
-  "boxClass": "foam.demo.service.CalculatorServiceSkeleton",
-  "serviceScript": "return new foam.demo.service.ServerCalculatorService(x);",
-  "client": """
-    {
-      "class": "foam.box.HTTPBox",
-      "url": "service/calculatorService"
+  "name": "placeService",
+  "authenticate": true,  // Requires authentication
+  "serve": true,         // Expose as server endpoint
+  "boxClass": "foam.core.place.PlaceServiceSkeleton",  // Auto-generated skeleton
+  "serviceClass": "foam.core.place.google.GooglePlaceService",  // Java implementation
+  "client": {
+    "class": "foam.core.place.ClientPlaceService",  // Client-side proxy
+    "delegate": {
+      "class": "foam.box.HTTPBox",  // HTTP transport
+      "url": "service/placeService"  // Service URL endpoint
     }
-  """
-})
-*/
+  }
+});
 
-log('Service registration example shown');
+log('PlaceService registration configured');
 
-##  Client Usage
+**Key Components:**
+- `CSpec` - Service configuration specification
+- `name` - Service identifier for dependency injection
+- `authenticate` - Security requirement
+- `serve` - Makes service available over network
+- `boxClass` - Server-side message handler (auto-generated)
+- `serviceClass` - Concrete implementation class
+- `client` - Client-side configuration
+- `HTTPBox` - HTTP transport mechanism
 
-Use the service in client code:
+## 3. Client Implementation
+**File:** [ClientPlaceService.js](https://github.com/kgrgreer/foam3/blob/development/src/foam/core/place/ClientPlaceService.js)
+
+Creates a client-side proxy that automatically forwards method calls to the server:
 --
 foam.CLASS({
-  package: 'foam.demo.service',
-  name: 'Calculator',
+  package: 'foam.core.place',
+  name: 'ClientPlaceService',
+  
+  implements: ['foam.core.place.PlaceService'],  // Must implement the service interface
+  
+  properties: [
+    {
+      class: 'Stub',  // Special property class that creates method proxies
+      of: 'foam.core.place.PlaceService',  // Interface to proxy
+      name: 'delegate'  // Will be set to HTTPBox from registration
+    }
+  ]
+});
+
+log('ClientPlaceService proxy defined');
+
+**How Client Implementation Works:**
+- `implements` - Ensures this class has all interface methods (placeAutocomplete, placeDetail)
+- `Stub` - Automatically generates proxy methods that forward calls to `delegate`
+- When you call `clientService.placeAutocomplete(...)`, the Stub property:
+  1. Serializes the method call and arguments
+  2. Sends HTTP request via the `delegate` (HTTPBox)
+  3. Deserializes the response and returns it
+- `delegate` - Set from registration config, points to HTTPBox with service URL
+
+## 4. Service Usage
+**Example Usage:** (Not a specific file - shows how to use in any application class)
+
+How to use the service in application code:
+--
+foam.CLASS({
+  package: 'foam.demo',
+  name: 'PlaceDemo',
   
   imports: [
-    'calculatorService?'
+    'placeService?'  // Import service (? makes it optional)
   ],
   
   methods: [
     {
-      name: 'performCalculations',
-      code: async function() {
-        if (!this.calculatorService) {
-          log('Calculator service not available');
+      name: 'searchPlaces',
+      code: async function(query) {
+        if (!this.placeService) {
+          console.log('Place service not available');
           return;
         }
         
         try {
-          var result = await this.calculatorService.calculate('ADD', 5, 3);
-          if (result.success) {
-            log('5 + 3 =', result.result);
-          } else {
-            log('Error:', result.message);
-          }
+          // Call service method
+          var result = await this.placeService.placeAutocomplete(
+            this.__subContext__, 
+            query, 
+            'US'
+          );
           
-          var divResult = await this.calculatorService.calculate('DIVIDE', 10, 0);
-          if (!divResult.success) {
-            log('Expected error:', divResult.message);
-          }
+          console.log('Found places:', result.places);
+          return result;
           
         } catch (error) {
-          log('Service error:', error.message);
+          console.error('Place search failed:', error);
         }
       }
     }
   ]
 });
 
-// Demo usage
-var calc = foam.demo.service.Calculator.create();
-log('Calculator created - service would be injected in real usage');
+log('Service usage example defined');
 
-##  Java Implementation
+**Key Components:**
+- `imports` - Dependency injection declarations
+- `?` - Optional dependency (won't fail if missing)
+- `async/await` - Promise-based method calls
+- `this.__subContext__` - Current context for service calls
+- Error handling for network/service failures
 
-For complex logic, implement in separate Java file:
---
-// ServerCalculatorService.java
-/*
-package foam.demo.service;
-
-import foam.core.ContextAwareSupport;
-
-public class ServerCalculatorService extends ContextAwareSupport implements CalculatorService {
-  
-  @Override
-  public CalculationResult calculate(String operation, double a, double b) {
-    try {
-      // Business validation
-      if (operation == null || operation.isEmpty()) {
-        getLogger().warn("Invalid operation requested");
-        return CalculationResult.create(getX())
-          .setSuccess(false)
-          .setMessage("Operation is required");
-      }
-      
-      double result;
-      switch (operation.toUpperCase()) {
-        case "ADD":
-          result = a + b;
-          break;
-        case "SUBTRACT":
-          result = a - b;
-          break;
-        case "MULTIPLY":
-          result = a * b;
-          break;
-        case "DIVIDE":
-          if (b == 0) {
-            getLogger().error("Division by zero attempted");
-            return CalculationResult.create(getX())
-              .setSuccess(false)
-              .setMessage("Division by zero not allowed");
-          }
-          result = a / b;
-          break;
-        default:
-          getLogger().warn("Unsupported operation: " + operation);
-          return CalculationResult.create(getX())
-            .setSuccess(false)
-            .setMessage("Unsupported operation");
-      }
-      
-      // Log successful operation using FOAM's logger
-      getLogger().info("Calculation: " + a + " " + operation + " " + b + " = " + result);
-      
-      return CalculationResult.create(getX())
-        .setSuccess(true)
-        .setResult(result)
-        .setMessage("Success");
-        
-    } catch (Exception e) {
-      getLogger().error("Calculation failed", e);
-      return CalculationResult.create(getX())
-        .setSuccess(false)
-        .setMessage("Calculation error: " + e.getMessage());
-    }
-  }
-}
-*/
-
-log('Java implementation example shown');
-
-##  Summary
+## Summary
 
 FOAM services provide:
-- **Business Logic**: Operations with validation and processing
-- **Built-in Logging**: Use getLogger() for proper logging
-- **Client-Server**: Automatic network communication
-- **Context Injection**: Services injected via imports
+- **Type Safety** - Interface contracts ensure consistency
+- **Network Transparency** - Local/remote calls work identically  
+- **Auto-generation** - Skeleton classes created automatically
+- **Dependency Injection** - Services injected via imports
+- **Authentication** - Built-in security integration
+- **Transport Abstraction** - HTTP, WebSocket, etc. supported
