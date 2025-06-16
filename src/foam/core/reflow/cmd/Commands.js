@@ -10,7 +10,14 @@ foam.CLASS({
   package: 'foam.core.reflow.cmd',
   name: 'Command',
 
+  implements: [ 'foam.core.auth.Authorizable' ],
+
   requires: [ 'foam.u2.Link' ],
+
+  javaImports: [
+    'foam.core.auth.AuthService',
+    'foam.core.auth.AuthorizationException'
+  ],
 
   imports: [ 'currentBlock', 'log', 'out', 'eval_' ],
 
@@ -20,7 +27,8 @@ foam.CLASS({
     { class: 'String',  name: 'id' },
     { class: 'String',  name: 'description' },
     { class: 'Code',    name: 'script' },
-    { class: 'Boolean', name: 'linkable', value: true }
+    { class: 'Boolean', name: 'linkable', value: true },
+    { class: 'Boolean', name: 'permissionRequired' }
   ],
 
   methods: [
@@ -34,6 +42,49 @@ foam.CLASS({
           }
         }
       }
+    },
+    {
+      name: 'authorizeOnCreate',
+      args: 'Context x',
+      javaThrows: ['AuthorizationException'],
+      javaCode: `
+        // nop - open to write
+      `
+    },
+    {
+      name: 'authorizeOnRead',
+      args: 'Context x',
+      javaThrows: ['AuthorizationException'],
+      javaCode: `
+        if ( getPermissionRequired() ) {
+          AuthService auth = (AuthService) x.get("auth");
+          if ( ! auth.check(x, "command.read." + getId()) ) {
+            throw new AuthorizationException();
+          }
+        }
+      `
+    },
+    {
+      name: 'authorizeOnUpdate',
+      args: 'Context x',
+      javaThrows: ['AuthorizationException'],
+      javaCode: `
+        AuthService auth = (AuthService) x.get("auth");
+        if ( ! auth.check(x, "command.update." + getId()) ) {
+          throw new AuthorizationException();
+        }
+      `
+    },
+    {
+      name: 'authorizeOnDelete',
+      args: 'Context x',
+      javaThrows: ['AuthorizationException'],
+      javaCode: `
+        AuthService auth = (AuthService) x.get("auth");
+        if ( ! auth.check(x, "command.remove." + getId()) ) {
+          throw new AuthorizationException();
+        }
+      `
     }
   ],
 
@@ -121,7 +172,7 @@ foam.CLASS({
       var self = this;
       var fns  = Object.keys(foam.core.reflow.lib).sort();
 
-      this.out.start('h3').add('Functionss').end().
+      this.out.start('h3').add('Functions').end().
       start('table').style({width: 'max-content'}).
         forEach(fns, function(f) {
           if ( q && f.toLowerCase().indexOf(q) == -1 ) return;
@@ -194,7 +245,7 @@ foam.CLASS({
       var p = this.DAOPrompt.create({dao: dao, daoLabel: opt_label});
 
       this.out.tag(p);
-      this.currentBlock.obj = p;
+      this.currentBlock.obj = p; // ???: Why .obj?
     }
   ]
 });
@@ -228,6 +279,20 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.core.reflow.cmd',
+  name: 'DAOCreateSave',
+
+  properties: [
+    { name: 'daoCreate', hidden: true }
+  ],
+
+  actions: [
+    function save() { this.daoCreate.save(); }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.core.reflow.cmd',
   name: 'DAOCreate',
   extends: 'foam.core.reflow.cmd.Command',
 
@@ -239,7 +304,9 @@ foam.CLASS({
 
   methods: [
     function execute(daoKey) {
-      this.out.tag(this.DAOCreate.create({daoKey: daoKey}));
+      var value = this.DAOCreate.create({daoKey: daoKey});
+      this.currentBlock.value = foam.core.reflow.cmd.DAOCreateSave.create({daoCreate: value});
+      this.out.tag(value);
     }
   ]
 });
@@ -254,15 +321,16 @@ foam.CLASS({
 
   requires: [ 'foam.core.boot.CSpec', 'foam.lang.Latch' ],
 
-  imports: [ 'AuthenticatedCSpecDAO as cSpecDAO' ],
+  imports: [ 'AuthenticatedCSpecDAO as cSpecDAO', 'commandDAO' ],
 
   properties: [
-    [ 'description', 'Display available DAO services' ]
+    [ 'description', 'Display available DAO services', 'uploadAvailable' ]
   ],
 
   methods: [
     function execute(opt_nameQuery) {
       var self = this;
+      this.commandDAO.find('upload').then( r => this.uploadAvailable = !! r );
       var dao  = this.cSpecDAO.where(this.CSpec.SERVED_DAOS);
       var count = foam.lang.SimpleSlot.create({value: 0});
       if ( opt_nameQuery ) dao = dao.where(
@@ -311,6 +379,7 @@ foam.CLASS({
               start(self.Link).add('add').on('click', addFn).end().
             end().
             start('td').attr('align', 'left').
+              show(self.uploadAvailable).
               start(self.Link).add('upload').on('click', uplFn).end().
             end()
             ;
@@ -564,7 +633,7 @@ foam.CLASS({
   name: 'Save',
   extends: 'foam.core.reflow.cmd.Command',
 
-  imports: [  'currentBlock', 'flow', 'flowDAO' ],
+  imports: [  'currentBlock', 'flow', 'flowDAO', 'save' ],
 
   properties: [
     [ 'description', 'Save the current flow to a specified name' ]
@@ -572,21 +641,17 @@ foam.CLASS({
 
   methods: [
     function execute(opt_flowName) {
-
       if ( opt_flowName ) {
         this.flow.name = opt_flowName;
       }
-      if (!this.flow.save()){
-        this.out.add('Please provide a name for the flow');
-        return;
-      }
-
 
       // Don't save the 'save' command
       this.currentBlock.del();
 
-      var ret = this.flowDAO.put(this.flow);
-      this.flow.copyFrom(ret);
+      if ( ! this.save() ) {
+        this.out.add('Please provide a name for the flow');
+        return;
+      }
     }
   ]
 });
@@ -630,6 +695,7 @@ foam.CLASS({
   ]
 });
 
+
 foam.CLASS({
   package: 'foam.core.reflow.cmd',
   name: 'Login',
@@ -647,6 +713,68 @@ foam.CLASS({
 
       this.out.tag(p);
       this.currentBlock.obj = p;
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.core.reflow.cmd',
+  name: 'Prompt',
+
+  imports: [ 'params' ],
+
+  properties: [
+    {
+      class: 'String',
+      name: 'prompt'
+    },
+    {
+      class: 'String',
+      name: 'urlParameter'
+    },
+    {
+      name: 'value',
+      transient: true
+    }
+  ],
+
+  methods: [
+    function init() {
+      this.SUPER();
+
+      if ( this.params && this.params[this.urlParameter] != undefined ) {
+        this.value = this.params[this.urlParameter];
+      }
+    },
+
+    function toString() {
+      return this.value.toString();
+    },
+
+    function valueOf() {
+      return this.value.valueOf();
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.core.reflow.cmd',
+  name: 'Input',
+  extends: 'foam.core.reflow.cmd.Command',
+
+  requires: [ 'foam.core.reflow.cmd.Prompt' ],
+
+  methods: [
+    function execute(prompt) {
+      var p = this.Prompt.create();
+
+      if ( prompt ) p.prompt = prompt;
+
+      this.currentBlock.value = p;
+
+      this.out.startContext({data: p}).start('span').add(p.prompt$, ' ', p.VALUE);
     }
   ]
 });
