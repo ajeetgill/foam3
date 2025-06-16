@@ -1069,8 +1069,10 @@ foam.CLASS({
               on('keyup', e => { if ( e.key == 'Enter' || e.keyCode == 13 ) self.onInput(); }).
             end().
             tag(self.ON_INPUT).
-            start(self.ReflowToolBar, { data: self }).end().
+          end().
+          start(self.ReflowToolBar, { data: self }).show(self.showPrompts$).end().
         end();
+        
 
         // These observers might cause scroll issues later when queries in the console can be edited
         // In that case there should be an explicit flag to only do the scroll when the query is submitted
