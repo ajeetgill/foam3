@@ -9,6 +9,14 @@ foam.CLASS({
   name: 'GroupByView',
   extends: 'foam.u2.View',
 
+  cssTokens: [
+    {
+      class: 'foam.u2.ColorToken',
+      name: 'groupByBackground',
+      value: '$backgroundBrandTertiary'
+    }
+  ],
+
   css: `
     /* Base table styling */
     ^table, ^td { 
@@ -24,7 +32,8 @@ foam.CLASS({
     }
     
     ^tr:hover {
-      background-color: $backgroundBrandTertiary;
+      background: $groupByBackground;
+      color: $groupByBackground$foreground;
     }
     
     /* Cell styling - both TH and TD */
