@@ -43,13 +43,17 @@ foam.CLASS({
         if ( ! this.findFlowChildByName(name) ) return name;
       }
     },
+
     function findFlowChildByName(n) {
       return this.flowChildren.find(c => c.flowName === n);
     },
+
     function addFlowChild(f) {
+      if ( f.deleted_ ) return;
       this.flowChildren = this.flowChildren.concat([f]);
       this.addFlowChild_ && this.addFlowChild_(f);
     },
+
     function removeFlowChild(f) {
       var index = this.flowChildren.indexOf(f);
       this.flowChildren = this.flowChildren.filter(c => c != f);
@@ -64,6 +68,7 @@ foam.CLASS({
         }
       }
     },
+
     function removeAllFlowChildren() {
       this.removeFlowChild_ && this.flowChildren.forEach(c => this.removeFlowChild_(c));
       this.flowChildren = [];
@@ -549,6 +554,7 @@ foam.CLASS({
       size: 'SMALL',
       destructive: true,
       code: function() {
+        this.deleted_ = true;
         this.flowParent && this.flowParent.removeFlowChild(this);
       }
     }
@@ -944,7 +950,7 @@ foam.CLASS({
     'currentBlock',
     {
       name: 'selected',
-      postSet: function(o, n) { 
+      postSet: function(o, n) {
         this.selectedValue = n ? n.value : null;
         if (n && n.element_) {
           n.element_.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1083,7 +1089,7 @@ foam.CLASS({
           end().
           start(self.ReflowToolBar, { data: self }).show(self.showPrompts$).end().
         end();
-        
+
 
         // These observers might cause scroll issues later when queries in the console can be edited
         // In that case there should be an explicit flag to only do the scroll when the query is submitted
@@ -1163,7 +1169,6 @@ foam.CLASS({
 
 //      this.out.tag('br').start().show(self.showPrompts$).start('b').add('> ').end().add(cmd);
       var block = this.currentBlock = this.Block.create({cmd: cmd, flowParent: this});
-      this.addFlowChild(block);
 
       var innerScope = {
         // shell: this,
@@ -1215,6 +1220,8 @@ foam.CLASS({
         }
       }}}}
 
+      this.addFlowChild(block);
+
       if ( ! opt_ignoreSelect ) this.selected = block;
 
       if ( r ) {
@@ -1237,10 +1244,12 @@ foam.CLASS({
 
       this.input_.focus();
 
+      /*
       this.setTimeout(() => this.scrollToBottom(), 16);
       this.setTimeout(() => this.scrollToBottom(), 32);
       this.setTimeout(() => this.scrollToBottom(), 64);
-      this.setTimeout(() => this.scrollToBottom(), 96);
+      */
+      this.setTimeout(() => this.scrollToBottom(), 100);
 
       return block;
     },
