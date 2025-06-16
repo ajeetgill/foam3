@@ -32,7 +32,6 @@ foam.POM({
     { name: 'ComparatorView',          flags: 'js' },
     { name: 'PredicateView',           flags: 'js' },
     { name: 'PropertyListView',        flags: 'js' },
-    { name: 'PropertyRichListView',    flags: 'js' },
     { name: 'PropertyOrderChoiceView', flags: 'js' },
     { name: 'ReactiveDetailView',      flags: 'js' },
     { name: 'ReactiveSectionView',      flags: 'js' },
