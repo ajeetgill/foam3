@@ -1,22 +1,19 @@
 ## Services
 
-FOAM services provide a clean way to implement distributed functionality with client-server communication. Services automatically generate client stubs, server skeletons, and handle network marshalling.
+FOAM services provide a clean way to implement distributed functionality with client-server communication. Services are typically implemented in Java and automatically generate client stubs, server skeletons, and handle network marshalling.
 
 ## Service Architecture
 
 The typical FOAM service consists of:
 
-1. **Interface Definition** - Defines the service contract
-2. **Server Implementation** - Contains business logic  
+1. **Interface Definition** - Defines the service contract with optional default implementation
+2. **Java Server Implementation** - Contains business logic in Java  
 3. **Service Registration** - Configures deployment in services.jrl
 4. **Client Usage** - Import and use via context injection
 
-##  Basic Service Interface
+##  Service Interface with Default Implementation
 
-Define a service interface using foam.INTERFACE() with key properties:
-- `skeleton: true` - Auto-generates server skeleton
-- `client: true` - Auto-generates client stub  
-- `async: true` - Required for methods returning values
+Define a service interface using foam.INTERFACE() with default Java implementation:
 --
 foam.INTERFACE({
   package: 'foam.demo.service',
@@ -30,83 +27,137 @@ foam.INTERFACE({
       name: 'createTask',
       async: true,
       type: 'String',  
-      args: 'String title, String description'
+      args: 'String title, String description',
+      javaCode: `
+        String taskId = "task-" + System.currentTimeMillis();
+        Task task = Task.create()
+          .setId(taskId)
+          .setTitle(title)
+          .setDescription(description)
+          .setCreated(new java.util.Date());
+        
+        // Store task (simplified - use DAO in real implementation)
+        getTaskMap().put(taskId, task);
+        
+        System.out.println("Task created: " + taskId);
+        return taskId;
+      `
     },
     {
       name: 'getTask',
       async: true,
-      type: 'Object',
-      args: 'String taskId'
+      type: 'foam.demo.service.Task',
+      args: 'String taskId',
+      javaCode: `
+        Task task = (Task) getTaskMap().get(taskId);
+        System.out.println("Task retrieved: " + taskId + " " + (task != null ? "found" : "not found"));
+        return task;
+      `
     },
     {
       name: 'deleteTask',
       async: true, 
       type: 'boolean',
-      args: 'String taskId'
-    }
-  ]
-});
-
-log('TaskService interface defined');
-
-##  Server Implementation
-
-Implement the service interface with business logic:
---
-foam.CLASS({
-  package: 'foam.demo.service',
-  name: 'SimpleTaskService',
-  
-  implements: ['foam.demo.service.TaskService'],
-  
-  properties: [
+      args: 'String taskId',
+      javaCode: `
+        boolean existed = getTaskMap().containsKey(taskId);
+        getTaskMap().remove(taskId);
+        System.out.println("Task deleted: " + taskId + " " + (existed ? "success" : "not found"));
+        return existed;
+      `
+    },
     {
-      name: 'tasks',
-      factory: function() { return new Map(); }
+      name: 'getTaskMap',
+      type: 'java.util.Map',
+      javaCode: `
+        // In real implementation, use DAO or database
+        if ( taskMap_ == null ) {
+          taskMap_ = new java.util.concurrent.ConcurrentHashMap<>();
+        }
+        return taskMap_;
+      `
     }
   ],
   
-  methods: [
+  properties: [
     {
-      name: 'createTask',
-      code: function(title, description) {
-        var taskId = 'task-' + Date.now();
-        var task = { id: taskId, title: title, description: description, created: new Date() };
-        this.tasks.set(taskId, task);
-        log('Task created:', taskId);
-        return taskId;
-      }
-    },
-    {
-      name: 'getTask', 
-      code: function(taskId) {
-        var task = this.tasks.get(taskId);
-        log('Task retrieved:', taskId, task ? 'found' : 'not found');
-        return task || null;
-      }
-    },
-    {
-      name: 'deleteTask',
-      code: function(taskId) {
-        var existed = this.tasks.has(taskId);
-        this.tasks.delete(taskId);
-        log('Task deleted:', taskId, existed ? 'success' : 'not found');
-        return existed;
-      }
+      class: 'Object',
+      name: 'taskMap',
+      javaType: 'java.util.Map<String, Task>',
+      visibility: 'HIDDEN'
     }
   ]
 });
 
-// Demo usage
-var taskService = foam.demo.service.SimpleTaskService.create();
-var taskId = taskService.createTask('Learn FOAM', 'Study service patterns');
-log('Created task ID:', taskId);
+// Define Task model
+foam.CLASS({
+  package: 'foam.demo.service',
+  name: 'Task',
+  
+  properties: [
+    { class: 'String', name: 'id' },
+    { class: 'String', name: 'title' },
+    { class: 'String', name: 'description' },
+    { class: 'DateTime', name: 'created' }
+  ]
+});
 
-var task = taskService.getTask(taskId);
-log('Retrieved task:', task.title);
+log('TaskService interface with default Java implementation defined');
 
-var deleted = taskService.deleteTask(taskId);
-log('Task deleted:', deleted);
+##  Separate Java Implementation
+
+For more complex services, create a separate Java file implementing the interface:
+--
+// ServerTaskService.java
+/*
+package foam.demo.service;
+
+import foam.core.ContextAwareSupport;
+import foam.dao.DAO;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
+
+public class ServerTaskService extends ContextAwareSupport implements TaskService {
+  
+  private final Map<String, Task> taskMap = new ConcurrentHashMap<>();
+  
+  @Override
+  public String createTask(String title, String description) {
+    String taskId = "task-" + System.currentTimeMillis();
+    Task task = (Task) Task.create(getX())
+      .setId(taskId)
+      .setTitle(title)
+      .setDescription(description)
+      .setCreated(new java.util.Date());
+    
+    taskMap.put(taskId, task);
+    
+    // In real implementation, use DAO:
+    // DAO taskDAO = (DAO) getX().get("taskDAO");
+    // taskDAO.put(task);
+    
+    getLogger().info("Task created: " + taskId);
+    return taskId;
+  }
+  
+  @Override
+  public Task getTask(String taskId) {
+    Task task = taskMap.get(taskId);
+    getLogger().info("Task retrieved: " + taskId + " " + (task != null ? "found" : "not found"));
+    return task;
+  }
+  
+  @Override
+  public boolean deleteTask(String taskId) {
+    boolean existed = taskMap.containsKey(taskId);
+    taskMap.remove(taskId);
+    getLogger().info("Task deleted: " + taskId + " " + (existed ? "success" : "not found"));
+    return existed;
+  }
+}
+*/
+
+log('Separate Java implementation example shown above');
 
 ##  Service Registration
 
@@ -120,14 +171,16 @@ p({
   "serve": true,
   "authenticate": false,
   "boxClass": "foam.demo.service.TaskServiceSkeleton",
-  "serviceScript": "return new foam.demo.service.SimpleTaskService(x);",
-  "client": {
-    "class": "foam.box.SessionClientBox",
-    "delegate": {
-      "class": "foam.box.HTTPBox",
-      "url": "service/taskService" 
+  "serviceScript": "return new foam.demo.service.ServerTaskService(x);",
+  "client": """
+    {
+      "class": "foam.box.SessionClientBox",
+      "delegate": {
+        "class": "foam.box.HTTPBox",
+        "url": "service/taskService"
+      }
     }
-  }
+  """
 })
 */
 
@@ -286,9 +339,9 @@ try {
 
 ##  HeadlessRunner Service Example
 
-A real-world service example for managing headless flow execution:
+A real-world service example for managing headless flow execution (your implementation):
 --
-// Interface Definition
+// Interface Definition with Java methods
 foam.INTERFACE({
   package: 'foam.core.reflow.headless',
   name: 'HeadlessRunnerService',
@@ -326,11 +379,98 @@ foam.INTERFACE({
       documentation: 'Get the number of currently running instances',
       async: true,
       type: 'int'
+    },
+    {
+      name: 'setProcess',
+      documentation: 'Set the process for a runner (internal use)',
+      args: 'String runnerId, Object process'
+    },
+    {
+      name: 'cleanup',
+      documentation: 'Clean up completed processes'
     }
   ]
 });
 
-log('HeadlessRunnerService interface demonstrates real-world service patterns');
+// Separate Java Implementation (ServerHeadlessRunnerService.java)
+/*
+package foam.core.reflow.headless;
+
+import foam.core.ContextAwareSupport;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
+import java.util.UUID;
+
+public class ServerHeadlessRunnerService extends ContextAwareSupport implements HeadlessRunnerService {
+  
+  private final Map<String, HeadlessRunner> runningInstances = new ConcurrentHashMap<>();
+  
+  @Override
+  public String addRunner(String flowName, String sessionId) {
+    String runnerId = UUID.randomUUID().toString();
+    HeadlessRunner runner = (HeadlessRunner) HeadlessRunner.create(getX())
+      .setId(runnerId)
+      .setFlowName(flowName)
+      .setSessionId(sessionId)
+      .setStartTime(new java.util.Date());
+    
+    runningInstances.put(runnerId, runner);
+    getLogger().info("Added headless runner: " + runnerId + " for flow: " + flowName);
+    return runnerId;
+  }
+  
+  @Override
+  public boolean removeRunner(String runnerId) {
+    HeadlessRunner runner = runningInstances.remove(runnerId);
+    if (runner != null) {
+      // Clean up process if it exists
+      Object process = runner.getProcess();
+      if (process != null) {
+        try {
+          ((Process) process).destroyForcibly();
+        } catch (Exception e) {
+          getLogger().warning("Error destroying process for runner " + runnerId + ": " + e.getMessage());
+        }
+      }
+      getLogger().info("Removed headless runner: " + runnerId);
+      return true;
+    }
+    return false;
+  }
+  
+  @Override
+  public boolean hasRunner(String runnerId) {
+    return runningInstances.containsKey(runnerId);
+  }
+  
+  @Override
+  public int getRunningCount() {
+    return runningInstances.size();
+  }
+  
+  @Override
+  public void setProcess(String runnerId, Object process) {
+    HeadlessRunner runner = runningInstances.get(runnerId);
+    if (runner != null) {
+      runner.setProcess(process);
+    }
+  }
+  
+  @Override
+  public void cleanup() {
+    // Clean up completed processes
+    runningInstances.entrySet().removeIf(entry -> {
+      Object process = entry.getValue().getProcess();
+      if (process instanceof Process) {
+        return !((Process) process).isAlive();
+      }
+      return false;
+    });
+  }
+}
+*/
+
+log('HeadlessRunnerService shows real-world Java service implementation patterns');
 
 ##  Service Best Practices
 
