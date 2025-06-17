@@ -106,20 +106,16 @@ foam.CLASS({
   ],
   listeners: [
     function updatePosition() {
+      this.height = this.window.innerHeight - 200 > 0 ? this.window.innerHeight - 200 + 'px' : this.window.innerHeight + 'px';
+
       if ( this.table && this.table.tableEl_ ) {
         var tableRect = this.table.tableEl_.getBoundingClientRect();
-        
-        // Calculate height using original calculation (total height - offset)
-        var availableHeight = this.window.innerHeight - tableRect.top - this.table.tableHeadHeight;
-        this.height = availableHeight > 0 ? availableHeight + 'px' : this.window.innerHeight + 'px';
         
         // Position relative to table's right edge, offset by dropdown width
         var dropdownWidth = 300; // Approximate width from CSS max-width
         this.rightOffset = Math.max(10, this.window.innerWidth - tableRect.right - dropdownWidth) + 'px';
         this.topOffset = (tableRect.top) + 'px';
       } else {
-        // Fallback positioning
-        this.height = this.window.innerHeight - 200 > 0 ? this.window.innerHeight - 200 + 'px' : this.window.innerHeight + 'px';
         this.rightOffset = '60px';
         this.topOffset = '120px';
       }
