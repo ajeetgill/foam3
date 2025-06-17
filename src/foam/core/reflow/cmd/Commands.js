@@ -121,6 +121,8 @@ foam.CLASS({
         [ 'ESC',     'Toggle prompt display' ],
         [ 'Up',      'Previous from history' ],
         [ 'Down',    'Next from history' ],
+        [ 'Shift-Up',  'Select next command' ],
+        [ 'Shift-Down', 'Select previous command' ],
         [ 'CMD + k / CTRL + k',  'Clear console' ],
         [ 'CTRL + `', 'Focus input' ]
       ];

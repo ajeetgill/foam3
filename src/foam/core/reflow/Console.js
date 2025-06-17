@@ -1135,11 +1135,15 @@ foam.CLASS({
     },
 
     function addHistory(cmd) {
-      if ( cmd.startsWith('history') || cmd.startsWith('help') ) return;
+      if ( cmd.startsWith('history') || cmd.startsWith('help') || cmd === 'save' ) return;
+
       // avoid adjacent duplicates
       if ( cmd == this.history_[this.history_.length-1] ) return;
+
       this.history_.push(cmd);
+
       while ( this.history_.length > this.historyLength ) this.history_.shift();
+
       this.window.localStorage[this.historyKey()] = foam.json.stringify(this.history_);
     },
 
@@ -1280,6 +1284,14 @@ foam.CLASS({
       flow.version++;
       flow.mementoMgr.clear();
       flow.flowDAO.put(this.value).then(ret => this.value.copyFrom(ret));
+    },
+
+    function setSelectedIndex(i) {
+      if ( i == -1 || i >= this.flowChildren.length ) {
+        this.selected = this;
+      } else {
+        this.selected = this.flowChildren[i];
+      }
     }
   ],
 
@@ -1352,6 +1364,22 @@ foam.CLASS({
         this.flowName = '';
       },
       keyboardShortcuts: [ 'meta-k', 'ctrl-k' ]
+    },
+    {
+      name: 'selectionUp',
+      keyboardShortcuts: [ 'shift-arrowup' ],
+      code: function() {
+        var i = this.flowChildren.findIndex(o => o === this.selected);
+        this.setSelectedIndex(i == -1 ? this.flowChildren.length-1 : i-1);
+      }
+    },
+    {
+      name: 'selectionDown',
+      keyboardShortcuts: [ 'shift-arrowdown' ],
+      code: function() {
+        var i = this.flowChildren.findIndex(o => o === this.selected);
+        this.setSelectedIndex(i+1);
+      }
     }
   ],
 
