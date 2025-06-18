@@ -133,7 +133,10 @@ foam.CLASS({
     {
       name: 'prop',
       view: function(_, X) {
-        return { class: 'foam.core.reflow.PropertyChoiceView', of: X.data.of };
+        return { 
+          class: 'foam.core.reflow.PropertyChoiceView', 
+          of: X.data.dao ? X.data.dao.of : null 
+        };
       }
     },
     {
@@ -281,7 +284,24 @@ foam.CLASS({
       class: 'FObjectArray',
       of: 'foam.core.reflow.AbstractDAOAgent',
       name: 'widgets',
-      factory: function() { return []; }
+      factory: function() { return []; },
+      view: {
+        class: 'foam.u2.view.FObjectArrayView',
+        valueView: {
+          class: 'foam.u2.view.FObjectView',
+          choices: [
+            ['foam.core.reflow.DashboardCountDAOAgent', 'Count - Shows total number of records'],
+            ['foam.core.reflow.DashboardBarChartDAOAgent', 'Bar Chart - Displays data grouped by property'],
+            ['foam.core.reflow.DashboardPieChartDAOAgent', 'Pie Chart - Shows proportional data distribution'],
+            ['foam.core.reflow.DashboardLineChartDAOAgent', 'Line Chart - Displays trends over property values']
+          ],
+          config: {
+            'of': { 
+              visibility: 'HIDDEN' 
+            }
+          }
+        }
+      }
     },
     {
       class: 'Int',
@@ -334,70 +354,3 @@ foam.CLASS({
   ]
 });
 
-foam.CLASS({
-  package: 'foam.core.reflow',
-  name: 'DashboardUserGreetingDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
-  mixins: ['foam.core.reflow.DashboardCardMixin'],
-
-  requires: [
-    'foam.dashboard.view.UserGreetingView',
-    'foam.dashboard.view.Card'
-  ],
-
-  imports: [ 'user' ],
-
-  properties: [
-    {
-      class: 'Enum',
-      of: 'foam.dashboard.model.VisualizationSize',
-      name: 'size',
-      value: 'SMALL',
-      view: {
-        class: 'foam.u2.view.ChoiceView',
-        choices: [
-          ['TINY', 'Tiny (176px × 358px) - Minimal display'],
-          ['SMALL', 'Small (312px × ~) - Compact view'],
-          ['SMEDIUM', 'Small-Medium (312px × 358px) - Balanced compact'],
-          ['MEDIUM', 'Medium (424px × 356px) - Standard size'],
-          ['LMEDIUM', 'Large-Medium (570px × 450px) - Expanded view'],
-          ['LARGE', 'Large (936px × 528px) - Full display'],
-          ['XLARGE', 'Extra Large (1580px × 698px) - Maximum display']
-        ]
-      }
-    }
-  ],
-
-  methods: [
-    function execute(e) {
-      var self = this;
-      
-      // Create context with user
-      var context = this.createDashboardContext(e);
-      context = context.createSubContext({
-        user: this.user || { firstName: 'User' }
-      });
-      
-      // Create a simple card with greeting
-      var card = this.Card.create({ 
-        data: {
-          label: 'Welcome',
-          size: this.size,
-          configView: null  // Hide the configuration dropdown
-        }
-      }, context);
-      
-      // Add the greeting view to the card's content
-      this.addViewToCard(card, this.UserGreetingView, {});
-      
-      // Add the card to the element
-      e.add(card);
-      
-      if (self.block.value) {
-        self.block.value.value = 'greeting';
-      } else {
-        self.block.value = 'greeting';
-      }
-    }
-  ]
-});
