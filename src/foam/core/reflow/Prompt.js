@@ -5,7 +5,7 @@
  */
 
 foam.CLASS({
-  package: 'foam.core.reflow.cmd',
+  package: 'foam.core.reflow',
   name: 'Prompt',
 
   requires: ['foam.layout.Section'],

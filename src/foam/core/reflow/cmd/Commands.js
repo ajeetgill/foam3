@@ -728,7 +728,7 @@ foam.CLASS({
   name: 'Input',
   extends: 'foam.core.reflow.cmd.Command',
 
-  requires: [ 'foam.core.reflow.cmd.Prompt' ],
+  requires: [ 'foam.core.reflow.Prompt' ],
 
   methods: [
     function execute(prompt) {
