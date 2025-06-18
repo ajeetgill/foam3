@@ -22,32 +22,59 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'PropertyChoiceView',
-  extends: 'foam.u2.view.ChoiceView',
+  extends: 'foam.u2.view.RichChoiceView',
 
   properties: [
     {
       name: 'of',
       postSet: function(_, value) {
-        this.choices = undefined;
+        this.rebuildSections();
       }
     },
     'predicate',
     'optionalChoice',
     {
-      name: 'choices',
-      expression: function(of) {
-        var choices = [ ];
-        if ( this.optionalChoice ) choices.push(this.optionalChoice);
-        if ( of ) {
-          this.of.getAxiomsByClass(foam.lang.Property).forEach(p => {
-            if ( ! p.showInPropertyChoice ) return;
-            if ( this.predicate && ! this.predicate(p) ) return;
-            choices.push([p, p.label]);
-          });
-        }
-        if ( choices.length ) this.data = choices[0][0];
-        return choices;
+      name: 'search',
+      value: true
+    },
+    {
+      name: 'idProperty',
+      value: 'name'
+    },
+    {
+      name: 'sections',
+      factory: function() {
+        if ( ! this.of ) return [
+          {
+            heading: 'Properties',
+            dao: foam.dao.ArrayDAO.create({ array: [] })
+          }
+        ];
+        
+        let arr = this.of.getAxiomsByClass(foam.lang.Property)
+          .filter(p => p.showInPropertyChoice)
+          .filter(p => ! this.predicate || this.predicate(p));
+
+        // MISSING - currently not dealing with this.optionalChoice at all
+        // BUGGY: currently two files(Upload.js and PropertyListView.js) are passing optionalChoice, both differently. Couldn't get this to render correctly - gui won't show the text (e.g. '--, *' was not being rendered)
+        // TRIED: changing the initialization of optionalChoice in both to be same as Upload.js. Still didn't work.
+        // if ( this.optionalChoice ) {
+        //   arr.unshift(this.optionalChoice);
+        // }
+
+        return [
+          {
+            heading: 'Properties',
+            dao: foam.dao.ArrayDAO.create({ array: arr })
+          }
+        ];
       }
+    }
+  ],
+
+  methods: [
+    function rebuildSections() {
+      this.clearProperty('sections');
     }
   ]
 });
