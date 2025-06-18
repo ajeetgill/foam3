@@ -8,13 +8,14 @@ package foam.lang;
 
 import foam.lib.parse.ParserContextImpl;
 import foam.lib.parse.StringPStream;
-
 import javax.xml.stream.XMLStreamReader;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.util.Date;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 public abstract class AbstractDatePropertyInfo
     extends AbstractPropertyInfo
@@ -34,7 +35,10 @@ public abstract class AbstractDatePropertyInfo
   };
 
   public int compareValues(java.lang.Object o1, java.lang.Object o2) {
-    return ((Date)o1).compareTo(((Date)o2));
+    // Convert to LocalDate so time information is not considered for compare
+    LocalDate l1 = LocalDate.ofInstant(((Date)o1).toInstant(), ZoneId.systemDefault());
+    LocalDate l2 = LocalDate.ofInstant(((Date)o2).toInstant(), ZoneId.systemDefault());
+    return l1.compareTo(l2);
   }
 
   public Object fromString(String value) {
