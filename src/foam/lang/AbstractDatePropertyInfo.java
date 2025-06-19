@@ -35,10 +35,8 @@ public abstract class AbstractDatePropertyInfo
   };
 
   public int compareValues(java.lang.Object o1, java.lang.Object o2) {
-    // Convert to LocalDate so time information is not considered for compare
-    LocalDate l1 = LocalDate.ofInstant(((Date)o1).toInstant(), ZoneId.systemDefault());
-    LocalDate l2 = LocalDate.ofInstant(((Date)o2).toInstant(), ZoneId.systemDefault());
-    return l1.compareTo(l2);
+    // Remove time component of Date
+    return foam.util.SafetyUtil.compare(((Date) o1).getTime() / 100000, ((Date) o2).getTime() / 100000);
   }
 
   public Object fromString(String value) {
