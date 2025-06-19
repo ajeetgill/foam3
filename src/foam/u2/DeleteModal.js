@@ -16,8 +16,8 @@ foam.CLASS({
   ],
 
   imports: [
-    'notify?',
-    'ctrl?'
+    'notify',
+    'ctrl'
   ],
 
   css: `
