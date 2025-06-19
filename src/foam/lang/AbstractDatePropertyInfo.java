@@ -14,8 +14,6 @@ import java.security.MessageDigest;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.util.Date;
-import java.time.LocalDate;
-import java.time.ZoneId;
 
 public abstract class AbstractDatePropertyInfo
     extends AbstractPropertyInfo
