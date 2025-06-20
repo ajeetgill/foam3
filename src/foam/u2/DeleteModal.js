@@ -102,19 +102,6 @@ foam.CLASS({
       );
     },
 
-    function safeNotify(message, submessage, severity, transient) {
-      // Try multiple ways to show notification
-      if ( this.notify ) {
-        this.notify(message, submessage, severity, transient);
-      } else if ( this.ctrl && this.ctrl.notify ) {
-        this.ctrl.notify(message, submessage, severity, transient);
-      } else if ( this.__context__ && this.__context__.notify ) {
-        this.__context__.notify(message, submessage, severity, transient);
-      } else {
-        // Fallback to console
-        console.error('Notification:', message, submessage);
-      }
-    }
   ],
 
   actions: [
@@ -126,24 +113,24 @@ foam.CLASS({
           if ( foam.comics.v2.userfeedback.UserFeedbackAware.isInstance(o) && o.userFeedback ){
             var currentFeedback = o.userFeedback;
             while ( currentFeedback ){
-              this.safeNotify(currentFeedback.message, '', this.LogLevel.INFO, true);
+              this.notify(currentFeedback.message, '', this.LogLevel.INFO, true);
               currentFeedback = currentFeedback.next;
             }
           } else {
-            this.safeNotify(this.data.model_.label + this.SUCCESS_MSG, '', this.LogLevel.INFO, true);
+            this.notify(this.data.model_.label + this.SUCCESS_MSG, '', this.LogLevel.INFO, true);
           }
           this.onDelete();
         }).catch((err) => {
           if ( err.exception && err.exception.userFeedback  ) {
             var currentFeedback = err.exception.userFeedback;
             while ( currentFeedback ) {
-              this.safeNotify(currentFeedback.message, '', this.LogLevel.INFO, true);
+              this.notify(currentFeedback.message, '', this.LogLevel.INFO, true);
               currentFeedback = currentFeedback.next;
             }
           } else if ( this.isAuthorizationException(err) ) {
-            this.safeNotify('Access Denied: You are not authorized to delete this item', '', this.LogLevel.ERROR, true);
+            this.notify('Access Denied: You are not authorized to do this action', '', this.LogLevel.ERROR, true);
           } else {
-            this.safeNotify(err.message || this.FAIL_MSG, '', this.LogLevel.ERROR, true);
+            this.notify(err.message || this.FAIL_MSG, '', this.LogLevel.ERROR, true);
           }
         });
         X.closeDialog();
