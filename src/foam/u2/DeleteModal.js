@@ -90,8 +90,7 @@ foam.CLASS({
             .tag(this.DELETE, { isDestructive: true })
           .endContext()
         .end();
-    },
-
+    }
   ],
 
   actions: [
@@ -103,7 +102,9 @@ foam.CLASS({
           if ( foam.comics.v2.userfeedback.UserFeedbackAware.isInstance(o) && o.userFeedback ){
             var currentFeedback = o.userFeedback;
             while ( currentFeedback ){
+
               this.notify(currentFeedback.message, '', this.LogLevel.INFO, true);
+
               currentFeedback = currentFeedback.next;
             }
           } else {
@@ -115,6 +116,7 @@ foam.CLASS({
             var currentFeedback = err.exception.userFeedback;
             while ( currentFeedback ) {
               this.notify(currentFeedback.message, '', this.LogLevel.INFO, true);
+
               currentFeedback = currentFeedback.next;
             }
           } else {
