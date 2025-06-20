@@ -338,6 +338,7 @@ foam.POM({
     { name: "notification/email/EmailTemplateCitationView",                               flags: "js" },
     { name: "notification/email/EmailTemplateSource",                                     flags: "js|java" },
     { name: "notification/email/SMTPAgent",                                               flags: "js|java" },
+    { name: "notification/email/MicrosoftGraphEmailAgent",                                flags: "js|java" },
     { name: "notification/email/SMTPConfig",                                              flags: "js|java" },
     { name: "notification/email/Status",                                                  flags: "js|java" },
     { name: "notification/email/test/EmailMessageRuleTest",                               flags: "js&test|java&test" },

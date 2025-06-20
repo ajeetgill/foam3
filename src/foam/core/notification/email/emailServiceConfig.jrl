@@ -2,6 +2,11 @@ p({
   class: 'foam.core.notification.email.EmailServiceConfig',
   id: 'smtp'
 })
+// Microsoft Graph API
+p({
+  class: 'foam.core.notification.email.EmailServiceConfig',
+  id: 'msGraph'
+})
 p({
   class: 'foam.core.notification.email.EmailServiceConfig',
   id: 'imap',

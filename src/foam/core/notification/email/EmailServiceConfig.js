@@ -95,6 +95,18 @@ foam.CLASS({
       value: 'smtp'
     },
     {
+      name: 'clientId',
+      class: 'String'
+    },
+    {
+      name: 'tenantId',
+      class: 'String'
+    },
+    {
+      name: 'clientSecret',
+      class: 'Password'
+    },
+    {
       documentation: 'Relevant to send - Provider imposed rateLimit (per second), at which point they will throttle or block completely for some time window',
       name: 'rateLimit',
       class: 'Long',
