@@ -78,51 +78,50 @@ foam.CLASS({
       var self = this;
       this
         .addClass(this.myClass())
-        .add(this.slot(function(data, glyph, displayWidth, displayHeight, alpha) {
+        .add(this.dynamic(function(data, glyph, displayWidth, displayHeight, alpha) {
           if ( glyph ) {
-            var indicator = glyph.clone(this).expandSVG();
-            return this.E().start(this.HTMLView, { data: indicator })
-              .attrs({ role: this.role })
-              .end();
+            var indicator = glyph.clone(self).expandSVG();
+            this.start(self.HTMLView, { data: indicator })
+              .attrs({ role: self.role })
+            .end();
+            return;
           }
 
-          if ( ! data) return null;
+          if ( self.embedSVG && data?.endsWith('svg') ) {
+            self.requestWithCache(data).then(data => {
+              if ( ! self.U3 && self.state == self.OUTPUT ) return;
 
-          var e = this.E()
+              this.start(self.HTMLView, { data: data })
+                .attrs({ role: self.role })
+              .end();
+            });
+
+            return;
+          }
+
+          if ( ! data ) return null;
+
           var src = data;
 
           /// TODO: A better polymorphic way of doing this
           if ( self.BlobBlob.isInstance(src) ) {
             var url = URL.createObjectURL(src.blob);
-            e.onDetach(() => {
+            this.onDetach(() => {
               URL.revokeObjectURL(url)
             })
             src = url;
           } else if ( self.Blob.isInstance(data) ) {
             src = self.__context__.blobService.urlFor(data);
           }
-
-          if ( this.embedSVG && data?.endsWith('svg') ) {
-            this.requestWithCache(data).then(data => {
-              if ( !this.U3 && this.state == this.OUTPUT ) return;
-
-              e.start(this.HTMLView, { data: data })
-                .attrs({ role: this.role })
-              .end();
-            });
-
-            return e;
-          }
           
-          return e
-            .start('img')
-              .attrs({ src: src, role: this.role })
-              .style({
-                height:  displayHeight,
-                width:   displayWidth,
-                opacity: alpha
-              })
-            .end();
+          this.start('img')
+            .attrs({ src: src, role: self.role })
+            .style({
+              height:  displayHeight,
+              width:   displayWidth,
+              opacity: alpha
+            })
+          .end();
         }));
     }
   ]

@@ -160,18 +160,21 @@ public class SessionServerBox
       }
 
       pm.log(x);
-      delegate.send(new foam.box.Envelope(message, replyBox));
+      delegate.send(new foam.box.Envelope(effectiveContext, message, replyBox));
     } catch (Throwable t) {
-      // t.printStackTrace(); // Uncomment to debug server-side exceptions
       logger.warning(t.getMessage());
+      // logger.warning(t.getMessage(), t); // Uncomment to debug server-side exceptions
       if ( t instanceof NullPointerException) {
         logger.error(t);
+      }
+      if ( t instanceof foam.core.auth.UserNotFoundException) {
+        sessionDAO.remove(session);
       }
       envelope.replyWithException(t);
       pm.error(x, t);
       AppConfig appConfig = (AppConfig) x.get("appConfig");
       if ( Mode.TEST == appConfig.getMode() )
-        throw t;
+        throw new RuntimeException(t);
     } finally {
       XLocator.set(null);
     }
