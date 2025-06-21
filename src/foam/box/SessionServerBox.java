@@ -170,7 +170,7 @@ public class SessionServerBox
       if ( t instanceof foam.core.auth.UserNotFoundException) {
         sessionDAO.remove(session);
       }
-      msg.replyWithException(t);
+      envelope.replyWithException(t);
       pm.error(x, t);
       AppConfig appConfig = (AppConfig) x.get("appConfig");
       if ( Mode.TEST == appConfig.getMode() )
