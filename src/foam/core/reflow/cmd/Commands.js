@@ -240,28 +240,6 @@ foam.CLASS({
   name: 'DAO',
   extends: 'foam.core.reflow.cmd.Command',
 
-  requires: [ 'foam.core.reflow.DAOPrompt' ],
-
-  properties: [
-    [ 'description', 'Perform DAO operation' ]
-  ],
-
-  methods: [
-    function execute(dao, opt_label) {
-      var p = this.DAOPrompt.create({dao: dao, daoLabel: opt_label});
-
-      this.out.tag(p);
-      this.currentBlock.obj = p; // ???: Why .obj?
-    }
-  ]
-});
-
-
-foam.CLASS({
-  package: 'foam.core.reflow.cmd',
-  name: 'DAO2',
-  extends: 'foam.core.reflow.cmd.Command',
-
   requires: [ 'foam.core.reflow.DAOPrompt2' ],
 
   imports: [ 'createFlowChildName' ],
