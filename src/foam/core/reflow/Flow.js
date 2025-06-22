@@ -86,6 +86,7 @@ foam.CLASS({
       class: 'Enum',
       of: 'foam.core.reflow.FlowAccess',
       name: 'accessLevel',
+      label: 'Access',
       value: foam.core.reflow.FlowAccess.PUBLIC_RW
     },
     {
@@ -175,8 +176,7 @@ foam.CLASS({
           // console.log('*********** FLOW mementoStr change:', n);
           n = n.trim();
           if ( n ) {
-            var json = JSON.parse(n);
-            this.memento = foam.json.parse(json, null, this.__context__);
+            this.memento = foam.json.parseString(n, this.__context__);
           } else {
             this.memento = [];
           }
