@@ -49,7 +49,7 @@ foam.CLASS({
               // TODO: fix JSON parsing should setup context corectly
               var select    = self.data.select.clone(self.data.__subContext__);
               await select.execute(this);
-              self.data.ready.resolve();
+              self.data.readyLatch_.resolve();
               self.data.executionTime = foam.lang.Duration.duration(Date.now() - startTime);
             })).
           end();
@@ -284,7 +284,7 @@ foam.CLASS({
     { class: 'Int',        hidden: true,  name: 'version', hidden: true },
     { class: 'FObjectProperty',  name: 'value', transient: true, hidden: true, visibility: 'RO' },
     {
-      name: 'ready',
+      name: 'readyLatch_',
       transient: true,
       hidden: true,
       factory: function() {
@@ -307,6 +307,10 @@ foam.CLASS({
       // TODO: name current block
       e.tag(this.DAOPrompt2View, {data: this, label: this.label});
 //      e.tag(this.DAOPrompt2View.create({data: this, label: this.label}, this));
+    },
+
+    function onLoad() {
+      return this.readyLatch_;
     }
   ],
 

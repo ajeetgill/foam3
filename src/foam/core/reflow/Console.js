@@ -1008,9 +1008,8 @@ foam.CLASS({
             if ( this.currentBlock.value && c.value ) {
               this.currentBlock.value.copyFrom(c.value);
             }
-            if ( this.currentBlock.value && this.currentBlock.value.ready ) {
-              await this.currentBlock.value.ready;
-            }
+
+            await this.currentBlock.value?.onLoad?.();
           }
           this.selected = currentBlockName == this.flowName ? this : this.findFlowChildByName(currentBlockName);
         } finally {

@@ -29,15 +29,13 @@ foam.CLASS({
     { class: 'Code',    name: 'script' },
     { class: 'Boolean', name: 'linkable', value: true },
     { class: 'Boolean', name: 'permissionRequired' }
-    /*
-    {
-      name: 'ready',
-      documentation: 'Promise if command needs to delay loading of following commands until it is ready',
-      value: Promise.resolve()
-    }*/
   ],
 
   methods: [
+    function onLoad() {
+      return Promise.resolve();
+    },
+
     function execute(...args) {
       with ( this ) {
         with ( { args: args, addValue: this.addValue.bind(this) } ) {
