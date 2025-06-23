@@ -289,7 +289,7 @@ foam.CLASS({
   methods: [
     function execute(daoKey) {
       var value = this.DAOCreate.create({daoKey: daoKey});
-      this.currentBlock.value = foam.core.reflow.cmd.DAOCreateSave.create({daoCreate: value});
+      // this.currentBlock.value = foam.core.reflow.cmd.DAOCreateSave.create({daoCreate: value});
       this.out.tag(value);
     }
   ]
@@ -334,13 +334,13 @@ foam.CLASS({
           }
 
           count.value++;
-          var daoFn = () => self.eval_('dao("' + n.name + '")');
-          var addFn = () => self.eval_('add("' + n.name + '")');
-          var uplFn = () => self.eval_('upload("' + n.name + '")');
-          var desFn = () => self.eval_('describe(' + of.id + ')');
-
           var shortName = n.name;
           if ( shortName.endsWith('DAO') ) shortName = shortName.substring(0, shortName.length-3);
+
+          var daoFn = () => self.eval_('dao ' + shortName);
+          var addFn = () => self.eval_('add ' + shortName);
+          var uplFn = () => self.eval_('upload ' + shortName);
+          var desFn = () => self.eval_('describe(' + of.id + ')');
 
           this.start('tr').
             start('th').attr('align', 'left').
