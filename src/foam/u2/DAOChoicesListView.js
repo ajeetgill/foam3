@@ -60,8 +60,8 @@ foam.CLASS({
         if ( flowChoices.length > 0 ) {
           var currentSelectedRemovedArray = Array.from(flowChoices).filter( e => {
             const dotIndex = e.indexOf(".");
-            if (dotIndex === -1) return true;
-            return e.substring(0, dotIndex) !== this.selected.flowName; // e.g. extracts 'match1' from 'match1.data1' to check with current selected flowName
+            if ( dotIndex === -1 ) return true;
+            return e.substring(0, dotIndex) !== this.selected?.flowName; // e.g. extracts 'match1' from 'match1.data1' to check with current selected flowName
           })
           this.choices = [ ...currentSelectedRemovedArray, ...daoChoices ];
         } else {
