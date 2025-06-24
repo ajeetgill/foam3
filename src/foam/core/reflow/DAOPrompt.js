@@ -336,7 +336,7 @@ foam.CLASS({
       }
     },
 
-    function describe() {
+    function describeModel() {
       this.eval_('describe ' + this.dao.of.id);
     }
   ]
