@@ -718,9 +718,6 @@ foam.CLASS({
       if ( prompt ) p.label = prompt;
 
       this.currentBlock.value = p;
-      this.currentBlock.configViewSpec = {
-        useSections: ['config']
-      }
       this.out.add(p);
     }
   ]
