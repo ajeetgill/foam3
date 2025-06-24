@@ -141,7 +141,6 @@ foam.CLASS({
       name: 'scrollToIndex',
       postSet: function () { this.safeScroll(); }
     },
-    'currGroup_',
     'rowObserver',
     {
       name: 'rootElement',
@@ -212,6 +211,12 @@ foam.CLASS({
     {
       class: 'Map',
       name: 'collapsedGroups',
+      factory: function() { return {}; }
+    },
+    {
+      class: 'Map',
+      name: 'pageGroupHeaders_',
+      documentation: 'Tracks which group headers have been rendered for each page',
       factory: function() { return {}; }
     },
   ],
@@ -310,6 +315,36 @@ foam.CLASS({
       })
       this.renderedPages_[page].remove();
       delete this.renderedPages_[page];
+      delete this.pageGroupHeaders_[page];
+    },
+
+    function shouldShowGroupHeader(page, group, itemIndex) {
+      if ( ! this.groupBy ) return false;
+      
+      // Convert group to string for consistent key handling
+      var groupKey = foam.json.stringify(group);
+      
+      // Always show header for the first item in the first page
+      if ( page === 0 && itemIndex === 0 ) return true;
+      
+      // Check if this group header has already been rendered on this page
+      if ( this.pageGroupHeaders_[page] && this.pageGroupHeaders_[page][groupKey] ) {
+        return false;
+      }
+      
+      // For subsequent pages, check if this group is different from the last group of the previous page
+      if ( page > 0 ) {
+        var prevPageHeaders = this.pageGroupHeaders_[page - 1];
+        if ( prevPageHeaders ) {
+          var prevPageGroups = Object.keys(prevPageHeaders);
+          var lastGroupOfPrevPage = prevPageGroups[prevPageGroups.length - 1];
+          if ( lastGroupOfPrevPage && lastGroupOfPrevPage === groupKey ) {
+            return false;
+          }
+        }
+      }
+      
+      return true;
     },
 
     function getPage(dao, page) {
@@ -338,10 +373,8 @@ foam.CLASS({
           if ( self.groupBy ) {
             group = self.groupBy.f(args.data);
             
-            // Show header if this is a new group (different from last rendered group)
-            if ( ! foam.util.equals(group, self.currGroup_) ) {
-      
-              
+            // Show header if this group should have a header on this page
+            if ( self.shouldShowGroupHeader(page, group, i) ) {
               e.tag(self.groupHeaderView,
                 { ...args,
                   groupLabel: group,
@@ -349,7 +382,12 @@ foam.CLASS({
               }
               );
               
-              self.currGroup_ = group;
+              // Track that we've rendered this group header on this page
+              if ( ! self.pageGroupHeaders_[page] ) {
+                self.pageGroupHeaders_[page] = {};
+              }
+              var groupKey = foam.json.stringify(group);
+              self.pageGroupHeaders_[page][groupKey] = true;
             }
           }
 
@@ -374,7 +412,7 @@ foam.CLASS({
 
         var isSet = false;
         if ( self.renderedPages_[page] ) {
-          console.warn('Trying to overwrite a loaded page without clearning....Clearing page');
+          console.warn('Trying to overwrite a loaded page without clearing....Clearing page');
           this.clearPage(page)
         }
 
@@ -445,13 +483,14 @@ foam.CLASS({
       name: 'refresh',
       isFramed: true,
       code: function() {
-        this.currGroup_ = undefined;
         this.rowObserver?.disconnect();
         // Don't clear loadingPages_ here since they are being
         // loaded and will have latest data anyway
         Object.keys(this.renderedPages_).forEach(i => {
           this.clearPage(i, true);
         });
+        // Clear page group headers tracking
+        this.pageGroupHeaders_ = {};
         if ( ! this.isInit ) {
           this.currentTopPage_ = 0;
           this.topRow = 0;
