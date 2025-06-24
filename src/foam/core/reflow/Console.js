@@ -152,9 +152,9 @@ foam.CLASS({
           .end()
 
           .start().addClass(this.myClass('header-actions'))
-            .startContext({ data: this.data.value.mementoMgr })
-              .tag(this.data.value.mementoMgr.BACK)
-              .tag(this.data.value.mementoMgr.FORTH)
+            .startContext({ data: this.data.mementoMgr })
+              .tag(this.data.mementoMgr.BACK)
+              .tag(this.data.mementoMgr.FORTH)
             .endContext()
             .startContext({data: this})
               .tag(this.CANCEL)
@@ -214,6 +214,13 @@ foam.CLASS({
       },
       code: function() {
         this.data.showPrompts = false;
+        this.data.eval_('clear');
+        var flow = this.data.value;
+
+        flow.name     = '';
+        this.mementoMgr.clear();
+        flow.version  = undefined;
+        flow.revision = undefined;
       }
     },
     {
@@ -247,7 +254,7 @@ foam.CLASS({
         var flow = this.data.value;
 
         flow.name     = '';
-        flow.mementoMgr.clear();
+        this.mementoMgr.clear();
         flow.version  = undefined;
         flow.revision = undefined;
       }
@@ -363,19 +370,21 @@ foam.CLASS({
           .endContext()
         .end();
     },
+
     function renderOpened(e) {
-        e.start().addClass(this.myClass('left-container'))
-          .start().addClass(this.myClass('left-header'))
-            .start('span').add('Contents').end()
-            .startContext({ data: this })
-              .tag(this.MENU_CONTROL)
-            .endContext()
-          .end()
-          .start('table')
-            .attr('cellpadding', '4')
-            .call(this.branch, [this, this.data, 0])
+      e.start().addClass(this.myClass('left-container'))
+        .start().addClass(this.myClass('left-header'))
+          .start('span').add('Contents').end()
+          .startContext({ data: this })
+            .tag(this.MENU_CONTROL)
+          .endContext()
         .end()
+        .start('table')
+          .attr('cellpadding', '4')
+          .call(this.branch, [this, this.data, 0])
+        .end();
     },
+
     function render() {
       var self = this;
       this.addClass();
@@ -509,7 +518,12 @@ foam.CLASS({
       }
     },
     [ 'togglerPosition', 'left' ],
-    [ 'expanded', true ]
+    [ 'expanded', true ],
+    {
+      class: 'foam.u2.ViewSpec',
+      name: 'configViewSpec',
+      documentation: `Passed on to the ReactiveSectionedDetailView as config, see AbstractSectionedDetailView to learn more about configuring detail views`
+    }
   ],
 
   methods: [
@@ -929,6 +943,13 @@ foam.CLASS({
       name: 'value',
       // The Console's Flow Value, which is the Flow object it is saved as
       factory: function() { return this.Flow.create(); }
+    },
+    {
+      class: 'FObjectProperty',
+      name: 'mementoMgr',
+      factory: function() {
+        return foam.memento.MementoMgr.create({memento$: this.value.script$, position$: this.value.revision$});
+      }
     }
   ],
 
@@ -980,56 +1001,33 @@ foam.CLASS({
         }
       });
 
-      var feedback_ = false;
+      // If this.value.script changes
+      //   update this.flowChildren
+      //   clearFlow()
+      //   rebuild flow
+      // If flowChildren changes
+      //   update this.value.script
 
-      this.flowChildren$.sub(() => {
-        if ( feedback_ ) return;
-        feedback_ = true;
-        try {
-          this.value.memento = this.flowChildren;
-        } finally {
-          feedback_ = false;
-        }
-        });
-      this.value.memento$.sub(async () => {
-        if ( feedback_ ) return;
-        feedback_ = true;
-        try {
-          var cs = this.value.memento;
-          var currentBlockName = this.selected ? this.selected.flowName : this.flowName;
-          this.clearFlow();
-          for ( var i = 0 ; i < cs.length ; i++ ) {
-            var c = cs[i];
+      this.value.script$.sub(this.onScriptChange);
 
-            this.eval_(c.cmd);
+      this.flowChildren$.sub(this.onFlowChildrenChange);
 
-            // TODO: await
-            this.currentBlock.flowName = c.flowName;
-            if ( this.currentBlock.value && c.value ) {
-              this.currentBlock.value.copyFrom(c.value);
-            }
-            if ( this.currentBlock.value && this.currentBlock.value.ready ) {
-              await this.currentBlock.value.ready;
-            }
-          }
-          this.selected = currentBlockName == this.flowName ? this : this.findFlowChildByName(currentBlockName);
-        } finally {
-          feedback_ = false;
-        }
-      });
-//      this.value.memento$.follow(this.flowChildren$);
 
       var layout = this.start(this.Layout);
 
       layout.showLeft$  = this.showPrompts$;
       layout.showRight$ = this.showPrompts$;
       layout.showHeader = true;
-      var flowableTree = this.FlowableTree.create({data: this, selected$: this.selected$});
-      layout.isMenuOpen$ = flowableTree.isMenuOpen$;
-      layout.left.tag(flowableTree);
+      layout.left.tag(this.FlowableTree, {data: this, selected$: this.selected$, isMenuOpen$: layout.isMenuOpen$});
       layout.middle.call(this.renderSelf, [this]);
-      layout.right.add(this.dynamic(function(selectedValue) {
-        this.tag(self.ReactiveSectionedDetailView, {data: selectedValue, showActions: true, showHeader: true});
+      layout.right.add(this.dynamic(function(selectedValue, selected$configViewSpec) {
+        this.tag(self.ReactiveSectionedDetailView, {
+          of: selectedValue?.cls_.id ?? '', 
+          ...(selected$configViewSpec || {}),  
+          data: selectedValue, 
+          showActions: true, 
+          showHeader: true
+        });
       }));
 
       layout.header.add(this.dynamic(function(showPrompts) {
@@ -1094,7 +1092,6 @@ foam.CLASS({
     },
 
     function log(...args) {
-      debugger;
       this.currentBlock.log.apply(this.currentBlock, args);
     },
 
@@ -1250,9 +1247,9 @@ foam.CLASS({
       // will make it easy to implement undo/redo in the future.
       var flow = this.value;
 
-      flow.MEMENTO.postSet.call(this, this.menento, this.memento);
+      this.generateScript();
       flow.version++;
-      flow.mementoMgr.clear();
+      this.mementoMgr.clear();
       flow.flowDAO.put(this.value).then(ret => this.value.copyFrom(ret));
     },
 
@@ -1262,6 +1259,19 @@ foam.CLASS({
       } else {
         this.selected = this.flowChildren[i];
       }
+    },
+
+    function generateScript() {
+      var json = foam.json.Outputter.create({
+        pretty: true,
+        strict: true,
+        formatDatesAsNumbers: false,
+        outputDefaultValues: false,
+        useShortNames: false,
+        propertyPredicate: function(_, p) { return p.name === 'reactions_' || ( ! p.externalTransient && ! p.networkTransient ); }
+      });
+
+      this.value.script = json.stringify(this.flowChildren);
     }
   ],
 
@@ -1364,6 +1374,51 @@ foam.CLASS({
       isMerged: true,
       mergeDelay: 600,
       code: function() { this.input_.focus(); }
+    },
+    {
+      name: 'onScriptChange',
+      code: async function() {
+        if ( this.feedback_ ) return;
+        this.feedback_ = true;
+        try {
+          var script = this.value.script;
+
+          var cs = script ? foam.json.parseString(script, this.__subContext__) : [];
+          var currentBlockName = this.selected ? this.selected.flowName : this.flowName;
+
+          this.clearFlow();
+
+          for ( var i = 0 ; i < cs.length ; i++ ) {
+            var c = cs[i];
+
+            this.eval_(c.cmd);
+
+            this.currentBlock.flowName = c.flowName;
+
+            if ( this.currentBlock.value && c.value ) {
+              this.currentBlock.value.copyFrom(c.value);
+            }
+
+            await this.currentBlock.value?.onLoad?.();
+          }
+
+          this.selected = currentBlockName == this.flowName ? this : this.findFlowChildByName(currentBlockName) || this;
+        } finally {
+          this.feedback_ = false;
+        }
+      }
+    },
+    {
+      name: 'onFlowChildrenChange',
+      isFramed: true,
+      code: async function() {
+        this.feedback_ = true;
+        try {
+          this.generateScript();
+        } finally {
+          this.feedback_ = false;
+        }
+      }
     }
   ]
 });
