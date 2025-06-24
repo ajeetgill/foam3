@@ -12,11 +12,6 @@ foam.CLASS({
 
   documentation: 'Implementation of Email Service using Microsoft Graph API.',
 
-  implements: [
-    'foam.lang.ContextAgent',
-    'foam.core.COREService'
-  ],
-
   javaImports: [
     'foam.core.logger.Loggers',
     'foam.core.logger.Logger',
@@ -120,7 +115,7 @@ foam.CLASS({
         EmailServiceConfig config = findId(getX());
         final String clientId = config.getClientId();
         final String tenantId = config.getTenantId();
-        final String clientSecret = config.getClientSecret();
+        final String clientSecret = config.getPassword();
         String emailFrom = config.getUsername();
 
         if (clientId == null || tenantId == null || clientSecret == null || emailFrom == null) {
@@ -211,6 +206,35 @@ foam.CLASS({
         timer.cancel();
         clearTimer();
         ((DAO) getX().get("eventRecordDAO")).put(new EventRecord(getX(), this, "stop", getId(), null, null, LogLevel.INFO, null));
+      }
+      `
+    },
+    {
+      name: 'maybeReload',
+      type: 'Boolean',
+      javaCode: `
+      // do not reload
+      return false;
+      `
+    },
+    {
+      name: 'reload',
+      javaCode: `
+      Logger logger = Loggers.logger(getX(), this);
+      EmailServiceConfig config = findId(getX());
+      EmailServiceConfig lastConfig = getLastConfig();
+      logger.info("Reloading Microsoft Graph Email Agent");
+      if ( lastConfig != null &&
+           ((Map) config.diff(lastConfig)).size() > 0 ) {
+
+        ((DAO) getX().get("eventRecordDAO")).put(new EventRecord(getX(), this, "reload", getId(), null, null, LogLevel.INFO, null));
+        if ( getService() != null ) {
+          getService().close();
+          setService(null);
+        }
+        setService(buildExchangeService());
+        setLastConfig(config);
+        logger.info("Reloaded Microsoft Graph Email Agent successfully");
       }
       `
     },

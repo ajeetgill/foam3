@@ -76,6 +76,7 @@ foam.CLASS({
     },
     {
       name: 'password',
+      label: 'Password / Client Secret',
       class: 'Password',
       value: null
     },
@@ -103,11 +104,6 @@ foam.CLASS({
       name: 'tenantId',
       documentation: 'Microsoft Graph API tenant ID',
       class: 'String'
-    },
-    {
-      name: 'clientSecret',
-      documentation: 'Microsoft Graph API client secret',
-      class: 'Password'
     },
     {
       documentation: 'Relevant to send - Provider imposed rateLimit (per second), at which point they will throttle or block completely for some time window',
