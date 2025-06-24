@@ -215,8 +215,8 @@ foam.CLASS({
     },
     {
       class: 'Map',
-      name: 'pageGroupHeaders_',
-      documentation: 'Tracks which group headers have been rendered for each page',
+      name: 'groupFirstPage_',
+      documentation: 'Tracks the first page where each group appears to ensure headers show only once',
       factory: function() { return {}; }
     },
   ],
@@ -315,37 +315,9 @@ foam.CLASS({
       })
       this.renderedPages_[page].remove();
       delete this.renderedPages_[page];
-      delete this.pageGroupHeaders_[page];
     },
 
-    function shouldShowGroupHeader(page, group, itemIndex) {
-      if ( ! this.groupBy ) return false;
-      
-      // Convert group to string for consistent key handling
-      var groupKey = foam.json.stringify(group);
-      
-      // Always show header for the first item in the first page
-      if ( page === 0 && itemIndex === 0 ) return true;
-      
-      // Check if this group header has already been rendered on this page
-      if ( this.pageGroupHeaders_[page] && this.pageGroupHeaders_[page][groupKey] ) {
-        return false;
-      }
-      
-      // For subsequent pages, check if this group is different from the last group of the previous page
-      if ( page > 0 ) {
-        var prevPageHeaders = this.pageGroupHeaders_[page - 1];
-        if ( prevPageHeaders ) {
-          var prevPageGroups = Object.keys(prevPageHeaders);
-          var lastGroupOfPrevPage = prevPageGroups[prevPageGroups.length - 1];
-          if ( lastGroupOfPrevPage && lastGroupOfPrevPage === groupKey ) {
-            return false;
-          }
-        }
-      }
-      
-      return true;
-    },
+
 
     function getPage(dao, page) {
       var self       = this;
@@ -370,25 +342,33 @@ foam.CLASS({
 
           var index = (page*self.pageSize_) + i + 1;
           var group = null;
+          var showHeader = false;
+          
           if ( self.groupBy ) {
             group = self.groupBy.f(args.data);
+            var groupKey = foam.json.stringify(group);
             
-            // Show header if this group should have a header on this page
-            if ( self.shouldShowGroupHeader(page, group, i) ) {
+            // Track if this is the first time we've seen this group
+            if ( self.groupFirstPage_[groupKey] === undefined ) {
+              self.groupFirstPage_[groupKey] = page;
+            }
+            
+            // Show header only if this is the first page where this group appears
+            // and it's different from the previous group in this page
+            if ( page === self.groupFirstPage_[groupKey] ) {
+              showHeader = ! foam.util.equals(group, previousGroup);
+            }
+            
+            if ( showHeader ) {
               e.tag(self.groupHeaderView,
                 { ...args,
                   groupLabel: group,
                   groupBy: self.groupBy,
               }
               );
-              
-              // Track that we've rendered this group header on this page
-              if ( ! self.pageGroupHeaders_[page] ) {
-                self.pageGroupHeaders_[page] = {};
-              }
-              var groupKey = foam.json.stringify(group);
-              self.pageGroupHeaders_[page][groupKey] = true;
             }
+            
+            previousGroup = group;
           }
 
           var isEven = (index + 1) % 2 !== 0 ;
@@ -397,6 +377,8 @@ foam.CLASS({
             self.rowObserver.observe(a)
           });
         };
+
+        var previousGroup = null;
 
         if ( foam.mlang.sink.Projection.isInstance( values ) ) {
           for ( var i = 0 ; i < values.projection.length ; i++ ) {
@@ -489,8 +471,8 @@ foam.CLASS({
         Object.keys(this.renderedPages_).forEach(i => {
           this.clearPage(i, true);
         });
-        // Clear page group headers tracking
-        this.pageGroupHeaders_ = {};
+        // Clear group first page tracking
+        this.groupFirstPage_ = {};
         if ( ! this.isInit ) {
           this.currentTopPage_ = 0;
           this.topRow = 0;
