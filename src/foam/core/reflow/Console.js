@@ -834,7 +834,6 @@ foam.CLASS({
       min-width: 220px;
     }
     .foam-core-reflow-Layout-l { overflow-y: auto; }
-    .foam-core-reflow-Layout-r .foam-core-reflow-PropertyBorder-richText .foam-core-reflow-PropertyBorder-propHolder { margin-left: -85px; }
     ^ .foam-u2-ProgressView { width: 600px; }
     ^ .foam-core-reflow-ReflowToolBar {
       position: absolute;
