@@ -121,8 +121,8 @@ foam.CLASS({
       return s;
     }
   ]
+});
 
-})
 
 foam.CLASS({
   package: 'foam.core.reflow',
@@ -275,7 +275,9 @@ foam.CLASS({
     function execute(e) {
       var self = this;
 
-      this.columns$ = this.block.value.columns$;
+      this.columns$.follow(this.block.value.columns$.map(
+        c => c.trim().split(',').map(c => c.trim()).filter(c => c)
+      ));
       this.block.value.value = this;
 
       e.add(this.dynamic(function(columns) {
