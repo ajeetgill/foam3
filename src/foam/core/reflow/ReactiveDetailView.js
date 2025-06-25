@@ -84,7 +84,7 @@ foam.CLASS({
       width: 100%;
     }
     ^ ^label {
-      width: 25%;
+      width: 50%;
     }
     ^view: {
       min-height: 0px;
