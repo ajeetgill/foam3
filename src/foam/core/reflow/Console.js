@@ -840,6 +840,7 @@ foam.CLASS({
       left: 50%;
       transform: translateX(-50%);
       bottom: 50px;
+      z-index: 11;
     }
   `,
 

@@ -34,7 +34,6 @@ foam.CLASS({
       border: 1px solid $grey200;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       width: 100%;
-      z-index: 11;
     }
 
     ^button-group {
