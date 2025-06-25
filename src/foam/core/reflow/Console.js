@@ -821,10 +821,10 @@ foam.CLASS({
       background: $backgroundSecondary;
     }
     ^output {
-      text-align: left;
-//      align-content: flex-end;
       flex: 1;
       overflow: auto;
+      text-align: left;
+      width: 100%
     }
     ^ .property-input {
       border: none !important;
@@ -1038,10 +1038,10 @@ foam.CLASS({
       layout.middle.call(this.renderSelf, [this]);
       layout.right.add(this.dynamic(function(selectedValue, selected$configViewSpec) {
         this.tag(self.ReactiveSectionedDetailView, {
-          of: selectedValue?.cls_.id ?? '', 
-          ...(selected$configViewSpec || {}),  
-          data: selectedValue, 
-          showActions: true, 
+          of: selectedValue?.cls_.id ?? '',
+          ...(selected$configViewSpec || {}),
+          data: selectedValue,
+          showActions: true,
           showHeader: true
         });
       }));
