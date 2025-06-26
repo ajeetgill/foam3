@@ -112,11 +112,11 @@ foam.CLASS({
 
       var self = this;
 
-      this.data$.relateTo(
+      this.onDetach(this.data$.relateTo(
         this.propName$,
         function propToName(p) { return p ? p.name : ''; },
         function nameToProp(n) { return n ? self.of.getAxiomByName(n) : ''; }
-      );
+      ));
       this.start(this.PropertyChoiceView_, {of: this.of, data$: this.propName$});
     }
   ]
