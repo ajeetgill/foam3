@@ -382,7 +382,9 @@ foam.CLASS({
   name: 'GroupByDAOAgent',
   extends: 'foam.core.reflow.AbstractDAOAgent',
 
-  imports: [ 'eval_' ],
+  imports: [ 'eval_', 'nestedGroupBy?' ],
+
+  exports: [ 'as nestedGroupBy' ],
 
   properties: [
     {
@@ -410,7 +412,7 @@ foam.CLASS({
   actions: [
     {
       name: 'browse',
-      // isEnabled: function(available) { return available; },
+      isAvailable: function(nestedGroupBy) { return ! nestedGroupBy; },
       code: function() {
         var block = this.block || this.__context__.currentBlock; // ??? Why needed?
         var cls   = block?.value?.value?.cls_;
@@ -418,7 +420,7 @@ foam.CLASS({
         var browse = () => this.eval_(`dao(${block.flowName}.value.asDAO(), '${block.flowName}GroupBy')`);
 
         if ( block && foam.mlang.sink.GroupBy != cls ) {
-            block.value.run();
+          block.value.run();
           // TODO: something better
           setTimeout(browse, 200);
         } else {
