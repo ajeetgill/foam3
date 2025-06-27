@@ -25,7 +25,7 @@ foam.CLASS({
   extends: 'foam.u2.CitationView',
   methods: [
     function render() {   // to be used later for complex views
-      this.add(this.data.label);
+      this.add(this.data.name/*, this.data.label*/);
     }
   ]
 });
@@ -71,7 +71,6 @@ foam.CLASS({
             dao: foam.dao.ArrayDAO.create({ array: [] })
           }
         ];
-
         let arr = this.of.getAxiomsByClass(foam.lang.Property)
           .filter(p => p.showInPropertyChoice)
           .filter(p => ! this.predicate || this.predicate(p));
