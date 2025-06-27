@@ -210,7 +210,7 @@ if ( getGroupLimit() == getGroups().size() && sub != null ) sub.detach();
       };
 
       model.plural = model.name;
-      var props = this.arg2.toProperties ? this.arg2.toProperties() : [ this.arg2.VALUE ];
+      var props = this.arg2.toProperties ? this.arg2.toProperties() : this.arg2.VALUE ? [ this.arg2.VALUE ] : [];
       model.properties.push.apply(model.properties, props);
 
       foam.CLASS(model);
