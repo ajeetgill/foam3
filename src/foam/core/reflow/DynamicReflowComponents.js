@@ -52,9 +52,6 @@ foam.CLASS({
       const commandsSink = await this.commandDAO.select();
       this.commands = commandsSink.array;
 
-      console.log('commands', this.commands);
-
-
       this.addClass()
         .start().addClass(this.myClass('container'))
           .tag(this.FILTER_SEARCH, { data$: this.filterSearch$ })
