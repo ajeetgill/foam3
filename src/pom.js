@@ -481,7 +481,6 @@ foam.POM({
     { name: "foam/dao/NotificationClientDAO",                         flags: "js|java" },
     { name: "foam/dao/PollingClientDAO",                              flags: "js" },
     { name: "foam/dao/PurgeRecordCmd",                                flags: "js|java" },
-    { name: "foam/dao/StreamingClientDAO",                            flags: "js" },
     { name: "foam/dao/RequestResponseClientDAO",                      flags: "js" },
     { name: "foam/box/InvalidMessageException",                       flags: "js" },
     { name: "foam/box/SkeletonBox",                                   flags: "js" },

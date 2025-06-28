@@ -15,6 +15,21 @@
  * limitations under the License.
  */
 
+Blob.prototype.ref = function() {
+  this.count_ = (this.count_ || 0) + 1;
+  if ( this.count_ == 1 ) {
+    this.url_ = URL.createObjectURL(this);
+  }
+  return this.url_
+}
+
+Blob.prototype.unref = function() {
+  this.count_ = this.count_ - 1;
+  if ( this.count_ == 0 ) {
+    URL.revokeObjectURL(this.url_);
+  }
+}
+
 foam.CLASS({
   package: 'foam.u2.tag',
   name: 'Image',
@@ -58,6 +73,10 @@ foam.CLASS({
     {
       class: 'Boolean',
       name: 'embedSVG'
+    },
+    {
+      class: 'Boolean',
+      name: 'sync'
     }
   ],
 
@@ -105,9 +124,9 @@ foam.CLASS({
 
           /// TODO: A better polymorphic way of doing this
           if ( self.BlobBlob.isInstance(src) ) {
-            var url = URL.createObjectURL(src.blob);
+            var url = src.blob.ref();
             this.onDetach(() => {
-              URL.revokeObjectURL(url)
+              src.blob.unref();
             })
             src = url;
           } else if ( self.Blob.isInstance(data) ) {
