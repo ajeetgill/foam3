@@ -118,6 +118,7 @@ foam.CLASS({
         this.cache = {};
         return this.SUPER(x, obj) || true;
       }
+
       if ( this.PurgeRecordCmd.isInstance(obj) ) {
         delete this.cache[obj.id];
         return this.SUPER(x, obj) || true;
