@@ -191,7 +191,7 @@ foam.CLASS({
     {
       name: 'prop',
       view: function(_, X) {
-       return { class: 'foam.core.reflow.PropertyChoiceView', of: X.data.of };
+       return { class: 'foam.core.reflow.PropertyChoiceView', forCls: X.data.of };
       }
     }
   ],
@@ -227,7 +227,7 @@ foam.CLASS({
       view: function(_, X) {
         return {
           class: 'foam.core.reflow.PropertyChoiceView',
-          of: X.data.of,
+          forCls: X.data.of,
           predicate: function(p) {
             return foam.lang.Int.isInstance(p) || foam.lang.Float.isInstance(p);
           }
@@ -390,10 +390,21 @@ foam.CLASS({
     {
       name: 'prop',
       view: function(_, X) {
-       return { class: 'foam.core.reflow.PropertyChoiceView', of: X.data.of };
+       return { class: 'foam.core.reflow.PropertyChoiceView', forCls: X.data.of };
       }
     },
-    { name: 'sink', view: { class: 'foam.core.reflow.SinkView', choice: 'Count' } }
+    {
+      name: 'sink',
+      view: { class: 'foam.core.reflow.SinkView', choice: 'Count' },
+      preSet: function(o, n) {
+        // Temporary fix to recontextualize the object after load.
+        // TODO: remove once JSON parsing/loading is fixed
+        if ( n && n.__context__ != this.__subContext__ ) {
+          return n.clone(this.__subContext__);
+        }
+        return n;
+      }
+    }
   ],
 
   methods: [
@@ -443,7 +454,7 @@ foam.CLASS({
     {
       name: 'prop',
       view: function(_, X) {
-       return { class: 'foam.core.reflow.PropertyChoiceView', of: X.data.of };
+       return { class: 'foam.core.reflow.PropertyChoiceView', forCls: X.data.of };
       }
     },
     { name: 'sink', view: 'foam.core.reflow.SinkView' }
@@ -469,13 +480,13 @@ foam.CLASS({
     {
       name: 'prop1',
       view: function(_, X) {
-       return { class: 'foam.core.reflow.PropertyChoiceView', of: X.data.of };
+       return { class: 'foam.core.reflow.PropertyChoiceView', forCls: X.data.of };
       }
     },
     {
       name: 'prop2',
       view: function(_, X) {
-       return { class: 'foam.core.reflow.PropertyChoiceView', of: X.data.of };
+       return { class: 'foam.core.reflow.PropertyChoiceView', forCls: X.data.of };
       }
     },
     { name: 'sink', view: { class: 'foam.core.reflow.SinkView', choice: 'Count' } }

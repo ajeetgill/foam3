@@ -38,7 +38,7 @@ foam.CLASS({
 
   properties: [
     {
-      name: 'of',
+      name: 'forCls',
       postSet: function(_, value) {
         this.rebuildSections();
       }
@@ -65,20 +65,20 @@ foam.CLASS({
     {
       name: 'sections',
       factory: function() {
-        if ( ! this.of ) return [
+        if ( ! this.forCls ) return [
           {
             heading: 'Properties',
-            dao: foam.dao.ArrayDAO.create({ array: [] })
+            dao: foam.dao.ArrayDAO.create({ of: foam.lang.Property, array: [] })
           }
         ];
-        let arr = this.of.getAxiomsByClass(foam.lang.Property)
+        let arr = this.forCls.getAxiomsByClass(foam.lang.Property)
           .filter(p => p.showInPropertyChoice)
           .filter(p => ! this.predicate || this.predicate(p));
 
         return [
           {
             heading: 'Properties',
-            dao: foam.dao.ArrayDAO.create({ array: arr })
+            dao: foam.dao.ArrayDAO.create({ of: foam.lang.Property, array: arr })
           }
         ];
       }
@@ -101,7 +101,7 @@ foam.CLASS({
   requires: [ 'foam.core.reflow.PropertyChoiceView_' ],
 
   properties: [
-    'of',
+    'forCls',
     'propName'
   ],
 
@@ -117,7 +117,7 @@ foam.CLASS({
         function nameToProp(n) { return n ? self.of.getAxiomByName(n) : ''; }
       );
 
-      this.start(this.PropertyChoiceView_, {of: this.of, data$: this.propName$});
+      this.start(this.PropertyChoiceView_, {forCls: this.forCls, data$: this.propName$});
     }
   ]
 
