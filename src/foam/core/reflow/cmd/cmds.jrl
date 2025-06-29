@@ -30,10 +30,27 @@ p({
 
 p({
   "class":"foam.core.reflow.cmd.Command",
+  "id": "testresults",
+  "description": "Insert an Test Results Summary",
+  "script": """
+    var results = foam.core.reflow.float.TestResults.create({}, this);
+    this.currentBlock.value = results;
+    this.currentBlock.flowName = 'testResults';
+   """,
+   permissionRequired: true
+})
+
+p({
+  "class":"foam.core.reflow.cmd.Command",
   "id": "expect",
   "description": "Insert an Expectation Test",
   "script": """
+//    if ( ! this.__context__.scope.testResults ) {
+//      this.eval_('testresults');
+//    }
+
     var test = foam.core.reflow.float.Test.create({received: args[0], description: args[1] || ''}, this);
+    this.__context__.scope.testResults.report(test);
     this.currentBlock.value = test;
 //    this.addValue(test);
    """,
