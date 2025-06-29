@@ -142,7 +142,6 @@ foam.CLASS({
 
   methods: [
     function execute(e) {
-      debugger;
       return this.dao.select(this.createSink()).then(s => {
         var a = s.array;
         for ( var i = 0 ; i < a.length ; i++ ) {
@@ -335,6 +334,7 @@ foam.CLASS({
   requires: [ 'foam.dao.CSVSink', 'foam.core.reflow.CopyFromBorder' ],
 
   methods: [
+    function value(s) { return foam.lang.StringHolder.create({value: s.csv}); },
     function getSinkWithProjectionData(s) { return s; },
     function getProjectionSink() { return this.CSVSink.create({ of: this.of, props: this.props }); },
     function getSink() { return this.CSVSink.create({of: this.of}); },
