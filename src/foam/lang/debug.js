@@ -416,7 +416,6 @@ foam.CLASS({
 
   methods: [
     function init() {
-      return;
       var is = this.cls_.getAxiomsByClass(foam.lang.Import);
       for ( var i = 0 ; i < is.length ; i++ ) {
         var imp = is[i];
