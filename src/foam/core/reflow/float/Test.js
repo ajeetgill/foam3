@@ -179,9 +179,21 @@ foam.CLASS({
         end().
         start().
           style({marginLeft: '20px', fontSize: 'larger'}).
-          start('div').style({color: 'green'}).add('Passed: ', this.data.passed$).end().
-          start('div').style({color: 'red'}).add('Failed: ',   this.data.failed$).end().
-          start('div').style({color: 'red'}).add('Missing: ',  this.data.missing$).end().
+          start('div').
+            show(this.data.passed$).
+            style({color: 'green'}).
+            add('Passed: ', this.data.passed$).
+          end().
+          start('div').
+            show(this.data.failed$).
+            style({color: 'red'}).
+            add('Failed: ',   this.data.failed$).
+          end().
+          start('div').
+            show(this.data.missing$).
+            style({color: 'red'}).
+            add('Missing: ',  this.data.missing$).
+          end().
           start('b').add('Total: ', this.data.total$);
     }
   ]
