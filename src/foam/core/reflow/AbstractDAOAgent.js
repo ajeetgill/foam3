@@ -85,7 +85,7 @@ foam.CLASS({
         this.props = null;
         this.useProjection = false;
       }
-      SUPER(e);
+      return SUPER(e);
     },
     function getProjectionSink() {
       var exprArray = [];
