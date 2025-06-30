@@ -133,6 +133,7 @@ foam.CLASS({
             'text/xml': 'XML',
             'text/plain': 'TXT'
           },
+          isMultipleFiles: false,
           title: 'Drag and drop a file here or click to browse',
           onFilesChanged: X.data.onFilesChanged.bind(X.data)
         };
