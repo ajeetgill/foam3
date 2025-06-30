@@ -38,7 +38,7 @@ p({
     this.currentBlock.flowName = 'testResults';
     this.out.tag(foam.core.reflow.float.TestResultsView, {data: results});
    """,
-   permissionRequired: true
+   permissionRequired: false
 })
 
 p({
@@ -57,7 +57,7 @@ p({
     this.out.tag(foam.core.reflow.float.TestView, {data: test});
 //    this.addValue(test);
    """,
-   permissionRequired: true
+   permissionRequired: false
 })
 
 p({"class":"foam.core.reflow.cmd.Command", "id": "signature", "description": "Insert a Signature Block",  "script": """var s = foam.core.reflow.Signature.create({label: args[0] || ''}, this); this.out.add(s); this.currentBlock.value = s;"""})
