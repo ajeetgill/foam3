@@ -213,16 +213,6 @@ p({
 
 p({
   class:"foam.core.boot.CSpec",
-  name:"microsoftGraphEmailAgent",
-  lazy: false,
-  service:{
-    class:"foam.core.notification.email.MicrosoftGraphEmailAgent",
-    id: 'msGraph'
-  }
-})
-
-p({
-  class:"foam.core.boot.CSpec",
   name:"emailFolderAgent",
   lazy: false,
   service:{

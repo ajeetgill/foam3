@@ -5,7 +5,7 @@
  */
 
 foam.CLASS({
-  package: 'foam.core.notification.email',
+  package: 'foam.core.notification.email.ms',
   name: 'MicrosoftGraphEmailAgent',
 
   extends: 'foam.core.notification.email.SMTPAgent',
@@ -20,6 +20,10 @@ foam.CLASS({
     'foam.lang.X',
     'foam.dao.DAO',
     'foam.core.er.EventRecord',
+
+    'foam.core.notification.email.Status',
+    'foam.core.notification.email.EmailMessage',
+    'foam.core.notification.email.EmailServiceConfig',
 
     'java.util.Collections',
     'foam.lang.ContextAgentTimerTask',

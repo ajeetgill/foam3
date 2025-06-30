@@ -79,10 +79,6 @@ foam.POM({
     'org.junit.jupiter:junit-jupiter-params:5.6.0',
     'org.junit.platform:junit-platform-launcher:1.6.0',
     'org.slf4j:slf4j-api:2.0.16',
-    'com.azure:azure-identity:1.15.4',
-    'com.microsoft.ews-java-api:ews-java-api:2.0',
-    'javax.xml.bind:jaxb-api:2.3.1',
-    'javax.xml.ws:jaxws-api:2.3.1',
     'org.slf4j:slf4j-simple:2.0.16'
   ]
 });

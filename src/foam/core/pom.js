@@ -31,6 +31,7 @@ foam.POM({
     { name: "crunch/pom" }, // NOTE: must follow ruler - direct reference to RULE_PREDICATE
     { name: "security/pom" },
     { name: "so/pom" },
+    { name: "notification/email/ms/pom" },
     { name: "test/pom", flags: "test" }
   ],
   files: [
@@ -338,7 +339,6 @@ foam.POM({
     { name: "notification/email/EmailTemplateCitationView",                               flags: "js" },
     { name: "notification/email/EmailTemplateSource",                                     flags: "js|java" },
     { name: "notification/email/SMTPAgent",                                               flags: "js|java" },
-    { name: "notification/email/MicrosoftGraphEmailAgent",                                flags: "js|java" },
     { name: "notification/email/SMTPConfig",                                              flags: "js|java" },
     { name: "notification/email/Status",                                                  flags: "js|java" },
     { name: "notification/email/test/EmailMessageRuleTest",                               flags: "js&test|java&test" },
