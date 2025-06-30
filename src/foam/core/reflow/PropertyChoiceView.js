@@ -25,7 +25,7 @@ foam.CLASS({
   extends: 'foam.u2.CitationView',
   methods: [
     function render() {   // to be used later for complex views
-      this.add(this.data.label);
+      this.add(this.data.name/*, this.data.label*/);
     }
   ]
 });
@@ -33,12 +33,12 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.core.reflow',
-  name: 'PropertyChoiceView',
+  name: 'PropertyChoiceView_',
   extends: 'foam.u2.view.RichChoiceView',
 
   properties: [
     {
-      name: 'of',
+      name: 'forCls',
       postSet: function(_, value) {
         this.rebuildSections();
       }
@@ -65,21 +65,20 @@ foam.CLASS({
     {
       name: 'sections',
       factory: function() {
-        if ( ! this.of ) return [
+        if ( ! this.forCls ) return [
           {
             heading: 'Properties',
-            dao: foam.dao.ArrayDAO.create({ array: [] })
+            dao: foam.dao.ArrayDAO.create({ of: foam.lang.Property, array: [] })
           }
         ];
-        
-        let arr = this.of.getAxiomsByClass(foam.lang.Property)
+        let arr = this.forCls.getAxiomsByClass(foam.lang.Property)
           .filter(p => p.showInPropertyChoice)
           .filter(p => ! this.predicate || this.predicate(p));
 
         return [
           {
             heading: 'Properties',
-            dao: foam.dao.ArrayDAO.create({ array: arr })
+            dao: foam.dao.ArrayDAO.create({ of: foam.lang.Property, array: arr })
           }
         ];
       }
@@ -91,4 +90,35 @@ foam.CLASS({
       this.clearProperty('sections');
     }
   ]
+});
+
+
+foam.CLASS({
+  package: 'foam.core.reflow',
+  name: 'PropertyChoiceView',
+  extends: 'foam.u2.View',
+
+  requires: [ 'foam.core.reflow.PropertyChoiceView_' ],
+
+  properties: [
+    'forCls',
+    'propName'
+  ],
+
+  methods: [
+    function render() {
+      this.SUPER();
+
+      var self = this;
+
+      this.data$.relateTo(
+        this.propName$,
+        function propToName(p) { return p ? p.name : ''; },
+        function nameToProp(n) { return n ? self.forCls.getAxiomByName(n) : ''; }
+      );
+
+      this.start(this.PropertyChoiceView_, {forCls: this.forCls, data$: this.propName$});
+    }
+  ]
+
 });

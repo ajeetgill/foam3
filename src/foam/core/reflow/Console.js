@@ -1410,6 +1410,7 @@ foam.CLASS({
             this.currentBlock.flowName = c.flowName;
 
             if ( this.currentBlock.value && c.value ) {
+              if ( c.value.clone ) c.value = c.value.clone(this.__subContext__);
               this.currentBlock.value.copyFrom(c.value);
             }
 
