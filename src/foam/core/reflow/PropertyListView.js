@@ -15,6 +15,10 @@ foam.CLASS({
       width: 100%;
       gap: 5px;
     }
+    ^ .property-choice {
+      width: 100%;
+      overflow-x: hidden;
+    }
   `,
 
   properties: [

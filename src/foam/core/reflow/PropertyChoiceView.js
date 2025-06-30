@@ -29,6 +29,8 @@ foam.CLASS({
   css: `
     ^row {
       display: flex;
+      overflow-x: hidden;
+      width: 100%;
       flex-direction: column;
       gap: 2px;
       border-bottom: 1px solid $borderXLight;
@@ -53,6 +55,10 @@ foam.CLASS({
   `,
   
   methods: [
+    function getSummary(data) {
+      // Override to prevent default summary behavior
+      return '';
+    },
     function render() {
       this.SUPER();
       // Clear the default summary content and add our custom layout
