@@ -27,7 +27,10 @@ foam.CLASS({
     },
     {
       name: 'choice',
-      view: function(_, X) { return { class: 'foam.core.reflow.PropertyChoiceView_', forCls: X.data.of } },
+      view: function(_, X) {
+        // X.data is actually 'this' because PropertyListView is a Controller, not a View
+        return { class: 'foam.core.reflow.PropertyChoiceView_', forCls: X.data.forCls };
+      },
       preSet: function(o, n) {
         if ( n == '*' ) {
           this.data = this.data || '';
