@@ -26,14 +26,14 @@ foam.CLASS({
     'foam.box.KeepAlivePing',
     'foam.box.KeepAlivePong',
     'foam.box.RetryBox',
-    'foam.box.TimeoutBox',
+    'foam.box.TimeoutBox'
   ],
 
   documentation: `Implements a TCP style keepalive ping.`,
 
   imports: [
     'setTimeout',
-    'clearTimeout',
+    'clearTimeout'
   ],
 
   properties: [

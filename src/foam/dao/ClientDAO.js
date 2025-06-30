@@ -134,7 +134,7 @@ return sink
         var detached = false;
         sub.onDetach(() => { detached = true; });
 
-        if ( !sink ) {
+        if ( ! sink ) {
           return sub;
         }
 
@@ -146,6 +146,8 @@ return sink
             return;
           }
           
+          // RemoteSink handles registering a Skeleton callback instead of trying
+          // to send the Sink across the network.
           var remote = foam.dao.RemoteSink.create({
             delegate: sink
           });
@@ -163,13 +165,6 @@ return sink
         doListen();
         
         return sub;
-        
-        if ( sink ) {
-          // RemoteSink handles registering a Skeleton callback instead of trying
-          // to send the Sink across the network.
-          this.SUPER(null, foam.dao.RemoteSink.create({delegate: sink}, x), predicate);
-        }
-        return foam.lang.FObject.create();
       },
       javaCode: `super.listen_(null, sink, predicate);`,
       swiftCode: `return try super.listen_(nil, sink, predicate)`
