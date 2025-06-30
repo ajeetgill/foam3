@@ -464,7 +464,7 @@ foam.CLASS({
     function execute(q) {
       if ( q ) q = q.toLowerCase();
       var self = this;
-      this.out.start('table').select(this.flowDAO, function(f) {
+      this.out.start('table').attr('cellpadding', '6px').select(this.flowDAO, function(f) {
         if ( q != undefined && (f.id + f.status + f.description).toLowerCase().indexOf(q) == -1 ) return;
         this.start('tr').
           start('td').start(self.Link).add(f.name).on('click', () => self.eval_('load("' + f.name + '")')).end().end().
