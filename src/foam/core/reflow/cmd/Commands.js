@@ -621,7 +621,7 @@ foam.CLASS({
   name: 'Save',
   extends: 'foam.core.reflow.cmd.Command',
 
-  imports: [  'currentBlock', 'flow', 'flowDAO', 'save' ],
+  imports: [  'flow', 'flowDAO', 'save' ],
 
   properties: [
     [ 'description', 'Save the current flow to a specified name' ]
