@@ -71,7 +71,7 @@ foam.CLASS({
       hidden: true,
       transient: true,
       factory: function() {
-        return this.EasyDAO.create({daoType: 'MDAO', of: foam.core.reflow.float.Test});
+        return this.EasyDAO.create({seqNo: true, daoType: 'MDAO', of: foam.core.reflow.float.Test});
       }
     },
     {
@@ -212,8 +212,8 @@ foam.CLASS({
     {
       class: 'Long',
       name: 'id',
-      reactive: false,
       hidden: true,
+      reactive: false,
       transient: true
     },
     {
