@@ -299,9 +299,6 @@ foam.CLASS({
       name: 'signInAction',
       label: 'Sign in',
       buttonStyle: 'PRIMARY',
-      isEnabled: function(data, data$errors_) {
-        return data && ! data$errors_;
-      },
       code: function(X) {
         this.clientLoginService.signin(X, this.data);
       }
