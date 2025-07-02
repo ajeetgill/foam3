@@ -463,6 +463,7 @@ foam.CLASS({
   ],
 
   methods: [
+    function value(s) { return this.sink.value(s.sink); },
     function createSink() { return this.DuplicateSink.create({expr: this.prop, sink: this.sink.createSink()}); },
     function addToE(e) {
       e.startContext({data: this}).start().style({display: 'flex'}).add(this.PROP, this.SINK);
