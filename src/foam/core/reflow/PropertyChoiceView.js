@@ -114,7 +114,7 @@ foam.CLASS({
         let arr = this.forCls.getAxiomsByClass(foam.lang.Property)
           .filter(p => p.showInPropertyChoice)
           .filter(p => ! this.predicate || this.predicate(p))
-          .sort(a.NAME.compare);
+          .sort(foam.lang.Property.NAME.compare);
 
         return [
           {
