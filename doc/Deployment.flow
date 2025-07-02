@@ -8,7 +8,8 @@
 
 <h2>Uploading / Installing</h2>
 <p>Once a tar ball is prepared, it can be uploaded and the application installed</p>
-<code>foam3/tools/bin/install_remote.sh -Hhostname</code>
+<code>./build.sh -TStandard,RemoteInstall,Java --remote-hostname:hostname</code>
+
 <p>This will upload and install</p>
 <p>Additional (most common) flags for install_remote.sh:
 <ul>
@@ -36,6 +37,8 @@ These properties can be overridden after first deployment by adding them to:
 #!/bin/bash
   JAVA_OPTS="${JAVA_OPTS} -Xmx8000m"
 </code>
+Or per deployment with
+<code>./build.sh -EJAVA_OPTS:"-Xms4g -Xmx8g"</code>
 </p>
 
 <h2>JVM Other Defaults and Tuning</h2>
