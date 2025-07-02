@@ -662,6 +662,9 @@ foam.CLASS({
       border-radius: 4px;
       gap: 10px;
     }
+    ^r .foam-u2-PropertyBorder-view {
+      width: 100%;
+    }
     ^r .foam-core-reflow-PropertyListView {
       justify-content: space-between;
     }
