@@ -11,11 +11,11 @@
 <code>./build.sh -TStandard,RemoteInstall,Java --remote-hostname:hostname</code>
 
 <p>This will upload and install</p>
-<p>Additional (most common) flags for install_remote.sh:
+<p>Additional (most common) installation flags:
 <ul>
-<li><b>-Uname</b> User name to create and run application under. Defaults to <b>foam</b></li>
-<li><b>-Yid</b> User ID to create User with. Defaults to <b>3626</b></li>
-<li><b>-Btrue|false</b> Controls backup of previous version during install. Defaults to <b>true</b>.<br/>
+<li><b>--user:name</b> User name to create and run application under. Defaults to <b>foam</b></li>
+<li><b>--user-id:id</b> User ID to create User with. Defaults to <b>3626</b></li>
+<li><b>--backup:true|false</b> Controls backup of previous version during install. Defaults to <b>true</b>.<br/>
 For a quick development, deploy cycle, and for non-production instances, set backup to false.</li>
 </ul>
 </p>
