@@ -55,20 +55,38 @@ foam.CLASS({
 
   constants: { ROLE_PERMISSION_PREFIX: '@' },
 
+  sections: [
+    {
+      name: 'general',
+      title: 'General'
+    },
+    {
+      name: 'scriptSection',
+      title: 'Script'
+    },
+    {
+      name: 'scheduleSection',
+      title: 'Schedule'
+    }
+  ],
+
   properties: [
     {
       class: 'String',
       name: 'name',
+      section: 'general',
       onKey: true
     },
     {
       class: 'String',
       name: 'description',
+      section: 'general',
       width: 80
     },
     {
       class: 'String',
       name: 'status',
+      section: 'general',
       tableCellFormatter: function(value, obj) {
         if ( value.startsWith('PASSED') ) {
           this.style({color: 'green'});
@@ -82,15 +100,18 @@ foam.CLASS({
     {
       class: 'String',
       name: 'source',
+      section: 'general',
       width: 30
     },
     {
       class: 'StringArray',
-      name: 'keywords'
+      name: 'keywords',
+      section: 'general'
     },
     {
       class: 'String',
       name: 'notes',
+      section: 'general',
       width: 80,
       view: { class: 'foam.u2.tag.TextArea', rows: 3, cols: 78 }
     },
@@ -98,6 +119,7 @@ foam.CLASS({
       class: 'Enum',
       of: 'foam.core.reflow.FlowAccess',
       name: 'accessLevel',
+      section: 'general',
       label: 'Access',
       value: foam.core.reflow.FlowAccess.PUBLIC_RW
     },
@@ -105,6 +127,7 @@ foam.CLASS({
       class: 'FObjectArray',
       of: 'foam.core.reflow.UserFlowAccess',
       name: 'specifiedUserAccess',
+      section: 'general',
       visibility: function(accessLevel) {
         return accessLevel != foam.core.reflow.FlowAccess.SHARED ? foam.u2.DisplayMode.HIDDEN : foam.u2.DisplayMode.RW;
       }
@@ -113,6 +136,7 @@ foam.CLASS({
       class: 'FObjectArray',
       of: 'foam.core.reflow.RoleFlowAccess',
       name: 'specifiedRoleAccess',
+      section: 'general',
       visibility: function(accessLevel) {
         return accessLevel != foam.core.reflow.FlowAccess.SHARED ? foam.u2.DisplayMode.HIDDEN : foam.u2.DisplayMode.RW;
       }
@@ -129,16 +153,19 @@ foam.CLASS({
       class: 'Reference',
       of: 'foam.core.auth.ServiceProvider',
       name: 'spid',
+      section: 'general',
       readPermissionRequired: true,
       writePermissionRequired: true
     },
     {
       class: 'Int',
-      name: 'version'
+      name: 'version',
+      section: 'general',
     },
     {
       class: 'Int',
       name: 'revision',
+      section: 'general',
       transient: true,
       xxxview: {
         class: 'foam.u2.view.DualView',
@@ -155,6 +182,7 @@ foam.CLASS({
     {
       class: 'String',
       name: 'script',
+      section: 'scriptSection',
       reactive: false,
       value: '[\n\t\n]', // Is needed so that mementoMgr doesn't get confused on the first state
       preSet: function(o, n) { return n.trim(); },
@@ -164,12 +192,14 @@ foam.CLASS({
       name: 'schedule',
       class: 'FObjectProperty',
       of: 'foam.core.cron.CronSchedule',
+      section: 'scheduleSection',
       documentation: 'Schedule to run this flow.'
     },
     {
       class: 'DateTime',
       name: 'lastRun',
       label: 'Last Run',
+      section: 'scheduleSection',
       readPermissionRequired: true,
       documentation: 'Timestamp of the last execution of this flow. Works with this.schedule.'
     }

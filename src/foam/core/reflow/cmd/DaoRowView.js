@@ -34,7 +34,7 @@ foam.CLASS({
           end().
           start('td').attr('align', 'left').
             show(this.uploadAvailable).
-            start(this.Button, { buttonStyle: 'SECONDARY', themeIcon: 'plus', size: 'SMALL' }).add('upload').on('click', this.uplFn).end().
+            start(this.Button, { buttonStyle: 'SECONDARY', themeIcon: 'upload', size: 'SMALL' }).add('upload').on('click', this.uplFn).end().
           end().
           start('th').attr('align', 'left').
             start(this.Button, { buttonStyle: 'LINK', size: 'SMALL'}).addClass(this.myClass('name-btn')).add(this.shortName).on('click', this.daoFn).end().
