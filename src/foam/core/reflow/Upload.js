@@ -94,6 +94,15 @@ foam.CLASS({
   name: 'Upload',
   // extends: 'foam.u2.Controller',
 
+  documentation: `
+    Data upload component supporting file drag & drop or manual text input.
+    Handles CSV, JSON, XML formats with auto-detection, column mapping, 
+    and bulk import to DAOs. Provides preview and progress tracking.
+    
+    When files are uploaded, their content is processed and moved to input.
+    When input is manually cleared, uploadedFiles is cleared.
+  `,
+
   requires: [
     'foam.dao.MDAO',
     'foam.lib.csv.CSVParser',
@@ -115,6 +124,8 @@ foam.CLASS({
       factory: function() { return []; },
       postSet: function(_, n) {
         if ( n && n.length > 0 ) {
+          // Clear any existing text input since we're switching to file mode
+          // The file content will be processed and displayed in the text area
           this.input = '';
           this.processUploadedFiles();
         }
@@ -146,6 +157,8 @@ foam.CLASS({
       view: { class: 'foam.u2.tag.TextArea', rows: 10, cols: 100 },
       postSet: function(_, n) {
         if ( n && n.trim() !== '' ) {
+          // Clear uploaded files when user manually enters/edits text
+          // Since the file content is now represented as text, we no longer need the file reference
           this.uploadedFiles = [];
         }
       },
