@@ -10,11 +10,9 @@
 
 // Features:
 //  - put current user in Context, use in Signature
-//  - load/save Flows
 //  ? how are Commands different than flows?
-
-
 // ???: Would it be better to have compose rather than mixing Flowable?
+
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'Flowable',
@@ -658,6 +656,21 @@ foam.CLASS({
       padding: 10px;
       border-radius: 4px;
     }
+    ^r .foam-u2-PropertyBorder-select {
+      padding: 5px;
+      background-color: $grey200;
+      border-radius: 4px;
+      gap: 10px;
+    }
+    ^r .foam-u2-PropertyBorder-view {
+      width: 100%;
+    }
+    ^r .foam-core-reflow-PropertyListView {
+      justify-content: space-between;
+    }
+    ^r .foam-u2-detail-SectionView-actionDiv {
+      gap: 10px;
+    }
   `,
 
   properties: [
@@ -761,6 +774,7 @@ foam.CLASS({
 
   imports: [
     'commandDAO',
+    'flowDAO',
     'params',
     'scope?',
     'setTimeout',
@@ -791,6 +805,9 @@ foam.CLASS({
       flex-direction: column;
       width: 100%;
       height: 100%;
+      position: relative;
+      align-items: center;
+      justify-content: center;
     }
     ^input-field {
       position: relative;
@@ -806,10 +823,10 @@ foam.CLASS({
       background: $backgroundSecondary;
     }
     ^output {
-      text-align: left;
-//      align-content: flex-end;
       flex: 1;
       overflow: auto;
+      text-align: left;
+      width: 100%
     }
     ^ .property-input {
       border: none !important;
@@ -818,13 +835,16 @@ foam.CLASS({
       min-width: 220px;
     }
     .foam-core-reflow-Layout-l { overflow-y: auto; }
-    .foam-core-reflow-Layout-r .foam-core-reflow-PropertyBorder-richText .foam-core-reflow-PropertyBorder-propHolder { margin-left: -85px; }
     ^ .foam-u2-ProgressView { width: 600px; }
-    ^ .foam-core-reflow-ReflowToolBar {
-      position: absolute;
-      left: 30%;
-      bottom: 50;
+
+    ^rightBar-title {
+      padding-inline: 24px;
+      padding-block: 16px;
+      border-bottom: 1px solid $grey200;
+      font-size: 16px;
+      font-weight: bold;
     }
+
   `,
 
   properties: [
@@ -954,6 +974,36 @@ foam.CLASS({
   ],
 
   methods: [
+    async function includeFlow(name) {
+      if ( ! name ) return;
+      var flow = await this.flowDAO.find(name);
+
+      if ( flow ) {
+        this.includeScript(flow.script);
+      }
+    },
+
+    async function includeScript(script) {
+      if ( ! script ) return;
+
+      var cs = foam.json.parseString(script, this.__subContext__);
+
+      for ( var i = 0 ; i < cs.length ; i++ ) {
+        var c = cs[i];
+
+        this.eval_(c.cmd);
+
+        this.currentBlock.flowName = c.flowName;
+
+        if ( this.currentBlock.value && c.value ) {
+          if ( c.value.clone ) c.value = c.value.clone(this.__subContext__);
+          this.currentBlock.value.copyFrom(c.value);
+        }
+
+        await this.currentBlock.value?.onLoad?.();
+      }
+    },
+
     function clearFlow() {
       this.removeAllFlowChildren();
 
@@ -1021,11 +1071,14 @@ foam.CLASS({
       layout.left.tag(this.FlowableTree, {data: this, selected$: this.selected$, isMenuOpen$: layout.isMenuOpen$});
       layout.middle.call(this.renderSelf, [this]);
       layout.right.add(this.dynamic(function(selectedValue, selected$configViewSpec) {
-        this.tag(self.ReactiveSectionedDetailView, {
-          of: selectedValue?.cls_.id ?? '', 
-          ...(selected$configViewSpec || {}),  
-          data: selectedValue, 
-          showActions: true, 
+        this.start().addClass(self.myClass('rightBar-title'))
+          .add('Flow Properties')
+        .end()
+        .tag(self.ReactiveSectionedDetailView, {
+          of: selectedValue?.cls_.id ?? '',
+          ...(selected$configViewSpec || {}),
+          data: selectedValue,
+          showActions: true,
           showHeader: true
         });
       }));
@@ -1127,7 +1180,9 @@ foam.CLASS({
 
       // Add bindings for children
       this.flowChildren.forEach(c => {
-        if ( c.value ) s[c.flowName] = c.value;
+        if ( c.value ) {
+          s[c.flowName] = foam.lang.Holder.isInstance(c.value) ? c.value.value : c.value;
+        }
       });
     },
 
@@ -1381,26 +1436,11 @@ foam.CLASS({
         if ( this.feedback_ ) return;
         this.feedback_ = true;
         try {
-          var script = this.value.script;
-
-          var cs = script ? foam.json.parseString(script, this.__subContext__) : [];
+          this.clearFlow();
           var currentBlockName = this.selected ? this.selected.flowName : this.flowName;
 
-          this.clearFlow();
-
-          for ( var i = 0 ; i < cs.length ; i++ ) {
-            var c = cs[i];
-
-            this.eval_(c.cmd);
-
-            this.currentBlock.flowName = c.flowName;
-
-            if ( this.currentBlock.value && c.value ) {
-              this.currentBlock.value.copyFrom(c.value);
-            }
-
-            await this.currentBlock.value?.onLoad?.();
-          }
+          var script = this.value.script;
+          this.includeScript(script);
 
           this.selected = currentBlockName == this.flowName ? this : this.findFlowChildByName(currentBlockName) || this;
         } finally {
@@ -1422,8 +1462,3 @@ foam.CLASS({
     }
   ]
 });
-
-/* TODO:
-   modes: Doc, Prompt/Console, Calc
-   Input
-*/
