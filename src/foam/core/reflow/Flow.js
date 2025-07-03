@@ -51,22 +51,24 @@ foam.CLASS({
 
   tableColumns: [ 'name', 'source', 'description', 'status', 'schedule', 'lastRun', /* 'isPublic', 'readOnly', */ 'reflow' ],
 
-  searchColumns: [ 'name', 'status', 'source', 'schedule' ],
+  searchColumns: [ 'name', 'status', 'source', 'keywords' ],
 
   constants: { ROLE_PERMISSION_PREFIX: '@' },
 
   sections: [
     {
       name: 'general',
-      title: 'General'
+      title: 'General',
     },
     {
       name: 'scriptSection',
-      title: 'Script'
+      title: 'Script',
+      collapsable: true
     },
     {
       name: 'scheduleSection',
-      title: 'Schedule'
+      title: 'Schedule',
+      collapsable: true
     }
   ],
 
@@ -105,11 +107,12 @@ foam.CLASS({
     },
     {
       class: 'StringArray',
-      name: 'keywords',
-      section: 'general'
+      section: 'general',
+      name: 'keywords'
     },
     {
       class: 'String',
+      section: 'general',
       name: 'notes',
       section: 'general',
       width: 80,
@@ -160,7 +163,7 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'version',
-      section: 'general',
+      section: 'general'
     },
     {
       class: 'Int',
@@ -190,6 +193,7 @@ foam.CLASS({
     },
     {
       name: 'schedule',
+      section: 'scheduleSection',
       class: 'FObjectProperty',
       of: 'foam.core.cron.CronSchedule',
       section: 'scheduleSection',
@@ -198,6 +202,7 @@ foam.CLASS({
     {
       class: 'DateTime',
       name: 'lastRun',
+      section: 'general',
       label: 'Last Run',
       section: 'scheduleSection',
       readPermissionRequired: true,

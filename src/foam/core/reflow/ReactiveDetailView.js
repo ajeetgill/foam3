@@ -85,9 +85,14 @@ foam.CLASS({
   css: `
     ^{
       width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      gap: 8px;
     }
     ^ ^label {
-      width: 50%;
+      color: $black;
+      width: 90%;
     }
     ^view: {
       min-height: 0px;
@@ -165,6 +170,62 @@ foam.CLASS({
       this.onDataChange();
 
       this.SUPER();
+    },
+
+    function layout(prop, visibilitySlot, modeSlot, labelSlot, viewSlot, colorSlot, errorSlot, supportingLabelSlot) {
+      var self = this;
+
+      this.
+        enableClass(this.myClass('u2'), ! this.U3).
+        addClass().
+        show(visibilitySlot).
+        add(labelSlot).
+        add(supportingLabelSlot).
+        call(this.layoutView, [self, prop, viewSlot]).
+        start().
+          addClass(this.myClass('propHolder')).
+          callIf(prop.help, function() {
+            this.start().addClass(self.myClass('helper-icon'))
+              .start('', { tooltip: prop.help.length < 60 ? prop.help : self.LEARN_MORE })
+                .start(self.CircleIndicator, {
+                  glyph: 'helpIcon',
+                  icon: '/images/question-icon.svg',
+                  size: 20
+                })
+                  .on('click', () => { self.helpEnabled = ! self.helpEnabled; })
+                .end()
+              .end()
+            .end();
+          }).
+        end().
+        start().
+          /**
+           * ERROR BEHAVIOUR:
+           * - data == nullish, error == true: Show error in default text color, hide icon
+           * - data == ! null, error == true: Show error and icon in destructive, highlight field border
+           * Allows for errors to act as suggestions until the user enters a value
+           * Potential improvement area: this approach makes it slightly harder to understand why
+           * submit action may be unavilable for long/tabbed  forms
+           */
+          addClass('p-legal-light', this.myClass('errorText')).
+          enableClass(this.myClass('colorText'), colorSlot).
+          show(errorSlot.and(modeSlot.map(m => m == foam.u2.DisplayMode.RW))).
+          // Using the line below we can reserve error text space instead of shifting layouts
+          // show(modeSlot.map(m => m == foam.u2.DisplayMode.RW)).
+          start({
+            class: 'foam.u2.tag.Image',
+            data: '/images/inline-error-icon.svg',
+            embedSVG: true
+          }).show(errorSlot.and(colorSlot)).end().
+          add(' ', errorSlot).
+        end().
+        callIf(prop.help, function() {
+          this
+            .start(self.ExpandableBorder, { expanded$: self.helpEnabled$, title: self.HELP })
+              .style({ 'flex-basis': '100%', width: '100%' })
+              .start('p').add(prop.help).end()
+            .end();
+        });
     },
 
     function layoutView(self, prop, viewSlot) {
@@ -294,14 +355,22 @@ foam.CLASS({
 
 
   css: `
-    ^ {
-      padding: 20px;
-    }
     ^ > div > .foam-u2-layout-Rows {
       gap: 10px;
     }
     ^ .foam-u2-detail-SectionView-actionDiv {
       flex-direction: column;
+    }
+    ^ .foam-u2-detail-SectionView-section-title {
+      padding-inline: 24px;
+      padding-block: 16px;
+      font-size: 16px;
+    }
+    ^ .foam-u2-detail-SectionView {
+      border-bottom: 1px solid $grey200;
+    }
+    ^ .foam-u2-detail-SectionView-grid {
+      padding-inline: 24px;
     }
   `,
 
