@@ -58,15 +58,17 @@ foam.CLASS({
   sections: [
     {
       name: 'general',
-      title: 'General'
+      title: 'General',
     },
     {
       name: 'scriptSection',
-      title: 'Script'
+      title: 'Script',
+      collapsable: true
     },
     {
       name: 'scheduleSection',
-      title: 'Schedule'
+      title: 'Schedule',
+      collapsable: true
     }
   ],
 

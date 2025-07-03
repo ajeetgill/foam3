@@ -111,10 +111,17 @@ foam.CLASS({
       class: 'String',
       name: 'fromClass',
       documentation: 'The class name to which the section belongs to.'
+    },
+    {
+      class: 'Boolean',
+      name: 'collapsable'
     }
   ],
 
   methods: [
+    function init() {
+      this.SUPER();
+    },
     function createErrorSlotFor(data$) {
       var errorSlots = data$.map(d => {
         return foam.lang.ArraySlot.create({
@@ -136,6 +143,7 @@ foam.CLASS({
       // If a isnt already a section axiom, make it one
       if ( ! this.SectionAxiom.isInstance(a) ) {
         a = this.SectionAxiom.create(a);
+        
       }
       this.copyFrom(a);
       this.copyFrom({

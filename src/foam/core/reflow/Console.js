@@ -841,6 +841,8 @@ foam.CLASS({
       padding-inline: 24px;
       padding-block: 16px;
       border-bottom: 1px solid $grey200;
+      font-size: 16px;
+      font-weight: bold;
     }
 
   `,
@@ -1070,7 +1072,7 @@ foam.CLASS({
       layout.middle.call(this.renderSelf, [this]);
       layout.right.add(this.dynamic(function(selectedValue, selected$configViewSpec) {
         this.start().addClass(self.myClass('rightBar-title'))
-          .add('Test')
+          .add('Flow Properties')
         .end()
         .tag(self.ReactiveSectionedDetailView, {
           of: selectedValue?.cls_.id ?? '',
