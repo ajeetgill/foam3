@@ -184,7 +184,7 @@ foam.CLASS({
     },
     {
       name: 'schedule',
-      name: 'scheduleSection',
+      section: 'scheduleSection',
       class: 'FObjectProperty',
       of: 'foam.core.cron.CronSchedule',
       documentation: 'Schedule to run this flow.'
@@ -192,7 +192,7 @@ foam.CLASS({
     {
       class: 'DateTime',
       name: 'lastRun',
-      name: 'general',
+      section: 'general',
       label: 'Last Run',
       readPermissionRequired: true,
       documentation: 'Timestamp of the last execution of this flow. Works with this.schedule.'
