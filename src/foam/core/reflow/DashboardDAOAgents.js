@@ -240,7 +240,7 @@ foam.CLASS({
         arg1: this.prop.name,
         arg2: aggregationSink,
         size: this.size,
-        label: 'Bar Chart: ' + this.prop.label + ' (' + this.aggregation + (this.aggregationProp ? ' of ' + this.aggregationProp.label : '') + ')',
+        label: this.prop.label + ' (' + this.aggregation + ')',
         configView: null  // Hide the configuration dropdown
       }, context);
       
@@ -310,7 +310,7 @@ foam.CLASS({
         arg1: this.prop.name,
         arg2: aggregationSink,
         size: this.size,
-        label: 'Pie Chart: ' + this.prop.label + ' (' + this.aggregation + (this.aggregationProp ? ' of ' + this.aggregationProp.label : '') + ')',
+        label: this.prop.label + ' (' + this.aggregation + ')',
         configView: null  // Hide the configuration dropdown
       }, context);
       
@@ -368,7 +368,7 @@ foam.CLASS({
         arg1: this.prop.name,
         arg2: aggregationSink,
         size: this.size,
-        label: 'Line Chart: ' + this.prop.label + ' (' + this.aggregation + (this.aggregationProp ? ' of ' + this.aggregationProp.label : '') + ')',
+        label: this.prop.label + ' (' + this.aggregation + ')',
         configView: null  // Hide the configuration dropdown
       }, context);
       
