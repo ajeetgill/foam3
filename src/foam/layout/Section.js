@@ -119,9 +119,6 @@ foam.CLASS({
   ],
 
   methods: [
-    function init() {
-      this.SUPER();
-    },
     function createErrorSlotFor(data$) {
       var errorSlots = data$.map(d => {
         return foam.lang.ArraySlot.create({
