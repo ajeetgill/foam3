@@ -303,17 +303,23 @@ foam.CLASS({
       border: 1px solid $grey200;
       border-radius: 4px;
     }
-    ^ table td .close {
-      font-size: 1.2rem;
-    }
+
     .foam-u2-ActionView-text:hover:not(:disabled) {
       background-color: $grey400!important;
     }
     ^ table td .close svg{
-      font-size: 1rem;
+      fill: $grey700;
       cursor: pointer;
       font-weight: 500;
     }
+    ^ table td .close button {
+      padding: 4px;
+    }
+    ^ table td .close button:active {
+      border-color: $destructive500;
+      background-color: $destructive100!important;
+    }
+
     ^selected {
       background: $grey100;
       font-weight: 500;
@@ -488,7 +494,6 @@ foam.CLASS({
       align-items: center;
     }
     ^ span .property-cmd { width: inherit; }
-    ^ .foam-u2-ActionView-del { padding: 2px; }
     ^ .foam-u2-TextField-cmd, ^ .foam-u2-ReadWriteView .foam-u2-TextField {
       border: none;
       height: 20px;
@@ -499,6 +504,18 @@ foam.CLASS({
       padding-right: 40px; // large so that you can still access the scrollbar
       overflow-x: auto;
       width: 100%;
+    }
+      ^ .foam-u2-ActionView-del svg{
+      fill: $grey700;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    ^ .foam-u2-ActionView-del {
+      padding: 4px;
+    }
+    ^ .foam-u2-ActionView-del:active {
+      border-color: $destructive500;
+      background-color: $destructive100!important;
     }
   `,
 
@@ -536,7 +553,7 @@ foam.CLASS({
         .end()
         .add(' = ')
         .add(this.CMD);
-      this.rightSection.tag(this.DEL, { isDestructive: true });
+      this.rightSection.tag(this.DEL);
       this.SUPER();
     },
 
@@ -562,14 +579,13 @@ foam.CLASS({
       name: 'del',
       label: '',
       themeIcon: 'close',
-      buttonStyle: 'TERTIARY',
+      buttonStyle: 'TEXT',
       size: 'SMALL',
-      destructive: true,
       code: function() {
         this.deleted_ = true;
         this.flowParent && this.flowParent.removeFlowChild(this);
       }
-    }
+    },
   ],
 
   listeners: [
