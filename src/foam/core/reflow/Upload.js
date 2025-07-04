@@ -583,7 +583,11 @@ foam.CLASS({
   actions: [
     {
       name: 'preview',
-      code: function() { this.process(false); }
+      code: function() { 
+        this.process(false).then(() => {
+          this.updateMatchedRows();
+        });
+      }
     },
     {
       name: 'upload',
