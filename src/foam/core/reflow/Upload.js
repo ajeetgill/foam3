@@ -96,16 +96,24 @@ foam.CLASS({
   package: 'foam.core.reflow',
   name: 'Upload',
 
+  implements: [ 'foam.mlang.Expressions' ],
+
   requires: [
     'foam.dao.MDAO',
     'foam.lib.csv.CSVParser',
     'foam.core.reflow.ColumnParser',
     'foam.core.reflow.DAOHolder',
     'foam.core.reflow.Mapping',
-    'foam.core.reflow.UploadAgent'
+    'foam.core.reflow.UploadAgent',
+    'foam.parse.QueryParser'
   ],
 
   imports: [ 'currentBlock?', 'eval_?', 'setTimeout' ],
+  
+  exports: [
+    'dao',
+    'data as objData'  // PredicateView expects objData with dao property
+  ],
 
   properties: [
     {
@@ -237,6 +245,49 @@ foam.CLASS({
       class: 'Boolean',
       name: 'bulkUpload',
       value: true
+    },
+    {
+      class: 'String',
+      name: 'where',
+      label: 'Filter',
+      view: { class: 'foam.core.reflow.PredicateView' },
+      help: 'Filter data. Applied to both preview and upload.'
+    },
+    {
+      name: 'filteredDAO',
+      hidden: true,
+      transient: true,
+      expression: function(data, where, dao) {
+        if ( ! data || ! where ) return data;
+        
+        try {
+          // Parse and apply filter
+          var p = this.QueryParser.create({of: dao.of}).parseString(where);
+          return data.where(p);
+        } catch (e) {
+          console.warn('Invalid filter expression:', where, e);
+          return data;
+        }
+      }
+    },
+    {
+      class: 'Int',
+      name: 'matchedRows',
+      visibility: function(where) {
+        return where ? foam.u2.DisplayMode.RO : foam.u2.DisplayMode.HIDDEN;
+      },
+      value: 0
+    },
+    {
+      class: 'String',
+      name: 'filterStatus',
+      visibility: function(where) {
+        return where ? foam.u2.DisplayMode.RO : foam.u2.DisplayMode.HIDDEN;
+      },
+      expression: function(rows, where, matchedRows) {
+        if ( ! where ) return '';
+        return matchedRows + ' of ' + rows + ' rows match filter';
+      }
     }
   ],
 
@@ -249,6 +300,11 @@ foam.CLASS({
         this.block.upload = this;
         this.block.value  = this.DAOHolder.create({preview: this.data});
       }
+      
+      // Update matchedRows when filteredDAO or data changes
+      this.onDetach(this.filteredDAO$.sub(this.updateMatchedRows));
+      this.onDetach(this.data$.sub(this.updateMatchedRows));
+      this.onDetach(this.where$.sub(this.updateMatchedRows));
     },
 
     function parseColumns(s) {
@@ -282,6 +338,7 @@ foam.CLASS({
       console.time('upload');
       var i = 1;
       var agent;
+      var p = self.QueryParser.create({of: self.dao.of}).parseString(self.where);
 
       var sink = this.bulkUpload ? {
         put: async function(o) {
@@ -297,6 +354,25 @@ foam.CLASS({
             if ( foam.lang.Long.isInstance(o.ID) && ! o.id ) o.id = i;
             self.data.put(o);
           } else {
+            // For real uploads, check if object passes filter
+            if ( self.where ) {
+              // Store in data for filtering check
+              await self.data.put(o);
+              
+              // Parse filter and check if object matches
+              try {
+                var matches = await p.f(o);
+                if ( ! matches ) {
+                  i++;
+                  return; // Skip this object
+                }
+              } catch (e) {
+                console.warn('Filter error:', e);
+                // If filter is invalid, include the object
+              }
+            }
+            
+            // Object passed filter or no filter active
             if ( ! agent ) agent = self.UploadAgent.create();
             agent.data.push(o);
             if ( i && i % 1000 === 0 ) {
@@ -321,9 +397,12 @@ foam.CLASS({
 
           if ( ! real ) {
             var block = self.block;
+            // Use filteredDAO if filter is active, otherwise use data
+            var previewDAO = self.where ? self.filteredDAO : self.data;
             self.eval_(`dao(${block.flowName}.preview, '${block.flowName}.preview')`);
             var block2 = self.currentBlock;
             block2.flowName = block.flowName + 'data';
+            block2.obj.dao = previewDAO;  // Set the DAO to filtered or unfiltered
             block2.obj.limit = 10;
             setTimeout(() => {
               // Needed because it is the SinkView which creates the 'select' object
@@ -352,15 +431,21 @@ foam.CLASS({
         }
       }
 
-      if ( this.format === 'DAO' ) {
-        this.processDAO(sink);
-      } else if ( this.format === 'CSV' ) {
-        this.processCSV(sink);
-      } else if ( this.format === 'XML' ) {
-        this.processXML(sink);
-      } else if ( this.format === 'JSON' ) {
-        // TODO:
-        // this.processJSON(sink);
+      // Process based on format
+      switch ( this.format ) {
+        case 'DAO':
+          this.processDAO(sink);
+          break;
+        case 'CSV':
+          this.processCSV(sink);
+          break;
+        case 'XML':
+          this.processXML(sink);
+          break;
+        case 'JSON':
+          // TODO:
+          // this.processJSON(sink);
+          break;
       }
 
       return latch;
@@ -502,7 +587,11 @@ foam.CLASS({
     },
     {
       name: 'upload',
-      code: function() { this.process(true); }
+      code: function() { this.process(true); },
+      isEnabled: function(data, where, matchedRows) {
+        // Enable upload if we have data and (no filter OR matches exist)
+        return data && (!where || matchedRows > 0);
+      }
     },
     {
       name: 'clear',
@@ -512,10 +601,39 @@ foam.CLASS({
       }
     },
     {
+      name: 'clearFilter',
+      label: 'Clear Filter',
+      isAvailable: function(where) { return !!where; },
+      code: function() {
+        this.where = '';
+      }
+    },
+    {
       name: 'resetMappings',
       isAvailable: function(mappings) { return mappings.length; },
       code: function() {
         this.mappings = [];
+      }
+    }
+  ],
+  
+  listeners: [
+    {
+      name: 'updateMatchedRows',
+      isMerged: true,
+      delay: 100,
+      code: async function() {
+        if ( this.where && this.data && this.filteredDAO ) {
+          try {
+            var count = await this.filteredDAO.select(this.COUNT());
+            this.matchedRows = count.value;
+          } catch (e) {
+            console.warn('Error counting filtered rows:', e);
+            this.matchedRows = 0;
+          }
+        } else {
+          this.matchedRows = 0;
+        }
       }
     }
   ]
