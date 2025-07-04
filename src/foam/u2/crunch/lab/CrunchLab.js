@@ -371,6 +371,7 @@ foam.CLASS({
   actions: [
     {
       name: 'openCrunchLab',
+      availablePermissions: ['menu.read.crunch.crunchlab'],
       code: async function(X) {
         let menu = await X.menuDAO?.find('crunch.crunchlab');
         if ( ! menu ) X.notify('Crunch Lab not found', '', 'ERROR');
