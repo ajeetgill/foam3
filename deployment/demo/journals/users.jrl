@@ -1,33 +1,16 @@
 p({
   "class":"foam.core.auth.User",
-  "id":1001,
+  "id":42,
   "spid":"foam",
   "lifecycleState":1,
+  "group":"system",
   "firstName":"admin",
+  "middleName":"",
   "lastName":"admin",
-  "email":"admin@foamddev.com",
+  "email":"admin@foamdev.com",
   "userName":"admin",
-  "group":"admin",
+  "birthday":"1982-07-07T23:12:00.0Z",
+  "password":"jsBl9sn5SY0=:8oH84sPuZ2M+DVIdryPPZveTpKWPbHqIYRw1MYVi/DdTlnpV0p73cZE7FsQ35w9k/k9ymPt0UwQAoMnHKmJ9DA==",
   "emailVerified":true,
-  "compliance":1,
-  "onboarded":true,
-  "loginEnabled":true,
-  // "secret"
-  "password":"7A6sKLKsb1k=:i+IBM76zFN2GRuoO7Wv7QcR1xrcOcRl5O9h3waC7uSPTe0EsrrgFq7aog0bL9LavgxTMoclvSMyvFlO2t6bmHg=="
-})
-
-p({
-  "class":"foam.core.auth.User",
-  "id":1002,
-  "spid":"foam",
-  "lifecycleState":1,
-  "firstName":"anon",
-  "lastName":"ymous",
-  "email":"anon@foamddev.com",
-  "userName":"anon",
-  "group":"admin",
-  "emailVerified":true,
-  "compliance":1,
-  "onboarded":true,
   "loginEnabled":true
 })
