@@ -480,7 +480,8 @@ foam.CLASS({
     }
     ^:not(^hidePrompts) {
       border-bottom: 1px solid $grey200;
-      padding: 16px;
+      padding-inline: 32px;
+      padding-block: 16px;
     }
     ^output {
       overflow-x: auto;
