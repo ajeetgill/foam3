@@ -818,7 +818,7 @@ foam.CLASS({
       align-items: center;
       position: sticky;
       bottom: 0;
-      padding: 0 8px;
+      padding: 10px 8px 0 8px;
     }
     ^input-field, ^input-field ^input {
       background: $backgroundSecondary;
