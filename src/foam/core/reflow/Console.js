@@ -671,7 +671,7 @@ foam.CLASS({
     ^r .foam-u2-detail-SectionView-actionDiv {
       gap: 10px;
     }
-    @media (min-width: /*%DISPLAYWIDTH.XL%*/ 1280px ) { 
+    @media (min-width: /*%DISPLAYWIDTH.XL%*/ 1280px ) {
       ^middle-holder {
         padding: 24px;
       }
@@ -865,9 +865,11 @@ foam.CLASS({
         if ( n !== this.flowName ) {
           this.clearFlow();
           if ( n ) {
+            // TODO: first eval_('preLoad');
             await this.eval_(`load("${n}")`);
             this.flowName = n;
             this.selected = this.currentBlock;
+            // TODO: last eval_('postLoad');
           }
         }
       }
