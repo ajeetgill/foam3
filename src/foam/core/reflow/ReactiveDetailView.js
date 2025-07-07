@@ -363,6 +363,7 @@ foam.CLASS({
     }
     ^ .foam-u2-detail-SectionView {
       border-bottom: 1px solid $borderLight;
+      padding: 16px 0;
     }
   `,
 
