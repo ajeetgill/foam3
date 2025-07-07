@@ -134,8 +134,7 @@ foam.CLASS({
     },
     {
       class: 'Boolean',
-      name: 'collapsed',
-      value: true
+      name: 'collapsed'
     }
   ],
 
@@ -175,7 +174,6 @@ foam.CLASS({
                       .on('click', function() { self.collapsed = !self.collapsed })
                     .end();
                   })
-                  
                 .end();
               }
             })

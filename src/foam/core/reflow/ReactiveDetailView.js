@@ -336,12 +336,23 @@ foam.CLASS({
   properties: [ [ 'reactive', false ] ]
 });
 
+
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'FObjectArrayRefinement',
   refines: 'FObjectArray',
   properties: [ [ 'reactive', false ] ]
 });
+
+
+foam.CLASS({
+  package: 'foam.core.reflow',
+  name: 'CollapsedByDefaultSectionView',
+  extends: 'foam.u2.detail.SectionView',
+
+  properties: [ [ 'collapsed', true ] ]
+});
+
 
 foam.CLASS({
   package: 'foam.core.reflow',
@@ -352,7 +363,6 @@ foam.CLASS({
     'foam.u2.PropertyBorder',
     'foam.core.reflow.PropertyBorder as ReactivePropertyBorder',
   ],
-
 
   css: `
     ^ > div > .foam-u2-layout-Rows {
@@ -394,6 +404,7 @@ foam.CLASS({
         }
       };
       x.register(cls, 'foam.u2.PropertyBorder');
+      x.register(foam.core.reflow.CollapsedByDefaultSectionView, 'foam.u2.detail.SectionView');
       this.__context__ = x;
       this.SUPER();
     }
