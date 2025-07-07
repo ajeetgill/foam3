@@ -374,3 +374,154 @@ foam.CLASS({
     }
   ],
 });
+
+
+foam.CLASS({
+  package: 'foam.u2.view',
+  name: 'ChoiceIconView',
+  extends: 'foam.u2.view.ChoiceView',
+
+  documentation: `
+    A ChoiceView that renders as an icon button instead of a traditional select dropdown.
+    
+    This uses the standard technique of overlaying an invisible select element
+    on top of a custom-styled button, preserving native functionality while
+    allowing custom appearance.
+    
+    Reference: https://css-tricks.com/styling-a-select-like-its-2019/
+  `,
+
+  cssTokens: [
+    {
+      class: 'foam.u2.ColorToken',
+      name: 'iconChoiceBackground',
+      value: '$backgroundSecondary'
+    },
+    {
+      class: 'foam.u2.ColorToken',
+      name: 'iconChoiceBackgroundHover',
+      value: '$backgroundBrand'
+    },
+    {
+      class: 'foam.u2.ColorToken',
+      name: 'iconChoiceBackgroundActive',
+      value: '$backgroundBrandSecondary'
+    },
+    {
+      name: 'iconChoiceSize',
+      value: '$inputHeight'  // from: foam3/src/foam/u2/CSSTokens.js
+    }
+  ],
+
+  css: `
+    ^ {
+      position: relative;
+      display: inline-block;
+      width: $iconChoiceSize;
+      height: $iconChoiceSize;
+    }
+    
+    ^button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      border: 1px solid $borderLight;
+      border-radius: $inputBorderRadius;
+      background: $iconChoiceBackground;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: $iconChoiceBackground$foreground;
+      position: relative;
+      z-index: 1;
+      box-sizing: border-box;
+    }
+    
+    ^button svg { 
+      fill: currentColor; // Glyph for '+' didn't look good, normally the text color would be picked up by $foreground (thanks to CSS tokens), but since these are SVG's we gotta fill currentColor
+    }
+    
+    ^button:hover {
+      background: $iconChoiceBackgroundHover;
+      border-color: $borderDefault;
+      color: $iconChoiceBackgroundHover$foreground;
+    }
+    
+    ^button:active {
+      background: $iconChoiceBackgroundActive;
+      border-color: $borderStrong;
+      color: $iconChoiceBackgroundActive$foreground;
+    }
+
+    ^ .foam-u2-tag-Select {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      min-width: $iconChoiceSize; // to make sure select is same size as icon
+      cursor: pointer;
+      z-index: 2;
+    }
+  `,
+
+  imports: [ 'theme?' ],
+
+  properties: [
+    {
+      class: 'GlyphProperty',
+      name: 'themeIcon',
+      value: 'trash',
+      displayWidth: 80,
+      documentation: 'The glyph to display in the icon button'
+    }
+  ],
+
+  methods: [
+    function renderContent() {
+      var self = this;
+      
+      this.addClass();
+      
+      // Add the icon button with glyph
+      this.start('div')
+        .addClass(this.myClass('button'))
+        .add(this.dynamic(function(themeIcon, theme) {
+          if ( themeIcon && theme ) {
+            this.start({ 
+              class: 'foam.u2.tag.Image', 
+              glyph: themeIcon, 
+              role: 'presentation' 
+            })
+            .end();
+          } else {
+            // Fallback to text if no theme
+            this.add('+');
+          }
+        }, this.themeIcon$, this.theme$))
+      .end();
+      
+      // Add the invisible select on top
+      this.add(this.dynamic(function(mode) {
+        if ( mode !== foam.u2.DisplayMode.RO ) {
+          this.start(self.selectSpec, {
+            data$:            self.index$,
+            label$:           self.label$,
+            alwaysFloatLabel: self.alwaysFloatLabel,
+            choices$:         self.choices$,
+            placeholder$:     self.placeholder$,
+            mode$:            self.mode$,
+            size$:            self.size$,
+            header$:          self.header$,
+            disabledData$:    self.disabledData$
+          })
+            .attrs({name: self.name})
+            .enableClass('selection-made', self.index$.map((index) => index !== -1))
+          .end();
+        }
+      }, this.mode$));
+    }
+  ]
+});
