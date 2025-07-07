@@ -54,6 +54,7 @@ foam.CLASS({
       class: 'Reference',
       of: 'foam.time.TimeZone',
       name: 'timeZone',
+      reactive: false,
       order: 0,
       gridColumns: 6,
       value: 'GMT'
@@ -61,6 +62,7 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'second',
+      reactive: false,
       value: 0,
       min: 0,
       max: 59,
@@ -72,6 +74,7 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'minute',
+      reactive: false,
       value: -1,
       min: -1,
       max: 59,
@@ -87,6 +90,7 @@ foam.CLASS({
       documentation: 'deprecated, replaced by hours',
       class: 'Int',
       name: 'hour',
+      reactive: false,
       transient: true,
       hidden: true,
       javaSetter: `
@@ -99,6 +103,7 @@ foam.CLASS({
       documentation: 'Comma seperated list of hours in range 0 through 23. Or -1 for all hours.',
       class: 'String',
       name: 'hours',
+      reactive: false,
       order: 3,
       gridColumns: 2,
       validationPredicates: [
