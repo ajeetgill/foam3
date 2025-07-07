@@ -233,13 +233,13 @@ foam.CLASS({
       javaPreSet: 'if ( val != null ) { Arrays.sort(val); }',
       view: { class: 'foam.u2.view.DayOfMonthView' },
       visibility: function(daysOfWeek, daysOfMonth, weekOfMonth) {
-        if ( weekOfMonth > 0 ||
-             ( daysOfWeek.length > 0 && daysOfMonth.length == 0 ) )
+        if ( weekOfMonth > 0 || ( daysOfWeek.length > 0 && daysOfMonth.length == 0 ) )
           return foam.u2.DisplayMode.HIDDEN;
+
         if ( this.controllerMode == foam.u2.ControllerMode.EDIT )
           return foam.u2.DisplayMode.RW;
-        else
-          return foam.u2.DisplayMode.RO;
+
+        return foam.u2.DisplayMode.RO;
       }
     }
   ],
