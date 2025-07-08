@@ -11,7 +11,7 @@ foam.CLASS({
   name: 'DAOHolder',
 
   properties: [
-    { name: 'preview', hidden: true }
+    { class: 'foam.dao.DAOProperty', name: 'preview', hidden: true }
   ]
 });
 
@@ -61,9 +61,9 @@ foam.CLASS({
 
   documentation: `
     Data upload component supporting file drag & drop or manual text input.
-    Handles CSV, JSON, XML formats with auto-detection, column mapping, 
+    Handles CSV, JSON, XML formats with auto-detection, column mapping,
     and bulk import to DAOs. Provides preview and progress tracking.
-    
+
     When files are uploaded, their content is processed and moved to input.
     When input is manually cleared, uploadedFiles is cleared.
   `,
@@ -84,7 +84,7 @@ foam.CLASS({
   constants: {
     SUPPORTED_FORMATS: {
       'text/csv': 'CSV',
-      'application/json': 'JSON', 
+      'application/json': 'JSON',
       'text/xml': 'XML',
       'text/plain': 'TXT'
     }
@@ -115,8 +115,8 @@ foam.CLASS({
         };
       },
       visibility: function(input) {
-        return ( ! input || input.trim() === '' ) ? 
-          foam.u2.DisplayMode.RW : 
+        return ( ! input || input.trim() === '' ) ?
+          foam.u2.DisplayMode.RW :
           foam.u2.DisplayMode.HIDDEN;
       }
     },
@@ -132,8 +132,8 @@ foam.CLASS({
         }
       },
       visibility: function(uploadedFiles) {
-        return ( ! uploadedFiles || uploadedFiles.length === 0 ) ? 
-          foam.u2.DisplayMode.RW : 
+        return ( ! uploadedFiles || uploadedFiles.length === 0 ) ?
+          foam.u2.DisplayMode.RW :
           foam.u2.DisplayMode.HIDDEN;
       }
     },
@@ -326,7 +326,7 @@ foam.CLASS({
         var firstFile = this.uploadedFiles[0];
         var content = await this.readFileContent(firstFile);
         this.input = content;
-        
+
         this.format = this.SUPPORTED_FORMATS[firstFile.mimeType] || 'AUTO';
       } catch (e) {
         console.error('Error processing uploaded files:', e);
@@ -338,22 +338,22 @@ foam.CLASS({
       return new Promise((resolve, reject) => {
         try {
           var actualFile = file.data ? file.data.blob : file;
-          
+
           if ( ! actualFile ) {
             reject('No file data available');
             return;
           }
 
           var reader = new FileReader();
-          
+
           reader.onload = function(e) {
             resolve(e.target.result);
           };
-          
+
           reader.onerror = function() {
             reject('Error reading file');
           };
-          
+
           reader.readAsText(actualFile);
         } catch (e) {
           console.error('Error accessing file:', e);
@@ -551,8 +551,8 @@ foam.CLASS({
 
       try {
         // Use existing mappings if available, otherwise parse from CSV headers
-        var props = this.mappings && this.mappings.length > 0 ? 
-          this.mappings : 
+        var props = this.mappings && this.mappings.length > 0 ?
+          this.mappings :
           this.parseColumns(a[0]);
         var parser = this.CSVParser.create({});
         var agent;
