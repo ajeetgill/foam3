@@ -211,14 +211,15 @@ foam.CLASS({
         return showPrompts;
       },
       code: function() {
-        this.data.showPrompts = false;
-        this.data.eval_('clear');
         var flow = this.data.value;
 
         flow.name     = '';
         this.mementoMgr.clear();
         flow.version  = undefined;
         flow.revision = undefined;
+
+        this.data.showPrompts = false;
+
       }
     },
     {
@@ -474,6 +475,7 @@ foam.CLASS({
     }
     ^:not(^hidePrompts) {
       border-top: 1px solid #999;
+      padding: 8px 16px;
     }
     ^output {
       overflow-x: auto;
@@ -496,7 +498,6 @@ foam.CLASS({
     ^:hover { background: $backgroundSecondary; }
     ^ .foam-u2-ReadWriteView { padding-right: 8px; }
     ^content {
-      padding-right: 40px; // large so that you can still access the scrollbar
       overflow-x: auto;
       width: 100%;
     }
@@ -614,7 +615,7 @@ foam.CLASS({
       border-right: 1px solid $grey200;
     }
     ^middle-holder {
-      padding: 10px;
+      padding: 16px;
       width: 100%;
       background-color: $grey100;
       overflow: auto;
@@ -670,6 +671,11 @@ foam.CLASS({
     }
     ^r .foam-u2-detail-SectionView-actionDiv {
       gap: 10px;
+    }
+    @media (min-width: /*%DISPLAYWIDTH.XL%*/ 1280px ) {
+      ^middle-holder {
+        padding: 24px;
+      }
     }
   `,
 
@@ -818,7 +824,7 @@ foam.CLASS({
       align-items: center;
       position: sticky;
       bottom: 0;
-      padding: 0 8px;
+      padding: 10px 8px;
     }
     ^input-field, ^input-field ^input {
       background: $backgroundSecondary;
@@ -829,7 +835,7 @@ foam.CLASS({
       text-align: left;
       width: 100%
     }
-    ^ .property-input {
+    ^input-field .property-input {
       border: none !important;
     }
     ^ .foam-u2-view-ValueView {
@@ -837,13 +843,15 @@ foam.CLASS({
     }
     .foam-core-reflow-Layout-l { overflow-y: auto; }
     ^ .foam-u2-ProgressView { width: 600px; }
-
     ^rightBar-title {
-      padding-inline: 24px;
-      padding-block: 16px;
-      border-bottom: 1px solid $grey200;
-      font-size: 16px;
-      font-weight: bold;
+      border-bottom: 1px solid $borderLight;
+      padding: 16px 0;
+    }
+    ^rightBar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 8px 16px;
     }
 
   `,
@@ -858,9 +866,11 @@ foam.CLASS({
         if ( n !== this.flowName ) {
           this.clearFlow();
           if ( n ) {
+            // TODO: first eval_('preLoad');
             await this.eval_(`load("${n}")`);
             this.flowName = n;
             this.selected = this.currentBlock;
+            // TODO: last eval_('postLoad');
           }
         }
       }
@@ -950,6 +960,7 @@ foam.CLASS({
     {
       name: 'selected',
       postSet: function(o, n) {
+        if ( o === n ) return;
         this.selectedValue = n ? n.value : null;
         if (n && n.element_) {
           n.element_.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1071,8 +1082,8 @@ foam.CLASS({
       layout.showHeader = true;
       layout.left.tag(this.FlowableTree, {data: this, selected$: this.selected$, isMenuOpen$: layout.isMenuOpen$});
       layout.middle.call(this.renderSelf, [this]);
-      layout.right.add(this.dynamic(function(selectedValue, selected$configViewSpec) {
-        this.start().addClass(self.myClass('rightBar-title'))
+      layout.right.addClass(self.myClass('rightBar')).add(this.dynamic(function(selectedValue, selected$configViewSpec) {
+        this.start().addClass(self.myClass('rightBar-title'), 'h400')
           .add('Flow Properties')
         .end()
         .tag(self.ReactiveSectionedDetailView, {
@@ -1115,7 +1126,7 @@ foam.CLASS({
               addClass(self.myClass('input')).
               on('keyup', e => { if ( e.key == 'Enter' || e.keyCode == 13 ) self.onInput(); }).
             end().
-            tag(self.ON_INPUT).
+//            tag(self.ON_INPUT).
           end().
           start(self.ReflowToolBar, { data: self }).show(self.showPrompts$).end().
         end();
