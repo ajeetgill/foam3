@@ -349,7 +349,7 @@ foam.CLASS({
         }
 
         var prop = this.columnParser.parseString(c);
-        mappings.push(this.Mapping.create({id: c, handler: prop || this.Mapping.UNKNOWN, of: this.of}));
+        mappings.push(this.Mapping.create({id: c, handler: prop, of: this.of}));
         if ( ! prop ) {
           this.output += '<span style="color:red">Unknown property: ' + c + '</span><br>';
         }
@@ -535,14 +535,14 @@ foam.CLASS({
           var prop = this.columnParser.parseString(tag + attr);
           this.mappings_[key] = this.Mapping.create({
             id: key,
-            handler: prop || this.Mapping.UNKNOWN,
+            handler: prop,
             of: this.of
           });
         } else {
           var prop = this.columnParser.parseString(tag);
           this.mappings_[key] = this.Mapping.create({
             id: key,
-            handler: prop || this.Mapping.UNKNOWN,
+            handler: prop,
             of: this.of
           });
         }

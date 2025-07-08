@@ -8,14 +8,6 @@ foam.CLASS({
   package: 'foam.core.reflow',
   name: 'Mapping',
 
-  constants: [
-    {
-      name: 'UNKNOWN',
-      value: null,
-      javaValue: null
-    }
-  ],
-
   properties: [
     {
       class: 'String',
