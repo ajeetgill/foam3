@@ -39,8 +39,7 @@ foam.CLASS({
       if ( foam.String.isInstance(value) ) value = value.trim();
       if ( value !== '' && this.handler && this.handler.name ) {
         obj[this.handler.name] = value;
-      }
-      else {
+      } else {
         console.warn('Mapping.process: No handler defined for', this.id, 'with value', value);
       }
     }
