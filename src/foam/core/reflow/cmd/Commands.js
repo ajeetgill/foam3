@@ -322,7 +322,7 @@ foam.CLASS({
           this.CONTAINS_IC(this.CSpec.KEYWORDS, opt_nameQuery)
         ));
       this.out.tag('br');
-      this.out.start('table').attr('width', '100%').attr('cellpadding', '4').
+      this.out.start('table').attr('width', '100%').
         select(dao, function(n) {
           var sdao  = self.__context__[n.name];
           var of    = sdao.of;
