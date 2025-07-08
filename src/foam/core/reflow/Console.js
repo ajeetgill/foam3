@@ -98,9 +98,7 @@ foam.CLASS({
     ^navigator {
       display: flex;
       align-items: center;
-      gap: 5px;
       color: $grey700;
-      font-weight: bold;
     }
     ^header-container {
       display: flex;
@@ -114,9 +112,13 @@ foam.CLASS({
       border: none;
       color: $black;
     }
+    ^title input::placeholder {
+      color: $black!important;
+      opacity: 1;
+    }
     ^header-actions {
       display: flex;
-      gap: 10px;
+      gap: 5px;
       align-items: center;
     }
     ^save-text {
@@ -134,19 +136,20 @@ foam.CLASS({
       this.addClass()
         .start().addClass(this.myClass('header-container'))
           .start().addClass(this.myClass('navigator'))
-            // .tag(this.HOME)
-            // .start(foam.u2.tag.Image, {
-            //   glyph: 'rightChevron',
-            //   embedSVG: true
-            // }).addClass(this.myClass('chevron')).end()
-            .startContext({data: this})
-              .tag(this.REFLOWS)
-            .endContext()
+            .tag(this.HOME)                     
             .start(foam.u2.tag.Image, {
               glyph: 'rightChevron',
               embedSVG: true
             }).addClass(this.myClass('chevron')).end()
-            .start('span').addClass(this.myClass('title')).add(this.data.FLOW_NAME).end()
+            .start('span').addClass(this.myClass('title'))
+              .start({
+                class: 'foam.u2.TextField',
+                data$: this.data.flowName$,
+                placeholder: 'Reflow',
+                onKey: true
+              })
+              .end()
+            .end()
           .end()
 
           .start().addClass(this.myClass('header-actions'))
@@ -155,10 +158,18 @@ foam.CLASS({
               .tag(this.data.mementoMgr.FORTH)
             .endContext()
             .startContext({data: this})
-              .tag(this.CANCEL)
               .tag(this.SAVE)
-              .tag(this.RESET)
-              .tag(this.EDIT)
+              .start('span')
+                .style({
+                  display: 'inline-block',
+                  width: '1px',
+                  height: '30px', // or whatever height fits your header
+                  background: '#E0E0E0', // or $grey200 if you have a variable
+                  margin: '0 8px', // optional, for spacing
+                  verticalAlign: 'middle'
+                })
+              .end()
+              .tag(this.FULL_SCREEN)
             .endContext()
             // callIf(this.data.showPrompts$, function() {
             //   this.start().addClass(self.myClass('save-text'))
@@ -171,20 +182,11 @@ foam.CLASS({
   ],
 
   actions: [
-    // {
-    //   name: 'home',
-    //   label: '',
-    //   buttonStyle: foam.u2.ButtonStyle.TERTIARY,
-    //   themeIcon: 'home',
-    //   size: 'SMALL',
-    //   code: function(X) {
-    //     X.pushDefaultMenu()
-    //   }
-    // },
     {
-      name: 'reflows',
-      label: 'Reflows',
-      buttonStyle: foam.u2.ButtonStyle.LINK,
+      name: 'home',
+      label: '',
+      buttonStyle: foam.u2.ButtonStyle.TERTIARY,
+      themeIcon: 'boldHome',
       size: 'SMALL',
       code: function(X) {
         X.routeTo('flows');
@@ -202,26 +204,26 @@ foam.CLASS({
         this.data.showPrompts = true;
       }
     },
-    {
-      name: 'cancel',
-      label: 'Cancel',
-      buttonStyle: foam.u2.ButtonStyle.SECONDARY,
-      size: 'SMALL',
-      isAvailable: function(showPrompts) {
-        return showPrompts;
-      },
-      code: function() {
-        var flow = this.data.value;
+    // {
+    //   name: 'cancel',
+    //   label: 'Cancel',
+    //   buttonStyle: foam.u2.ButtonStyle.SECONDARY,
+    //   size: 'SMALL',
+    //   isAvailable: function(showPrompts) {
+    //     return showPrompts;
+    //   },
+    //   code: function() {
+    //     var flow = this.data.value;
 
-        flow.name     = '';
-        this.mementoMgr.clear();
-        flow.version  = undefined;
-        flow.revision = undefined;
+    //     flow.name     = '';
+    //     this.mementoMgr.clear();
+    //     flow.version  = undefined;
+    //     flow.revision = undefined;
 
-        this.data.showPrompts = false;
+    //     this.data.showPrompts = false;
 
-      }
-    },
+    //   }
+    // },
     {
       name: 'save',
       label: 'Save',
@@ -240,41 +242,69 @@ foam.CLASS({
         }
       }
     },
-    {
-      name: 'confirmReset',
-      label: 'Yes, Confirm',
-      buttonStyle: foam.u2.ButtonStyle.PRIMARY,
-      size: 'SMALL',
-      isAvailable: function(showPrompts) {
-        return showPrompts;
-      },
-      code: function() {
-        this.data.eval_('clear');
-        var flow = this.data.value;
+    // {
+    //   name: 'confirmReset',
+    //   label: 'Yes, Confirm',
+    //   buttonStyle: foam.u2.ButtonStyle.PRIMARY,
+    //   size: 'SMALL',
+    //   isAvailable: function(showPrompts) {
+    //     return showPrompts;
+    //   },
+    //   code: function() {
+    //     this.data.eval_('clear');
+    //     var flow = this.data.value;
 
-        flow.name     = '';
-        this.mementoMgr.clear();
-        flow.version  = undefined;
-        flow.revision = undefined;
-      }
-    },
+    //     flow.name     = '';
+    //     this.mementoMgr.clear();
+    //     flow.version  = undefined;
+    //     flow.revision = undefined;
+    //   }
+    // },
+    // {
+    //   name: 'reset',
+    //   label: 'New',
+    //   buttonStyle: foam.u2.ButtonStyle.TERTIARY,
+    //   size: 'SMALL',
+    //   isAvailable: function(showPrompts) {
+    //     return showPrompts;
+    //   },
+    //   code: function() {
+    //     let confirmationModal = this.ConfirmationModal.create({
+    //       title: `Unsaved changes will be lost, are you sure you want a New Reflow page?`,
+    //       primaryAction: this.CONFIRM_RESET,
+    //       showCancel: true,
+    //       modalStyle: 'DESTRUCTIVE',
+    //       data: this
+    //     });
+    //     this.add(confirmationModal);
+    //   }
+    // },
     {
-      name: 'reset',
-      label: 'New',
-      buttonStyle: foam.u2.ButtonStyle.TERTIARY,
-      size: 'SMALL',
-      isAvailable: function(showPrompts) {
-        return showPrompts;
-      },
+      name: 'fullScreen',
+      label: '',
+      themeIcon: 'fullScreen',
+      buttonStyle: foam.u2.ButtonStyle.SECONDARY,
       code: function() {
-        let confirmationModal = this.ConfirmationModal.create({
-          title: `Unsaved changes will be lost, are you sure you want a New Reflow page?`,
-          primaryAction: this.CONFIRM_RESET,
-          showCancel: true,
-          modalStyle: 'DESTRUCTIVE',
-          data: this
-        });
-        this.add(confirmationModal);
+        let doc = window.document;
+        let elem = doc.documentElement;
+
+        if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+          if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+          } else if (elem.webkitRequestFullscreen) { /* Safari */
+            elem.webkitRequestFullscreen();
+          } else if (elem.msRequestFullscreen) { /* IE11 */
+            elem.msRequestFullscreen();
+          }
+        } else {
+          if (doc.exitFullscreen) {
+            doc.exitFullscreen();
+          } else if (doc.webkitExitFullscreen) { /* Safari */
+            doc.webkitExitFullscreen();
+          } else if (doc.msExitFullscreen) { /* IE11 */
+            doc.msExitFullscreen();
+          }
+        }
       }
     }
   ]
@@ -602,7 +632,7 @@ foam.CLASS({
       overflow: auto;
     }
     ^header {
-      padding: 5px;
+      padding: 5px 24px;
       height: fit-content;
       max-height: 64px;
       background-color: $white;
