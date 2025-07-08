@@ -661,15 +661,6 @@ foam.CLASS({
     ^r .foam-core-reflow-PropertyListView {
       justify-content: space-between;
     }
-    ^r .foam-core-reflow-CollapsedByDefaultSectionView-actionDiv {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    ^r .foam-core-reflow-CollapsedByDefaultSectionView {
-      border-bottom: 1px solid $grey200;
-      padding: 8px 16px;
-    }
     @media (min-width: /*%DISPLAYWIDTH.XL%*/ 1280px ) {
       ^middle-holder {
         padding: 24px;
