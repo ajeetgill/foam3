@@ -494,18 +494,6 @@ foam.CLASS({
       overflow-x: auto;
       width: 100%;
     }
-      ^ .foam-u2-ActionView-del svg{
-      fill: $grey700;
-      cursor: pointer;
-      font-weight: 500;
-    }
-    ^ .foam-u2-ActionView-del {
-      padding: 4px;
-    }
-    ^ .foam-u2-ActionView-del:active {
-      border-color: $destructive500;
-      background-color: $destructive100!important;
-    }
   `,
 
   properties: [
@@ -673,8 +661,14 @@ foam.CLASS({
     ^r .foam-core-reflow-PropertyListView {
       justify-content: space-between;
     }
-    ^r .foam-u2-detail-SectionView-actionDiv {
+    ^r .foam-core-reflow-CollapsedByDefaultSectionView-actionDiv {
+      display: flex;
+      flex-direction: column;
       gap: 10px;
+    }
+    ^r .foam-core-reflow-CollapsedByDefaultSectionView {
+      border-bottom: 1px solid $grey200;
+      padding: 8px 16px;
     }
     @media (min-width: /*%DISPLAYWIDTH.XL%*/ 1280px ) {
       ^middle-holder {
@@ -695,7 +689,7 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'rightWidth',
-      value: 400
+      value: 300
     }
   ],
 
@@ -849,14 +843,14 @@ foam.CLASS({
     ^ .foam-u2-ProgressView { width: 600px; }
     ^rightBar-title {
       border-bottom: 1px solid $borderLight;
-      padding: 16px 0;
+      padding: 8px 16px;
     }
     ^rightBar {
       display: flex;
       flex-direction: column;
       gap: 16px;
-      padding: 8px 16px;
     }
+
 
   `,
 
