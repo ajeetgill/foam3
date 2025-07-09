@@ -234,9 +234,11 @@ foam.CLASS({
         };
       },
       visibility: function(select) {
-        // Show skip/limit only for non-sink agents (agents with getSink method)
+        // Show skip/limit only for sink agents (agents with getSink method like CSVDAOAgent, JSONDAOAgent)
+        // Hide for non-sink agents (agents without getSink method like TableDAOAgent)
         if ( ! select ) return 'HIDDEN';
-        return typeof select.getSink !== 'undefined' ? 'RW' : 'HIDDEN';
+        var isSinkAgent = typeof select.getSink !== 'undefined';
+        return isSinkAgent ? 'RW' : 'HIDDEN';
       }
     },
     {
@@ -247,9 +249,11 @@ foam.CLASS({
       placeholder: '',
       displayWidth: 8,
       visibility: function(select) {
-        // Show skip/limit only for non-sink agents (agents with getSink method)
+        // Show skip/limit only for sink agents (agents with getSink method like CSVDAOAgent, JSONDAOAgent)
+        // Hide for non-sink agents (agents without getSink method like TableDAOAgent)
         if ( ! select ) return 'HIDDEN';
-        return typeof select.getSink !== 'undefined' ? 'RW' : 'HIDDEN';
+        var isSinkAgent = typeof select.getSink !== 'undefined';
+        return isSinkAgent ? 'RW' : 'HIDDEN';
       }
     },
     {
