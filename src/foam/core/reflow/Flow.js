@@ -106,6 +106,7 @@ foam.CLASS({
       class: 'String',
       section: 'general',
       name: 'notes',
+      section: 'general',
       width: 80,
       view: { class: 'foam.u2.tag.TextArea', rows: 3, cols: 78 }
     },

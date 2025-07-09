@@ -211,14 +211,15 @@ foam.CLASS({
         return showPrompts;
       },
       code: function() {
-        this.data.showPrompts = false;
-        this.data.eval_('clear');
         var flow = this.data.value;
 
         flow.name     = '';
         this.mementoMgr.clear();
         flow.version  = undefined;
         flow.revision = undefined;
+
+        this.data.showPrompts = false;
+
       }
     },
     {
@@ -300,34 +301,28 @@ foam.CLASS({
       padding: 10px 8px;
       align-items: center;
       cursor: pointer;
-      border: 1px solid $grey200;
+      border: 1px solid $borderLight;
       border-radius: 4px;
     }
-    ^ table td .close {
-      font-size: 1.2rem;
+
+    ^ table td .close button {
+      padding: 4px;
     }
-    .foam-u2-ActionView-text:hover:not(:disabled) {
-      background-color: $grey400!important;
-    }
-    ^ table td .close svg{
-      font-size: 1rem;
-      cursor: pointer;
-      font-weight: 500;
-    }
+
     ^selected {
-      background: $grey100;
+      background: $backgroundTertiary;
       font-weight: 500;
     }
     ^error {
-      background: $destructive50;
-      color: $destructive600;
+      background: $backgroundDestructiveTertiary;
+      color: $textDestructive;
     }
     ^left-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 10px;
-      border-bottom: 1px solid $grey200;
+      border-bottom: 1px solid $borderLight;
       font-weight: bold;
       font-size: 16px;
     }
@@ -438,7 +433,7 @@ foam.CLASS({
       name: 'close',
       label: '',
       themeIcon: 'close',
-      buttonStyle: 'TEXT',
+      buttonStyle: 'TERTIARY',
       size: 'SMALL',
       code: function() { this.flowParent.removeFlowChild(this); }
     },
@@ -474,6 +469,7 @@ foam.CLASS({
     }
     ^:not(^hidePrompts) {
       border-top: 1px solid #999;
+      padding: 8px 16px;
     }
     ^output {
       overflow-x: auto;
@@ -488,7 +484,6 @@ foam.CLASS({
       align-items: center;
     }
     ^ span .property-cmd { width: inherit; }
-    ^ .foam-u2-ActionView-del { padding: 2px; }
     ^ .foam-u2-TextField-cmd, ^ .foam-u2-ReadWriteView .foam-u2-TextField {
       border: none;
       height: 20px;
@@ -496,7 +491,6 @@ foam.CLASS({
     ^:hover { background: $backgroundSecondary; }
     ^ .foam-u2-ReadWriteView { padding-right: 8px; }
     ^content {
-      padding-right: 40px; // large so that you can still access the scrollbar
       overflow-x: auto;
       width: 100%;
     }
@@ -536,7 +530,7 @@ foam.CLASS({
         .end()
         .add(' = ')
         .add(this.CMD);
-      this.rightSection.tag(this.DEL, { isDestructive: true });
+      this.rightSection.tag(this.DEL);
       this.SUPER();
     },
 
@@ -564,7 +558,6 @@ foam.CLASS({
       themeIcon: 'close',
       buttonStyle: 'TERTIARY',
       size: 'SMALL',
-      destructive: true,
       code: function() {
         this.deleted_ = true;
         this.flowParent && this.flowParent.removeFlowChild(this);
@@ -614,7 +607,7 @@ foam.CLASS({
       border-right: 1px solid $grey200;
     }
     ^middle-holder {
-      padding: 10px;
+      padding: 16px;
       width: 100%;
       background-color: $grey100;
       overflow: auto;
@@ -668,8 +661,10 @@ foam.CLASS({
     ^r .foam-core-reflow-PropertyListView {
       justify-content: space-between;
     }
-    ^r .foam-u2-detail-SectionView-actionDiv {
-      gap: 10px;
+    @media (min-width: /*%DISPLAYWIDTH.XL%*/ 1280px ) {
+      ^middle-holder {
+        padding: 24px;
+      }
     }
   `,
 
@@ -685,7 +680,7 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'rightWidth',
-      value: 400
+      value: 300
     }
   ],
 
@@ -818,7 +813,7 @@ foam.CLASS({
       align-items: center;
       position: sticky;
       bottom: 0;
-      padding: 10px 8px 0 8px;
+      padding: 10px 8px;
     }
     ^input-field, ^input-field ^input {
       background: $backgroundSecondary;
@@ -837,14 +832,16 @@ foam.CLASS({
     }
     .foam-core-reflow-Layout-l { overflow-y: auto; }
     ^ .foam-u2-ProgressView { width: 600px; }
-
     ^rightBar-title {
-      padding-inline: 24px;
-      padding-block: 16px;
-      border-bottom: 1px solid $grey200;
-      font-size: 16px;
-      font-weight: bold;
+      border-bottom: 1px solid $borderLight;
+      padding: 8px 16px;
     }
+    ^rightBar {
+      display: flex;
+      flex-direction: column;
+ 
+    }
+
 
   `,
 
@@ -858,6 +855,7 @@ foam.CLASS({
         if ( n !== this.flowName ) {
           this.clearFlow();
           if ( n ) {
+            await this.eval_('preLoad');
             await this.eval_(`load("${n}")`);
             this.flowName = n;
             this.selected = this.currentBlock;
@@ -981,7 +979,7 @@ foam.CLASS({
       var flow = await this.flowDAO.find(name);
 
       if ( flow ) {
-        this.includeScript(flow.script);
+        await this.includeScript(flow.script);
       }
     },
 
@@ -993,7 +991,7 @@ foam.CLASS({
       for ( var i = 0 ; i < cs.length ; i++ ) {
         var c = cs[i];
 
-        this.eval_(c.cmd);
+        await this.eval_(c.cmd);
 
         this.currentBlock.flowName = c.flowName;
 
@@ -1004,6 +1002,9 @@ foam.CLASS({
 
         await this.currentBlock.value?.onLoad?.();
       }
+      
+      // Call postLoad after all blocks have executed
+      await this.eval_('postLoad');
     },
 
     function clearFlow() {
@@ -1072,8 +1073,8 @@ foam.CLASS({
       layout.showHeader = true;
       layout.left.tag(this.FlowableTree, {data: this, selected$: this.selected$, isMenuOpen$: layout.isMenuOpen$});
       layout.middle.call(this.renderSelf, [this]);
-      layout.right.add(this.dynamic(function(selectedValue, selected$configViewSpec) {
-        this.start().addClass(self.myClass('rightBar-title'))
+      layout.right.addClass(self.myClass('rightBar')).add(this.dynamic(function(selectedValue, selected$configViewSpec) {
+        this.start().addClass(self.myClass('rightBar-title'), 'h400')
           .add('Flow Properties')
         .end()
         .tag(self.ReactiveSectionedDetailView, {
