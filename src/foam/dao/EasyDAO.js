@@ -496,7 +496,7 @@ foam.CLASS({
         return this.of.name.toLowerCase();
       },
       javaFactory: `
-      return getOf().getObjClass().getSimpleName().toLowerCase();
+      return getOf().getSimpleName().toLowerCase();
      `
     },
     {

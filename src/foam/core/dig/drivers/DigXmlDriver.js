@@ -76,7 +76,7 @@ foam.CLASS({
       foam.lib.xml.Outputter outputterXml = new foam.lib.xml.Outputter(OutputterMode.NETWORK);
       outputterXml.output(fobjects.toArray());
 
-      String simpleName = cInfo.getObjClass().getSimpleName().toString();
+      String simpleName = cInfo.getSimpleName().toString();
       String output = "<" + simpleName + "s>"+ outputterXml.toString() + "</" + simpleName + "s>";
 
       // Output the formatted data
