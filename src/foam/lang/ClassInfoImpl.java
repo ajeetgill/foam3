@@ -42,6 +42,12 @@ public class ClassInfoImpl
     return getId().compareTo(((ClassInfo)obj).getId());
   }
 
+  public boolean isAssignableFrom(Class cls) { return getObjClass().isAssignableFrom(cls); }
+
+  public String getName() { return getObjClass().getName(); }
+
+  public String getSimpleName() { return getObjClass().getSimpleName(); }
+
   public Class getObjClass() {
     return class_;
   }

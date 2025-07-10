@@ -24,14 +24,11 @@ public interface ClassInfo
   boolean     isInstance(Object o);
   Object      newInstance() throws IllegalAccessException, InstantiationException;
 
-  default
-  boolean     isAssignableFrom(Class cls) { return getObjClass().isAssignableFrom(cls); }
+  boolean     isAssignableFrom(Class cls);
 
-  default
-  String      getName() { return getName(); }
+  String      getName();
 
-  default
-  String      getSimpleName() { return getSimpleName(); }
+  String      getSimpleName();
 
   ClassInfo   setObjClass(Class cls);
   Class       getObjClass();
