@@ -82,7 +82,8 @@ foam.CLASS({
 
   requires: [
     'foam.u2.dialog.ConfirmationModal',
-    'foam.log.LogLevel'
+    'foam.log.LogLevel',
+    'foam.u2.view.OverlayActionListView'
   ],
 
   imports: [
@@ -124,6 +125,13 @@ foam.CLASS({
     ^save-text {
       color: $grey700;
     }
+    ^ .foam-u2-view-OverlayActionListView {
+      color: $textDefault;
+    }
+    ^ .foam-u2-ActionView[name="back"]:not([disabled="disabled"]),
+    ^ .foam-u2-ActionView[name="forth"]:not([disabled="disabled"]) {
+      color: $textDefault;
+    }
   `,
 
   properties: [
@@ -157,8 +165,26 @@ foam.CLASS({
               .tag(this.data.mementoMgr.BACK)
               .tag(this.data.mementoMgr.FORTH)
             .endContext()
+            .start('span')
+                .style({
+                  display: 'inline-block',
+                  width: '1px',
+                  height: '30px', // or whatever height fits your header
+                  background: '#E0E0E0', // or $grey200 if you have a variable
+                  margin: '0 8px', // optional, for spacing
+                  verticalAlign: 'middle'
+                })
+              .end()
             .startContext({data: this})
               .tag(this.SAVE)
+              .tag(this.OverlayActionListView, {
+                label: 'More',
+                data: [this.RESET, this.CANCEL, this.CLEAR],
+                obj: this,
+                buttonStyle: 'SECONDARY',
+                size: 'SMALL',
+                horizontal: false
+              })
               .start('span')
                 .style({
                   display: 'inline-block',
@@ -204,26 +230,27 @@ foam.CLASS({
         this.data.showPrompts = true;
       }
     },
-    // {
-    //   name: 'cancel',
-    //   label: 'Cancel',
-    //   buttonStyle: foam.u2.ButtonStyle.SECONDARY,
-    //   size: 'SMALL',
-    //   isAvailable: function(showPrompts) {
-    //     return showPrompts;
-    //   },
-    //   code: function() {
-    //     var flow = this.data.value;
+    {
+      name: 'cancel',
+      label: 'Cancel Changes',
+      buttonStyle: foam.u2.ButtonStyle.SECONDARY,
+      size: 'SMALL',
+      themeIcon: 'close',
+      isAvailable: function(showPrompts) {
+        return showPrompts;
+      },
+      code: function() {
+        var flow = this.data.value;
 
-    //     flow.name     = '';
-    //     this.mementoMgr.clear();
-    //     flow.version  = undefined;
-    //     flow.revision = undefined;
+        flow.name     = '';
+        this.mementoMgr.clear();
+        flow.version  = undefined;
+        flow.revision = undefined;
 
-    //     this.data.showPrompts = false;
+        this.data.showPrompts = false;
 
-    //   }
-    // },
+      }
+    },
     {
       name: 'save',
       label: 'Save',
@@ -242,43 +269,54 @@ foam.CLASS({
         }
       }
     },
-    // {
-    //   name: 'confirmReset',
-    //   label: 'Yes, Confirm',
-    //   buttonStyle: foam.u2.ButtonStyle.PRIMARY,
-    //   size: 'SMALL',
-    //   isAvailable: function(showPrompts) {
-    //     return showPrompts;
-    //   },
-    //   code: function() {
-    //     this.data.eval_('clear');
-    //     var flow = this.data.value;
+    {
+      name: 'confirmReset',
+      label: 'Yes, Confirm',
+      buttonStyle: foam.u2.ButtonStyle.PRIMARY,
+      size: 'SMALL',
+      isAvailable: function(showPrompts) {
+        return showPrompts;
+      },
+      code: function() {
+        this.data.eval_('clear');
+        var flow = this.data.value;
 
-    //     flow.name     = '';
-    //     this.mementoMgr.clear();
-    //     flow.version  = undefined;
-    //     flow.revision = undefined;
-    //   }
-    // },
-    // {
-    //   name: 'reset',
-    //   label: 'New',
-    //   buttonStyle: foam.u2.ButtonStyle.TERTIARY,
-    //   size: 'SMALL',
-    //   isAvailable: function(showPrompts) {
-    //     return showPrompts;
-    //   },
-    //   code: function() {
-    //     let confirmationModal = this.ConfirmationModal.create({
-    //       title: `Unsaved changes will be lost, are you sure you want a New Reflow page?`,
-    //       primaryAction: this.CONFIRM_RESET,
-    //       showCancel: true,
-    //       modalStyle: 'DESTRUCTIVE',
-    //       data: this
-    //     });
-    //     this.add(confirmationModal);
-    //   }
-    // },
+        flow.name     = '';
+        this.mementoMgr.clear();
+        flow.version  = undefined;
+        flow.revision = undefined;
+      }
+    },
+    {
+      name: 'clear',
+      label: 'Clear Document',
+      buttonStyle: foam.u2.ButtonStyle.SECONDARY,
+      size: 'SMALL',
+      themeIcon: 'trash',
+      code: function() {
+        this.data.eval_('clear');
+      }
+    },
+    {
+      name: 'reset',
+      label: 'Start a New Flow',
+      buttonStyle: foam.u2.ButtonStyle.TERTIARY,
+      size: 'SMALL',
+      themeIcon: 'plus',
+      isAvailable: function(showPrompts) {
+        return showPrompts;
+      },
+      code: function() {
+        let confirmationModal = this.ConfirmationModal.create({
+          title: `Unsaved changes will be lost, are you sure you want a New Reflow page?`,
+          primaryAction: this.CONFIRM_RESET,
+          showCancel: true,
+          modalStyle: 'DESTRUCTIVE',
+          data: this
+        });
+        this.add(confirmationModal);
+      }
+    },
     {
       name: 'fullScreen',
       label: '',
