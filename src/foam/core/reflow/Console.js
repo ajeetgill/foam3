@@ -112,8 +112,8 @@ foam.CLASS({
       border: none;
       color: $black;
     }
-    ^title input::placeholder {
-      color: $black!important;
+    ^title .foam-u2-TextInputCSS::placeholder {
+      color: $textDefault;
       opacity: 1;
     }
     ^header-actions {
@@ -628,7 +628,7 @@ foam.CLASS({
       height: fit-content;
       max-height: 64px;
       background-color: $white;
-      border-bottom: 1px solid $grey100;
+      border-bottom: 1px solid $borderLight;
     }
     ^l {
       padding: 4px;
