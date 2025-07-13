@@ -131,6 +131,11 @@ foam.CLASS({
   methods: [
     function render() {
       let self = this;
+
+      var fullVersion = this.data.value.dynamic(function(version, revision) {
+        this.add(`v${version}.${revision}`);
+      });
+
       this.addClass()
         .start().addClass(this.myClass('header-container'))
           .start().addClass(this.myClass('navigator'))
@@ -146,6 +151,7 @@ foam.CLASS({
               glyph: 'rightChevron',
               embedSVG: true
             }).addClass(this.myClass('chevron')).end()
+            .start().add(fullVersion).end()
             .start('span').addClass(this.myClass('title')).add(this.data.FLOW_NAME).end()
           .end()
 
@@ -219,7 +225,6 @@ foam.CLASS({
         flow.revision = undefined;
 
         this.data.showPrompts = false;
-
       }
     },
     {
@@ -227,6 +232,9 @@ foam.CLASS({
       label: 'Save',
       buttonStyle: foam.u2.ButtonStyle.PRIMARY,
       size: 'SMALL',
+      isEnabled: function(data$flowErrors_) {
+        return ! data$flowErrors_;
+      },
       isAvailable: function(showPrompts) {
         return showPrompts;
       },
@@ -970,7 +978,8 @@ foam.CLASS({
       factory: function() {
         return foam.memento.MementoMgr.create({memento$: this.value.script$, position$: this.value.revision$});
       }
-    }
+    },
+    'flowErrors_'
   ],
 
   methods: [
@@ -1036,7 +1045,7 @@ foam.CLASS({
 
       this.flowName$.sub(() => this.refreshFlowScope());
       this.value$.sub(() => this.refreshFlowScope());
-
+      this.flowErrors_$.follow(this.value.errors_$);
 
       globalThis.shell = this; // for debugging
 

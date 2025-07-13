@@ -49,7 +49,7 @@ foam.CLASS({
   ],
     */
 
-  tableColumns: [ 'name', 'source', 'description', 'status', 'schedule', 'lastRun', /* 'isPublic', 'readOnly', */ 'reflow' ],
+  tableColumns: [ 'name', 'source', 'description', 'status', 'version', 'schedule', 'lastRun', /* 'isPublic', 'readOnly', */ 'reflow' ],
 
   searchColumns: [ 'name', 'status', 'source', 'keywords' ],
 
@@ -102,6 +102,7 @@ foam.CLASS({
     {
       class: 'String',
       name: 'source',
+      reactive: false,
       section: 'general',
       width: 30
     },
@@ -130,6 +131,7 @@ foam.CLASS({
       class: 'FObjectArray',
       of: 'foam.core.reflow.UserFlowAccess',
       name: 'specifiedUserAccess',
+      autoValidate: true,
       section: 'general',
       visibility: function(accessLevel) {
         return accessLevel != foam.core.reflow.FlowAccess.SHARED ? foam.u2.DisplayMode.HIDDEN : foam.u2.DisplayMode.RW;
@@ -139,6 +141,7 @@ foam.CLASS({
       class: 'FObjectArray',
       of: 'foam.core.reflow.RoleFlowAccess',
       name: 'specifiedRoleAccess',
+      autoValidate: true,
       section: 'general',
       visibility: function(accessLevel) {
         return accessLevel != foam.core.reflow.FlowAccess.SHARED ? foam.u2.DisplayMode.HIDDEN : foam.u2.DisplayMode.RW;
@@ -156,6 +159,7 @@ foam.CLASS({
       class: 'Reference',
       of: 'foam.core.auth.ServiceProvider',
       name: 'spid',
+      reactive: false,
       section: 'general',
       readPermissionRequired: true,
       writePermissionRequired: true
@@ -163,11 +167,15 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'version',
+      visibility: 'HIDDEN',
+      reactive: false,
       section: 'general'
     },
     {
       class: 'Int',
       name: 'revision',
+      hidden: true,
+      reactive: false,
       section: 'general',
       transient: true,
       xxxview: {
