@@ -295,6 +295,13 @@ foam.CLASS({
         if ( ! where ) return '';
         return matchedRows + ' rows match filter (of ' + rows + ' total)';
       }
+    },
+    {
+      class: 'Function',
+      name: 'adaptObject',
+      documentation: 'Callback function to adapt objects before uploading. Called with (object).',
+      value: function() { },
+      hidden: true
     }
   ],
 
@@ -420,6 +427,14 @@ foam.CLASS({
 
       var sink = this.bulkUpload ? {
         put: async function(o) {
+          // Apply object adaptation callback
+          try {
+            self.adaptObject(o);
+          } catch (e) {
+            console.warn('Object adaptation callback failed:', e);
+          }
+          
+          
           totalRows++;
           self.processing = totalRows;
           self.progress   = self.rows ? Math.max(self.progress, Math.floor(100 * totalRows / self.rows)) : 0;
