@@ -1218,9 +1218,11 @@ foam.CLASS({
           start('span').
             show(self.showInput$).
             addClass(self.myClass('input-field')).
-            start('b').style({ display: 'flex', 'white-space': 'pre'}).
-              call(self.renderToolbar, [self]).
-            end()
+            add(self.dynamic(function(promptMode) {
+              return this.start('b').style({ display: 'flex', 'white-space': 'pre'}).
+                        call(self.renderToolbar, [self]).
+                      end()
+            }))
             .start({
               class: 'foam.u2.view.ChoiceView',
               data$: self.promptMode$,
