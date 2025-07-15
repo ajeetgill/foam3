@@ -429,7 +429,7 @@ foam.CLASS({
         put: async function(o) {
           // Apply object adaptation callback
           try {
-            await self.adaptObject(o);
+            self.adaptObject(o);
           } catch (e) {
             console.warn('Object adaptation callback failed:', e);
           }
