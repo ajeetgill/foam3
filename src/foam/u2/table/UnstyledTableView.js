@@ -47,6 +47,7 @@ foam.CLASS({
 
   imports: [
     'auth?',
+    'columnStorage',
     'config? as importedConfig',
     'filteredTableColumns?',
     'stack?',
@@ -130,7 +131,7 @@ foam.CLASS({
         Can also be set by any column config view to change the current columns loaded by the table`,
       memorable: true,
       expression: function(columns, of) {
-        var ls = JSON.parse(localStorage.getItem(of.id))?.map(c => foam.Array.isInstance(c) ? c[0] : c)
+        var ls = JSON.parse(this.columnStorage.getItem(of.id))?.map(c => foam.Array.isInstance(c) ? c[0] : c)
         return ls || columns;
       },
       adapt: function(_,n) {
@@ -144,7 +145,7 @@ foam.CLASS({
         widths here should propogate changes to the rest of the view and LS`,
       factory: function() {
         var local = {};
-        JSON.parse(localStorage.getItem(this.of.id))?.map(c => {
+        JSON.parse(this.columnStorage.getItem(this.of.id))?.map(c => {
           foam.Array.isInstance(c) ?
           local[c[0]] = c[1] :
           local[c] = undefined;
@@ -549,8 +550,8 @@ foam.CLASS({
       isMerged: true,
       mergeDelay: 5000,
       code: function() {
-        localStorage.removeItem(this.of.id);
-        localStorage.setItem(this.of.id, JSON.stringify(this.selectedColumnNames.map(c => {
+        this.columnStorage.removeItem(this.of.id);
+        this.columnStorage.setItem(this.of.id, JSON.stringify(this.selectedColumnNames.map(c => {
           var name = foam.String.isInstance(c) ? c : c.name;
           var size = this.selectedColumnsWidth[name] == undefined ? undefined : this.selectedColumnsWidth[name];
           return [name, size];

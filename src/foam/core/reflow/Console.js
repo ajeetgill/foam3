@@ -82,7 +82,8 @@ foam.CLASS({
 
   requires: [
     'foam.u2.dialog.ConfirmationModal',
-    'foam.log.LogLevel'
+    'foam.log.LogLevel',
+    'foam.u2.view.OverlayActionListView'
   ],
 
   imports: [
@@ -98,9 +99,8 @@ foam.CLASS({
     ^navigator {
       display: flex;
       align-items: center;
-      gap: 5px;
       color: $grey700;
-      font-weight: bold;
+      gap: 4px;
     }
     ^header-container {
       display: flex;
@@ -114,13 +114,28 @@ foam.CLASS({
       border: none;
       color: $black;
     }
+    ^title .foam-u2-TextInputCSS::placeholder {
+      color: $textDefault;
+      opacity: 1;
+    }
     ^header-actions {
       display: flex;
-      gap: 10px;
+      gap: 5px;
       align-items: center;
     }
     ^save-text {
       color: $grey700;
+    }
+    ^ .foam-u2-view-OverlayActionListView {
+      color: $textDefault;
+    }
+
+    ^separator {
+      display: inline-block;
+      width: 1px;
+      height: 30px;
+      background: $grey200;
+      margin: 0 8px;
     }
   `,
 
@@ -139,20 +154,21 @@ foam.CLASS({
       this.addClass()
         .start().addClass(this.myClass('header-container'))
           .start().addClass(this.myClass('navigator'))
-            // .tag(this.HOME)
-            // .start(foam.u2.tag.Image, {
-            //   glyph: 'rightChevron',
-            //   embedSVG: true
-            // }).addClass(this.myClass('chevron')).end()
-            .startContext({data: this})
-              .tag(this.REFLOWS)
-            .endContext()
+            .tag(this.HOME)                     
             .start(foam.u2.tag.Image, {
               glyph: 'rightChevron',
               embedSVG: true
             }).addClass(this.myClass('chevron')).end()
+            .start('span').addClass(this.myClass('title'))
+              .start({
+                class: 'foam.u2.TextField',
+                data$: this.data.flowName$,
+                placeholder: 'Reflow',
+                onKey: true
+              })
+              .end()
+            .end()
             .start().add(fullVersion).end()
-            .start('span').addClass(this.myClass('title')).add(this.data.FLOW_NAME).end()
           .end()
 
           .start().addClass(this.myClass('header-actions'))
@@ -160,11 +176,19 @@ foam.CLASS({
               .tag(this.data.mementoMgr.BACK)
               .tag(this.data.mementoMgr.FORTH)
             .endContext()
+            .start('span').addClass(this.myClass('separator')).end()
             .startContext({data: this})
-              .tag(this.CANCEL)
               .tag(this.SAVE)
-              .tag(this.RESET)
-              .tag(this.EDIT)
+              .tag(this.OverlayActionListView, {
+                label: 'More',
+                data: [this.RESET, this.CANCEL, this.CLEAR],
+                obj: this,
+                buttonStyle: 'SECONDARY',
+                size: 'SMALL',
+                horizontal: false
+              })
+              .start('span').addClass(this.myClass('separator')).end()
+              .tag(this.FULL_SCREEN)
             .endContext()
             // callIf(this.data.showPrompts$, function() {
             //   this.start().addClass(self.myClass('save-text'))
@@ -177,20 +201,11 @@ foam.CLASS({
   ],
 
   actions: [
-    // {
-    //   name: 'home',
-    //   label: '',
-    //   buttonStyle: foam.u2.ButtonStyle.TERTIARY,
-    //   themeIcon: 'home',
-    //   size: 'SMALL',
-    //   code: function(X) {
-    //     X.pushDefaultMenu()
-    //   }
-    // },
     {
-      name: 'reflows',
-      label: 'Reflows',
-      buttonStyle: foam.u2.ButtonStyle.LINK,
+      name: 'home',
+      label: '',
+      buttonStyle: foam.u2.ButtonStyle.TERTIARY,
+      themeIcon: 'boldHome',
       size: 'SMALL',
       code: function(X) {
         X.routeTo('flows');
@@ -210,9 +225,10 @@ foam.CLASS({
     },
     {
       name: 'cancel',
-      label: 'Cancel',
+      label: 'Cancel Changes',
       buttonStyle: foam.u2.ButtonStyle.SECONDARY,
       size: 'SMALL',
+      themeIcon: 'close',
       isAvailable: function(showPrompts) {
         return showPrompts;
       },
@@ -267,10 +283,21 @@ foam.CLASS({
       }
     },
     {
+      name: 'clear',
+      label: 'Clear Document',
+      buttonStyle: foam.u2.ButtonStyle.SECONDARY,
+      size: 'SMALL',
+      themeIcon: 'trash',
+      code: function() {
+        this.data.eval_('clear');
+      }
+    },
+    {
       name: 'reset',
-      label: 'New',
+      label: 'Start a New Flow',
       buttonStyle: foam.u2.ButtonStyle.TERTIARY,
       size: 'SMALL',
+      themeIcon: 'plus',
       isAvailable: function(showPrompts) {
         return showPrompts;
       },
@@ -283,6 +310,34 @@ foam.CLASS({
           data: this
         });
         this.add(confirmationModal);
+      }
+    },
+    {
+      name: 'fullScreen',
+      label: '',
+      themeIcon: 'fullScreen',
+      buttonStyle: foam.u2.ButtonStyle.SECONDARY,
+      code: function() {
+        let doc = window.document;
+        let elem = doc.documentElement;
+
+        if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+          if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+          } else if (elem.webkitRequestFullscreen) { /* Safari */
+            elem.webkitRequestFullscreen();
+          } else if (elem.msRequestFullscreen) { /* IE11 */
+            elem.msRequestFullscreen();
+          }
+        } else {
+          if (doc.exitFullscreen) {
+            doc.exitFullscreen();
+          } else if (doc.webkitExitFullscreen) { /* Safari */
+            doc.webkitExitFullscreen();
+          } else if (doc.msExitFullscreen) { /* IE11 */
+            doc.msExitFullscreen();
+          }
+        }
       }
     }
   ]
@@ -602,11 +657,11 @@ foam.CLASS({
       overflow: auto;
     }
     ^header {
-      padding: 10px;
+      padding: 5px 24px;
       height: fit-content;
       max-height: 64px;
       background-color: $white;
-      border-bottom: 1px solid $grey200;
+      border-bottom: 1px solid $borderLight;
     }
     ^l {
       padding: 4px;
@@ -633,11 +688,14 @@ foam.CLASS({
       transition: width 0.1s;
     }
     ^resize-handle {
-      width: 6px;
+      width: 2px;
       cursor: ew-resize;
-      background: $primary100;
+      background: $borderLight;
       height: 100%;
       z-index: 10;
+    }
+    ^resize-handle:hover, ^resize-handle:active {
+      background: $primary500;
     }
 
     ^r .foam-core-reflow-SinkView, .foam-u2-view-IntView {
@@ -649,7 +707,8 @@ foam.CLASS({
     }
 
     ^menuClosed {
-     width: fit-content;
+     width: 60px!important;
+     transition: width 0.2s cubic-bezier(0.4,0,0.2,1);
     }
 
     ^r .foam-u2-view-TitledArrayView-value-view-container {
@@ -689,6 +748,11 @@ foam.CLASS({
       class: 'Int',
       name: 'rightWidth',
       value: 300
+    },
+    {
+      class: 'Int',
+      name: 'leftWidth',
+      value: 300
     }
   ],
 
@@ -699,26 +763,31 @@ foam.CLASS({
         addClass().
         start('div', {}, this.header$).addClass(this.myClass('header')).show(this.showHeader$).end().
         start().addClass(this.myClass('flex-container')).
-          start('div', {}, this.left$)
-            .addClass(this.myClass('l'))
-            .enableClass(this.myClass('menuClosed'), this.isMenuOpen$.map(open => !open))
-            .show(this.showLeft$)
-          .end().
-          start().addClass(this.myClass('middle-holder'))
-            .start('div', {}, this.middle$).addClass(this.myClass('m')).end()
-          .end()
+          start('div', {}, this.left$).
+            addClass(this.myClass('l')).
+            enableClass(this.myClass('menuClosed'), this.isMenuOpen$.map(open => !open)).
+            show(this.showLeft$).
+            style({ width: this.leftWidth$.map(w => w + 'px') }).
+          end().
+          start('div').
+            addClass(this.myClass('resize-handle')).
+            on('mousedown', this.onLeftResizeStart).
+          end().
+          start().addClass(this.myClass('middle-holder')).
+            start('div', {}, this.middle$).addClass(this.myClass('m')).end().
+          end().
           // --- Resize handle ---
-          .start('div')
-            .addClass(this.myClass('resize-handle'))
-            .on('mousedown', this.onResizeStart)
-          .end()
+          start('div').
+            addClass(this.myClass('resize-handle')).
+            on('mousedown', this.onResizeStart).
+          end().
           // --- Right sidebar ---
-          .start('div', {}, this.right$)
-            .addClass(this.myClass('r'))
-            .style({ width: this.rightWidth$.map(w => w + 'px') })
-            .show(this.showRight$)
-          .end()
-        .end();
+          start('div', {}, this.right$).
+            addClass(this.myClass('r')).
+            style({ width: this.rightWidth$.map(w => w + 'px') }).
+            show(this.showRight$).
+          end().
+        end();
     },
   ],
   listeners: [
@@ -740,7 +809,31 @@ foam.CLASS({
 
       window.addEventListener('mousemove', onMouseMove);
       window.addEventListener('mouseup', onMouseUp);
-    }
+    },
+    function onLeftResizeStart(e) {
+      var self = this;
+      var startX = e.clientX;
+      var startWidth = this.leftWidth;
+    
+      function onMouseMove(e) {
+        var newWidth = startWidth + (e.clientX - startX);
+        if ( newWidth <= 150 ) {
+          self.isMenuOpen = false;
+          self.leftWidth = 60; 
+        } else {
+          self.isMenuOpen = true;
+          self.leftWidth = newWidth;
+        }
+      }
+    
+      function onMouseUp() {
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+      }
+    
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    } 
   ]
 
 });
