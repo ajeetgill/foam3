@@ -6,10 +6,10 @@
 
 foam.CLASS({
     package: 'foam.core.reflow.control',
-    name: 'CollectionsControl',
+    name: 'ComponentsControl',
     extends: 'foam.u2.Element',
   
-    requires: [ 'foam.core.reflow.DynamicReflowData' ],
+    requires: [ 'foam.core.reflow.DynamicReflowComponents' ],
     imports: [ 'eval_' ],
   
     css: `
@@ -69,13 +69,13 @@ foam.CLASS({
             .add(this.dynamic(function(opened) {
                 if (opened) {
                     this.start().addClass(self.myClass('expanded-island'), self.myClass('holder'))
-                        .start(self.DynamicReflowData, { data: self.data, header: 'Collections', dataType: 'collections' })
+                        .start(self.DynamicReflowComponents, { data: self.data })
                     .end();
                 }
             }))
             .start()
                 .startContext({ data: this })
-                    .start(this.COLLECTIONS).enableClass(this.myClass('active'), this.opened$).end()
+                    .start(this.COMPONENTS).enableClass(this.myClass('active'), this.opened$).end()
                 .endContext()
             .end()
         .end();
@@ -84,9 +84,9 @@ foam.CLASS({
 
     actions: [
       {
-        name: 'collections',
-        label: 'Collections',
-        themeIcon: 'file',
+        name: 'components',
+        label: 'Components',
+        themeIcon: 'plus',
         buttonStyle: foam.u2.ButtonStyle.SECONDARY,
         size: 'SMALL',
         code: function() {

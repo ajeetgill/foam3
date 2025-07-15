@@ -6,7 +6,7 @@
 
 foam.CLASS({
     package: 'foam.core.reflow.control',
-    name: 'CollectionsControl',
+    name: 'FlowsControl',
     extends: 'foam.u2.Element',
   
     requires: [ 'foam.core.reflow.DynamicReflowData' ],
@@ -62,14 +62,13 @@ foam.CLASS({
             this.opened = false;
         }
       },
-    
       function render() {
         var self = this;
         this.start().addClass(this.myClass('promptHolder'))
             .add(this.dynamic(function(opened) {
                 if (opened) {
                     this.start().addClass(self.myClass('expanded-island'), self.myClass('holder'))
-                        .start(self.DynamicReflowData, { data: self.data, header: 'Collections', dataType: 'collections' })
+                        .start(self.DynamicReflowData, { data: self.data, header: 'Flows', dataType: 'flows' })
                     .end();
                 }
             }))
@@ -85,8 +84,8 @@ foam.CLASS({
     actions: [
       {
         name: 'collections',
-        label: 'Collections',
-        themeIcon: 'file',
+        label: 'Flows',
+        themeIcon: 'flow',
         buttonStyle: foam.u2.ButtonStyle.SECONDARY,
         size: 'SMALL',
         code: function() {

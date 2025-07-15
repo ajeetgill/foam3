@@ -531,7 +531,7 @@ foam.CLASS({
       padding: 4px;
     }
     ^:not(^hidePrompts) {
-      border-top: 1px solid #999;
+      border-bottom: 1px solid $borderLight;
       padding: 8px 16px;
     }
     ^output {
@@ -941,7 +941,12 @@ foam.CLASS({
       flex-direction: column;
 
     }
-
+    ^input-field-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 80%;
+    }
 
   `,
 
@@ -1203,10 +1208,12 @@ foam.CLASS({
     function renderToolbar(self) {
       self.toolbarControlDAO.where(self.EQ(self.ToolbarControl.TOOLBAR, self.promptMode))
         .select().then(result => {
-          result.array.forEach(c => {
-            this.tag({class: c.view, data: self});
-          });
-      });
+          result.array
+            .sort((a, b) => (a.order || 0) - (b.order || 0))
+            .forEach(c => {
+              this.tag({class: c.view, data: self});
+            });
+        });
     },
 
     function renderSelf(self) {
@@ -1219,7 +1226,7 @@ foam.CLASS({
             show(self.showInput$).
             addClass(self.myClass('input-field')).
             add(self.dynamic(function(promptMode) {
-              return this.start('b').style({ display: 'flex', 'white-space': 'pre'}).
+              return this.start().addClass(self.myClass('input-field-container')).
                         call(self.renderToolbar, [self]).
                       end()
             }))
