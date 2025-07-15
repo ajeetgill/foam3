@@ -99,41 +99,6 @@ foam.CLASS({
               })
             .end();
           }))
-          // .add(this.dynamic(function(selectedTab, filterSearch, collections, flows) {
-          //   this.start(self.UnderlinedTabs).addClass(self.myClass('tabs'))
-          //     .forEach(self.tabs, function(tab) {
-          //       this.start(self.Tab, {
-          //         label: tab.label,
-          //         selected: tab.name === selectedTab
-          //       })
-          //         .start()
-          //           .callIf(tab.name === 'collections', function() {
-          //             var search = (filterSearch || '').toLowerCase();
-          //             var filtered = collections.filter(c =>
-          //             !search || (c.name && c.name.toLowerCase().includes(search))
-          //             );
-          //           console.log('filtered', filtered);
-          //             this.start().addClass(self.myClass('collection-list'))
-          //               .forEach(filtered, function(collection) {
-          //                 this.start(self.CommandItemView, { data: self.data, command: 'dao '+collection.name, description: collection.name });
-          //               })
-          //             .end();
-          //           })
-          //           .callIf(tab.name === 'flows', function() {
-          //             var search = (filterSearch || '').toLowerCase();
-          //             var filtered = flows.filter(f =>
-          //               !search || (f.name && f.name.toLowerCase().includes(search))
-          //             );
-          //             this.start().addClass(self.myClass('collection-list'))
-          //               .forEach(filtered, function(flow) {
-          //                 this.start(self.CommandItemView, { data: self.data, command: 'load '+flow.name, description: flow.name });
-          //               })
-          //             .end();
-          //           })
-          //         .end()
-          //     })
-          //     .end()
-          // }))
         .end();
     }
   ],
