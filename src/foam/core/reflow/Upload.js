@@ -297,10 +297,10 @@ foam.CLASS({
       }
     },
     {
-      class: 'Map',
-      name: 'extraParams',
-      documentation: 'Extra parameters to set on all uploaded objects',
-      factory: function() { return {}; },
+      class: 'Function',
+      name: 'objectAdaption',
+      documentation: 'Callback function to adapt objects before uploading. Called with (object).',
+      factory: function() { return null; },
       hidden: true
     }
   ],
@@ -427,13 +427,13 @@ foam.CLASS({
 
       var sink = this.bulkUpload ? {
         put: async function(o) {
-          // Apply extra parameters to the object
-          if ( self.extraParams ) {
-            Object.keys(self.extraParams).forEach(key => {
-              if ( o.cls_.getAxiomByName(key) ) {
-                o[key] = self.extraParams[key];
-              }
-            });
+          // Apply object adaptation callback
+          if ( self.objectAdaption ) {
+            try {
+              self.objectAdaption(o);
+            } catch (e) {
+              console.warn('Object adaptation callback failed:', e);
+            }
           }
           
           totalRows++;
