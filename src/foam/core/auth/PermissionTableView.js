@@ -34,7 +34,7 @@ foam.CLASS({
 
   constants: {
     COLS: 26,
-    ROWS: 19,
+    ROWS: 17,
     ROLE_PREFIX: 'Role'
   },
 
@@ -199,8 +199,7 @@ foam.CLASS({
     },
     {
       class: 'Int',
-      name: 'gSkip',
-      preSet: function(_, skip) { if ( skip === undefined || skip === null ) return skip || 0; }
+      name: 'gSkip'
     },
     'ps', /* permissions array */
     'gs', /* groups array */
