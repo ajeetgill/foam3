@@ -354,7 +354,8 @@ foam.CLASS({
               // removed mouseout because it just caused flicker
               .enableClass(self.myClass('hovered'), self.slot(function(currentGroup, currentPermission) { return currentGroup == g || currentPermission == p; }))
 //              .attrs({title: g.id + ' : ' + p.id}) // Not needed becasue with scrollbars, col&row labels are always visible
-              .tag(self.createCheckBox(p, g)).addClass(self.myClass('x'))
+              .call(self.addCheckBox, [self, p, g])
+              .addClass(self.myClass('x'))
             .end();
           })
         .end();
@@ -439,16 +440,12 @@ foam.CLASS({
       }
     },
 
-    function createCheckBox(p, g) {
-      // Disable adding a group role to that group itself.
-      // TODO: should be protected in the model as well to prevent
-      // updating through Group GUI, DIG or API. Also, should prevent
-      // loops.
-      if ( p.id == '@' + g.id ) return this.E().add('X');
-      var self = this;
-      return function() {
-        return self.GroupPermissionView.create({data: self.getGroupPermission(g, p)});
-      };
+    function addCheckBox(self, p, g) {
+      if ( p.id == '@' + g.id ) {
+        this.add('X');
+      } else {
+        this.tag(self.GroupPermissionView, {data: self.getGroupPermission(g, p)});
+      }
     },
 
     function tableColumns(gs, matrix) {
