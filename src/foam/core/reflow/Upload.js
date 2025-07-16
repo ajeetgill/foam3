@@ -16,12 +16,14 @@ foam.CLASS({
 });
 
 
+
+
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'MappingsView',
   extends: 'foam.u2.Controller',
 
-  properties: [ 'data', 'of' ],
+  properties: [ 'data' ],
 
   css: `
     ^ .foam-u2-tag-Select { height: 20px; }
@@ -34,29 +36,34 @@ foam.CLASS({
 
       this.addClass().
       start('table').start('tr').
-        start('td').style({fontWeight: 'bold'}).add('Field').end().
         start('td').style({fontWeight: 'bold'}).add('Property').end().
-        start('td').style({fontWeight: 'bold'}).add('Handler').end().
+        start('td').style({fontWeight: 'bold'}).add('Value').end().
         start('td').style({fontWeight: 'bold'}).add('Type').end().
         start('td').style({fontWeight: 'bold'}).add('Required').end().
       end().
-      add(function(of) {
-        if ( ! of ) return;
+      add(this.dynamic(function(data) {
+        if ( ! data || data.length === 0 ) return;
         
-        // Show all properties of the target model
-        this.forEach(of.getOwnAxioms().filter(a => a.cls_.name === 'Property'), function(prop) {
+        this.forEach(data, function(mapping) {
+          // Get the property info from the target model
+          var targetModel = mapping.of;
+          var prop = targetModel && targetModel.getAxiomByName(mapping.property);
+          
           this.
             start('tr').
+              start('td').add(mapping.property).end().
               start('td').
-                start('input').attrs({type: 'text', placeholder: 'TODO: field mapping logic'}).end().
+                start(foam.u2.DetailView, {
+                  data: mapping,
+                  showActions: false,
+                  properties: ['constantValue', 'fieldName', 'dynamicExpression']
+                }).end().
               end().
-              start('td').add(prop.name).end().
-              start('td').add('TODO: Handler').end().
-              start('td').add(prop.cls_.name).end().
-              start('td').add(prop.required || false).end().
+              start('td').add(prop ? prop.cls_.name : '').end().
+              start('td').add(prop ? (prop.required || false) : false).end().
             end();
         });
-      });
+      }));
     }
   ]
 });
@@ -237,7 +244,10 @@ foam.CLASS({
       of: 'foam.core.reflow.Mapping',
       name: 'mappings',
       view: function(_, X) {
-        return { class: 'foam.core.reflow.MappingsView', of: X.data.of };
+        return { 
+          class: 'foam.core.reflow.MappingsView', 
+          of: X.data.of
+        };
       },
       factory: function() { return []; }
     },
@@ -353,12 +363,19 @@ foam.CLASS({
       var mappings = [];
 
       s.trim().split(',').forEach(c => {
+        var originalC = c;
         if ( c.indexOf(' ') != -1 ) {
           c = c.split(' ').map((n, i) => { n = n.toLowerCase(); if ( i ) n = foam.String.capitalize(n); return n; }).join('');
         }
 
         var prop = this.columnParser.parseString(c);
-        mappings.push(this.Mapping.create({id: c, handler: prop, of: this.of}));
+        mappings.push(this.Mapping.create({
+          id: originalC,
+          property: prop ? prop.name : c,
+          type: foam.core.reflow.MappingType.FIELD,
+          fieldName: originalC,
+          of: this.of
+        }));
         if ( ! prop ) {
           this.output += '<span style="color:red">Unknown property: ' + c + '</span><br>';
         }
@@ -368,6 +385,32 @@ foam.CLASS({
       this.lastColumns = s;
 
       return this.mappings;
+    },
+
+    function generateMappings(fileHeaders) {
+      if ( ! this.of ) return;
+      
+      // Clean up file headers
+      var cleanHeaders = fileHeaders && fileHeaders.length > 0 ? 
+        fileHeaders.filter(h => h && h.trim()) : [];
+      
+      // Get all properties for the target model
+      var props = this.of.getAxiomsByClass(foam.lang.Property)
+        .filter(p => p.showInPropertyChoice)
+        .sort(foam.lang.Property.NAME.compare);
+      
+      // Create mappings for all properties with file headers
+      var mappings = [];
+      props.forEach(prop => {
+        mappings.push(this.Mapping.create({
+          property: prop.name,
+          type: foam.core.reflow.MappingType.FIELD,
+          of: this.of,
+          fileHeaders: cleanHeaders
+        }));
+      });
+      
+      this.mappings = mappings;
     },
 
     async function processUploadedFiles() {
@@ -532,6 +575,11 @@ foam.CLASS({
           // this.processJSON(sink);
           break;
       }
+      
+      // Generate mappings for all properties after processing (non-CSV formats)
+      if ( this.format !== 'CSV' ) {
+        this.generateMappings([]);
+      }
 
       return latch;
     },
@@ -540,21 +588,15 @@ foam.CLASS({
       var key = attr ? tag + '.' + attr : tag;
 
       if ( ! this.mappings_[key] ) {
-        if ( attr ) {
-          var prop = this.columnParser.parseString(tag + attr);
-          this.mappings_[key] = this.Mapping.create({
-            id: key,
-            handler: prop,
-            of: this.of
-          });
-        } else {
-          var prop = this.columnParser.parseString(tag);
-          this.mappings_[key] = this.Mapping.create({
-            id: key,
-            handler: prop,
-            of: this.of
-          });
-        }
+        var propName = attr ? tag + attr : tag;
+        var prop = this.columnParser.parseString(propName);
+        this.mappings_[key] = this.Mapping.create({
+          id: key,
+          property: prop ? prop.name : propName,
+          type: foam.core.reflow.MappingType.FIELD,
+          fieldName: key,
+          of: this.of
+        });
       }
 
       return this.mappings_[key];
@@ -628,10 +670,16 @@ foam.CLASS({
       this.rows = a.length-1;
 
       try {
-        // Use existing mappings if available, otherwise parse from CSV headers
-        var props = this.mappings && this.mappings.length > 0 ?
-          this.mappings :
-          this.parseColumns(a[0]);
+        // Parse CSV headers using existing CSVParser
+        var parser = this.CSVParser.create({});
+        var parsedHeaders = parser.parseString(a[0], this.delimiter);
+        var fileHeaders = parsedHeaders.map(h => h.value);
+        
+        // Generate mappings for all properties with file headers
+        this.generateMappings(fileHeaders);
+        
+        // Use the generated mappings
+        var props = this.mappings;
         var parser = this.CSVParser.create({});
         var agent;
 
