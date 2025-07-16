@@ -331,7 +331,6 @@ foam.CLASS({
 
           if ( ! of ) {
             console.log('Bad DAO:', n.name);
-            debugger;
             return;
           }
 
