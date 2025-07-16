@@ -41,8 +41,7 @@ foam.CLASS({
       'data',
       {
         class: 'Boolean',
-        name: 'opened',
-        value: false
+        name: 'opened'
       }
     ],
   
@@ -58,7 +57,8 @@ foam.CLASS({
       },
 
       function handleClickOutside(e) {
-        const islandHolder = document?.querySelector(`.${this.myClass('expanded-island')}`);      if (islandHolder && !islandHolder.contains(e.target)) {
+        const islandHolder = document?.querySelector(`.${this.myClass('expanded-island')}`);      
+        if ( islandHolder && !islandHolder.contains(e.target) ) {
             this.opened = false;
         }
       },
@@ -66,18 +66,18 @@ foam.CLASS({
       function render() {
         var self = this;
         this.start().addClass(this.myClass('promptHolder'))
-            .add(this.dynamic(function(opened) {
-                if (opened) {
-                    this.start().addClass(self.myClass('expanded-island'), self.myClass('holder'))
-                        .start(self.DynamicReflowData, { data: self.data, header: 'Collections', dataType: 'collections' })
-                    .end();
-                }
-            }))
-            .start()
-                .startContext({ data: this })
-                    .start(this.COLLECTIONS).enableClass(this.myClass('active'), this.opened$).end()
-                .endContext()
-            .end()
+          .add(this.dynamic(function(opened) {
+              if (opened) {
+                  this.start().addClass(self.myClass('expanded-island'), self.myClass('holder'))
+                      .start(self.DynamicReflowData, { data: self.data, header: 'Collections', dataType: 'collections' })
+                  .end();
+              }
+          }))
+          .start()
+              .startContext({ data: this })
+                  .start(this.COLLECTIONS).enableClass(this.myClass('active'), this.opened$).end()
+              .endContext()
+          .end()
         .end();
       }
     ],
@@ -90,7 +90,7 @@ foam.CLASS({
         buttonStyle: foam.u2.ButtonStyle.SECONDARY,
         size: 'SMALL',
         code: function() {
-            this.opened = !this.opened;
+          this.opened = !this.opened;
         }
       }
     ]

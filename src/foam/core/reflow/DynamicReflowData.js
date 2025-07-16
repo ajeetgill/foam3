@@ -68,10 +68,10 @@ foam.CLASS({
   methods: [
     async function render() {
       var self = this;
-      if (this.dataType == 'collections') {
+      if ( this.dataType == 'collections' ) {
         const collectionsSink = await this.cSpecDAO.where(this.CSpec.DAOS).select();
         this.collections = collectionsSink.array;
-      } else if (this.dataType == 'flows') {
+      } else if ( this.dataType == 'flows' ) {
         const flowsSink = await this.flowDAO.select();
         this.collections = flowsSink.array;
       } else {
@@ -89,10 +89,9 @@ foam.CLASS({
             var filtered = collections.filter(c =>
               !search || (c.name && c.name.toLowerCase().includes(search))
             );
-            console.log('filtered', filtered);
             this.start().addClass(self.myClass('collection-list'))
               .forEach(filtered, function(collection) {
-                if (self.dataType == 'collections') {
+                if ( self.dataType == 'collections' ) {
                   this.start(self.CommandItemView, { data: self.data, command: 'dao '+collection.name, description: collection.name });
                 } else if (self.dataType == 'flows') {
                   this.start(self.CommandItemView, { data: self.data, command: 'load '+collection.name, description: collection.name });

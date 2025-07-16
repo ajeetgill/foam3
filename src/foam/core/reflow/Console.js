@@ -1217,7 +1217,6 @@ foam.CLASS({
     },
 
     function renderSelf(self) {
-      console.log('renderSelf', self.PromptMode);
       this.
         addClass(self.myClass()).
         start('div', null, self.out$)
@@ -1233,7 +1232,7 @@ foam.CLASS({
             .start({
               class: 'foam.u2.view.ChoiceView',
               data$: self.promptMode$,
-              choices: ['Standard', 'Advanced']
+              choices: ['Standard', 'Advanced'] // TODO: get dynamic from toolbarDAO to create later
             })
               .addClass(self.myClass('prompt-mode-choice'))
             .end().
