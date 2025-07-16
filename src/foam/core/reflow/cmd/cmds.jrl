@@ -123,8 +123,7 @@ p({
     } else {
       this.out.add(foam.core.reflow.Upload.create({daoKey: args[0]}, this));
     }
-  """,
-  permissionRequired: true
+  """
 })
 p({
   "class":"foam.core.reflow.cmd.Command",
