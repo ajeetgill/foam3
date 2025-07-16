@@ -257,7 +257,7 @@ foam.CLASS({
       code: function() {
         if ( this.data.flowName && this.data.flowName !== '' ) {
           this.data.eval_(`save ${this.data.flowName}`);
-          this.data.showPrompts = false;
+//          this.data.showPrompts = false;
         } else {
           // Using error message instead of disabling the save button to provide users feedback on why it’s not working.
           this.notify(this.PROVIDE_NAME, '', this.LogLevel.ERROR, true);
@@ -1000,7 +1000,7 @@ foam.CLASS({
         return flowMode === this.FlowMode.EDIT;
       },
       preSet: function(_, n) { return n === 'false' ? '' : n; },
-      memorable: true
+      // memorable: true
     },
     {
       name: 'showInput',
@@ -1479,6 +1479,7 @@ foam.CLASS({
       // You can do this.showPrompts = true|false; from flow scripts
       // You can do this.showInput = true|false; from flow scripts
       code: function() {
+        this.showPrompts = undefined;
         if ( this.flowMode !== this.FlowMode.READONLY ) {
           this.flowMode = { EDIT: this.FlowMode.VIEW, VIEW: this.FlowMode.CONSOLE, CONSOLE: this.FlowMode.EDIT }[this.flowMode.name];
         }
