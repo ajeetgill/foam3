@@ -48,6 +48,7 @@ foam.CLASS({
     {
       class: 'String',
       name: 'filterSearch',
+      onKey: true,
       placeholder: 'Search...'
     },
     {
