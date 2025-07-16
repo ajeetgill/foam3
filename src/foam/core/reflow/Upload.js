@@ -25,47 +25,17 @@ foam.CLASS({
 
   css: `
     ^ {
-      width: 100%;
-      max-width: 100%;
       overflow-x: auto;
-      box-sizing: border-box;
     }
     ^ table {
       width: 100%;
-      max-width: 100%;
       table-layout: fixed;
-      border-collapse: collapse;
-      font-size: 14px;
     }
     ^ .foam-u2-tag-Select { 
-      height: 20px;
-      width: 100%;
-      max-width: 100%;
-      box-sizing: border-box;
+      height: 20px; 
     }
     ^ td { 
-      padding: 2px 10px;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      max-width: 0;
-      box-sizing: border-box;
-    }
-    ^ th {
-      padding: 2px 10px;
-      font-weight: bold;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      max-width: 0;
-      box-sizing: border-box;
-    }
-    ^ .col-property { width: 25%; }
-    ^ .col-handler { width: 30%; }
-    ^ .col-type { width: 25%; }
-    ^ .col-required { width: 20%; }
-    
-    @media (max-width: 768px) {
-      ^ table { font-size: 12px; }
-      ^ td, ^ th { padding: 1px 5px; }
+      padding: 2px 10px; 
     }
   `,
 
@@ -75,20 +45,20 @@ foam.CLASS({
 
       this.addClass().
       start('table').start('tr').
-        start('th').addClass('col-property').add('Property').end().
-        start('th').addClass('col-handler').add('Handler').end().
-        start('th').addClass('col-type').add('Type').end().
-        start('th').addClass('col-required').add('Required').end().
+        start('th').add('Property').end().
+        start('th').add('Handler').end().
+        start('th').add('Type').end().
+        start('th').add('Required').end().
       end().
       add(function(data) {
         this.forEach(data, function(d) {
           this.
             startContext({data: d}).
             start('tr').
-              start('td').addClass('col-property').add(d.id).end().
-              start('td').addClass('col-handler').add(d.HANDLER).end().
-              start('td').addClass('col-type').add(d.handler$.map(h => h.cls_.name)).end().
-              start('td').addClass('col-required').add(d.handler$.map(h => h.required)).end();
+              start('td').add(d.id).end().
+              start('td').add(d.HANDLER).end().
+              start('td').add(d.handler$.map(h => h.cls_.name)).end().
+              start('td').add(d.handler$.map(h => h.required)).end();
         });
       });
     }
