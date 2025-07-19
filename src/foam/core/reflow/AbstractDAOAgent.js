@@ -135,7 +135,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'ScriptDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
 
   properties: [
     {
