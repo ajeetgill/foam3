@@ -776,6 +776,10 @@ foam.CLASS({
       display: flex;
       flex-direction: column;
     }
+    ^error {
+      background: $backgroundDestructiveTertiary!important;
+      color: $textDestructive;
+    }
   `,
 
   properties: [
@@ -1190,6 +1194,10 @@ foam.CLASS({
           } else {
             console.log(x);
             block.flowName = this.createFlowChildName('error');
+            block.value = foam.lang.StringHolder.create({value: x.toString()});
+            block.treeRowRenderer = function(e) {
+              e.parentNode.addClass(self.myClass('error'));
+              e.add(this.flowName); }
           }
         }
 

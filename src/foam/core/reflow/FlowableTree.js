@@ -36,10 +36,6 @@ foam.CLASS({
       background: $backgroundTertiary;
       font-weight: 500;
     }
-    ^error {
-      background: $backgroundDestructiveTertiary;
-      color: $textDestructive;
-    }
     ^left-header {
       display: flex;
       justify-content: space-between;
@@ -120,7 +116,6 @@ foam.CLASS({
           on('dblclick', () => data.expanded = ! data.expanded).
           start('td').
             addClass(self.myClass('element-row')).
-            enableClass(self.myClass('error'), flowName.startsWith('error')).
             style({'marginLeft': (depth * 12) + 'px'}).
             enableClass(self.myClass('selected'), self.selected$.map(s => s === data)).
             start().
