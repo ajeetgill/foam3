@@ -52,8 +52,15 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.core.reflow',
+  name: 'AbstractSinkDAOAgent',
+  extends: 'foam.core.reflow.AbstractDAOAgent'
+});
+
+
+foam.CLASS({
+  package: 'foam.core.reflow',
   name: 'AbstractColumnAwareDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
 
   imports: [
     'block',
@@ -128,13 +135,13 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'ScriptDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
 
   properties: [
     {
       class: 'String',
       name: 'code',
-      value: '// var o is the current object\n\nconsole.log(o);\n',
+      value: '// var o is the current object\nlog(o.id);\n',
       view: { class: 'foam.u2.tag.TextArea', rows: 6 },
       displayWidth: 60
     },
@@ -166,7 +173,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'CountDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
 
   methods: [
     function value(s) {
@@ -184,7 +191,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'MinDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
 
   properties: [
     {
@@ -382,7 +389,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'GroupByDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
 
   imports: [ 'eval_', 'nestedGroupBy?' ],
 
@@ -441,7 +448,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'DuplicateDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
 
   requires: [ 'foam.core.reflow.DuplicateSink' ],
 
@@ -468,7 +475,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'GridByDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
 
   requires: [ 'foam.core.reflow.GridBy' ],
 
@@ -505,7 +512,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'ColumnDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
 
   requires: [ 'foam.mlang.sink.Sequence' ],
 
@@ -585,7 +592,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'ViewDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
 
   requires: [ 'foam.core.reflow.ViewSink' ],
 
@@ -598,7 +605,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'EditDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
 
   requires: [ 'foam.core.reflow.EditSink' ],
 
@@ -624,7 +631,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'CitationDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
 
   requires: [ 'foam.core.reflow.CitationSink' ],
 
