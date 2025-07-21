@@ -724,6 +724,7 @@ foam.CLASS({
     'log',
     'mementoMgr',
     'moveFlowChild',
+    'moveFlowChildAfter',
     'out',
     'save',
     'scrollToBottom',
@@ -1267,6 +1268,29 @@ foam.CLASS({
       var child = this.findFlowChildByName(childName);
       child.flowParent.removeFlowChild(child);
       parent.addFlowChild(child);
+    },
+
+    function moveFlowChildAfter(childName, target) {
+      var children = [...this.flowChildren];
+
+      var findPos = n => {
+        for ( var i = 0 ; i < children.length ; i++ ) {
+          if ( children[i] === n ) return i+1;
+        }
+        return 0;
+      };
+      console.log('moveFlowChildAfter', childName, target.flowName);
+
+      var child = this.findFlowChildByName(childName);
+      var i = findPos(child);
+      console.log('removing', i);
+      children.splice(i-1, 1);
+      i = findPos(target);
+      console.log('inserting', i);
+      children.splice(i, 0, child);
+      this.flowChildren = children;
+      this.onFlowChildrenChange();
+      this.generateScript();
     },
 
     function save() {
