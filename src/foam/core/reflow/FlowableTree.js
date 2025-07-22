@@ -18,7 +18,8 @@ foam.CLASS({
     ^ table {
       width: 100%;
       border-collapse: separate;
-      border-spacing: 5px;
+      border-spacing: 0;
+      padding-top: 8px;
     }
     ^ table td {
       display: flex;
@@ -28,6 +29,7 @@ foam.CLASS({
       cursor: pointer;
       border: 1px solid $borderLight;
       border-radius: 4px;
+      border-spacing: 0!important;
     }
 
     ^ table td .close button {
@@ -68,7 +70,7 @@ foam.CLASS({
       background: rgba(0,0,0,0);
       border: none!important;
       width: 100%;
-      height: 6px;
+      height: 8px;
       padding: 0!important;
       margin: 0!important;
     }
@@ -207,7 +209,7 @@ foam.CLASS({
       console.log('onDragOver', e);
       console.log('over', src, '->', row.flowName);
 
-      if ( src === row.flowName ) return;
+      // if ( src === row.flowName ) return;
 
       e.preventDefault();
       e.stopPropagation();
