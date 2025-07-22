@@ -304,7 +304,7 @@ foam.CLASS({
       e.startContext({click: self.click}).
         start(self.TableView.create({}, this.__subContext__), config).
           style({height: '600px'});
-   
+
     }
   ],
 
@@ -392,9 +392,7 @@ foam.CLASS({
   name: 'GroupByDAOAgent',
   extends: 'foam.core.reflow.AbstractSinkDAOAgent',
 
-  imports: [ 'eval_', 'nestedGroupBy?' ],
-
-  exports: [ 'as nestedGroupBy' ],
+  imports: [ 'eval_' ],
 
   properties: [
     {
@@ -414,6 +412,12 @@ foam.CLASS({
         }
         return n;
       }
+    },
+    {
+      name: 'browseEnabled',
+      hidden: true,
+      // Only enable Browse action if this is the top-level DAOAgent
+      factory: function() { return this.block.value.select === this; }
     }
   ],
 
@@ -433,7 +437,7 @@ foam.CLASS({
   actions: [
     {
       name: 'browse',
-      isAvailable: function(nestedGroupBy) { return ! nestedGroupBy; },
+      isAvailable: function(browseEnabled) { return browseEnabled; },
       code: async function() {
         var block = this.block || this.__context__.currentBlock; // ??? Why needed?
         var cls   = block?.value?.value?.cls_;
