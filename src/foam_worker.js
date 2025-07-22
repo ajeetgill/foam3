@@ -4,7 +4,7 @@ globalThis.foam = Object.assign({
   },
   require: function (fn, batch, isProject) {
     if ( ! fn ) {
-      return1
+      return
     }
 
     var absolute = fn.startsWith("/");
