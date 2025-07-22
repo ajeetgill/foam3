@@ -53,6 +53,7 @@ foam.CLASS({
         }).addClass(this.myClass('chevron')).end()
         .start(this.data.INPUT, null, this.data.input_$)
           .addClass(this.myClass('input'))
+          .focus()
           .on('keyup', e => { if ( e.key == 'Enter' || e.keyCode == 13 ) this.data.onInput(); })
         .end()
       .end();
