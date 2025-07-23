@@ -86,17 +86,17 @@ foam.CLASS({
     {
       name: 'output',
       title: 'Output',
-      collapsable: true
+      collapsable: false
     },
     {
       name: 'scroll',
       title: 'Scroll',
-      collapsable: true
+      collapsable: false
     },
     {
       name: 'filter',
       title: 'Filter',
-      collapsable: true
+      collapsable: false
     },
     {
       name: 'actions',
@@ -114,13 +114,13 @@ foam.CLASS({
     'foam.parse.QueryParser'
   ],
 
-  imports: [ 'block', 'eval_' ],
+  imports: [ 'block', 'eval_', 'scope' ],
 
   exports: [
     'dao',
     'limitedDAO as sinkDAO',
     'filteredDAO as sinkUnlimitedDAO',
-    'columns'
+    'columnStorage'
   ],
 
   properties: [
@@ -152,7 +152,10 @@ foam.CLASS({
       adapt: function(o, n, p) {
         let oldAdapt = foam.dao.DAOProperty.ADAPT;
         if ( foam.String.isInstance(n) ) {
-          if ( this.__context__[n + 'DAO'] ) {
+          if ( this.scope[n] ) {
+            this.daoKey = n;
+            n = this.scope[n];
+          } else if ( this.__context__[n + 'DAO'] ) {
             n =  n + 'DAO';
           } else if ( n.endsWith('s') ) {
             this.daoKey = n;
@@ -232,6 +235,13 @@ foam.CLASS({
           viewa: { class: 'foam.u2.IntView' },
           viewb: { class: 'foam.u2.RangeView', minValue: 0, maxValue$: X.data.rowCount$.map(c => c-1), onKey: true }
         };
+      },
+      visibility: function(select) {
+        // Show skip/limit only for sink agents (agents with getSink method like CSVDAOAgent, JSONDAOAgent)
+        // Hide for non-sink agents (agents without getSink method like TableDAOAgent)
+        if ( ! select ) return foam.u2.DisplayMode.HIDDEN;
+        var isSinkAgent = foam.core.reflow.AbstractSinkDAOAgent.isInstance(select);
+        return isSinkAgent ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
       }
     },
     {
@@ -240,7 +250,14 @@ foam.CLASS({
       section: 'scroll',
       value: 100,
       placeholder: '',
-      displayWidth: 8
+      displayWidth: 8,
+      visibility: function(select) {
+        // Show skip/limit only for sink agents (agents with getSink method like CSVDAOAgent, JSONDAOAgent)
+        // Hide for non-sink agents (agents without getSink method like TableDAOAgent)
+        if ( ! select ) return foam.u2.DisplayMode.HIDDEN;
+        var isSinkAgent = foam.core.reflow.AbstractSinkDAOAgent.isInstance(select);
+        return isSinkAgent ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
+      }
     },
     {
       class: 'String',
@@ -268,6 +285,28 @@ foam.CLASS({
           class: 'foam.core.reflow.PropertyListView',
           forCls: X.data.dao.of
         };
+      },
+      postSet: function(_, n) {
+        this.updateColumnStorage(n);
+      }
+    },
+    {
+      name: 'columnStorage',
+      transient: true,
+      hidden: true,
+      section: 'filter',
+      factory: function() {
+        var self = this;
+        return Object.create({
+          getItem: function(k) { return this[k] || null; },
+          setItem:    function(k, v) {
+            this[k] = v;
+            // save column updates from tableview
+            self.columns = self.getColumnNamesFromStorage(v);
+          },
+          removeItem: function(k)    { delete this[k]; },
+          clear:      function()     { for ( const k in this ) delete this[k]; }
+        });
       }
     },
     {
@@ -307,9 +346,30 @@ visible      },
   ],
 
   methods: [
+    function getColumnNamesFromStorage(json) {
+      if ( ! json ) return null;
+      return JSON.parse(json)?.map(a => a[0]).join(',');
+    },
+
+    function updateColumnStorage(columns) {
+      if ( columns === this.getColumnNamesFromStorage(this.columnStorage.getItem(this.dao.of.id)) )
+        return;
+      var defaultCols = JSON.parse(localStorage.getItem(this.dao.of.id));
+      var cols = columns?.trim().length > 0 ?
+        columns.trim().split(',').map(c => c.trim()).filter(c => c).map(c => {
+          var defaultCol = defaultCols?.find(dc => dc[0] === c );
+          var w = defaultCol ? defaultCol[1] : 0;
+          return [c, w];
+        }) :
+        defaultCols;
+        this.columnStorage[this.dao.of.id] = JSON.stringify(cols);
+    },
+
     function init() {
       this.SUPER();
-
+      if ( ! this.columns ) {
+        this.columns = this.getColumnNamesFromStorage(localStorage.getItem(this.dao.of.id));
+      }
       this.where$.sub(this.maybeAutoRun);
       this.order$.sub(this.maybeAutoRun);
     },

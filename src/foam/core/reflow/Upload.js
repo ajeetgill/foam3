@@ -24,6 +24,7 @@ foam.CLASS({
   properties: [ 'data' ],
 
   css: `
+    ^ { overflow-x: auto; }
     ^ .foam-u2-tag-Select { height: 20px; }
     ^ td { padding: 2px 10px; }
   `,
@@ -34,10 +35,10 @@ foam.CLASS({
 
       this.addClass().
       start('table').start('tr').
-        start('td').style({fontWeight: 'bold'}).add('Property').end().
-        start('td').style({fontWeight: 'bold'}).add('Handler').end().
-        start('td').style({fontWeight: 'bold'}).add('Type').end().
-        start('td').style({fontWeight: 'bold'}).add('Required').end().
+        start('th').add('Property').end().
+        start('th').add('Handler').end().
+        start('th').add('Type').end().
+        start('th').add('Required').end().
       end().
       add(function(data) {
         this.forEach(data, function(d) {
@@ -295,6 +296,13 @@ foam.CLASS({
         if ( ! where ) return '';
         return matchedRows + ' rows match filter (of ' + rows + ' total)';
       }
+    },
+    {
+      class: 'Function',
+      name: 'adaptObject',
+      documentation: 'Callback function to adapt objects before uploading. Called with (object).',
+      value: function() { },
+      hidden: true
     }
   ],
 
@@ -420,6 +428,14 @@ foam.CLASS({
 
       var sink = this.bulkUpload ? {
         put: async function(o) {
+          // Apply object adaptation callback
+          try {
+            self.adaptObject(o);
+          } catch (e) {
+            console.warn('Object adaptation callback failed:', e);
+          }
+          
+          
           totalRows++;
           self.processing = totalRows;
           self.progress   = self.rows ? Math.max(self.progress, Math.floor(100 * totalRows / self.rows)) : 0;
@@ -467,23 +483,31 @@ foam.CLASS({
           }
         },
         eof: async function() {
-          if ( agent ) await self.dao.cmd(agent);
-          self.progress = 100;
-          console.timeEnd('upload');
-          latch.resolve('eof');
+          try {
+            if ( agent ) await self.dao.cmd(agent);
+            self.progress = 100;
+            console.timeEnd('upload');
 
-          if ( ! real ) {
-            var block = self.block;
-            // Data is already filtered during put operations
-            self.eval_(`dao(${block.flowName}.preview, '${block.flowName}.preview')`);
-            var block2 = self.currentBlock;
-            block2.flowName = block.flowName + 'data';
-            block2.obj.dao = self.data;
-            block2.obj.limit = 10;
-            setTimeout(() => {
-              // Needed because it is the SinkView which creates the 'select' object
-              block2.obj.run();
-            }, 100);
+            if ( ! real ) {
+              var block = self.block;
+              // Data is already filtered during put operations
+              self.eval_(`dao(${block.flowName}.preview, '${block.flowName}.preview')`);
+              var block2 = self.currentBlock;
+              block2.flowName = block.flowName + 'data';
+              block2.obj.dao = self.data;
+              block2.obj.limit = 10;
+              setTimeout(() => {
+                // Needed because it is the SinkView which creates the 'select' object
+                block2.obj.run();
+              }, 100);
+            }
+            
+            latch.resolve('eof');
+          } catch (e) {
+            console.error('Upload eof error:', e);
+            var errorMessage = e.message || 'Unknown error during upload completion';
+            self.output += '<span style="color:red">ERROR: ' + errorMessage + '</span><br>';
+            latch.reject(e);
           }
         }
       } : {

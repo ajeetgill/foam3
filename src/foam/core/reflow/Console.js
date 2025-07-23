@@ -31,7 +31,11 @@ foam.CLASS({
       name: 'flowChildren',
       transient: true
     },
-    { name: 'value' }
+    { name: 'value' },
+    {
+      name: 'treeRowRenderer',
+      value: function(e) { e.add(this.flowName); }
+    }
   ],
 
   methods: [
@@ -82,7 +86,8 @@ foam.CLASS({
 
   requires: [
     'foam.u2.dialog.ConfirmationModal',
-    'foam.log.LogLevel'
+    'foam.log.LogLevel',
+    'foam.u2.view.OverlayActionListView'
   ],
 
   imports: [
@@ -98,9 +103,8 @@ foam.CLASS({
     ^navigator {
       display: flex;
       align-items: center;
-      gap: 5px;
       color: $grey700;
-      font-weight: bold;
+      gap: 4px;
     }
     ^header-container {
       display: flex;
@@ -114,13 +118,28 @@ foam.CLASS({
       border: none;
       color: $black;
     }
+    ^title .foam-u2-TextInputCSS::placeholder {
+      color: $textDefault;
+      opacity: 1;
+    }
     ^header-actions {
       display: flex;
-      gap: 10px;
+      gap: 5px;
       align-items: center;
     }
     ^save-text {
       color: $grey700;
+    }
+    ^ .foam-u2-view-OverlayActionListView {
+      color: $textDefault;
+    }
+
+    ^separator {
+      display: inline-block;
+      width: 1px;
+      height: 30px;
+      background: $grey200;
+      margin: 0 8px;
     }
   `,
 
@@ -131,22 +150,29 @@ foam.CLASS({
   methods: [
     function render() {
       let self = this;
+
+      var fullVersion = this.data.value.dynamic(function(version, revision) {
+        this.add(`v${version}.${revision}`);
+      });
+
       this.addClass()
         .start().addClass(this.myClass('header-container'))
           .start().addClass(this.myClass('navigator'))
-            // .tag(this.HOME)
-            // .start(foam.u2.tag.Image, {
-            //   glyph: 'rightChevron',
-            //   embedSVG: true
-            // }).addClass(this.myClass('chevron')).end()
-            .startContext({data: this})
-              .tag(this.REFLOWS)
-            .endContext()
+            .tag(this.HOME)
             .start(foam.u2.tag.Image, {
               glyph: 'rightChevron',
               embedSVG: true
             }).addClass(this.myClass('chevron')).end()
-            .start('span').addClass(this.myClass('title')).add(this.data.FLOW_NAME).end()
+            .start('span').addClass(this.myClass('title'))
+              .start({
+                class: 'foam.u2.TextField',
+                data$: this.data.flowName$,
+                placeholder: 'Reflow',
+                onKey: true
+              })
+              .end()
+            .end()
+            .start().add(fullVersion).end()
           .end()
 
           .start().addClass(this.myClass('header-actions'))
@@ -154,11 +180,19 @@ foam.CLASS({
               .tag(this.data.mementoMgr.BACK)
               .tag(this.data.mementoMgr.FORTH)
             .endContext()
+            .start('span').addClass(this.myClass('separator')).end()
             .startContext({data: this})
-              .tag(this.CANCEL)
               .tag(this.SAVE)
-              .tag(this.RESET)
-              .tag(this.EDIT)
+              .tag(this.OverlayActionListView, {
+                label: 'More',
+                data: [this.RESET, this.CANCEL, this.CLEAR],
+                obj: this,
+                buttonStyle: 'SECONDARY',
+                size: 'SMALL',
+                horizontal: false
+              })
+              .start('span').addClass(this.myClass('separator')).end()
+              .tag(this.FULL_SCREEN)
             .endContext()
             // callIf(this.data.showPrompts$, function() {
             //   this.start().addClass(self.myClass('save-text'))
@@ -171,20 +205,11 @@ foam.CLASS({
   ],
 
   actions: [
-    // {
-    //   name: 'home',
-    //   label: '',
-    //   buttonStyle: foam.u2.ButtonStyle.TERTIARY,
-    //   themeIcon: 'home',
-    //   size: 'SMALL',
-    //   code: function(X) {
-    //     X.pushDefaultMenu()
-    //   }
-    // },
     {
-      name: 'reflows',
-      label: 'Reflows',
-      buttonStyle: foam.u2.ButtonStyle.LINK,
+      name: 'home',
+      label: '',
+      buttonStyle: foam.u2.ButtonStyle.TERTIARY,
+      themeIcon: 'boldHome',
       size: 'SMALL',
       code: function(X) {
         X.routeTo('flows');
@@ -204,9 +229,10 @@ foam.CLASS({
     },
     {
       name: 'cancel',
-      label: 'Cancel',
+      label: 'Cancel Changes',
       buttonStyle: foam.u2.ButtonStyle.SECONDARY,
       size: 'SMALL',
+      themeIcon: 'close',
       isAvailable: function(showPrompts) {
         return showPrompts;
       },
@@ -219,7 +245,6 @@ foam.CLASS({
         flow.revision = undefined;
 
         this.data.showPrompts = false;
-
       }
     },
     {
@@ -227,13 +252,16 @@ foam.CLASS({
       label: 'Save',
       buttonStyle: foam.u2.ButtonStyle.PRIMARY,
       size: 'SMALL',
+      isEnabled: function(data$flowErrors_) {
+        return ! data$flowErrors_;
+      },
       isAvailable: function(showPrompts) {
         return showPrompts;
       },
       code: function() {
         if ( this.data.flowName && this.data.flowName !== '' ) {
           this.data.eval_(`save ${this.data.flowName}`);
-          this.data.showPrompts = false;
+//          this.data.showPrompts = false;
         } else {
           // Using error message instead of disabling the save button to provide users feedback on why it’s not working.
           this.notify(this.PROVIDE_NAME, '', this.LogLevel.ERROR, true);
@@ -259,10 +287,21 @@ foam.CLASS({
       }
     },
     {
+      name: 'clear',
+      label: 'Clear Document',
+      buttonStyle: foam.u2.ButtonStyle.SECONDARY,
+      size: 'SMALL',
+      themeIcon: 'trash',
+      code: function() {
+        this.data.eval_('clear');
+      }
+    },
+    {
       name: 'reset',
-      label: 'New',
+      label: 'Start a New Flow',
       buttonStyle: foam.u2.ButtonStyle.TERTIARY,
       size: 'SMALL',
+      themeIcon: 'plus',
       isAvailable: function(showPrompts) {
         return showPrompts;
       },
@@ -276,176 +315,33 @@ foam.CLASS({
         });
         this.add(confirmationModal);
       }
-    }
-  ]
-});
-
-
-foam.CLASS({
-  package: 'foam.core.reflow',
-  name: 'FlowableTree',
-  extends: 'foam.u2.View',
-
-  css: `
-    ^ {
-      width: 100%;
-    }
-    ^ table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 10px;
-    }
-    ^ table td {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 8px;
-      align-items: center;
-      cursor: pointer;
-      border: 1px solid $borderLight;
-      border-radius: 4px;
-    }
-
-    ^ table td .close button {
-      padding: 4px;
-    }
-
-    ^selected {
-      background: $backgroundTertiary;
-      font-weight: 500;
-    }
-    ^error {
-      background: $backgroundDestructiveTertiary;
-      color: $textDestructive;
-    }
-    ^left-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px;
-      border-bottom: 1px solid $borderLight;
-      font-weight: bold;
-      font-size: 16px;
-    }
-
-    ^icon-holder {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    ^element-row {
-      padding: 10px;
-    }
-    ^element-row-content {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    ^element-row-icon {
-      color: $primary500;
-    }
-  `,
-
-  properties: [
-    'selected',
+    },
     {
-      class: 'Boolean',
-      name: 'isMenuOpen',
-      value: true
-    }
-  ],
-
-  methods: [
-    function renderClosed(e) {
-      var self = this;
-      e.start().addClass(this.myClass('icon-holder'))
-          .startContext({ data: this })
-            .tag(this.MENU_CONTROL)
-          .endContext()
-        .end();
-    },
-
-    function renderOpened(e) {
-      e.start().addClass(this.myClass('left-container'))
-        .start().addClass(this.myClass('left-header'))
-          .start('span').add('Contents').end()
-          .startContext({ data: this })
-            .tag(this.MENU_CONTROL)
-          .endContext()
-        .end()
-        .start('table')
-          .attr('cellpadding', '4')
-          .call(this.branch, [this, this.data, 0])
-        .end();
-    },
-
-    function render() {
-      var self = this;
-      this.addClass();
-      this.add(this.dynamic(function(isMenuOpen) {
-        if (isMenuOpen) {
-          self.renderOpened(this);
-        } else {
-          self.renderClosed(this);
-        }
-      }))
-    },
-
-    function branch(self, data, depth) {
-      this.add(data.dynamic(function (flowName) {
-        this.start('tr').
-          on('click', () => self.selected = data).
-          on('dblclick', () => data.expanded = ! data.expanded).
-          start('td').
-            addClass(self.myClass('element-row')).
-            enableClass(self.myClass('error'), flowName.startsWith('error')).
-            style({'marginLeft': (depth * 12) + 'px'}).
-            enableClass(self.myClass('selected'), self.selected$.map(s => s === data)).
-            start().
-              addClass(self.myClass('element-row-content')).
-              callIfElse(data.cmd && data?.cmd?.includes('dao'), function() {
-                this.start(foam.u2.tag.Image, {
-                  glyph: 'grid',
-                  embedSVG: true
-                }).addClass(self.myClass('element-row-icon')).end()
-              }, function() {
-                this.start(foam.u2.tag.Image, {
-                  glyph: 'rectangle',
-                  embedSVG: true
-                }).addClass(self.myClass('element-row-icon')).end()
-              }).
-              callIfElse(flowName, function() { this.add(flowName); }, function() { this.start('i').add('Unnamed'); }).
-            end().
-            callIf(data.flowParent, function() {
-              this.start().addClass('close').startContext({ data: data }).tag(self.CLOSE).endContext().end();
-            }).
-          end();
-      }));
-      this.add(data.dynamic(function (flowChildren) {
-        this.forEach(flowChildren, d => {
-          this.call(self.branch, [self, d, depth+1]);
-        });
-      }))
-    }
-  ],
-
-  actions: [
-    {
-      name: 'close',
+      name: 'fullScreen',
       label: '',
-      themeIcon: 'close',
-      buttonStyle: 'TERTIARY',
-      size: 'SMALL',
-      code: function() { this.flowParent.removeFlowChild(this); }
-    },
-    {
-      name: 'menuControl',
-      label: '',
-      ariaLabel: 'Open/Close Menu',
-      themeIcon: 'sidebar',
-      buttonStyle: 'TERTIARY',
-      size: 'SMALL',
+      themeIcon: 'fullScreen',
+      buttonStyle: foam.u2.ButtonStyle.SECONDARY,
       code: function() {
-        this.isMenuOpen = ! this.isMenuOpen;
+        let doc = window.document;
+        let elem = doc.documentElement;
+
+        if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+          if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+          } else if (elem.webkitRequestFullscreen) { /* Safari */
+            elem.webkitRequestFullscreen();
+          } else if (elem.msRequestFullscreen) { /* IE11 */
+            elem.msRequestFullscreen();
+          }
+        } else {
+          if (doc.exitFullscreen) {
+            doc.exitFullscreen();
+          } else if (doc.webkitExitFullscreen) { /* Safari */
+            doc.webkitExitFullscreen();
+          } else if (doc.msExitFullscreen) { /* IE11 */
+            doc.msExitFullscreen();
+          }
+        }
       }
     }
   ]
@@ -468,7 +364,7 @@ foam.CLASS({
       padding: 4px;
     }
     ^:not(^hidePrompts) {
-      border-top: 1px solid #999;
+      border-bottom: 1px solid $borderLight;
       padding: 8px 16px;
     }
     ^output {
@@ -594,11 +490,11 @@ foam.CLASS({
       overflow: auto;
     }
     ^header {
-      padding: 10px;
+      padding: 5px 24px;
       height: fit-content;
       max-height: 64px;
       background-color: $white;
-      border-bottom: 1px solid $grey200;
+      border-bottom: 1px solid $borderLight;
     }
     ^l {
       padding: 4px;
@@ -607,7 +503,7 @@ foam.CLASS({
       border-right: 1px solid $grey200;
     }
     ^middle-holder {
-      padding: 16px;
+      padding: 16px 16px 0 16px;
       width: 100%;
       background-color: $grey100;
       overflow: auto;
@@ -625,11 +521,14 @@ foam.CLASS({
       transition: width 0.1s;
     }
     ^resize-handle {
-      width: 6px;
+      width: 2px;
       cursor: ew-resize;
-      background: $primary100;
+      background: $borderLight;
       height: 100%;
       z-index: 10;
+    }
+    ^resize-handle:hover, ^resize-handle:active {
+      background: $primary500;
     }
 
     ^r .foam-core-reflow-SinkView, .foam-u2-view-IntView {
@@ -641,7 +540,8 @@ foam.CLASS({
     }
 
     ^menuClosed {
-     width: fit-content;
+     width: 60px!important;
+     transition: width 0.2s cubic-bezier(0.4,0,0.2,1);
     }
 
     ^r .foam-u2-view-TitledArrayView-value-view-container {
@@ -663,7 +563,7 @@ foam.CLASS({
     }
     @media (min-width: /*%DISPLAYWIDTH.XL%*/ 1280px ) {
       ^middle-holder {
-        padding: 24px;
+        padding: 24px 24px 0 24px;
       }
     }
   `,
@@ -681,6 +581,11 @@ foam.CLASS({
       class: 'Int',
       name: 'rightWidth',
       value: 300
+    },
+    {
+      class: 'Int',
+      name: 'leftWidth',
+      value: 300
     }
   ],
 
@@ -691,26 +596,31 @@ foam.CLASS({
         addClass().
         start('div', {}, this.header$).addClass(this.myClass('header')).show(this.showHeader$).end().
         start().addClass(this.myClass('flex-container')).
-          start('div', {}, this.left$)
-            .addClass(this.myClass('l'))
-            .enableClass(this.myClass('menuClosed'), this.isMenuOpen$.map(open => !open))
-            .show(this.showLeft$)
-          .end().
-          start().addClass(this.myClass('middle-holder'))
-            .start('div', {}, this.middle$).addClass(this.myClass('m')).end()
-          .end()
+          start('div', {}, this.left$).
+            addClass(this.myClass('l')).
+            enableClass(this.myClass('menuClosed'), this.isMenuOpen$.map(open => !open)).
+            show(this.showLeft$).
+            style({ width: this.leftWidth$.map(w => w + 'px') }).
+          end().
+          start('div').
+            addClass(this.myClass('resize-handle')).
+            on('mousedown', this.onLeftResizeStart).
+          end().
+          start().addClass(this.myClass('middle-holder')).
+            start('div', {}, this.middle$).addClass(this.myClass('m')).end().
+          end().
           // --- Resize handle ---
-          .start('div')
-            .addClass(this.myClass('resize-handle'))
-            .on('mousedown', this.onResizeStart)
-          .end()
+          start('div').
+            addClass(this.myClass('resize-handle')).
+            on('mousedown', this.onResizeStart).
+          end().
           // --- Right sidebar ---
-          .start('div', {}, this.right$)
-            .addClass(this.myClass('r'))
-            .style({ width: this.rightWidth$.map(w => w + 'px') })
-            .show(this.showRight$)
-          .end()
-        .end();
+          start('div', {}, this.right$).
+            addClass(this.myClass('r')).
+            style({ width: this.rightWidth$.map(w => w + 'px') }).
+            show(this.showRight$).
+          end().
+        end();
     },
   ],
   listeners: [
@@ -732,6 +642,30 @@ foam.CLASS({
 
       window.addEventListener('mousemove', onMouseMove);
       window.addEventListener('mouseup', onMouseUp);
+    },
+    function onLeftResizeStart(e) {
+      var self = this;
+      var startX = e.clientX;
+      var startWidth = this.leftWidth;
+
+      function onMouseMove(e) {
+        var newWidth = startWidth + (e.clientX - startX);
+        if ( newWidth <= 150 ) {
+          self.isMenuOpen = false;
+          self.leftWidth = 60;
+        } else {
+          self.isMenuOpen = true;
+          self.leftWidth = newWidth;
+        }
+      }
+
+      function onMouseUp() {
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+      }
+
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
     }
   ]
 
@@ -741,8 +675,9 @@ foam.CLASS({
 foam.ENUM({
   package: 'foam.core.reflow',
   name: 'FlowMode',
-  values: [ 'EDIT', 'VIEW', 'RO', 'CONSOLE' ]
+  values: [ 'EDIT', 'VIEW', 'CONSOLE' ]
 });
+
 
 
 foam.CLASS({
@@ -750,13 +685,15 @@ foam.CLASS({
   name: 'Console',
   extends: 'foam.u2.Controller',
 
-  mixins: [ 'foam.core.reflow.Flowable', 'foam.u2.memento.Memorable' ],
+  implements: [ 'foam.core.reflow.Flowable' ],
+  mixins: [ 'foam.u2.memento.Memorable' ],
 
   requires: [
     'foam.core.reflow.ReflowHeader',
     'foam.core.reflow.ReactiveSectionedDetailView',
     'foam.core.reflow.RightSidebarOutputView',
     'foam.core.reflow.ReflowToolBar',
+    'foam.core.reflow.ToolbarControl',
     'foam.core.reflow.Block',
     'foam.core.reflow.Flow',
     'foam.core.reflow.FlowMode',
@@ -787,6 +724,9 @@ foam.CLASS({
     'flowScope as scope',
     'history_',
     'log',
+    'mementoMgr',
+    'moveFlowChild',
+    'moveFlowChildAfter',
     'out',
     'save',
     'scrollToBottom',
@@ -812,20 +752,16 @@ foam.CLASS({
       width: 100%;
       align-items: center;
       position: sticky;
+      justify-content: space-between;
       bottom: 0;
-      padding: 10px 8px;
-    }
-    ^input-field, ^input-field ^input {
-      background: $backgroundSecondary;
+      padding: 10px 16px;
+      border-top: 1px solid $borderLight;
     }
     ^output {
       flex: 1;
       overflow: auto;
       text-align: left;
       width: 100%
-    }
-    ^input-field .property-input {
-      border: none !important;
     }
     ^ .foam-u2-view-ValueView {
       min-width: 220px;
@@ -839,10 +775,17 @@ foam.CLASS({
     ^rightBar {
       display: flex;
       flex-direction: column;
- 
     }
-
-
+    ^input-field-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 80%;
+    }
+    ^error {
+      background: $backgroundDestructiveTertiary!important;
+      color: $textDestructive;
+    }
   `,
 
   properties: [
@@ -872,6 +815,15 @@ foam.CLASS({
       }
     },
     {
+      name: 'treeRowRenderer',
+      value: function(e) {
+        if ( this.flowName )
+          e.add(this.flowName);
+        else
+          e.start('i').add('Unnamed');
+      }
+    },
+    {
       class: 'String',
       name: 'input',
       view: {
@@ -892,20 +844,25 @@ foam.CLASS({
       memorable: true
     },
     {
+      class: 'String',
+      name: 'promptMode',
+      value: 'Standard'
+    },
+    {
       name: 'showPrompts',
       value: true,
       expression: function(flowMode) {
         return flowMode === this.FlowMode.EDIT;
       },
       preSet: function(_, n) { return n === 'false' ? '' : n; },
-      memorable: true
+      // memorable: true
     },
     {
       name: 'showInput',
       value: true,
       preSet: function(_, n) { return n === 'false' ? '' : n; },
       expression: function(flowMode) {
-        return flowMode != this.FlowMode.VIEW && flowMode != this.FlowMode.RO;
+        return flowMode != this.FlowMode.VIEW;
       },
       memorable: true
     },
@@ -970,7 +927,8 @@ foam.CLASS({
       factory: function() {
         return foam.memento.MementoMgr.create({memento$: this.value.script$, position$: this.value.revision$});
       }
-    }
+    },
+    'flowErrors_'
   ],
 
   methods: [
@@ -1002,7 +960,7 @@ foam.CLASS({
 
         await this.currentBlock.value?.onLoad?.();
       }
-      
+
       // Call postLoad after all blocks have executed
       await this.eval_('postLoad');
     },
@@ -1036,7 +994,7 @@ foam.CLASS({
 
       this.flowName$.sub(() => this.refreshFlowScope());
       this.value$.sub(() => this.refreshFlowScope());
-
+      this.flowErrors_$.follow(this.value.errors_$);
 
       globalThis.shell = this; // for debugging
 
@@ -1064,7 +1022,6 @@ foam.CLASS({
       this.value.script$.sub(this.onScriptChange);
 
       this.flowChildren$.sub(this.onFlowChildrenChange);
-
 
       var layout = this.start(this.Layout);
 
@@ -1096,9 +1053,14 @@ foam.CLASS({
     },
 
     function renderToolbar(self) {
-      this.select(self.toolbarControlDAO, function(c) {
-        this.tag({class: c.view});
-      });
+      self.toolbarControlDAO.where(self.EQ(self.ToolbarControl.TOOLBAR, self.promptMode))
+        .select().then(result => {
+          result.array
+            .sort((a, b) => (a.order || 0) - (b.order || 0))
+            .forEach(c => {
+              this.tag({class: c.view, data: self});
+            });
+        });
     },
 
     function renderSelf(self) {
@@ -1109,23 +1071,24 @@ foam.CLASS({
           start('span').
             show(self.showInput$).
             addClass(self.myClass('input-field')).
-            start('b').style({ display: 'flex', 'white-space': 'pre'}).
-              call(self.renderToolbar, [self]).
-              add(' >').
-            end().
-            start(self.INPUT, null, self.input_$).
-              addClass(self.myClass('input')).
-              on('keyup', e => { if ( e.key == 'Enter' || e.keyCode == 13 ) self.onInput(); }).
-            end().
-//            tag(self.ON_INPUT).
+            add(self.dynamic(function(promptMode) {
+              return this.start().addClass(self.myClass('input-field-container')).
+                        call(self.renderToolbar, [self]).
+                      end()
+            }))
+            .start({
+              class: 'foam.u2.view.ChoiceView',
+              data$: self.promptMode$,
+              choices: ['Standard', 'Advanced'] // TODO: get dynamic from toolbarDAO to create later
+            })
+              .addClass(self.myClass('prompt-mode-choice'))
+            .end().
           end().
-          start(self.ReflowToolBar, { data: self }).show(self.showPrompts$).end().
         end();
-
 
         // These observers might cause scroll issues later when queries in the console can be edited
         // In that case there should be an explicit flag to only do the scroll when the query is submitted
-      // from the main console input
+        // from the main console input
       /*
         const resizeObserver = new ResizeObserver(this.scrollToBottom.bind(this));
         var observer = new MutationObserver(function(mutations) {
@@ -1186,6 +1149,13 @@ foam.CLASS({
       // Add binding for this
       s[this.flowName] = this.value;
 
+      // Add shortname bindings for DAO children
+      this.flowChildren.forEach(c => {
+        if ( c.value && c.flowName.endsWith('DAO') ) {
+          s[c.flowName.substring(0, c.flowName.length-3)] = foam.lang.Holder.isInstance(c.value) ? c.value.value : c.value;
+        }
+      });
+
       // Add bindings for children
       this.flowChildren.forEach(c => {
         if ( c.value ) {
@@ -1241,6 +1211,10 @@ foam.CLASS({
           } else {
             console.log(x);
             block.flowName = this.createFlowChildName('error');
+            block.value = foam.lang.StringHolder.create({value: x.toString()});
+            block.treeRowRenderer = function(e) {
+              e.parentNode.addClass(self.myClass('error'));
+              e.add(this.flowName); }
           }
         }
 
@@ -1279,8 +1253,6 @@ foam.CLASS({
         }
       }
 
-      this.input_.focus();
-
       /*
       this.setTimeout(() => this.scrollToBottom(), 16);
       this.setTimeout(() => this.scrollToBottom(), 32);
@@ -1300,6 +1272,38 @@ foam.CLASS({
 
     function removeFlowChild_(c) {
       c.remove();
+    },
+
+    function moveFlowChild(childName, parent) {
+      // TODO: prevent cycles
+      console.log('moveFlowChild', childName, parent.flowName);
+      // TODO: findFlowChildByName needs to work recursively
+      var child = this.findFlowChildByName(childName);
+      child.flowParent.removeFlowChild(child);
+      parent.addFlowChild(child);
+    },
+
+    function moveFlowChildAfter(childName, target) {
+      var children = [...this.flowChildren];
+
+      var findPos = n => {
+        for ( var i = 0 ; i < children.length ; i++ ) {
+          if ( children[i] === n ) return i+1;
+        }
+        return 0;
+      };
+      console.log('moveFlowChildAfter', childName, target.flowName);
+
+      var child = this.findFlowChildByName(childName);
+      var i = findPos(child);
+      console.log('removing', i);
+      children.splice(i-1, 1);
+      i = findPos(target);
+      console.log('inserting', i);
+      children.splice(i, 0, child);
+      this.flowChildren = children;
+      this.onFlowChildrenChange();
+      this.generateScript();
     },
 
     function save() {
@@ -1335,6 +1339,16 @@ foam.CLASS({
       });
 
       this.value.script = json.stringify(this.flowChildren);
+    },
+
+    function maybeRegenScript() {
+//      if ( this.feedback_ ) return;
+      this.feedback_ = true;
+      try {
+        this.generateScript();
+      } finally {
+        this.feedback_ = false;
+      }
     }
   ],
 
@@ -1360,6 +1374,7 @@ foam.CLASS({
       // You can do this.showPrompts = true|false; from flow scripts
       // You can do this.showInput = true|false; from flow scripts
       code: function() {
+        this.showPrompts = undefined;
         if ( this.flowMode !== this.FlowMode.READONLY ) {
           this.flowMode = { EDIT: this.FlowMode.VIEW, VIEW: this.FlowMode.CONSOLE, CONSOLE: this.FlowMode.EDIT }[this.flowMode.name];
         }
@@ -1444,13 +1459,16 @@ foam.CLASS({
         if ( this.feedback_ ) return;
         this.feedback_ = true;
         try {
+          var currentBlockName = (this.selected || this).flowName;
+
           this.clearFlow();
-          var currentBlockName = this.selected ? this.selected.flowName : this.flowName;
 
           var script = this.value.script;
-          this.includeScript(script);
+          await this.includeScript(script);
 
-          this.selected = currentBlockName == this.flowName ? this : this.findFlowChildByName(currentBlockName) || this;
+          this.selected = ( currentBlockName == this.flowName ) ?
+            this :
+            ( this.findFlowChildByName(currentBlockName) || this );
         } finally {
           this.feedback_ = false;
         }
@@ -1458,14 +1476,38 @@ foam.CLASS({
     },
     {
       name: 'onFlowChildrenChange',
-      isFramed: true,
-      code: async function() {
-        this.feedback_ = true;
-        try {
-          this.generateScript();
-        } finally {
-          this.feedback_ = false;
-        }
+      isMerged: true,
+      delay: 250,
+      code: function() {
+// if ( this.feedback_ ) return;
+        if ( this.flowChildrenSub_ ) this.flowChildrenSub_.detach();
+        this.flowChildrenSub_ = foam.lang.FObject.create();
+        this.flowChildren.forEach(c => {
+          var prev;
+          if ( c.value ) {
+            this.flowChildrenSub_.onDetach(c.value.sub(this.onFlowChildChange));
+
+            // TODO: this is a little hackish, it would be better if DAOPrompt tracked
+            // that itself and updated its own hidden revision property
+            if ( foam.core.reflow.DAOPrompt.isInstance(c.value) ) {
+              this.flowChildrenSub_.onDetach(c.value.select$.sub(() => {
+                prev?.detach();
+                this.flowChildrenSub_.onDetach(c.value.select.sub(this.onFlowChildChange));
+              }));
+            }
+          }
+        });
+
+        this.maybeRegenScript();
+      }
+    },
+    {
+      name: 'onFlowChildChange',
+      isMerged: true,
+      delay: 2000,
+      code: function() {
+// if ( this.feedback_ ) return;
+       this.maybeRegenScript();
       }
     }
   ]

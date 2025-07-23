@@ -47,6 +47,7 @@ foam.CLASS({
 
   imports: [
     'auth?',
+    'columnStorage',
     'config? as importedConfig',
     'filteredTableColumns?',
     'stack?',
@@ -125,12 +126,12 @@ foam.CLASS({
     {
       name: 'selectedColumnNames',
       documentation: `Property responsible for deciding what columns to use when tableView is rendered
-        Order of precedece: Memento -> localStorage -> default cols.
-        Gets updated when 'columns' changes and tries to fetch the latest value from localStorage.
+        Order of precedece: Memento -> columnStorage (localStorage) -> default cols.
+        Gets updated when 'columns' changes and tries to fetch the latest value from columnStorage.
         Can also be set by any column config view to change the current columns loaded by the table`,
       memorable: true,
       expression: function(columns, of) {
-        var ls = JSON.parse(localStorage.getItem(of.id))?.map(c => foam.Array.isInstance(c) ? c[0] : c)
+        var ls = JSON.parse(this.columnStorage.getItem(of.id))?.map(c => foam.Array.isInstance(c) ? c[0] : c)
         return ls || columns;
       },
       adapt: function(_,n) {
@@ -144,7 +145,7 @@ foam.CLASS({
         widths here should propogate changes to the rest of the view and LS`,
       factory: function() {
         var local = {};
-        JSON.parse(localStorage.getItem(this.of.id))?.map(c => {
+        JSON.parse(this.columnStorage.getItem(this.of.id))?.map(c => {
           foam.Array.isInstance(c) ?
           local[c[0]] = c[1] :
           local[c] = undefined;
@@ -340,7 +341,7 @@ foam.CLASS({
       this.groupBy = column;
     },
     function updateColumns() {
-      this.updateLocalStorage();
+      this.updateColumnStorage();
 
       this.isColumnChanged = ! this.isColumnChanged;
     },
@@ -360,7 +361,7 @@ foam.CLASS({
       this.isColumnChanged$.sub(this.updateColumns_);
       this.updateColumns_();
 
-      this.onDetach(this.colWidthUpdated$.sub(this.updateLocalStorage));
+      this.onDetach(this.colWidthUpdated$.sub(this.updateColumnStorage));
       if ( view.editColumnsEnabled )
         var editColumnView = foam.u2.view.EditColumnsView.create({data:view}, this);
 
@@ -522,12 +523,12 @@ foam.CLASS({
       }
     },
     {
-      name: 'updateLocalStorage',
+      name: 'updateColumnStorage',
       isMerged: true,
       mergeDelay: 5000,
       code: function() {
-        localStorage.removeItem(this.of.id);
-        localStorage.setItem(this.of.id, JSON.stringify(this.selectedColumnNames.map(c => {
+        this.columnStorage.removeItem(this.of.id);
+        this.columnStorage.setItem(this.of.id, JSON.stringify(this.selectedColumnNames.map(c => {
           var name = foam.String.isInstance(c) ? c : c.name;
           var size = this.selectedColumnsWidth[name] == undefined ? undefined : this.selectedColumnsWidth[name];
           return [name, size];
