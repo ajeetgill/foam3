@@ -862,7 +862,7 @@ foam.CLASS({
       value: true,
       preSet: function(_, n) { return n === 'false' ? '' : n; },
       expression: function(flowMode) {
-        return flowMode != this.FlowMode.VIEW;
+        return flowMode != this.FlowMode.VIEW && flowMode != this.FlowMode.READONLY;
       },
       memorable: true
     },
