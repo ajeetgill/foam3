@@ -94,7 +94,7 @@ foam.CLASS({
               .forEach(data || [], function(e, i) {
                 var row = self.Row.create({ index: i, value: e });
                 var isCollapsed = collapsed[i] === undefined ? true : collapsed[i];
-                console.log(row.value$);
+                   
                 this
                   .startContext({ data: row })
                     .start()
@@ -150,8 +150,7 @@ foam.CLASS({
 
   listeners: [
     function toggleCollapse(idx) {
-      this.collapsed[idx] = ! this.collapsed[idx];
-      this.collapsed = Object.assign({}, this.collapsed);
+      this.collapsed$set(idx, ! this.collapsed[idx])
     },
   ]
 });
