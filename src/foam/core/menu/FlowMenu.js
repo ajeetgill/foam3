@@ -28,7 +28,7 @@ foam.CLASS({
       var view = {
         class: 'foam.core.reflow.Console',
         flowName: this.flow,
-        flowMode: this.FlowMode.RO
+        flowMode: this.FlowMode.READONLY
       };
 
       return view;

@@ -675,7 +675,7 @@ foam.CLASS({
 foam.ENUM({
   package: 'foam.core.reflow',
   name: 'FlowMode',
-  values: [ 'EDIT', 'VIEW', 'CONSOLE' ]
+  values: [ 'EDIT', 'VIEW', 'CONSOLE', 'READONLY' ]
 });
 
 
