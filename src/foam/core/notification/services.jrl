@@ -288,3 +288,16 @@ p({
       .build();
   """
 })
+
+p({
+  class: "foam.core.boot.CSpec",
+  name: "notificationAgency",
+  lazy: false,
+  serve: false,
+  serviceScript: """
+    return new foam.core.pool.ThreadPoolAgency.Builder(x)
+      .setPrefix("notification")
+      .setNumberOfThreads(8)
+      .build();
+  """
+})

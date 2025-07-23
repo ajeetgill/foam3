@@ -1271,6 +1271,7 @@ foam.POM({
     { name: "foam/lang/AbstractListPropertyInfo" },
     { name: "foam/lang/AbstractEnumPropertyInfo" },
     { name: "foam/lang/MultitonInfo" },
+    { name: "foam/lang/VirtualThreadAgency" },
     { name: "foam/lib/parse/Join" },
     { name: "foam/lib/parse/Until" },
     { name: "foam/lib/parse/CSVParser" },
