@@ -609,6 +609,47 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.core.reflow',
+  name: 'PivotByDAOAgent',
+  extends: 'foam.core.reflow.AbstractDAOAgent',
+
+  requires: [ 'foam.core.reflow.PivotBy' ],
+
+  properties: [
+    {
+      name: 'xProps',
+      view: function(_, X) {
+       return { class: 'foam.core.reflow.PropertyListView', of: X.data.of };
+      }
+    },
+    {
+      name: 'yProps',
+      view: function(_, X) {
+       return { class: 'foam.core.reflow.PropertyListView', of: X.data.of };
+      }
+    },
+    { name: 'sink', view: { class: 'foam.core.reflow.SinkView', choice: 'Count' } }
+  ],
+
+  methods: [
+    function value(s) { return s; },
+    function createSink() {
+      var xProps = [...new Set(this.xProps.split(','))].map(p => this.of?.axiomMap_[p]);
+      var yProps = [...new Set(this.yProps.split(','))].map(p => this.of?.axiomMap_[p]);
+      return this.PivotBy.create({
+        yFunc: xProps,
+        xFunc: yProps,
+        acc:   this.sink.createSink()
+      });
+    },
+    function addToE(e) {
+      e.startContext({data: this}).start().style({paddingLeft: '12px', display: 'flex'}).add(this.X_PROPS, this.Y_PROPS, this.SINK);
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.core.reflow',
   name: 'ColumnDAOAgent',
   extends: 'foam.core.reflow.AbstractSinkDAOAgent',
 
@@ -772,6 +813,7 @@ foam.CLASS({
         if ( a == 'Duplicate' ) return;
         if ( a == 'GroupBy' ) return;
         if ( a == 'GridBy' ) return;
+        if ( a == 'PivotBy' ) return;
         if ( a == 'Pie' ) return;
         if ( a == 'Min' ) return;
         if ( a == 'Max' ) return;
