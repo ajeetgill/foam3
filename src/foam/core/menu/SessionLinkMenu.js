@@ -23,18 +23,6 @@ foam.CLASS({
       this.link = url;
 
       this.SUPER();
-      /*
-      if ( this.openNewTab ) {
-        this.window.open(url, '_blank');
-      } else {
-        this.window.location = url;
-      }
-      if ( menu.analyticsMessage ) {
-        X.postToWindow?.post({ step: menu.analyticsMessage });
-      }*/
-/*    },
-    function launch(X, menu) {
-      this.select(X, menu);*/
     }
   ]
 });
