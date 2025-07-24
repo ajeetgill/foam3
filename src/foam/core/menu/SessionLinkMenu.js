@@ -17,9 +17,17 @@ foam.CLASS({
 
   methods: [
     function select(X, menu) {
-      var url = window.location.origin;
+      var url = "";
+      if ( ! this.link.includes("http") ) {
+        url = window.location.origin;
+      }
       url += this.link;
-      url += "?sessionId=" + localStorage.defaultSession;
+      if ( ! this.link.includes("?") ) {
+        url += "?";
+      } else {
+        url += "&";
+      }
+      url += "sessionId=" + localStorage.defaultSession;
       this.link = url;
 
       this.SUPER();
