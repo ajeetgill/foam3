@@ -7,12 +7,12 @@ foam.CLASS({
       class: 'Function',
       name: 'fromCSV',
       value: function(str) {
-        return prop.fromString(str);
+        return this.fromString(str);
       }
     }
   ]
 });
-foam.POM({
+foam.CLASS({
   name: 'IntFromCSVRefines',
   refines: 'foam.lang.Int',
   properties: [
@@ -20,13 +20,13 @@ foam.POM({
       class: 'Function',
       name: 'fromCSV',
       value: function(str) {
-        return this.fromString(str ? str.replace(/,/g, '') : str);
+        return this.fromString(str?.replace(/,/g, ''));
       }
     }
   ]
 });
 
-foam.POM({
+foam.CLASS({
   name: 'FloatFromCSVRefines',
   refines: 'foam.lang.Float',
   properties: [
@@ -34,13 +34,13 @@ foam.POM({
       class: 'Function',
       name: 'fromCSV',
       value: function(str) {
-        return this.fromString(str ? str.replace(/,/g, '') : str);
+        return this.fromString(str?.replace(/,/g, ''));
       }
     }
   ]
 });
 
-foam.POM({
+foam.CLASS({
   name: 'LongFromCSVRefines',
   refines: 'foam.lang.Long',
   properties: [
@@ -48,13 +48,13 @@ foam.POM({
       class: 'Function',
       name: 'fromCSV',
       value: function(str) {
-        return this.fromString(str ? str.replace(/,/g, '') : str);
+        return this.fromString(str?.replace(/,/g, ''));
       }
     }
   ]
 });
 
-foam.POM({
+foam.CLASS({
   name: 'DoubleFromCSVRefines',
   refines: 'foam.lang.Double',
   properties: [
@@ -62,7 +62,7 @@ foam.POM({
       class: 'Function',
       name: 'fromCSV',
       value: function(str) {
-        return this.fromString(str ? str.replace(/,/g, '') : str);
+        return this.fromString(str?.replace(/,/g, ''));
       }
     }
   ]
