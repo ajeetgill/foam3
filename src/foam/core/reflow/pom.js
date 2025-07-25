@@ -6,6 +6,7 @@ foam.POM({
     { name: 'CellsSink',               flags: 'js|java' },
     { name: 'Check',                   flags: 'js' },
     { name: 'CitationSink',            flags: 'js|java' },
+    { name: 'FlowableTree',            flags: 'js' },
     { name: 'Console',                 flags: 'js' },
     { name: 'ConsoleZACClient',        flags: 'js' },
     { name: 'DAOCreate',               flags: 'js' },
@@ -52,6 +53,9 @@ foam.POM({
     { name: 'lib',                     flags: 'js' },
     { name: 'Mapping',                 flags: 'js|java' },
     { name: 'ToolbarControl',          flags: 'js|java' },
-    { name: 'control/HelpControl',     flags: 'js' }
+    { name: 'control/HelpControl',     flags: 'js' },
+    { name: 'control/CollectionsControl', flags: 'js' },
+    { name: 'control/FlowsControl',     flags: 'js' },
+    { name: 'control/ComponentsControl', flags: 'js' }
   ]
 });
