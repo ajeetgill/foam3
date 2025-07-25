@@ -127,7 +127,7 @@ foam.CLASS({
           .on('mouseover', () => self.currentHoverCol = key)
           .on('mouseleave', function() { self.currentHoverCol = undefined; self.currentHoverRow = undefined; })
           .enableClass(self.myClass('highlighted-col'), self.slot((currentHoverCol) => currentHoverCol === key || currentHoverCol?.startsWith(key) || key.startsWith(currentHoverCol)))
-          .add(keys[i].toString())
+          .add(keys[i])
         .end();
         if ( depth == colDepth - 1 ) this.colIndexMap.push(key);
 
@@ -153,7 +153,7 @@ foam.CLASS({
             var el = foam.u2.Element.create({nodeName: 'th'});
             el.attrs({ 'rowspan' : ret.rowSpan })
               .addClass(self.myClass('th'))
-              .add(rowKeys[i].toString())
+              .add(rowKeys[i])
               .on('mouseover', () => self.currentHoverRow = key)
               .on('mouseleave', () => self.currentHoverRow = undefined)
               .enableClass(self.myClass('highlighted-row'), self.slot((currentHoverRow) => currentHoverRow === key || key.startsWith(currentHoverRow) || currentHoverRow?.startsWith(key) ));
@@ -168,10 +168,10 @@ foam.CLASS({
             .on('mouseover', () => self.currentHoverRow = key)
             .on('mouseleave', function() { self.currentHoverCol = undefined; self.currentHoverRow = undefined; })
             .enableClass(self.myClass('highlighted-col'), self.slot((currentHoverRow) => currentHoverRow === key || key.startsWith(currentHoverRow) || currentHoverRow?.startsWith(key) ))
-            .add(rowKeys[i].toString())
+            .add(rowKeys[i])
             .end();
           if ( self.colIndexMap?.length ) {
-            var map = self.flattenMap(rows[rowKeys[i]]);
+            var map = self.flattenMap(rows[rowKeys[i]], self.data.xFunc.length);
             row.forEach(self.colIndexMap, function(col) {
               const c = col;
               row.start('td')
@@ -209,7 +209,7 @@ foam.CLASS({
     },
 
     function renderColVals(self, table, cols) {
-      cols = this.flattenMap(cols);
+      cols = this.flattenMap(cols, self.data.xFunc.length);
       var row = table.start('tr').addClass(self.myClass('tr'));
       for ( const key in cols ) {
         const val = cols[key];
@@ -271,13 +271,13 @@ foam.CLASS({
     },
 
     // flatten a nested map into a simple one, where the keys are paths of the nested vals
-    function flattenMap(obj, prefix = '') {
+    function flattenMap(obj, colDepth, prefix = '') {
       if ( ! Object.keys(obj)?.length ) return null;
       var map = {};
       for (var key in obj) {
         var val = obj[key];
-        if (typeof val === 'object' && val !== null) {
-          Object.assign(map, flattenMap(val, prefix + key));
+        if ( colDepth > 1 && typeof val === 'object' && val !== null ) {
+          Object.assign(map, flattenMap(val, colDepth - 1, prefix + key));
         } else {
           map[prefix + key] = val;
         }
