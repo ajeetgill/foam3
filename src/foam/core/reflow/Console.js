@@ -673,7 +673,7 @@ foam.CLASS({
 foam.ENUM({
   package: 'foam.core.reflow',
   name: 'FlowMode',
-  values: [ 'EDIT', 'VIEW', 'CONSOLE' ]
+  values: [ 'CONSOLE', 'PRESENTATION' ]
 });
 
 
@@ -843,7 +843,7 @@ foam.CLASS({
       class: 'Enum',
       of: 'foam.core.reflow.FlowMode',
       name: 'flowMode',
-      factory: function() { return this.FlowMode.EDIT; },
+      value: 'CONSOLE',
       memorable: true
     },
     {
@@ -855,7 +855,7 @@ foam.CLASS({
       name: 'showPrompts',
       value: true,
       expression: function(flowMode) {
-        return flowMode === this.FlowMode.EDIT;
+        return flowMode === this.FlowMode.CONSOLE;
       },
       preSet: function(_, n) { return n === 'false' ? '' : n; },
       // memorable: true
@@ -865,7 +865,7 @@ foam.CLASS({
       value: true,
       preSet: function(_, n) { return n === 'false' ? '' : n; },
       expression: function(flowMode) {
-        return flowMode != this.FlowMode.VIEW;
+        return flowMode == this.FlowMode.CONSOLE;
       },
       memorable: true
     },
@@ -1354,11 +1354,8 @@ foam.CLASS({
   actions: [
     {
       name: 'helpKey',
-      isAvailable: function(input_) {
-          if ( this.flowMode === this.FlowMode.READONLY ) {
-          return false;
-        }
-        return input_.element_ === document.activeElement;
+      isAvailable: function(flowMode, input_) {
+        return this.flowMode == this.FlowMode.CONSOLE && input_.element_ === document.activeElement;
       },
       code: function() { this.help(); },
       keyboardShortcuts: [ 'f1' ]
@@ -1374,9 +1371,9 @@ foam.CLASS({
       // You can do this.showInput = true|false; from flow scripts
       code: function() {
         this.showPrompts = undefined;
-        if ( this.flowMode !== this.FlowMode.READONLY ) {
-          this.flowMode = { EDIT: this.FlowMode.VIEW, VIEW: this.FlowMode.CONSOLE, CONSOLE: this.FlowMode.EDIT }[this.flowMode.name];
-        }
+        this.flowMode = this.flowMode == this.FlowMode.CONSOLE ?
+          this.FlowMode.PRESENTATION :
+          this.FlowMode.CONSOLE ;
       },
       keyboardShortcuts: [ 'escape' ]
     },
