@@ -44,6 +44,7 @@ foam.CLASS({
 
     /* Cell styling - both TH and TD */
     ^th, ^td {
+      text-align: center;
       padding: .8rem 1rem;
       transition: background-color 0.15s ease;
       border: 1px solid $borderDefault;
@@ -53,11 +54,10 @@ foam.CLASS({
     ^th {
       background-color: $backgroundDefault;
       font-weight: bold;
-      text-align: center;
       text-wrap-mode: nowrap;
     }
       
-    ^ td:hover {
+    ^td:hover {
       font-weight: 600;
       background: $highlightCell;
       color: $highlightCell$foreground;
