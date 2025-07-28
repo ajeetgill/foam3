@@ -1,3 +1,10 @@
+/**
+ * @license
+ * Copyright 2025 The FOAM Authors. All Rights Reserved.
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
+
 foam.CLASS({
   package: 'foam.lib.csv',
   name: 'PropertyFromCSV',
@@ -26,44 +33,3 @@ foam.CLASS({
   ]
 });
 
-foam.CLASS({
-  name: 'FloatFromCSVRefines',
-  refines: 'foam.lang.Float',
-  properties: [
-    {
-      class: 'Function',
-      name: 'fromCSV',
-      value: function(str) {
-        return this.fromString(str?.replace(/,/g, ''));
-      }
-    }
-  ]
-});
-
-foam.CLASS({
-  name: 'LongFromCSVRefines',
-  refines: 'foam.lang.Long',
-  properties: [
-    {
-      class: 'Function',
-      name: 'fromCSV',
-      value: function(str) {
-        return this.fromString(str?.replace(/,/g, ''));
-      }
-    }
-  ]
-});
-
-foam.CLASS({
-  name: 'DoubleFromCSVRefines',
-  refines: 'foam.lang.Double',
-  properties: [
-    {
-      class: 'Function',
-      name: 'fromCSV',
-      value: function(str) {
-        return this.fromString(str?.replace(/,/g, ''));
-      }
-    }
-  ]
-});
