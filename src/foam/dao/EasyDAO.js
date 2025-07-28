@@ -931,7 +931,7 @@ foam.CLASS({
             jdao.setFilename(getJournalName());
             jdao.setCluster(getCluster() && !getSAF());
             jdao.setWaitReplay(getWaitReplay());
-            jdao.setNdiff(getNDiff());
+            jdao.setNdiff(getNdiff());
             // Setting of delegate must be last as it triggers replay
             jdao.setDelegate(delegate);
             delegate = jdao;
