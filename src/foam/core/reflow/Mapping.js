@@ -130,7 +130,7 @@ foam.CLASS({
       if ( foam.String.isInstance(value) ) value = value.trim();
       
       if ( value !== '' ) {
-        obj[this.property] = value;
+        obj[this.property] = this.handler.fromCSV(value);;
       }
     },
 
