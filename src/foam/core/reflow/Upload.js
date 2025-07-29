@@ -502,7 +502,7 @@ foam.CLASS({
           mapping.process(obj, undefined, rowData);
         } catch (x) {
           // Handle dynamic expression errors gracefully
-          var errorMsg = `Dynamic expression error in property '${mapping.property}': ${x.message}`;
+          var errorMsg = `error: ${mapping.property}': ${x.message}, stack: ${x.stack}`;
           console.error(errorMsg, {
             mapping: mapping,
             expression: mapping.dynamicExpression,

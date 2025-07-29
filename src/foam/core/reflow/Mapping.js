@@ -127,10 +127,13 @@ foam.CLASS({
           break;
       }
       
-      if ( foam.String.isInstance(value) ) value = value.trim();
+      if ( foam.String.isInstance(value) && value != null && value !== undefined ) {
+        value = value.trim();
+      }
       
-      if ( value !== '' ) {
-        obj[this.property] = this.handler.fromCSV(value);;
+      if ( value !== '' && value != null && value !== undefined ) {
+        var handler = this.of && this.of.getAxiomByName(this.property);
+        obj[this.property] = handler.fromCSV(value);
       }
     },
 
