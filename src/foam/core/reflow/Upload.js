@@ -324,6 +324,21 @@ foam.CLASS({
       value: 0
     },
     {
+      class: 'Int',
+      name: 'validationFailures',
+      visibility: 'RO',
+      value: 0,
+      documentation: 'Count of rows that failed validation'
+    },
+    {
+      class: 'FObjectArray',
+      of: 'foam.lang.FObject',
+      name: 'validationErrors',
+      factory: function() { return []; },
+      hidden: true,
+      documentation: 'Array of validation error details for failed rows'
+    },
+    {
       class: 'String',
       name: 'filterStatus',
       visibility: function(where) {
@@ -396,33 +411,6 @@ foam.CLASS({
       }
     },
 
-    function parseColumns(s) {
-      if ( s === this.lastColumns ) return this.mappings;
-      var mappings = [];
-
-      s.trim().split(',').forEach(c => {
-        var originalC = c;
-        if ( c.indexOf(' ') != -1 ) {
-          c = c.split(' ').map((n, i) => { n = n.toLowerCase(); if ( i ) n = foam.String.capitalize(n); return n; }).join('');
-        }
-
-        var prop = this.columnParser.parseString(c);
-        var propertyObj = prop || { name: c };
-        mappings.push(this.createFieldMapping(propertyObj, {
-          id: originalC,
-          fieldName: originalC
-        }));
-        if ( ! prop ) {
-          this.output += '<span style="color:red">Unknown property: ' + c + '</span><br>';
-        }
-      });
-
-      this.mappings = mappings;
-      this.lastColumns = s;
-
-      return this.mappings;
-    },
-
     function generateMappings(fileHeaders) {
       if ( ! this.of ) return;
 
@@ -492,16 +480,32 @@ foam.CLASS({
     function processAllMappings(obj, rowData) {
       if ( ! this.mappings || this.mappings.length === 0 ) return;
 
+      var hasValidationErrors = false;
+      var validationErrorDetails = [];
+
       this.mappings.forEach(mapping => {
         try {
           mapping.process(obj, undefined, rowData);
+          
+          // Check for NaN/invalid values after processing
+          this.validateProcessedValue(obj, mapping.property);
         } catch (x) {
+          hasValidationErrors = true;
+          
           // Handle dynamic expression errors gracefully
-          var errorMsg = `error: ${mapping.property}': ${x.message}, stack: ${x.stack}`;
+          var errorMsg = `error: ${mapping.property}': ${x.message}`;
           console.error(errorMsg, {
             mapping: mapping,
             expression: mapping.dynamicExpression,
             rowData: rowData
+          });
+
+          // Collect validation error details
+          validationErrorDetails.push({
+            field: mapping.property,
+            value: rowData[mapping.fieldName],
+            error: x.message,
+            type: mapping.type
           });
 
           // Add error to output for user visibility
@@ -512,7 +516,32 @@ foam.CLASS({
           obj.errors_.push([mapping, errorMsg]);
         }
       });
+
+      // Track validation statistics
+      if ( hasValidationErrors ) {
+        this.validationFailures++;
+        this.validationErrors.push({
+          rowNumber: this.processing + 1,
+          errors: validationErrorDetails,
+          rowData: rowData
+        });
+      }
     },
+
+    function validateProcessedValue(obj, propertyName) {
+      var value = obj[propertyName];
+      
+      // Check for NaN in numeric fields
+      if ( typeof value === 'number' && (isNaN(value) || !isFinite(value)) ) {
+        throw new Error(`Invalid number (NaN/Infinity/null) in field '${propertyName}'`);
+      }
+      
+      // Check for invalid dates
+      if ( value instanceof Date && isNaN(value.getTime()) ) {
+        throw new Error(`Invalid date in field '${propertyName}'`);
+      }
+    },
+
 
     async function processUploadedFiles() {
       if ( ! this.uploadedFiles || this.uploadedFiles.length === 0 ) {
@@ -565,6 +594,8 @@ foam.CLASS({
       await this.data.removeAll();
       this.processing = 0;
       this.matchedRows = 0;
+      this.validationFailures = 0;
+      this.validationErrors = [];
       this.clear();
       console.time('upload');
       var totalRows = 0;
@@ -632,6 +663,7 @@ foam.CLASS({
             if ( agent ) await self.dao.cmd(agent);
             self.progress = 100;
             console.timeEnd('upload');
+
 
             if ( ! real ) {
               var block = self.block;
