@@ -253,8 +253,9 @@ foam.CLASS({
     },
 
     {
-      class: 'FObjectArray',
-      of: 'foam.core.reflow.Mapping',
+      // having class and of, makes the mapping expression not reactive, even if the post set is there, (somewhere it gets set to empty array)
+      // class: 'FObjectArray',
+      // of: 'foam.core.reflow.Mapping',
       name: 'mappings',
       view: function(_, X) {
         return {
@@ -866,13 +867,6 @@ foam.CLASS({
       isAvailable: function(where) { return !!where; },
       code: function() {
         this.where = '';
-      }
-    },
-    {
-      name: 'resetMappings',
-      isAvailable: function(mappings) { return mappings.length; },
-      code: function() {
-        this.mappings = [];
       }
     }
   ]
