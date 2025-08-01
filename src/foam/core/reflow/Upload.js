@@ -263,7 +263,31 @@ foam.CLASS({
           of: X.data.of
         };
       },
-      factory: function() { return []; },
+      expression: function(of, fileHeaders) {
+        // Auto-calculate mappings from fileHeaders when available
+        // Once explicitly set, this expression stops being reactive (FOAM3 behavior)
+        if (!of || !fileHeaders || fileHeaders.length === 0) return [];
+        
+        // Clean up file headers
+        var cleanHeaders = fileHeaders.filter(function(h) { return h && h.trim(); });
+        if (cleanHeaders.length === 0) return [];
+        
+        // Get all properties for the target model
+        var props = of.getAxiomsByClass(foam.lang.Property)
+          .filter(function(p) { return p.showInPropertyChoice; })
+          .sort(foam.lang.Property.NAME.compare);
+        
+        // Create mappings for all properties with file headers
+        var mappings = [];
+        var self = this;
+        props.forEach(function(prop) {
+          mappings.push(self.createFieldMapping(prop, {
+            fileHeaders: cleanHeaders
+          }));
+        });
+        
+        return mappings;
+      },
       visibility: function(fileHeaders) {
         return fileHeaders && fileHeaders.length > 0 ?
           foam.u2.DisplayMode.RW :
@@ -344,15 +368,8 @@ foam.CLASS({
     {
       name: 'fileHeaders',
       hidden: true,
-      documentation: 'File headers from processed data (CSV columns, XML tags/attributes, DAO properties)',
-      postSet: function(o, n) {
-        // Only auto-generate mappings if no mappings are explicitly set
-        // This prevents overwriting explicitly set mappings from FileUploadConfig
-        if ( this.of && n && JSON.stringify(o) !== JSON.stringify(n) && (!this.mappings || this.mappings.length === 0) ) {
-          this.generateMappings(n);
-        }
-      }
-    }
+      documentation: 'File headers from processed data (CSV columns, XML tags/attributes, DAO properties)'
+    },
   ],
 
   methods: [
@@ -396,55 +413,7 @@ foam.CLASS({
       }
     },
 
-    function parseColumns(s) {
-      if ( s === this.lastColumns ) return this.mappings;
-      var mappings = [];
 
-      s.trim().split(',').forEach(c => {
-        var originalC = c;
-        if ( c.indexOf(' ') != -1 ) {
-          c = c.split(' ').map((n, i) => { n = n.toLowerCase(); if ( i ) n = foam.String.capitalize(n); return n; }).join('');
-        }
-
-        var prop = this.columnParser.parseString(c);
-        var propertyObj = prop || { name: c };
-        mappings.push(this.createFieldMapping(propertyObj, {
-          id: originalC,
-          fieldName: originalC
-        }));
-        if ( ! prop ) {
-          this.output += '<span style="color:red">Unknown property: ' + c + '</span><br>';
-        }
-      });
-
-      this.mappings = mappings;
-      this.lastColumns = s;
-
-      return this.mappings;
-    },
-
-    function generateMappings(fileHeaders) {
-      if ( ! this.of ) return;
-
-      // Clean up file headers
-      var cleanHeaders = fileHeaders && fileHeaders.length > 0 ?
-        fileHeaders.filter(h => h && h.trim()) : [];
-
-      // Get all properties for the target model
-      var props = this.of.getAxiomsByClass(foam.lang.Property)
-        .filter(p => p.showInPropertyChoice)
-        .sort(foam.lang.Property.NAME.compare);
-
-      // Create mappings for all properties with file headers
-      var mappings = [];
-      props.forEach(prop => {
-        mappings.push(this.createFieldMapping(prop, {
-          fileHeaders: cleanHeaders
-        }));
-      });
-
-      this.mappings = mappings;
-    },
 
     function findMatchingHeader(headers, prop) {
       if ( ! headers || headers.length === 0 ) return null;
