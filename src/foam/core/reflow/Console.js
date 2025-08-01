@@ -32,7 +32,7 @@ foam.CLASS({
     { name: 'value' },
     {
       name: 'treeRowRenderer',
-      value: function(e) { e.add(this.flowName); }
+      value: function(e) { this.flowName == 'flow' ? e.add('Flow') : e.add(this.flowName); }
     }
   ],
 
@@ -810,7 +810,8 @@ foam.CLASS({
     {
       class: 'String',
       name: 'flowName',
-      value: 'flow'
+      value: 'flow',
+      getter: function() { return 'flow'; }
     },
     {
       class: 'String',
