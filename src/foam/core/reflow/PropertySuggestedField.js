@@ -7,9 +7,9 @@
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'PropertyOption',
-  
+
   documentation: 'Model for property-based dropdown options',
-  
+
   properties: [
     {
       class: 'String',
@@ -28,6 +28,7 @@ foam.CLASS({
     }
   ]
 });
+
 
 foam.CLASS({
   package: 'foam.core.reflow',
@@ -59,7 +60,7 @@ foam.CLASS({
     'foam.dao.ArrayDAO',
     'foam.u2.Autocompleter'
   ],
-  
+
   implements: [
     'foam.mlang.Expressions'
   ],
@@ -99,16 +100,16 @@ foam.CLASS({
           dao: this.createOptionsDAO(),
           queryFactory: function(str) {
             if ( ! str ) return self.TRUE;
-            
+
             var lastSegment = self.getLastSegment(str);
-            
+
             // If empty (just typed separator), show all options
             if ( ! lastSegment ) {
               return self.TRUE;
             }
-            
-            // Search in label, id and value fields for the last segment 
-            // Search with "id", lets end-user search(type) for "Amount", now Label shows at top, 
+
+            // Search in label, id and value fields for the last segment
+            // Search with "id", lets end-user search(type) for "Amount", now Label shows at top,
             // without this top item was "Bill Amount (billAmtValue)" above "Amount(txnAmtValue)"
             // for end-user, "Amount" label should be at top, if he searches(types) "Amount"
             return self.OR(
