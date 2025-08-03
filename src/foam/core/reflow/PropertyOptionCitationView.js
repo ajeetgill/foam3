@@ -15,11 +15,11 @@ foam.CLASS({
     ^ {
       border-bottom: 1px solid $borderXLight;
     }
-    
+
     ^:last-child {
       border-bottom: none;
     }
-    
+
     ^propertyName {
       font-family: monospace;
       font-size: 12px;
@@ -33,24 +33,22 @@ foam.CLASS({
 
   methods: [
     function render() {
-      
+
       var self = this;
       this
         .addClass(this.myClass())
-        .add(this.slot(function(data) {
-          if ( ! data ) return this.E();
-          
-          var label = data.label || '';
-          var propertyName = data.id || '';
-          
-          return this.E()
-            .start('div')
+        .add(this.data.dynamic(function(id, label) {
+          label = label || '';
+          id    = id    || '';
+
+          return this.
+            start('div')
               .addClass(self.myClass('label'))
               .add(label)
             .end()
             .start('div')
               .addClass(self.myClass('propertyName'))
-              .add(propertyName)
+              .add(id)
             .end();
         }));
     }
