@@ -810,7 +810,8 @@ foam.CLASS({
     {
       class: 'String',
       name: 'flowName',
-      value: 'flow'
+      value: 'flow',
+      getter: function() { return 'flow'; }
     },
     {
       class: 'String',
