@@ -142,6 +142,9 @@ foam.CLASS({
     ^layoutView {
       width: 100%;
     }
+    ^ .property-skip .foam-u2-view-DualView-wrapper {
+      flex-direction: column;
+    }
   `,
 
   properties: [
