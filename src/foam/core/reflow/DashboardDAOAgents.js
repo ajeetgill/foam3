@@ -114,12 +114,7 @@ foam.CLASS({
 
   requires: [
     'foam.dashboard.model.GroupBy',
-    'foam.dashboard.model.VisualizationSize',
-    'foam.mlang.sink.Count',
-    'foam.mlang.sink.Sum',
-    'foam.mlang.sink.Average',
-    'foam.mlang.sink.Min',
-    'foam.mlang.sink.Max'
+    'foam.dashboard.model.VisualizationSize'
   ],
 
   properties: [
@@ -133,56 +128,10 @@ foam.CLASS({
       }
     },
     {
-      class: 'String',
-      name: 'aggregation',
-      value: 'COUNT',
-      view: {
-        class: 'foam.u2.view.ChoiceView',
-        choices: [
-          ['COUNT', 'Count - Count number of records in each group'],
-          ['SUM', 'Sum - Add up values for each group'],
-          ['AVG', 'Average - Calculate average value for each group'],
-          ['MIN', 'Minimum - Find smallest value in each group'],
-          ['MAX', 'Maximum - Find largest value in each group']
-        ]
-      }
-    },
-    {
-      name: 'aggregationProp',
-      view: function(_, X) {
-        return { 
-          class: 'foam.core.reflow.PropertyChoiceView', 
-          forCls: X.data.dao.of,
-          predicate: function(p) {
-            // Only show numeric properties for aggregation
-            return foam.lang.Int.isInstance(p) || 
-                   foam.lang.Long.isInstance(p) || 
-                   foam.lang.Float.isInstance(p) || 
-                   foam.lang.Double.isInstance(p);
-          }
-        };
-      },
-      visibility: function(aggregation) {
-        return aggregation !== 'COUNT' ? 'RW' : 'HIDDEN';
-      }
-    },
-    {
       class: 'Enum',
       of: 'foam.dashboard.model.VisualizationSize',
       name: 'size',
-      value: 'MEDIUM',
-      view: {
-        class: 'foam.u2.view.ChoiceView',
-        choices: [
-          ['TINY', 'Tiny (176px × 358px) - Minimal display'],
-          ['SMALL', 'Small (312px × ~) - Compact view'],
-          ['SMEDIUM', 'Small-Medium (312px × 358px) - Balanced compact'],
-          ['MEDIUM', 'Medium (424px × 356px) - Standard size'],
-          ['LMEDIUM', 'Large-Medium (570px × 450px) - Expanded view'],
-          ['LARGE', 'Large (936px × 528px) - Full display'],
-          ['XLARGE', 'Extra Large (1580px × 698px) - Maximum display']
-        ]
-      }
+      value: 'MEDIUM'
     }
   ],
 
@@ -205,7 +154,7 @@ foam.CLASS({
         dao: this.dao,
         arg1: this.prop.name,
         size: this.size,
-        label: this.prop.label + ' (' + this.aggregation + ')',
+        label: this.prop.label,
         configView: null  // Hide the configuration dropdown
       }, context);
       
@@ -219,8 +168,6 @@ foam.CLASS({
         start().
           style({display: 'flex', gap: '10px', flexWrap: 'wrap'}).
           add('Property: ', this.PROP).
-          add('Aggregation: ', this.AGGREGATION).
-          add('Agg. Property: ', this.AGGREGATION_PROP).
           add('Size: ', this.SIZE).
         end().
       endContext();
@@ -252,7 +199,7 @@ foam.CLASS({
         dao: this.dao,
         arg1: this.prop.name,
         size: this.size,
-        label: this.prop.label + ' (' + this.aggregation + ')',
+        label: this.prop.label,
         configView: null  // Hide the configuration dropdown
       }, context);
       
@@ -262,6 +209,7 @@ foam.CLASS({
     }
   ]
 });
+
 
 foam.CLASS({
   package: 'foam.core.reflow',
