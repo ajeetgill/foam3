@@ -283,7 +283,8 @@ function moreUsage(arg) {
   if ( ! showEnvs ) {
     info('Usage: build.js [OPTIONS] (see --usage for examples)');
     if( ! arg || arg === 'options' ) {
-      info('\nOptions are:');
+      log('\n');
+      info('Options are:');
       Object.keys(OPTIONS).forEach(key => {
         let option = OPTIONS[key];
         var opts = '';
@@ -311,7 +312,8 @@ function moreUsage(arg) {
     }
 
     if ( ! arg || arg === 'tasks' ) {
-      info('\nTasks: (invoke with -XtaskName or --task-name)');
+      log('\n');
+      info('Tasks: (invoke with -XtaskName or --task-name)');
       var ts = Object.assign({}, TOOLING_TASKS);
       var depth = 1;
       function printTask(t) {
@@ -346,10 +348,11 @@ function moreUsage(arg) {
   if ( showEnvs ||
        ! arg ||
        arg === 'envs' ) {
+    log('\n');
     if ( showEnvs ) {
-      info('\nEnvironment variable report:');
+      info('Environment variable report:');
     } else {
-      info('\nEnvironment variables: (set with -E)');
+      info('Environment variables: (set with -E)');
     }
     depth = 1;
 
@@ -372,6 +375,10 @@ function moreUsage(arg) {
   }
   log('');
   if ( ! showEnvs ) {
+    info('Additional Tooling (include with -T)');
+    log('  RemoteInstall - configure remote host and install Java application.');
+    log('  setup/Project - create a new FOAM project');
+    log('\n');
     info('See --usage for examples, and documentation #flowdoc/Build.)');
   }
 }
