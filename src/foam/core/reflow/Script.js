@@ -38,10 +38,15 @@ foam.CLASS({
       reactive: false,
       view: { class: 'foam.u2.tag.TextArea', rows: 8 },
       displayWidth: 60
-    }
+    },
+    { class: 'Boolean', name: 'autoRun', view: { class: 'foam.u2.Switch' } }
   ],
 
   methods: [
+    function onLoad() {
+      if ( this.autoRun ) this.run();
+    },
+
     function log() {
       this.output += Array.from(arguments).join(' ') + '\n';
     }
