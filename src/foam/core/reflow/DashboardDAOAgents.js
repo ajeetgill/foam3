@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2024 The FOAM Authors. All Rights Reserved.
+ * Copyright 2025 The FOAM Authors. All Rights Reserved.
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
@@ -84,18 +84,6 @@ foam.CLASS({
       of: 'foam.dashboard.model.VisualizationSize',
       name: 'size',
       value: 'SMALL',
-      view: {
-        class: 'foam.u2.view.ChoiceView',
-        choices: [
-          ['TINY', 'Tiny (176px × 358px) - Minimal display'],
-          ['SMALL', 'Small (312px × ~) - Compact view'],
-          ['SMEDIUM', 'Small-Medium (312px × 358px) - Balanced compact'],
-          ['MEDIUM', 'Medium (424px × 356px) - Standard size'],
-          ['LMEDIUM', 'Large-Medium (570px × 450px) - Expanded view'],
-          ['LARGE', 'Large (936px × 528px) - Full display'],
-          ['XLARGE', 'Extra Large (1580px × 698px) - Maximum display']
-        ]
-      }
     }
   ],
 
@@ -211,34 +199,11 @@ foam.CLASS({
         return;
       }
       
-      // Create the aggregation sink based on user selection
-      var aggregationSink;
-      switch(this.aggregation) {
-        case 'COUNT':
-          aggregationSink = this.Count.create();
-          break;
-        case 'SUM':
-          aggregationSink = this.aggregationProp ? this.Sum.create({arg1: this.aggregationProp}) : this.Count.create();
-          break;
-        case 'AVG':
-          aggregationSink = this.aggregationProp ? this.Average.create({arg1: this.aggregationProp}) : this.Count.create();
-          break;
-        case 'MIN':
-          aggregationSink = this.aggregationProp ? this.Min.create({arg1: this.aggregationProp}) : this.Count.create();
-          break;
-        case 'MAX':
-          aggregationSink = this.aggregationProp ? this.Max.create({arg1: this.aggregationProp}) : this.Count.create();
-          break;
-        default:
-          aggregationSink = this.Count.create();
-      }
-
       // Create context and visualization
       var context = this.createDashboardContext(e);
       var visualization = this.GroupBy.create({
         dao: this.dao,
         arg1: this.prop.name,
-        arg2: aggregationSink,
         size: this.size,
         label: this.prop.label + ' (' + this.aggregation + ')',
         configView: null  // Hide the configuration dropdown
@@ -281,34 +246,11 @@ foam.CLASS({
         return;
       }
       
-      // Create the aggregation sink based on user selection
-      var aggregationSink;
-      switch(this.aggregation) {
-        case 'COUNT':
-          aggregationSink = this.Count.create();
-          break;
-        case 'SUM':
-          aggregationSink = this.aggregationProp ? this.Sum.create({arg1: this.aggregationProp}) : this.Count.create();
-          break;
-        case 'AVG':
-          aggregationSink = this.aggregationProp ? this.Average.create({arg1: this.aggregationProp}) : this.Count.create();
-          break;
-        case 'MIN':
-          aggregationSink = this.aggregationProp ? this.Min.create({arg1: this.aggregationProp}) : this.Count.create();
-          break;
-        case 'MAX':
-          aggregationSink = this.aggregationProp ? this.Max.create({arg1: this.aggregationProp}) : this.Count.create();
-          break;
-        default:
-          aggregationSink = this.Count.create();
-      }
-
       // Create context and visualization
       var context = this.createDashboardContext(e);
       var visualization = this.GroupBy.create({
         dao: this.dao,
         arg1: this.prop.name,
-        arg2: aggregationSink,
         size: this.size,
         label: this.prop.label + ' (' + this.aggregation + ')',
         configView: null  // Hide the configuration dropdown
@@ -339,34 +281,11 @@ foam.CLASS({
         return;
       }
       
-      // Create the aggregation sink based on user selection
-      var aggregationSink;
-      switch(this.aggregation) {
-        case 'COUNT':
-          aggregationSink = this.Count.create();
-          break;
-        case 'SUM':
-          aggregationSink = this.aggregationProp ? this.Sum.create({arg1: this.aggregationProp}) : this.Count.create();
-          break;
-        case 'AVG':
-          aggregationSink = this.aggregationProp ? this.Average.create({arg1: this.aggregationProp}) : this.Count.create();
-          break;
-        case 'MIN':
-          aggregationSink = this.aggregationProp ? this.Min.create({arg1: this.aggregationProp}) : this.Count.create();
-          break;
-        case 'MAX':
-          aggregationSink = this.aggregationProp ? this.Max.create({arg1: this.aggregationProp}) : this.Count.create();
-          break;
-        default:
-          aggregationSink = this.Count.create();
-      }
-
       // Create context and visualization
       var context = this.createDashboardContext(e);
       var visualization = this.GroupBy.create({
         dao: this.dao,
         arg1: this.prop.name,
-        arg2: aggregationSink,
         size: this.size,
         label: this.prop.label + ' (' + this.aggregation + ')',
         configView: null  // Hide the configuration dropdown
