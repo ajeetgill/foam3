@@ -44,7 +44,6 @@ foam.CLASS({
 
   methods: [
     function onLoad() {
-      console.log('Script onLoad', this.autoRun);
       if ( this.autoRun ) this.run();
     },
 
