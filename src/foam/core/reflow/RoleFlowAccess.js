@@ -24,6 +24,13 @@ foam.CLASS({
 
   properties: [
     {
+      class: 'foam.mlang.predicate.PredicateProperty',
+      name: 'predicate',
+      factory: function() {
+        return this.CONTAINS(this.Group.ID, this.ROLE_PREFIX);
+      }
+    },
+    {
       class: 'Reference',
       of: 'foam.core.auth.Group',
       name: 'roleId',
@@ -31,8 +38,7 @@ foam.CLASS({
       reactive: false,
       view: function(_, X) {
         var self = X.data;
-        var rolesDAO = self.groupDAO
-        // .where(self.CONTAINS(self.Group.ID, self.ROLE_PREFIX));
+        var rolesDAO = self.groupDAO.where(self.predicate);
         return {
           class: 'foam.u2.view.RichChoiceView',
           search: true,

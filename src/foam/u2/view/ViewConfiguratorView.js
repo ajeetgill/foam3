@@ -88,7 +88,6 @@ foam.CLASS({
     function render() {
       let self = this;
       this.initSlots();
-      console.log(this.data_);
       this
         .addClass()
         .start(self.Tab, {label: 'Config'})

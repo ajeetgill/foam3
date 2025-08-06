@@ -134,7 +134,7 @@ foam.CLASS({
       .addClass(this.myClass())
       .enableClass(this.myClass('main'), this.main)
       .start()
-        .hide(this.dashboardTitle$.not())
+        .show(this.dashboardTitle$)
         .enableClass('h500', this.dashboardTitle$)
         .style({ height: '2em' })
         .add(this.dashboardTitle$)
