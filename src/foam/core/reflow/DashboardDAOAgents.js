@@ -439,67 +439,14 @@ foam.CLASS({
     'foam.mlang.sink.Sum',
     'foam.mlang.sink.Min',
     'foam.mlang.sink.Max',
-    'foam.mlang.sink.Average'
-  ],
-
-  classes: [
-    {
-      name: 'MetricOperation',
-      extends: 'foam.lang.AbstractEnum',
-      
-      properties: [
-        {
-          name: 'createSink',
-          value: function(agent) {
-            return agent.Count.create();
-          }
-        }
-      ],
-      
-      values: [
-        { 
-          name: 'COUNT', 
-          label: 'Count',
-          createSink: function(agent) {
-            return agent.Count.create();
-          }
-        },
-        { 
-          name: 'SUM',   
-          label: 'Sum',
-          createSink: function(agent) {
-            return agent.Sum.create({ arg1: agent.prop });
-          }
-        },
-        { 
-          name: 'MIN',   
-          label: 'Min',
-          createSink: function(agent) {
-            return agent.Min.create({ arg1: agent.prop });
-          }
-        },
-        { 
-          name: 'MAX',   
-          label: 'Max',
-          createSink: function(agent) {
-            return agent.Max.create({ arg1: agent.prop });
-          }
-        },
-        { 
-          name: 'AVG',   
-          label: 'Avg',
-          createSink: function(agent) {
-            return agent.Average.create({ arg1: agent.prop });
-          }
-        }
-      ]
-    }
+    'foam.mlang.sink.Average',
+    'foam.core.reflow.MetricOperation'
   ],
 
   properties: [
     {
       class: 'Enum',
-      of: this.MetricOperation,
+      of: 'foam.core.reflow.MetricOperation',
       name: 'operation',
       value: 'COUNT'
     },

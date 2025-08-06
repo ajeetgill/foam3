@@ -60,6 +60,7 @@ foam.POM({
     { name: 'control/CollectionsControl', flags: 'js' },
     { name: 'control/FlowsControl',     flags: 'js' },
     { name: 'control/ComponentsControl', flags: 'js' },
+    { name: 'MetricOperation',         flags: 'js' },
     { name: 'DashboardDAOAgents',      flags: 'js' }
   ]
 });
