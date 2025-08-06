@@ -403,6 +403,155 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.core.reflow',
+  name: 'DashboardMetricDAOAgent',
+  extends: 'foam.core.reflow.AbstractDAOAgent',
+
+  requires: [
+    'foam.mlang.sink.Count',
+    'foam.mlang.sink.Sum',
+    'foam.mlang.sink.Min',
+    'foam.mlang.sink.Max',
+    'foam.mlang.sink.Average'
+  ],
+
+  classes: [
+    {
+      name: 'MetricOperation',
+      extends: 'foam.lang.AbstractEnum',
+      
+      properties: [
+        {
+          name: 'createSink',
+          value: function(agent) {
+            return agent.Count.create();
+          }
+        }
+      ],
+      
+      values: [
+        { 
+          name: 'COUNT', 
+          label: 'Count',
+          createSink: function(agent) {
+            return agent.Count.create();
+          }
+        },
+        { 
+          name: 'SUM',   
+          label: 'Sum',
+          createSink: function(agent) {
+            return agent.Sum.create({ arg1: agent.prop });
+          }
+        },
+        { 
+          name: 'MIN',   
+          label: 'Min',
+          createSink: function(agent) {
+            return agent.Min.create({ arg1: agent.prop });
+          }
+        },
+        { 
+          name: 'MAX',   
+          label: 'Max',
+          createSink: function(agent) {
+            return agent.Max.create({ arg1: agent.prop });
+          }
+        },
+        { 
+          name: 'AVG',   
+          label: 'Avg',
+          createSink: function(agent) {
+            return agent.Average.create({ arg1: agent.prop });
+          }
+        }
+      ]
+    }
+  ],
+
+  properties: [
+    {
+      class: 'Enum',
+      of: this.MetricOperation,
+      name: 'operation',
+      value: 'COUNT'
+    },
+    {
+      name: 'prop',
+      view: function(_, X) {
+        return { 
+          class: 'foam.core.reflow.PropertyChoiceView', 
+          forCls: X.data.dao.of
+        };
+      }
+    },
+    {
+      class: 'String',
+      name: 'label',
+      value: 'Metric'
+    }
+  ],
+
+  methods: [
+    function execute(e) {
+      var self = this;
+      
+      if (this.operation !== 'COUNT' && !this.prop) {
+        this.showPropertyRequiredMessage(e);
+        return;
+      }
+
+      var sink = this.operation.createSink(this);
+      this.dao.select(sink).then(function(result) {
+        e.start('div').
+          style({
+            padding: '20px',
+            textAlign: 'center',
+            fontSize: '2em',
+            fontWeight: 'bold',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            backgroundColor: '#f9f9f9'
+          }).
+          add(self.getDisplayLabel() + ': ' + result.value).
+        end();
+
+        if (self.block) {
+          if (self.block.value) {
+            self.block.value.value = result.value;
+          } else {
+            self.block.value = result.value;
+          }
+        }
+      });
+    },
+
+    function getDisplayLabel() {
+      return this.label || 
+             (this.prop ? this.operation.label + ' of ' + this.prop.label : this.operation.label);
+    },
+
+    function showPropertyRequiredMessage(e) {
+      e.start('div').
+        style({padding: '20px', textAlign: 'center', color: '#666'}).
+        add('Please select a property for ' + this.operation.label + ' operation').
+      end();
+    },
+
+    function addToE(e) {
+      e.startContext({data: this}).
+        start().
+          style({display: 'flex', gap: '10px', flexWrap: 'wrap'}).
+          add('Operation: ', this.OPERATION).
+          add('Property: ', this.PROP).
+          add('Label: ', this.LABEL).
+        end().
+      endContext();
+    }
+  ]
+});
+
+foam.CLASS({
+  package: 'foam.core.reflow',
   name: 'DashboardGridDAOAgent',
   extends: 'foam.core.reflow.AbstractDAOAgent',
 
@@ -418,6 +567,7 @@ foam.CLASS({
           class: 'foam.u2.view.FObjectView',
           choices: [
             ['foam.core.reflow.DashboardCountDAOAgent', 'Count - Shows total number of records'],
+            ['foam.core.reflow.DashboardMetricDAOAgent', 'Metric - Shows count, sum, min, max, or average'],
             ['foam.core.reflow.DashboardBarChartDAOAgent', 'Bar Chart - Displays data grouped by property'],
             ['foam.core.reflow.DashboardPieChartDAOAgent', 'Pie Chart - Shows proportional data distribution'],
             ['foam.core.reflow.DashboardLineChartDAOAgent', 'Line Chart - Displays trends over property values']
