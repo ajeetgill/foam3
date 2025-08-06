@@ -14,76 +14,139 @@
 
 foam.CLASS({
   package: 'foam.core.reflow',
-  name: 'DashboardCardMixin',
+  name: 'DirectChartMixin',
   
-  documentation: 'Mixin providing common dashboard card functionality for DAO agents',
+  documentation: 'Mixin providing direct Chart.js integration for DAO agents',
+  
+  requires: [
+    'org.chartjs.Bar2',
+    'org.chartjs.Pie2', 
+    'org.chartjs.Line2'
+  ],
   
   methods: [
-    function createDashboardContext(e) {
-      // Create a minimal dashboard controller for context
-      var dashboardController = {
-        sub: function() { return { detach: function() {} }; }
+    function renderDirectChart(e, chartType, chartData, config, block) {
+      var ChartClass;
+      switch(chartType) {
+        case 'bar': ChartClass = this.Bar2; break;
+        case 'pie': ChartClass = this.Pie2; break;
+        case 'line': ChartClass = this.Line2; break;
+        default: throw new Error('Unknown chart type: ' + chartType);
+      }
+      
+      // Ensure charts are responsive by default
+      var defaultConfig = {
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
       };
       
-      // Create context with dashboardController
-      return e.__subContext__.createSubContext({
-        dashboardController: dashboardController
-      });
-    },
-    
-    function createVisualizationCard(visualization, context) {
-      // Create a card to display the visualization
-      return visualization.toE(null, context);
-    },
-    
-    function addViewToCard(card, viewClass, visualization) {
-      // Add the actual view to the card's content (in card's context for imports)
-      card.add(foam.u2.ViewSpec.createView(viewClass, {
-        data: visualization
-      }, card, card.__subContext__));
-    },
-    
-    function findViewInVisualization(visualization, viewName) {
-      // Find a specific view by name in the visualization's views array
-      var view = visualization.views.find(function(v) { return v[1] === viewName; });
-      return view ? view[0] : visualization.views[0][0];
-    },
-    
-    function renderVisualizationCard(e, visualization, viewClass, block) {
-      var context = this.createDashboardContext(e);
-      var card = this.createVisualizationCard(visualization, context);
-      this.addViewToCard(card, viewClass, visualization);
-      e.add(card);
+      var finalConfig = config ? {...defaultConfig, ...config} : defaultConfig;
+      if (config && config.options) {
+        finalConfig.options = {...defaultConfig.options, ...config.options};
+      }
+      
+      var chart = ChartClass.create({
+        data: chartData,
+        ...finalConfig
+      }, e.__subContext__);
+      
+      // Wrap chart in responsive container
+      e.start('div').
+        style({
+          position: 'relative',
+          height: '300px',  // Fixed height for consistent layout
+          width: '100%',
+          overflow: 'hidden'
+        }).
+        add(chart).
+      end();
       
       // Set block value
       if (block) {
         if (block.value) {
-          block.value.value = visualization;
+          block.value.value = chart;
         } else {
-          block.value = visualization;
+          block.value = chart;
         }
       }
+      
+      return chart;
+    },
+    
+    function showPropertyRequiredMessage(e) {
+      e.start('div').
+        style({padding: '20px', textAlign: 'center', color: '#666'}).
+        add('Please select a property to group by').
+      end();
+    },
+    
+    function convertGroupByToChartData(groupBy, propLabel, chartType) {
+      var data = [];
+      var labels = [];
+      
+      // Extract data from GroupBy sink
+      for ( var key in groupBy.groups ) {
+        if ( groupBy.groups.hasOwnProperty(key) ) {
+          labels.push(key.toString());
+          data.push(groupBy.groups[key].value);
+        }
+      }
+      
+      // Create Chart.js dataset with type-specific styling
+      var dataset = {
+        label: propLabel || 'Count',
+        data: data
+      };
+      
+      // Apply chart-type specific styling
+      switch(chartType) {
+        case 'bar':
+          dataset.backgroundColor = 'rgba(54, 162, 235, 0.5)';
+          dataset.borderColor = 'rgba(54, 162, 235, 1)';
+          dataset.borderWidth = 1;
+          break;
+          
+        case 'pie':
+          var colors = ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 
+                       'rgba(255, 205, 86, 0.5)', 'rgba(75, 192, 192, 0.5)',
+                       'rgba(153, 102, 255, 0.5)', 'rgba(255, 159, 64, 0.5)'];
+          dataset.backgroundColor = colors.slice(0, data.length);
+          break;
+          
+        case 'line':
+          dataset.backgroundColor = 'rgba(75, 192, 192, 0.2)';
+          dataset.borderColor = 'rgba(75, 192, 192, 1)';
+          dataset.borderWidth = 2;
+          dataset.fill = false;
+          dataset.tension = 0.1;
+          break;
+      }
+      
+      return {
+        labels: labels,
+        datasets: [dataset]
+      };
     }
   ]
 });
 
 foam.CLASS({
   package: 'foam.core.reflow',
-  name: 'DashboardCountDAOAgent',
+  name: 'DashboardCountDAOAgent', 
   extends: 'foam.core.reflow.AbstractDAOAgent',
-  mixins: ['foam.core.reflow.DashboardCardMixin'],
+  mixins: ['foam.core.reflow.DirectChartMixin'],
 
   requires: [
-    'foam.dashboard.model.Count',
-    'foam.dashboard.model.VisualizationSize'
+    'foam.mlang.sink.Count'
   ],
 
   properties: [
     {
-      class: 'Enum',
-      of: 'foam.dashboard.model.VisualizationSize',
-      name: 'size',
-      value: 'SMALL',
+      class: 'String',
+      name: 'label',
+      value: 'Count'
     }
   ],
 
@@ -91,17 +154,31 @@ foam.CLASS({
     function execute(e) {
       var self = this;
       
-      // Create context and visualization
-      var context = this.createDashboardContext(e);
-      var visualization = this.Count.create({
-        dao: this.dao,
-        size: this.size,
-        label: 'Count',
-        configView: null  // Hide the configuration dropdown
-      }, context);
-      
-      // Render the card with the Count view
-      this.renderVisualizationCard(e, visualization, visualization.views[0][0], self.block);
+      // Count the DAO records directly
+      this.dao.select(this.Count.create()).then(function(count) {
+        // Create a simple count display
+        e.start('div').
+          style({
+            padding: '20px',
+            textAlign: 'center', 
+            fontSize: '2em',
+            fontWeight: 'bold',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            backgroundColor: '#f9f9f9'
+          }).
+          add(self.label + ': ' + count.value).
+        end();
+        
+        // Set block value
+        if (self.block) {
+          if (self.block.value) {
+            self.block.value.value = count.value;
+          } else {
+            self.block.value = count.value;
+          }
+        }
+      });
     }
   ]
 });
@@ -110,11 +187,11 @@ foam.CLASS({
   package: 'foam.core.reflow',
   name: 'DashboardBarChartDAOAgent',
   extends: 'foam.core.reflow.AbstractDAOAgent',
-  mixins: ['foam.core.reflow.DashboardCardMixin'],
+  mixins: ['foam.core.reflow.DirectChartMixin'],
 
   requires: [
-    'foam.dashboard.model.GroupBy',
-    'foam.dashboard.model.VisualizationSize'
+    'foam.mlang.sink.GroupBy',
+    'foam.mlang.sink.Count'
   ],
 
   properties: [
@@ -126,12 +203,6 @@ foam.CLASS({
           forCls: X.data.dao.of
         };
       }
-    },
-    {
-      class: 'Enum',
-      of: 'foam.dashboard.model.VisualizationSize',
-      name: 'size',
-      value: 'MEDIUM'
     }
   ],
 
@@ -139,28 +210,19 @@ foam.CLASS({
     function execute(e) {
       var self = this;
       
-      // Don't create visualization if no property is selected
       if ( ! this.prop ) {
-        e.start('div').
-          style({padding: '20px', textAlign: 'center', color: '#666'}).
-          add('Please select a property to group by').
-        end();
+        this.showPropertyRequiredMessage(e);
         return;
       }
       
-      // Create context and visualization
-      var context = this.createDashboardContext(e);
-      var visualization = this.GroupBy.create({
-        dao: this.dao,
-        arg1: this.prop.name,
-        size: this.size,
-        label: this.prop.label,
-        configView: null  // Hide the configuration dropdown
-      }, context);
-      
-      // Find and render the Bar view
-      var barView = this.findViewInVisualization(visualization, 'Bar');
-      this.renderVisualizationCard(e, visualization, barView, self.block);
+      // Group data by property and render bar chart
+      this.dao.select(this.GroupBy.create({
+        arg1: this.prop,
+        arg2: this.Count.create()
+      })).then(function(groupBy) {
+        var chartData = self.convertGroupByToChartData(groupBy, self.prop.label, 'bar');
+        self.renderDirectChart(e, 'bar', chartData, null, self.block);
+      });
     },
     
     function addToE(e) {
@@ -168,7 +230,6 @@ foam.CLASS({
         start().
           style({display: 'flex', gap: '10px', flexWrap: 'wrap'}).
           add('Property: ', this.PROP).
-          add('Size: ', this.SIZE).
         end().
       endContext();
     }
@@ -184,28 +245,19 @@ foam.CLASS({
     function execute(e) {
       var self = this;
       
-      // Don't create visualization if no property is selected
       if ( ! this.prop ) {
-        e.start('div').
-          style({padding: '20px', textAlign: 'center', color: '#666'}).
-          add('Please select a property to group by').
-        end();
+        this.showPropertyRequiredMessage(e);
         return;
       }
       
-      // Create context and visualization
-      var context = this.createDashboardContext(e);
-      var visualization = this.GroupBy.create({
-        dao: this.dao,
-        arg1: this.prop.name,
-        size: this.size,
-        label: this.prop.label,
-        configView: null  // Hide the configuration dropdown
-      }, context);
-      
-      // Find and render the Pie view
-      var pieView = this.findViewInVisualization(visualization, 'Pie');
-      this.renderVisualizationCard(e, visualization, pieView, self.block);
+      // Group data by property and render pie chart
+      this.dao.select(this.GroupBy.create({
+        arg1: this.prop,
+        arg2: this.Count.create()
+      })).then(function(groupBy) {
+        var chartData = self.convertGroupByToChartData(groupBy, self.prop.label, 'pie');
+        self.renderDirectChart(e, 'pie', chartData, null, self.block);
+      });
     }
   ]
 });
@@ -214,34 +266,137 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'DashboardLineChartDAOAgent',
-  extends: 'foam.core.reflow.DashboardBarChartDAOAgent',
+  extends: 'foam.core.reflow.AbstractDAOAgent',
+  mixins: ['foam.core.reflow.DirectChartMixin'],
+
+  requires: [
+    'foam.mlang.sink.GroupBy',
+    'foam.mlang.sink.Count'
+  ],
+
+  properties: [
+    {
+      name: 'xProp',
+      view: function(_, X) {
+        return { 
+          class: 'foam.core.reflow.PropertyChoiceView', 
+          forCls: X.data.dao.of
+        };
+      }
+    },
+    {
+      name: 'yProp', 
+      view: function(_, X) {
+        return { 
+          class: 'foam.core.reflow.PropertyChoiceView', 
+          forCls: X.data.dao.of
+        };
+      }
+    }
+  ],
 
   methods: [
     function execute(e) {
       var self = this;
       
-      // Don't create visualization if no property is selected
-      if ( ! this.prop ) {
+      if ( ! this.xProp || ! this.yProp ) {
         e.start('div').
           style({padding: '20px', textAlign: 'center', color: '#666'}).
-          add('Please select a property to group by').
+          add('Please select both X and Y properties').
         end();
         return;
       }
       
-      // Create context and visualization
-      var context = this.createDashboardContext(e);
-      var visualization = this.GroupBy.create({
-        dao: this.dao,
-        arg1: this.prop.name,
-        size: this.size,
-        label: this.prop.label + ' (' + this.aggregation + ')',
-        configView: null  // Hide the configuration dropdown
-      }, context);
+      // Get all records and create X vs Y line chart
+      this.dao.select().then(function(arraySink) {
+        var chartData = self.convertRecordsToLineChart(arraySink.array);
+        
+        // Configure Chart.js options with proper date handling
+        var isXAxisDate = self.xProp.chartJsFormatter && 
+                         (foam.lang.Date.isInstance(self.xProp) || 
+                          foam.lang.DateTime.isInstance(self.xProp));
+        
+        var options = {
+          scales: {
+            x: {
+              type: isXAxisDate ? 'time' : 'linear',
+              title: { display: true, text: self.xProp.label }
+            },
+            y: {
+              title: { display: true, text: self.yProp.label }
+            }
+          },
+          plugins: { legend: { display: true } }
+        };
+        
+        // Add time scale configuration for date axes
+        if (isXAxisDate) {
+          options.scales.x.time = {
+            displayFormats: {
+              day: 'MMM dd',
+              month: 'MMM yyyy'
+            },
+            tooltipFormat: 'MMM dd, yyyy'
+          };
+        }
+        
+        self.renderDirectChart(e, 'line', chartData, {options: options}, self.block);
+      });
+    },
+    
+    function convertRecordsToLineChart(records) {
+      var data = [];
+      var self = this;
       
-      // Find and render the Line view
-      var lineView = this.findViewInVisualization(visualization, 'Line');
-      this.renderVisualizationCard(e, visualization, lineView, self.block);
+      // Check if X-axis property has FOAM3 date formatting
+      var isXAxisDate = self.xProp.chartJsFormatter && 
+                       (foam.lang.Date.isInstance(self.xProp) || 
+                        foam.lang.DateTime.isInstance(self.xProp));
+      
+      // Convert records to {x, y} points with proper FOAM3 date handling
+      records.forEach(function(obj) {
+        var xVal = obj[self.xProp.name];
+        var yVal = obj[self.yProp.name];
+        
+        if ( xVal != null && yVal != null ) {
+          // Use FOAM3 chartJsFormatter for proper date conversion
+          var processedXVal = self.xProp.chartJsFormatter ? 
+                             self.xProp.chartJsFormatter(xVal) : xVal;
+          
+          data.push({x: processedXVal, y: yVal});
+        }
+      });
+      
+      // Sort by X value for proper line connection
+      data.sort(function(a, b) {
+        // Handle date comparison if needed
+        if (isXAxisDate) {
+          return new Date(a.x) - new Date(b.x);
+        }
+        return a.x - b.x;
+      });
+      
+      return {
+        datasets: [{
+          label: this.yProp.label + ' vs ' + this.xProp.label,
+          data: data,
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.1
+        }]
+      };
+    },
+    
+    function addToE(e) {
+      e.startContext({data: this}).
+        start().
+          style({display: 'flex', gap: '10px', flexWrap: 'wrap'}).
+          add('X Property: ', this.X_PROP).
+          add('Y Property: ', this.Y_PROP).
+        end().
+      endContext();
     }
   ]
 });
@@ -250,11 +405,6 @@ foam.CLASS({
   package: 'foam.core.reflow',
   name: 'DashboardGridDAOAgent',
   extends: 'foam.core.reflow.AbstractDAOAgent',
-
-  requires: [
-    'foam.dashboard.view.Dashboard',
-    'foam.dashboard.view.Card'
-  ],
 
   properties: [
     {
@@ -291,21 +441,39 @@ foam.CLASS({
     function execute(e) {
       var self = this;
       
-      // Create a container for the dashboard widgets
-      e.start('div').
+      var actualColumns = Math.min(self.columns, self.widgets.length);
+      var gridContainer = e.start('div').
         style({
           display: 'grid',
-          gridTemplateColumns: `repeat(${self.columns}, 1fr)`,
+          gridTemplateColumns: `repeat(${actualColumns}, 1fr)`,
           gap: '16px',
-          padding: '16px'
-        }).
-        forEach(self.widgets, function(widget) {
-          this.start('div');
-          widget.dao = self.dao;
-          widget.execute(this);
-          this.end();
-        }).
-      end();
+          padding: '16px',
+          maxWidth: '100%',
+          width: '100%',
+          boxSizing: 'border-box',
+          overflow: 'hidden'
+        });
+      
+      // Pre-allocate containers to maintain order during async rendering
+      var widgetContainers = [];
+      for (var i = 0; i < self.widgets.length; i++) {
+        var container = gridContainer.start('div').
+          style({
+            minWidth: '0',
+            overflow: 'hidden',
+            boxSizing: 'border-box'
+          });
+        widgetContainers.push(container);
+      }
+      
+      // Render each widget in its designated container
+      self.widgets.forEach(function(widget, index) {
+        widget.dao = self.dao;
+        widget.execute(widgetContainers[index]);
+        widgetContainers[index].end();
+      });
+      
+      gridContainer.end();
       
       if (self.block.value) {
         self.block.value.value = self.widgets;
