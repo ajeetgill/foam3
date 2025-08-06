@@ -113,7 +113,6 @@ foam.CLASS({
           this
             .forEach(data || [], function(e, i) {
               var row = self.CollapsableRow.create({ index: i, value: e, collapsed: self.collapseBehaviour == 'START_COLLAPSED' ? true : false });
-
               this
                 .startContext({ data: row })
                   .start()
@@ -123,7 +122,10 @@ foam.CLASS({
                       .start().style({alignContent: 'center'}).addClass(self.myClass('item-row'))
                         .start('span').addClass(self.myClass('item-index')).add(i+1).end()
                         .start('span').addClass(self.myClass('item-name')).add(
-                          self.title || row.value$.dot('label').map(label => label ? label : row.value.toSummary && row.value.toSummary() || self.of.model_.label)
+                          self.title ||
+                            row.value.toSummary ?
+                              row.value$.map(v => v.toSummary()) :
+                              row.value$.dot('label').map(label => label || self.of.model_.label)
                         ).end()
                       .end()
                       .start().addClass(self.myClass('actions-holder'))
