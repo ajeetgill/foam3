@@ -17,10 +17,14 @@ foam.CLASS({
     ^header-row {
       align-items: center;
       cursor: pointer;
+      padding: 5px;
+    }
+    ^header-row.opened {
       border-bottom: 1px solid $borderLight;
       padding: 8px 8px;
     }
     ^value-view-container {
+      padding: 5px;
       border: 1px solid $borderLight;
       border-radius: 4px;
     }
@@ -45,6 +49,15 @@ foam.CLASS({
     }
     ^ .foam-u2-layout-Rows {
         gap: 10px;
+    }
+    ^type-label {
+      padding: 5px;
+      border-radius: 4px;
+      font-size: $body-sm;
+      font-weight: $font-bold;
+    }
+    ^value-view-container.opened {
+      border-color: $primary500;
     }
   `,
 
@@ -113,22 +126,30 @@ foam.CLASS({
           this
             .forEach(data || [], function(e, i) {
               var row = self.CollapsableRow.create({ index: i, value: e, collapsed: self.collapseBehaviour == 'START_COLLAPSED' ? true : false });
+              var summaryType = self.title || row.value.toSummary ? row.value$.map(v => v.toSummary()) : 'default';
+              var label = row.value$.dot('label').map(label => label || 'New ' + self.of.model_.label)
+              var summaryTypeClass =  summaryType.map(v => v && v.code().toLowerCase().replace(/\s+/g, ''))
+
               this
                 .startContext({ data: row })
                   .start()
                     .addClass(self.myClass('value-view-container'))
+                    .enableClass('opened', row.collapsed$.map(c => !c))
                     .start(self.Cols)
                       .addClass(self.myClass('header-row'))
+                      .enableClass('opened', row.collapsed$.map(c => !c))
                       .start().style({alignContent: 'center'}).addClass(self.myClass('item-row'))
                         .start('span').addClass(self.myClass('item-index')).add(i+1).end()
                         .start('span').addClass(self.myClass('item-name')).add(
-                          self.title ||
-                            row.value.toSummary ?
-                              row.value$.map(v => v.toSummary()) :
-                              row.value$.dot('label').map(label => label || self.of.model_.label)
+                          label
                         ).end()
                       .end()
                       .start().addClass(self.myClass('actions-holder'))
+                        .start('span')
+                          .addClass(self.myClass('type-label'))
+                          .addClass(summaryTypeClass)
+                          .add(summaryType)
+                        .end()
                         .tag(self.CollapsableRow.REMOVE, {
                           buttonStyle: 'TERTIARY',
                           themeIcon: 'trash',
