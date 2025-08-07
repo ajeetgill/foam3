@@ -225,6 +225,129 @@ foam.CLASS({
 });
 
 foam.CLASS({
+  package: 'foam.core.reflow.dashboard',
+  name: 'CardRenderMixin',
+  
+  documentation: 'Mixin providing reusable card/tile rendering functionality for metrics and widgets',
+  
+  properties: [
+    {
+      class: 'Boolean',
+      name: 'renderAsCard',
+      label: 'Render as Card',
+      value: true,
+      help: 'If true, renders content in a styled card/tile. If false, renders simple display.'
+    }
+  ],
+  
+  methods: [
+    function renderCardWrapper(e, contentRenderer, options) {
+      // Helper method to render content either as card or simple display
+      options = options || {};
+      
+      if ( this.renderAsCard ) {
+        this.renderAsCardTile(e, contentRenderer, options);
+      } else {
+        this.renderAsSimpleDisplay(e, contentRenderer, options);
+      }
+    },
+    
+    function renderAsCardTile(e, contentRenderer, options) {
+      var self = this;
+      var cardE = e.start('div')
+        .style({
+          backgroundColor: foam.CSS.returnTokenValue('$backgroundPrimary', this.cls_, this.__context__),
+          border: '1px solid ' + foam.CSS.returnTokenValue('$borderLight', this.cls_, this.__context__),
+          borderRadius: foam.CSS.returnTokenValue('$inputBorderRadius', this.cls_, this.__context__),
+          padding: '24px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
+          transition: 'all 0.2s ease',
+          cursor: options.clickable ? 'pointer' : 'default',
+          minHeight: '140px',
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative',
+          overflow: 'hidden'
+        })
+        .on('mouseenter', function() {
+          if ( options.clickable ) {
+            this.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)';
+            this.style.transform = 'translateY(-1px)';
+          }
+        })
+        .on('mouseleave', function() {
+          if ( options.clickable ) {
+            this.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)';
+            this.style.transform = 'translateY(0)';
+          }
+        });
+        
+      // Card content container
+      var contentE = cardE.start('div')
+        .style({
+          flex: '1',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center'
+        });
+        
+      // Call the content renderer with the content container
+      contentRenderer.call(this, contentE);
+      
+      contentE.end(); // content div
+      cardE.end(); // card div
+    },
+    
+    function renderAsSimpleDisplay(e, contentRenderer, options) {
+      // Simple display without card styling
+      contentRenderer.call(this, e);
+    },
+    
+    function renderMetricValue(e, label, value, options) {
+      // Helper specifically for metric values
+      options = options || {};
+      
+      var self = this;
+      this.renderCardWrapper(e, function(contentE) {
+        var container = contentE.start('div')
+          .style({
+            width: '100%',
+            padding: self.renderAsCard ? '0' : '20px'
+          });
+          
+        // Label display (above the number)
+        container.start('div')
+          .style({
+            fontSize: self.renderAsCard ? '0.875rem' : '1rem',
+            color: foam.CSS.returnTokenValue('$textSecondary', this.cls_, this.__context__),
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            fontWeight: foam.CSS.returnTokenValue('$font-medium', this.cls_, this.__context__),
+            marginBottom: '8px'
+          })
+          .add(label)
+        .end();
+        
+        // Value display (below the label)
+        container.start('div')
+          .style({
+            fontSize: self.renderAsCard ? '3rem' : '2.5rem',
+            fontWeight: foam.CSS.returnTokenValue('$font-bold', this.cls_, this.__context__),
+            color: options.valueColor || foam.CSS.returnTokenValue('$primary500', this.cls_, this.__context__),
+            lineHeight: '1',
+            letterSpacing: '-0.025em'
+          })
+          .add(typeof value === 'number' ? value.toLocaleString() : value)
+        .end();
+        
+        container.end(); // container div
+      }, options);
+    }
+  ]
+});
+
+foam.CLASS({
   package: 'foam.core.reflow.dashboard', 
   name: 'LimitedGroupByMixin',
   
@@ -294,56 +417,6 @@ foam.CLASS({
   ]
 });
 
-foam.CLASS({
-  package: 'foam.core.reflow.dashboard',
-  name: 'DashboardCountDAOAgent', 
-  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
-  mixins: ['foam.core.reflow.dashboard.DirectChartMixin'],
-
-  requires: [
-    'foam.mlang.sink.Count'
-  ],
-
-  properties: [
-    {
-      class: 'String',
-      name: 'label',
-      value: 'Count'
-    }
-  ],
-
-  methods: [
-    function execute(e) {
-      var self = this;
-      
-      // Count the DAO records directly
-      this.dao.select(this.Count.create()).then(function(count) {
-        // Create a simple count display
-        e.start('div').
-          style({
-            padding: '20px',
-            textAlign: 'center', 
-            fontSize: '2em',
-            fontWeight: foam.CSS.returnTokenValue('$font-bold', this.cls_, this.__context__),
-            border: '1px solid ' + foam.CSS.returnTokenValue('$borderLight', this.cls_, this.__context__),
-            borderRadius: foam.CSS.returnTokenValue('$inputBorderRadius', this.cls_, this.__context__),
-            backgroundColor: foam.CSS.returnTokenValue('$backgroundTertiary', this.cls_, this.__context__)
-          }).
-          add(self.label + ': ' + count.value).
-        end();
-        
-        // Set block value
-        if (self.block) {
-          if (self.block.value) {
-            self.block.value.value = count.value;
-          } else {
-            self.block.value = count.value;
-          }
-        }
-      });
-    }
-  ]
-});
 
 foam.CLASS({
   package: 'foam.core.reflow.dashboard',
@@ -923,6 +996,9 @@ foam.CLASS({
   package: 'foam.core.reflow.dashboard',
   name: 'DashboardMetricDAOAgent',
   extends: 'foam.core.reflow.AbstractSinkDAOAgent',
+  mixins: [
+    'foam.core.reflow.dashboard.CardRenderMixin'
+  ],
 
   requires: [
     'foam.mlang.sink.Count',
@@ -965,20 +1041,10 @@ foam.CLASS({
         return;
       }
 
-      var sink = this.operation.createSink(this);
+      var sink = this.operation.createSink(this.prop);
       this.dao.select(sink).then(function(result) {
-        e.start('div').
-          style({
-            padding: '20px',
-            textAlign: 'center',
-            fontSize: '2em',
-            fontWeight: 'bold',
-            border: '1px solid ' + foam.CSS.returnTokenValue('$borderLight', this.cls_, this.__context__),
-            borderRadius: foam.CSS.returnTokenValue('$inputBorderRadius', this.cls_, this.__context__),
-            backgroundColor: foam.CSS.returnTokenValue('$backgroundTertiary', this.cls_, this.__context__)
-          }).
-          add(self.getDisplayLabel() + ': ' + result.value).
-        end();
+        // Render using CardRenderMixin
+        self.renderMetricValue(e, self.getDisplayLabel(), result.value);
 
         if (self.block) {
           if (self.block.value) {
@@ -1009,6 +1075,7 @@ foam.CLASS({
           add('Operation: ', this.OPERATION).
           add('Property: ', this.PROP).
           add('Label: ', this.LABEL).
+          add('Render as Card: ', this.RENDER_AS_CARD).
         end().
       endContext();
     }
