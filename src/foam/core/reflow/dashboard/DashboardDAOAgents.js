@@ -863,7 +863,9 @@ foam.CLASS({
 
   requires: [
     'foam.mlang.sink.GroupBy',
-    'foam.mlang.sink.Count'
+    'foam.mlang.sink.Count',
+    'org.chartjs.Lib',
+    'foam.core.reflow.dashboard.TimeUnit'
   ],
 
   properties: [
@@ -883,6 +885,17 @@ foam.CLASS({
           class: 'foam.core.reflow.PropertyChoiceView', 
           forCls: X.data.dao.of
         };
+      }
+    },
+    {
+      class: 'Enum',
+      of: 'foam.core.reflow.dashboard.TimeUnit',
+      name: 'timeUnit',
+      label: 'Time Unit',
+      value: 'DAY',
+      help: 'Time unit for X-axis when using date/time properties',
+      visibility: function(xProp) {
+        return xProp && (foam.core.Date.isInstance(xProp) || foam.core.DateTime.isInstance(xProp)) ? 'RW' : 'HIDDEN';
       }
     }
   ],
@@ -923,15 +936,23 @@ foam.CLASS({
         
         // Add time scale configuration for date axes
         if (isXAxisDate) {
+          var timeUnitValue = self.TimeUnit[self.timeUnit];
           options.scales.x.time = {
-            displayFormats: {
-              day: 'MMM dd',
-              month: 'MMM yyyy'
-            },
-            tooltipFormat: 'MMM dd, yyyy'
+            unit: timeUnitValue.chartJsUnit,
+            displayFormats: {},
+            tooltipFormat: timeUnitValue.tooltipFormat
+          };
+          
+          // Set the display format for the selected unit
+          options.scales.x.time.displayFormats[timeUnitValue.chartJsUnit] = timeUnitValue.displayFormat;
+          
+          // Enable time parsing with proper locale
+          options.adapters = {
+            date: {
+              locale: 'en-US' // Default locale, can be customized
+            }
           };
         }
-        
         self.renderDirectChart(e, 'line', chartData, {options: options}, self.block);
       });
     },
@@ -959,6 +980,10 @@ foam.CLASS({
           if ( !isXAxisDate && typeof processedXVal === 'string' ) {
             // Remove commas and convert to number for linear scales
             processedXVal = parseFloat(processedXVal.replace(/,/g, ''));
+          }
+          
+          // Debug: Log time series data processing
+          if ( isXAxisDate && processedXVal ) {
           }
           
           data.push({x: processedXVal, y: yVal});
@@ -994,6 +1019,7 @@ foam.CLASS({
           style({display: 'flex', gap: '10px', flexWrap: 'wrap'}).
           add('X Property: ', this.X_PROP).
           add('Y Property: ', this.Y_PROP).
+          add('Time Unit: ', this.TIME_UNIT).
         end().
       endContext();
     }

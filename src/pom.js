@@ -904,6 +904,7 @@ foam.POM({
     { name: "foam/flow/widgets/DocumentationIncomplete",              flags: "js" },
     { name: "foam/flow/widgets/TryItSnippet",                         flags: "js" },
     { name: "foam/flow/widgets/ApiShortSummary",                      flags: "js" },
+    { name: "org/chartjs/SequentialJsLib",                            flags: "web" },
     { name: "org/chartjs/Lib",                                        flags: "web" },
     { name: "org/chartjs/ChartCView",                                 flags: "web" },
     { name: "org/chartjs/AbstractChartCView",                         flags: "web" },
