@@ -46,8 +46,12 @@ foam.CLASS({
   ],
 
   css: `
-    ^ .foam-u2-filter-FilterView-general-field {
+    ^ .foam-u2-filter-FilterView-container-search {
       min-width: 100%;
+      gap:8px;
+    }
+    ^ .foam-u2-filter-FilterView-general-field {
+      min-width: 80%;
     }
     ^ {
       display: flex;
@@ -56,11 +60,21 @@ foam.CLASS({
       padding: 0;
       margin: 0
     }
+    ^top-bar {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+    }
+    ^filters{
+      padding: 0 24px;
+      padding-bottom: 12px;
+    }
     ^button-span {
       display: flex;
       flex-direction: row;
       justify-content: flex-end;
-      padding: 12px 0;
       gap: 4px;
     }
 
@@ -104,12 +118,17 @@ foam.CLASS({
 
       this
         .start().addClass(this.myClass())
-          .start('span')
-            .addClass(this.myClass('button-span'))
-            .show(this.mode$.map(function(m) { return m == foam.u2.DisplayMode.RW; }))
-            .add(this.cls.getAxiomsByClass(foam.lang.Action))
+          .start().addClass(this.myClass('top-bar'))
+            .start().style({ 'min-width' : '70%' })
+              .add(filterView)
+            .end()
+            .start('span')
+              .addClass(this.myClass('button-span'))
+              .show(this.mode$.map(function(m) { return m == foam.u2.DisplayMode.RW; }))
+              .add(this.cls.getAxiomsByClass(foam.lang.Action))
+            .end()
           .end()
-          .add(filterView)
+          .start().tag(filterView.filtersContainer$).addClass(self.myClass('filters')).end()
           .start()
             .tag(self.summaryView, {
               data$: self.data.filteredDAO$,
