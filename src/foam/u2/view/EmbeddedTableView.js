@@ -83,6 +83,7 @@ foam.CLASS({
     {
       name: 'daoCount',
       expression: async function(data, rowsToDisplay) {
+        // not selecting count because want num entries with limit and skip applied
         var daoCount = (await data.select()).array;
         return Math.max(daoCount.length - rowsToDisplay, 0);
       }
