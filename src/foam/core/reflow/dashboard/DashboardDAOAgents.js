@@ -23,7 +23,9 @@ foam.CLASS({
     'org.chartjs.Pie2', 
     'org.chartjs.Line2',
     'org.chartjs.Donut2',
-    'org.chartjs.StackedBar2'
+    'org.chartjs.StackedBar2',
+    'foam.mlang.sink.GroupBy',
+    'foam.mlang.sink.TopGroupBy'
   ],
   
   methods: [
@@ -144,6 +146,150 @@ foam.CLASS({
         labels: labels,
         datasets: [dataset]
       };
+    },
+    
+    function createLimitedGroupBy(groupBy, sink, topN, sortDescending, includeOthers) {
+      // Helper method to create either GroupBy or TopGroupBy based on topN setting
+      if ( topN > 0 ) {
+        return this.TopGroupBy.create({
+          arg1: groupBy,
+          arg2: sink,
+          topLimit: topN,
+          descending: sortDescending,
+          includeOthers: includeOthers
+        });
+      } else {
+        return this.GroupBy.create({
+          arg1: groupBy,
+          arg2: sink
+        });
+      }
+    },
+    
+    function convertLimitedGroupsToChartData(groups, propLabel, chartType) {
+      var data = [];
+      var labels = [];
+      
+      // Extract data from groups object (either from regular GroupBy or TopGroupBy.getTopGroups())
+      for ( var key in groups ) {
+        if ( groups.hasOwnProperty(key) ) {
+          labels.push(key.toString());
+          data.push(groups[key].value);
+        }
+      }
+      
+      // Create Chart.js dataset with type-specific styling
+      var dataset = {
+        label: propLabel || 'Count',
+        data: data
+      };
+      
+      // Apply chart-type specific styling with CSS tokens
+      switch(chartType) {
+        case 'bar':
+          dataset.backgroundColor = foam.CSS.returnTokenValue('$primary200', this.cls_, this.__context__);
+          dataset.borderColor = foam.CSS.returnTokenValue('$primary400', this.cls_, this.__context__);
+          dataset.borderWidth = 1;
+          break;
+          
+        case 'stackedbar':
+          dataset.backgroundColor = foam.CSS.returnTokenValue('$blue200', this.cls_, this.__context__);
+          dataset.borderColor = foam.CSS.returnTokenValue('$blue400', this.cls_, this.__context__);
+          dataset.borderWidth = 1;
+          break;
+          
+        case 'pie':
+        case 'donut':
+          var tokenColors = ['$red200', '$blue200', '$yellow200', '$green200', '$purple200', '$orange200'];
+          var colors = tokenColors.map(function(token) {
+            return foam.CSS.returnTokenValue(token, this.cls_, this.__context__);
+          }.bind(this));
+          dataset.backgroundColor = colors.slice(0, data.length);
+          break;
+          
+        case 'line':
+          dataset.backgroundColor = foam.CSS.returnTokenValue('$green100', this.cls_, this.__context__);
+          dataset.borderColor = foam.CSS.returnTokenValue('$green500', this.cls_, this.__context__);
+          dataset.borderWidth = 2;
+          dataset.fill = false;
+          dataset.tension = 0.1;
+          break;
+      }
+      
+      return {
+        labels: labels,
+        datasets: [dataset]
+      };
+    }
+  ]
+});
+
+foam.CLASS({
+  package: 'foam.core.reflow.dashboard', 
+  name: 'LimitedGroupByMixin',
+  
+  documentation: 'Mixin providing top/bottom N group limitation with Others category support',
+  
+  properties: [
+    {
+      class: 'Int',
+      name: 'topN',
+      label: 'Top N Results',
+      value: 0,
+      help: 'Limit results to top N groups (0 for no limit)'
+    },
+    {
+      class: 'Boolean',
+      name: 'sortDescending',
+      label: 'Sort Descending',
+      value: true,
+      help: 'If true, show top values (highest first). If false, show bottom values (lowest first).',
+      visibility: function(topN) {
+        return topN > 0 ? 'RW' : 'HIDDEN';
+      }
+    },
+    {
+      class: 'Boolean',
+      name: 'includeOthers',
+      label: 'Include Others',
+      value: false,
+      help: 'If true, includes an "Others" category aggregating remaining groups',
+      visibility: function(topN) {
+        return topN > 0 ? 'RW' : 'HIDDEN';
+      }
+    }
+  ],
+  
+  methods: [
+    function createGroupBySinkWithLimits(groupByProp, valueSink) {
+      // Helper method to create either GroupBy or TopGroupBy based on topN setting
+      if ( this.topN > 0 ) {
+        return this.TopGroupBy.create({
+          arg1: groupByProp,
+          arg2: valueSink,
+          topLimit: this.topN,
+          descending: this.sortDescending,
+          includeOthers: this.includeOthers
+        });
+      } else {
+        return this.GroupBy.create({
+          arg1: groupByProp,
+          arg2: valueSink
+        });
+      }
+    },
+    
+    function extractGroupsFromResult(groupByResult) {
+      // Helper method to extract groups from either GroupBy or TopGroupBy result
+      return this.topN > 0 ? groupByResult.getTopGroups() : groupByResult.groups;
+    },
+    
+    function addLimitPropertiesToE(e, prefix) {
+      // Helper method to add limit properties to UI
+      prefix = prefix || '';
+      e.add(prefix + 'Top N: ', this.TOP_N);
+      e.add(prefix + 'Sort Descending: ', this.SORT_DESCENDING);  
+      e.add(prefix + 'Include Others: ', this.INCLUDE_OTHERS);
     }
   ]
 });
@@ -203,10 +349,14 @@ foam.CLASS({
   package: 'foam.core.reflow.dashboard',
   name: 'DashboardBarChartDAOAgent',
   extends: 'foam.core.reflow.AbstractSinkDAOAgent',
-  mixins: ['foam.core.reflow.dashboard.DirectChartMixin'],
+  mixins: [
+    'foam.core.reflow.dashboard.DirectChartMixin',
+    'foam.core.reflow.dashboard.LimitedGroupByMixin'
+  ],
 
   requires: [
     'foam.mlang.sink.GroupBy',
+    'foam.mlang.sink.TopGroupBy',
     'foam.mlang.sink.Count',
     'foam.mlang.sink.Sum',
     'foam.mlang.sink.Min',
@@ -269,11 +419,11 @@ foam.CLASS({
       var sink = this.operation.createSink(this.valueProp);
       
       // Group data by property and render bar chart
-      this.dao.select(this.GroupBy.create({
-        arg1: this.groupBy,
-        arg2: sink
-      })).then(function(groupBy) {
-        var chartData = self.convertGroupByToChartData(groupBy, self.getDisplayLabel(), 'bar');
+      var groupBySink = this.createGroupBySinkWithLimits(this.groupBy, sink);
+      
+      this.dao.select(groupBySink).then(function(groupByResult) {
+        var groups = self.extractGroupsFromResult(groupByResult);
+        var chartData = self.convertLimitedGroupsToChartData(groups, self.getDisplayLabel(), 'bar');
         self.renderDirectChart(e, 'bar', chartData, null, self.block);
       });
     },
@@ -291,8 +441,12 @@ foam.CLASS({
           style({display: 'flex', gap: '10px', flexWrap: 'wrap'}).
           add('Group By: ', this.GROUP_BY).
           add('Operation: ', this.OPERATION).
-          add('Value Property: ', this.VALUE_PROP).
-        end().
+          add('Value Property: ', this.VALUE_PROP);
+          
+      // Add limit properties using mixin helper
+      this.addLimitPropertiesToE(e.start(), '');
+      
+      e.end().
       endContext();
     }
   ]
@@ -302,7 +456,10 @@ foam.CLASS({
   package: 'foam.core.reflow.dashboard',
   name: 'DashboardStackedBarChartDAOAgent',
   extends: 'foam.core.reflow.AbstractSinkDAOAgent',
-  mixins: ['foam.core.reflow.dashboard.DirectChartMixin'],
+  mixins: [
+    'foam.core.reflow.dashboard.DirectChartMixin',
+    'foam.core.reflow.dashboard.LimitedGroupByMixin'
+  ],
 
   requires: [
     'foam.mlang.sink.GroupBy',
@@ -502,11 +659,12 @@ foam.CLASS({
       // Create the appropriate sink based on operation
       var sink = this.operation.createSink(this.valueProp);
       
-      this.dao.select(this.GroupBy.create({
-        arg1: this.groupBy,
-        arg2: sink
-      })).then(function(groupBy) {
-        var chartData = self.convertGroupByToChartData(groupBy, self.getDisplayLabel(), 'pie');
+      // Group data by property with limits and render pie chart
+      var groupBySink = this.createGroupBySinkWithLimits(this.groupBy, sink);
+      
+      this.dao.select(groupBySink).then(function(groupByResult) {
+        var groups = self.extractGroupsFromResult(groupByResult);
+        var chartData = self.convertLimitedGroupsToChartData(groups, self.getDisplayLabel(), 'pie');
         var config = self.createPieConfig();
         self.renderDirectChart(e, 'pie', chartData, config, self.block);
       });
@@ -573,8 +731,12 @@ foam.CLASS({
           add('Operation: ', this.OPERATION).
           add('Value Property: ', this.VALUE_PROP).
           add('Show Percentages: ', this.SHOW_PERCENTAGES).
-          add('Label Position: ', this.LABEL_POSITION).
-        end().
+          add('Label Position: ', this.LABEL_POSITION);
+          
+      // Add limit properties using mixin helper  
+      this.addLimitPropertiesToE(e.start(), '');
+      
+      e.end().
       endContext();
     }
   ]
@@ -606,11 +768,12 @@ foam.CLASS({
       // Create the appropriate sink based on operation
       var sink = this.operation.createSink(this.valueProp);
       
-      this.dao.select(this.GroupBy.create({
-        arg1: this.groupBy,
-        arg2: sink
-      })).then(function(groupBy) {
-        var chartData = self.convertGroupByToChartData(groupBy, self.getDisplayLabel(), 'donut');
+      // Group data by property with limits and render donut chart
+      var groupBySink = this.createGroupBySinkWithLimits(this.groupBy, sink);
+      
+      this.dao.select(groupBySink).then(function(groupByResult) {
+        var groups = self.extractGroupsFromResult(groupByResult);
+        var chartData = self.convertLimitedGroupsToChartData(groups, self.getDisplayLabel(), 'donut');
         var config = self.createPieConfig(); // Reuse pie config method
         self.renderDirectChart(e, 'donut', chartData, config, self.block);
       });
