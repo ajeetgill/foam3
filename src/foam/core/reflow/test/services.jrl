@@ -13,5 +13,10 @@ p({
       .setOf(foam.core.reflow.test.PivotTestObject.getOwnClassInfo())
       .build();
   """,
-  "client": "{\"of\":\"foam.core.reflow.test.PivotTestObject\"}"
+  "client": """
+    {
+      "of":"foam.core.reflow.test.PivotTestObject",
+      "cache":false
+    }
+  """
 })
