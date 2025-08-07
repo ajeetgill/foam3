@@ -76,7 +76,7 @@ foam.CLASS({
     
     function showPropertyRequiredMessage(e) {
       e.start('div').
-        style({padding: '20px', textAlign: 'center', color: '#666'}).
+        style({padding: '20px', textAlign: 'center', color: '$textTertiary'}).
         add('Please select a property to group by').
       end();
     },
@@ -99,25 +99,26 @@ foam.CLASS({
         data: data
       };
       
-      // Apply chart-type specific styling
+      // Apply chart-type specific styling with CSS tokens
       switch(chartType) {
         case 'bar':
-          dataset.backgroundColor = 'rgba(54, 162, 235, 0.5)';
-          dataset.borderColor = 'rgba(54, 162, 235, 1)';
+          dataset.backgroundColor = foam.CSS.returnTokenValue('$primary200', this.cls_, this.__context__);
+          dataset.borderColor = foam.CSS.returnTokenValue('$primary400', this.cls_, this.__context__);
           dataset.borderWidth = 1;
           break;
           
         case 'pie':
         case 'donut':
-          var colors = ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 
-                       'rgba(255, 205, 86, 0.5)', 'rgba(75, 192, 192, 0.5)',
-                       'rgba(153, 102, 255, 0.5)', 'rgba(255, 159, 64, 0.5)'];
+          var tokenColors = ['$red200', '$blue200', '$yellow200', '$green200', '$purple200', '$orange200'];
+          var colors = tokenColors.map(function(token) {
+            return foam.CSS.returnTokenValue(token, this.cls_, this.__context__);
+          }.bind(this));
           dataset.backgroundColor = colors.slice(0, data.length);
           break;
           
         case 'line':
-          dataset.backgroundColor = 'rgba(75, 192, 192, 0.2)';
-          dataset.borderColor = 'rgba(75, 192, 192, 1)';
+          dataset.backgroundColor = foam.CSS.returnTokenValue('$green100', this.cls_, this.__context__);
+          dataset.borderColor = foam.CSS.returnTokenValue('$green500', this.cls_, this.__context__);
           dataset.borderWidth = 2;
           dataset.fill = false;
           dataset.tension = 0.1;
@@ -405,7 +406,7 @@ foam.CLASS({
       
       if ( ! this.xProp || ! this.yProp ) {
         e.start('div').
-          style({padding: '20px', textAlign: 'center', color: '#666'}).
+          style({padding: '20px', textAlign: 'center', color: '$textTertiary'}).
           add('Please select both X and Y properties').
         end();
         return;
@@ -484,8 +485,8 @@ foam.CLASS({
         datasets: [{
           label: this.yProp.label + ' vs ' + this.xProp.label,
           data: data,
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: foam.CSS.returnTokenValue('$green100', this.cls_, this.__context__),
+          borderColor: foam.CSS.returnTokenValue('$green500', this.cls_, this.__context__),
           borderWidth: 2,
           fill: false,
           tension: 0.1
@@ -559,9 +560,9 @@ foam.CLASS({
             textAlign: 'center',
             fontSize: '2em',
             fontWeight: 'bold',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            backgroundColor: '#f9f9f9'
+            border: '1px solid $borderLight',
+            borderRadius: '$inputBorderRadius',
+            backgroundColor: '$backgroundTertiary'
           }).
           add(self.getDisplayLabel() + ': ' + result.value).
         end();
@@ -583,7 +584,7 @@ foam.CLASS({
 
     function showPropertyRequiredMessage(e) {
       e.start('div').
-        style({padding: '20px', textAlign: 'center', color: '#666'}).
+        style({padding: '20px', textAlign: 'center', color: '$textTertiary'}).
         add('Please select a property for ' + this.operation.label + ' operation').
       end();
     },
