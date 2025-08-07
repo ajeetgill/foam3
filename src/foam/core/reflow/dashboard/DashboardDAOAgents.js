@@ -159,13 +159,13 @@ foam.CLASS({
         // Create a simple count display
         e.start('div').
           style({
-            padding: '20px',
+            padding: '$inputVerticalPadding $inputHorizontalPadding',
             textAlign: 'center', 
             fontSize: '2em',
-            fontWeight: 'bold',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            backgroundColor: '#f9f9f9'
+            fontWeight: '$font-bold',
+            border: '1px solid $borderLight',
+            borderRadius: '$inputBorderRadius',
+            backgroundColor: '$backgroundTertiary'
           }).
           add(self.label + ': ' + count.value).
         end();
