@@ -376,6 +376,8 @@ foam.CLASS({
     ^content {
       overflow-x: auto;
       width: 100%;
+      height: fit-content;
+      overflow-y: hidden;
     }
   `,
 
