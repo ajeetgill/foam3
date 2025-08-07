@@ -136,7 +136,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow.dashboard',
   name: 'DashboardCountDAOAgent', 
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
   mixins: ['foam.core.reflow.dashboard.DirectChartMixin'],
 
   requires: [
@@ -187,7 +187,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow.dashboard',
   name: 'DashboardBarChartDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
   mixins: ['foam.core.reflow.dashboard.DirectChartMixin'],
 
   requires: [
@@ -371,7 +371,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow.dashboard',
   name: 'DashboardLineChartDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
   mixins: ['foam.core.reflow.dashboard.DirectChartMixin'],
 
   requires: [
@@ -509,7 +509,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow.dashboard',
   name: 'DashboardMetricDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
 
   requires: [
     'foam.mlang.sink.Count',
@@ -605,12 +605,12 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow.dashboard',
   name: 'DashboardGridDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
 
   properties: [
     {
       class: 'FObjectArray',
-      of: 'foam.core.reflow.AbstractDAOAgent',
+      of: 'foam.core.reflow.AbstractSinkDAOAgent',
       name: 'widgets',
       factory: function() { return []; },
       view: {
