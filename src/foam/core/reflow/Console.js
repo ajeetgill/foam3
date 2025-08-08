@@ -1141,13 +1141,13 @@ foam.CLASS({
           }
           // Add bindings for children
           if ( c.value ) {
-            s[c.flowName] = foam.lang.Holder.isInstance(c.value) ? c.value.value : c.value;
+            s[c.flowName] = foam.lang.Holder.isInstance(c.value) ? c.value.value : c.value || c.value;
           }
           this.Flowable.isInstance(c) && addBindings(c);
         });
       };
       addBindings(this);
-      this.flowScope = s;
+      this.flowScope = s;    
     },
 
     async function eval_(cmd, opt_ignoreSelect, ignoreHistory, flowParent) {
