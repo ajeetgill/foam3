@@ -14,6 +14,48 @@
 
 foam.CLASS({
   package: 'foam.core.reflow.dashboard',
+  name: 'ColorMappingMixin',
+  
+  documentation: 'Mixin providing centralized color management for charts with user control over color mappings',
+  
+  properties: [
+    {
+      class: 'StringArray',
+      of: 'Color',
+      name: 'colors',
+      label: 'Chart Colors',
+      view: {
+        class: 'foam.u2.view.ArrayView',
+        valueView: 'foam.u2.view.ColorEditView'
+      }
+    }
+  ],
+  
+  methods: [
+    function getColorForCategory(categoryKey, colorIndex) {
+      // Use the color from the array based on index
+      if ( this.colors && this.colors.length > 0 ) {
+        var colorObj = this.colors[colorIndex % this.colors.length];
+        // foam.lang.Color automatically handles token resolution
+        return colorObj;
+      }
+      
+      // Fallback if no colors defined
+      var defaultTokens = ['$green500', '$blue500', '$red500', '$yellow500'];
+      return foam.CSS.returnTokenValue(defaultTokens[colorIndex % defaultTokens.length], this.cls_, this.__context__);
+    },
+    
+    function addColorMappingToE(e) {
+      // Helper method to add color controls to UI
+      e.startContext({data: this}).
+        add('Chart Colors: ', this.COLORS).
+      endContext();
+    }
+  ]
+});
+
+foam.CLASS({
+  package: 'foam.core.reflow.dashboard',
   name: 'DirectChartMixin',
   
   documentation: 'Mixin providing direct Chart.js integration for DAO agents',
@@ -105,42 +147,15 @@ foam.CLASS({
         }
       }
       
-      // Create Chart.js dataset with type-specific styling
+      // Create Chart.js dataset with basic structure
       var dataset = {
         label: propLabel || 'Count',
         data: data
       };
       
-      // Apply chart-type specific styling with CSS tokens
-      switch(chartType) {
-        case 'bar':
-          dataset.backgroundColor = foam.CSS.returnTokenValue('$primary200', this.cls_, this.__context__);
-          dataset.borderColor = foam.CSS.returnTokenValue('$primary400', this.cls_, this.__context__);
-          dataset.borderWidth = 1;
-          break;
-          
-        case 'stackedbar':
-          dataset.backgroundColor = foam.CSS.returnTokenValue('$blue200', this.cls_, this.__context__);
-          dataset.borderColor = foam.CSS.returnTokenValue('$blue400', this.cls_, this.__context__);
-          dataset.borderWidth = 1;
-          break;
-          
-        case 'pie':
-        case 'donut':
-          var tokenColors = ['$red200', '$blue200', '$yellow200', '$green200', '$purple200', '$orange200'];
-          var colors = tokenColors.map(function(token) {
-            return foam.CSS.returnTokenValue(token, this.cls_, this.__context__);
-          }.bind(this));
-          dataset.backgroundColor = colors.slice(0, data.length);
-          break;
-          
-        case 'line':
-          dataset.backgroundColor = foam.CSS.returnTokenValue('$green100', this.cls_, this.__context__);
-          dataset.borderColor = foam.CSS.returnTokenValue('$green500', this.cls_, this.__context__);
-          dataset.borderWidth = 2;
-          dataset.fill = false;
-          dataset.tension = 0.1;
-          break;
+      // Let the agent configure its own styling
+      if ( this.configureDatasetStyling ) {
+        this.configureDatasetStyling(dataset, labels, chartType);
       }
       
       return {
@@ -177,42 +192,15 @@ foam.CLASS({
         }
       }
       
-      // Create Chart.js dataset with type-specific styling
+      // Create Chart.js dataset with basic structure
       var dataset = {
         label: propLabel || 'Count',
         data: data
       };
       
-      // Apply chart-type specific styling with CSS tokens
-      switch(chartType) {
-        case 'bar':
-          dataset.backgroundColor = foam.CSS.returnTokenValue('$primary200', this.cls_, this.__context__);
-          dataset.borderColor = foam.CSS.returnTokenValue('$primary400', this.cls_, this.__context__);
-          dataset.borderWidth = 1;
-          break;
-          
-        case 'stackedbar':
-          dataset.backgroundColor = foam.CSS.returnTokenValue('$blue200', this.cls_, this.__context__);
-          dataset.borderColor = foam.CSS.returnTokenValue('$blue400', this.cls_, this.__context__);
-          dataset.borderWidth = 1;
-          break;
-          
-        case 'pie':
-        case 'donut':
-          var tokenColors = ['$red200', '$blue200', '$yellow200', '$green200', '$purple200', '$orange200'];
-          var colors = tokenColors.map(function(token) {
-            return foam.CSS.returnTokenValue(token, this.cls_, this.__context__);
-          }.bind(this));
-          dataset.backgroundColor = colors.slice(0, data.length);
-          break;
-          
-        case 'line':
-          dataset.backgroundColor = foam.CSS.returnTokenValue('$green100', this.cls_, this.__context__);
-          dataset.borderColor = foam.CSS.returnTokenValue('$green500', this.cls_, this.__context__);
-          dataset.borderWidth = 2;
-          dataset.fill = false;
-          dataset.tension = 0.1;
-          break;
+      // Let the agent configure its own styling
+      if ( this.configureDatasetStyling ) {
+        this.configureDatasetStyling(dataset, labels, chartType);
       }
       
       return {
@@ -502,6 +490,13 @@ foam.CLASS({
       return this.operation.label + ' of ' + (this.valueProp ? this.valueProp.label : 'Value') + ' by ' + this.groupBy.label;
     },
     
+    function configureDatasetStyling(dataset, labels, chartType) {
+      // Bar chart specific styling
+      dataset.backgroundColor = foam.CSS.returnTokenValue('$primary200', this.cls_, this.__context__);
+      dataset.borderColor = foam.CSS.returnTokenValue('$primary400', this.cls_, this.__context__);
+      dataset.borderWidth = 1;
+    },
+    
     function addToE(e) {
       e.startContext({data: this}).
         start().
@@ -525,7 +520,8 @@ foam.CLASS({
   extends: 'foam.core.reflow.AbstractSinkDAOAgent',
   mixins: [
     'foam.core.reflow.dashboard.DirectChartMixin',
-    'foam.core.reflow.dashboard.LimitedGroupByMixin'
+    'foam.core.reflow.dashboard.LimitedGroupByMixin',
+    'foam.core.reflow.dashboard.ColorMappingMixin'
   ],
 
   requires: [
@@ -638,7 +634,6 @@ foam.CLASS({
       // Create datasets for each stack
       var datasets = [];
       var colorIndex = 0;
-      var tokenColors = ['$blue200', '$green200', '$red200', '$yellow200', '$purple200', '$orange200'];
       
       for ( var stackValue in stackGroups ) {
         if ( stackGroups.hasOwnProperty(stackValue) ) {
@@ -649,8 +644,8 @@ foam.CLASS({
             data.push(stackGroups[stackValue][category] || 0);
           });
           
-          var color = foam.CSS.returnTokenValue(tokenColors[colorIndex % tokenColors.length], this.cls_, this.__context__);
-          var borderColor = color.replace('200', '400'); // Darker border
+          var color = this.getColorForCategory(stackValue, colorIndex);
+          var borderColor = color.replace('500', '600'); // Darker border for 500 colors
           
           datasets.push({
             label: stackValue.toString(),
@@ -677,8 +672,12 @@ foam.CLASS({
           add('X Group By: ', this.X_GROUP_BY).
           add('Stack By: ', this.STACK_BY).
           add('Operation: ', this.OPERATION).
-          add('Value Property: ', this.VALUE_PROP).
-        end().
+          add('Value Property: ', this.VALUE_PROP);
+      
+      // Add color mapping controls for stack categories
+      this.addColorMappingToE(e.start());
+      
+      e.end().
       endContext();
     }
   ]
@@ -688,6 +687,7 @@ foam.CLASS({
   package: 'foam.core.reflow.dashboard',
   name: 'DashboardPieChartDAOAgent',
   extends: 'foam.core.reflow.dashboard.DashboardBarChartDAOAgent',
+  mixins: ['foam.core.reflow.dashboard.ColorMappingMixin'],
 
   properties: [
     {
@@ -783,6 +783,15 @@ foam.CLASS({
 
       return { options: options, plugins: [] };
     },
+    
+    function configureDatasetStyling(dataset, labels, chartType) {
+      // Pie/Donut chart specific styling using ColorMappingMixin
+      var colors = [];
+      for ( var i = 0; i < labels.length; i++ ) {
+        colors.push(this.getColorForCategory(labels[i], i));
+      }
+      dataset.backgroundColor = colors;
+    },
 
     function addToE(e) {
       e.startContext({data: this}).
@@ -796,6 +805,9 @@ foam.CLASS({
           
       // Add limit properties using mixin helper  
       this.addLimitPropertiesToE(e.start(), '');
+      
+      // Add color mapping controls for pie slices
+      this.addColorMappingToE(e.start());
       
       e.end().
       endContext();
@@ -843,18 +855,28 @@ foam.CLASS({
   package: 'foam.core.reflow.dashboard',
   name: 'DashboardLineChartDAOAgent',
   extends: 'foam.core.reflow.AbstractSinkDAOAgent',
-  mixins: ['foam.core.reflow.dashboard.DirectChartMixin'],
+  mixins: [
+    'foam.core.reflow.dashboard.DirectChartMixin',
+    'foam.core.reflow.dashboard.ColorMappingMixin'
+  ],
 
   requires: [
     'foam.mlang.sink.GroupBy',
     'foam.mlang.sink.Count',
+    'foam.mlang.sink.Sum',
+    'foam.mlang.sink.Min',
+    'foam.mlang.sink.Max',
+    'foam.mlang.sink.Average',
+    'foam.dao.ArraySink',
     'org.chartjs.Lib',
-    'foam.core.reflow.dashboard.TimeUnit'
+    'foam.core.reflow.dashboard.TimeUnit',
+    'foam.core.reflow.dashboard.MetricOperation'
   ],
 
   properties: [
     {
       name: 'xProp',
+      label: 'X Property',
       view: function(_, X) {
         return { 
           class: 'foam.core.reflow.PropertyChoiceView', 
@@ -864,11 +886,47 @@ foam.CLASS({
     },
     {
       name: 'yProp', 
+      label: 'Y Property',
       view: function(_, X) {
         return { 
           class: 'foam.core.reflow.PropertyChoiceView', 
           forCls: X.data.dao.of
         };
+      }
+    },
+    {
+      name: 'groupBy',
+      label: 'Group By (for multiple lines)',
+      help: 'Optional: Group data by this property to create multiple lines, one for each category',
+      view: function(_, X) {
+        return { 
+          class: 'foam.core.reflow.PropertyChoiceView', 
+          forCls: X.data.dao.of
+        };
+      }
+    },
+    {
+      class: 'Enum',
+      of: 'foam.core.reflow.dashboard.MetricOperation',
+      name: 'operation',
+      label: 'Y-Axis Operation',
+      value: 'COUNT',
+      help: 'Operation to apply when grouping data points with same X value',
+      visibility: function(groupBy) {
+        return groupBy ? 'RW' : 'HIDDEN';
+      }
+    },
+    {
+      name: 'valueProp',
+      label: 'Value Property',
+      view: function(_, X) {
+        return { 
+          class: 'foam.core.reflow.PropertyChoiceView', 
+          forCls: X.data.dao.of
+        };
+      },
+      visibility: function(operation, groupBy) {
+        return groupBy && operation !== 'COUNT' ? 'RW' : 'HIDDEN';
       }
     },
     {
@@ -894,9 +952,23 @@ foam.CLASS({
         return;
       }
       
-      // Get all records and create X vs Y line chart
-      var arraySink = await this.dao.select();
-      var chartData = this.convertRecordsToLineChart(arraySink.array);
+      var chartData;
+      
+      if ( this.groupBy ) {
+        // Multiline chart: group data by the groupBy property with operations
+        if ( this.operation !== 'COUNT' && ! this.valueProp ) {
+          e.start('div').
+            style({padding: '20px', textAlign: 'center', color: foam.CSS.returnTokenValue('$textTertiary', this.cls_, this.__context__)}).
+            add('Please select a Value property for ' + this.operation.label + ' operation').
+          end();
+          return;
+        }
+        chartData = await this.createMultilineChartData();
+      } else {
+        // Single line chart: original behavior
+        var arraySink = await this.dao.select();
+        chartData = this.convertRecordsToLineChart(arraySink.array);
+      }
       
       // Configure Chart.js options with proper date handling
       var isXAxisDate = this.xProp.chartJsFormatter && 
@@ -938,7 +1010,106 @@ foam.CLASS({
       this.renderDirectChart(e, 'line', chartData, {options: options}, this.block);
     },
     
-    function convertRecordsToLineChart(records) {
+    async function createMultilineChartData() {
+      // Check if operation requires a value property
+      if ( this.operation !== 'COUNT' && ! this.valueProp ) {
+        return { datasets: [] }; // Empty dataset if configuration is incomplete
+      }
+      
+      // Create appropriate sink based on operation
+      var valueSink = this.operation.createSink(this.valueProp);
+      
+      // Group by category first, then within each category group by X property
+      var categoryGroupBy = this.GroupBy.create({
+        arg1: this.groupBy,
+        arg2: this.GroupBy.create({
+          arg1: this.xProp,
+          arg2: valueSink
+        })
+      });
+      
+      var groupByResult = await this.dao.select(categoryGroupBy);
+      var datasets = [];
+      var colorIndex = 0;
+      
+      // Create a dataset for each category
+      for ( var categoryKey in groupByResult.groups ) {
+        if ( groupByResult.groups.hasOwnProperty(categoryKey) ) {
+          var xGroupByResult = groupByResult.groups[categoryKey];
+          var lineData = this.convertGroupByToLineData(xGroupByResult);
+          
+          if ( lineData.length > 0 ) {
+            var color = this.getColorForCategory(categoryKey, colorIndex);
+            
+            datasets.push({
+              label: categoryKey.toString(),
+              data: lineData,
+              backgroundColor: color + '20', // Add some transparency
+              borderColor: color,
+              borderWidth: 2,
+              fill: false,
+              tension: 0.1,
+              pointBackgroundColor: color,
+              pointBorderColor: color,
+              pointRadius: 3,
+              pointHoverRadius: 5
+            });
+            
+            colorIndex++;
+          }
+        }
+      }
+      
+      return {
+        datasets: datasets
+      };
+    },
+    
+    function convertGroupByToLineData(xGroupByResult) {
+      var data = [];
+      var self = this;
+      
+      // Check if X-axis property has FOAM3 date formatting
+      var isXAxisDate = self.xProp.chartJsFormatter && 
+                       (foam.lang.Date.isInstance(self.xProp) || 
+                        foam.lang.DateTime.isInstance(self.xProp));
+      
+      // Convert GroupBy result to {x, y} points
+      for ( var xKey in xGroupByResult.groups ) {
+        if ( xGroupByResult.groups.hasOwnProperty(xKey) ) {
+          var xVal = xKey;
+          var yVal = xGroupByResult.groups[xKey].value;
+          
+          if ( xVal != null && yVal != null ) {
+            // Use FOAM3 chartJsFormatter for proper date conversion
+            var processedXVal = self.xProp.chartJsFormatter ? 
+                               self.xProp.chartJsFormatter(xVal) : xVal;
+            
+            // For linear scales, ensure x values are numbers, not formatted strings
+            if ( !isXAxisDate && typeof processedXVal === 'string' ) {
+              // Remove commas and convert to number for linear scales
+              processedXVal = parseFloat(processedXVal.replace(/,/g, ''));
+            }
+            
+            data.push({x: processedXVal, y: yVal});
+          }
+        }
+      }
+      
+      // Sort by X value for proper line connection
+      data.sort(function(a, b) {
+        // Handle date comparison if needed
+        if (isXAxisDate) {
+          return new Date(a.x) - new Date(b.x);
+        }
+        // Ensure numeric comparison for linear scales
+        return parseFloat(a.x) - parseFloat(b.x);
+      });
+      
+      return data;
+    },
+    
+    function convertRecordsToLineData(records) {
       var data = [];
       var self = this;
       
@@ -963,10 +1134,6 @@ foam.CLASS({
             processedXVal = parseFloat(processedXVal.replace(/,/g, ''));
           }
           
-          // Debug: Log time series data processing
-          if ( isXAxisDate && processedXVal ) {
-          }
-          
           data.push({x: processedXVal, y: yVal});
         }
       });
@@ -981,6 +1148,13 @@ foam.CLASS({
         return parseFloat(a.x) - parseFloat(b.x);
       });
       
+      return data;
+    },
+    
+    function convertRecordsToLineChart(records) {
+      // Use the new helper method for consistency
+      var data = this.convertRecordsToLineData(records);
+      
       return {
         datasets: [{
           label: this.yProp.label + ' vs ' + this.xProp.label,
@@ -994,14 +1168,32 @@ foam.CLASS({
       };
     },
     
+    function configureDatasetStyling(dataset, labels, chartType) {
+      // Line chart specific styling
+      dataset.backgroundColor = foam.CSS.returnTokenValue('$green100', this.cls_, this.__context__);
+      dataset.borderColor = foam.CSS.returnTokenValue('$green500', this.cls_, this.__context__);
+      dataset.borderWidth = 2;
+      dataset.fill = false;
+      dataset.tension = 0.1;
+    },
+    
     function addToE(e) {
       e.startContext({data: this}).
         start().
           style({display: 'flex', gap: '10px', flexWrap: 'wrap'}).
           add('X Property: ', this.X_PROP).
           add('Y Property: ', this.Y_PROP).
-          add('Time Unit: ', this.TIME_UNIT).
-        end().
+          add('Group By: ', this.GROUP_BY).
+          add('Y-Axis Operation: ', this.OPERATION).
+          add('Value Property: ', this.VALUE_PROP).
+          add('Time Unit: ', this.TIME_UNIT);
+          
+      // Add color mapping controls when groupBy is set  
+      if ( this.groupBy ) {
+        this.addColorMappingToE(e.start());
+      }
+      
+      e.end().
       endContext();
     }
   ]
