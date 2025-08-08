@@ -106,11 +106,11 @@ foam.CLASS({
 
       this.data.createEnabled = true;
       this.data.selectEnabled = false;
-      this.data.editEnabled = false;
+      this.data.editEnabled   = false;
       this.data.exportEnabled = false;
 
       var filterView = foam.u2.ViewSpec.createView(this.FilterView, {
-        dao$: this.data.data$,
+        dao$:  this.data.data$,
         data$: this.data.predicate$,
       }, this, this.__subContext__.createSubContext({
         controllerMode: foam.u2.ControllerMode.EDIT
@@ -136,8 +136,8 @@ foam.CLASS({
               selectedObjects$: self.data.selectedObjects$
             })
           .end()
-        .end()
-    },
+        .end();
+    }
   ],
 
   listeners: [
@@ -166,6 +166,7 @@ foam.CLASS({
   name: 'FlowDAOCreateControllerView',
   extends: 'foam.comics.DAOCreateControllerView',
   imports: ['block'],
+
   css: `
     ^ {
       width: 100%;
@@ -269,7 +270,7 @@ foam.CLASS({
         idOfRecord: id
       }, ctx);
       detailView.finished.sub(this.onFinished);
-      
+
       this.view = foam.u2.Element.create().start(stack).style({top: '12px'}).add(detailView).end();
       this.block.out.add(this.view);
     },
