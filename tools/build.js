@@ -54,16 +54,6 @@
 // TODO:
 //   - should Makers be responsible for building target directories?
 
-/*
-diskutil erasevolume HFS+ RAM_Disk $(hdiutil attach -nomount ram://1000000)
-ln -s /Volumes/RAM_DISK /path/to/project/build2
-
-diskutil erasevolume HFS+ 'RAMDisk' `hdiutil attach -nomount ram://848000`
-mkdir /Volumes/RamDisk/build
-rm -rf ~/foam3/build
-ln -s /Volumes/RamDisk/build ~/foam3/build
-*/
-
 const { adaptOrCreateArgs, bool, buildEnv, addOptions, comma, copyDir, copyFile, emptyDir, ensureDir, exec, execSync, exportEnvs, findOption, findSimilarOptions, findTask, findSimilarTasks, flag, hyphenate, info, isExcluded, log, processBuildArgs, processToolingArgs, rmdir, rmfile, spawn, stat, warning, writeFileIfUpdated, verbose } = require('./buildlib');
 const { appendFileSync, existsSync, openSync, readdirSync, readFileSync, writeFileSync } = require('fs');
 const os = require('os');
@@ -283,7 +273,8 @@ function moreUsage(arg) {
   if ( ! showEnvs ) {
     info('Usage: build.js [OPTIONS] (see --usage for examples)');
     if( ! arg || arg === 'options' ) {
-      info('\nOptions are:');
+      log('\n');
+      info('Options are:');
       Object.keys(OPTIONS).forEach(key => {
         let option = OPTIONS[key];
         var opts = '';
@@ -311,7 +302,8 @@ function moreUsage(arg) {
     }
 
     if ( ! arg || arg === 'tasks' ) {
-      info('\nTasks: (invoke with -XtaskName or --task-name)');
+      log('\n');
+      info('Tasks: (invoke with -XtaskName or --task-name)');
       var ts = Object.assign({}, TOOLING_TASKS);
       var depth = 1;
       function printTask(t) {
@@ -346,10 +338,11 @@ function moreUsage(arg) {
   if ( showEnvs ||
        ! arg ||
        arg === 'envs' ) {
+    log('\n');
     if ( showEnvs ) {
-      info('\nEnvironment variable report:');
+      info('Environment variable report:');
     } else {
-      info('\nEnvironment variables: (set with -E)');
+      info('Environment variables: (set with -E)');
     }
     depth = 1;
 
@@ -372,7 +365,12 @@ function moreUsage(arg) {
   }
   log('');
   if ( ! showEnvs ) {
-    info('See --usage for examples, and documentation #flowdoc/Build.)');
+    info('Additional Tooling (include with -T)');
+    log('  RAMDisk - create RAM disk to use as the build directory. use: -TRAMDisk');
+    log('  RemoteInstall - configure remote host and install Java application. use: -TStandard,RemoteInstall,Java ...');
+    log('  setup/Project - create a new FOAM project. use: -T+setup/Project ...');
+    log('');
+    info('See --usage for examples, and documentation #flowdoc/Build');
   }
 }
 
@@ -434,7 +432,7 @@ TOOLING_OPTIONS = addOptions({
   homeDir: ['', 'home-dir', 'HOME_DIR', 'Home directory of user executing build', () => os.homedir(), arg => HOME_DIR = arg ],
   platform: ['', 'platform', 'PLATFORM', 'Operation System Type. One of: darwin (MacOS), freebsd, linux, win32', () => os.platform(), arg => PLATFORM = arg ],
   silent: ['', 'silent', 'SILENT', "Suppress all 'info' and 'warning' log messages.", false, function(arg) { SILENT = arg ? bool(arg) : true; }],
-  toolingPoms: [ 'T', 'tooling-poms', 'TOOLING_POMS', 'Comma separated list of tooling poms. When not specified, build will look for tools/defaultTooling file, and it not found, default to \'Standard,RAMDisk,Npm,Maven,Git,JS,Java\'.  To \'add\' tooling to default list, prefix name with +.',
+  toolingPoms: [ 'T', 'tooling-poms', 'TOOLING_POMS', 'Comma separated list of tooling poms. When not specified, build will look for tools/defaultTooling file, and it not found, default to \'Standard,Npm,Maven,Git,JS,Java\'.  To \'add\' tooling to default list, prefix name with +.',
                  function() {
                    var poms;
                    var fn = join(process.cwd(),`tools/defaultTooling`);
@@ -443,7 +441,7 @@ TOOLING_OPTIONS = addOptions({
                      verbose(`[build] using project tooling: ${poms}`);
                    }
                    if ( ! poms ) {
-                     poms = 'Standard,RAMDisk,Npm,Maven,Git,JS,Java';
+                     poms = 'Standard,Npm,Maven,Git,JS,Java';
                      verbose(`[build] using default tooling: ${poms}`);
                    }
                    return poms;

@@ -43,18 +43,21 @@ foam.CLASS({
     {
       class: 'String',
       name: 'name',
+      hidden: true,
       expression: function(prop_) {
         return prop_?.name ?? 'select';
       }
     },
     {
       class: 'String',
+      hidden: true,
       name: 'label',
-      documentation: `User-visible label. Not to be confused with "text",
+      documentation: `DEPRECATED: User-visible label. Not to be confused with "text",
           'which is the user-visible name of the currently selected choice.`
     },
     {
       name: 'choice',
+      hidden: true,
       // 'choice' is the canonical source of truth. Updating 'choice' is
       // responsible for updating 'index', 'data', and 'text'. Updating any
       // of those properties calls back to updating 'choice'.
@@ -86,6 +89,7 @@ foam.CLASS({
           be a map, which results in [key, value] pairs listed in
           enumeration order.`,
       factory: function() { return []; },
+      view: { class: 'foam.u2.view.ArrayView' },
       adapt: function(old, nu) {
         if ( typeof nu === 'object' && ! Array.isArray(nu) ) {
           var out = [];
@@ -103,7 +107,7 @@ foam.CLASS({
         // Upgrade single values to [value, value].
         for ( var i = 0 ; i < nu.length ; i++ ) {
           if ( ! Array.isArray(nu[i]) ) {
-            nu[i] = [ nu[i], nu[i] ];
+            nu[i] = [ nu[i], foam.String.labelize(nu[i]) ];
           }
         }
 
@@ -121,6 +125,7 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'index',
+      hidden: true,
       documentation: 'The index of the current choice in the choices array.',
       transient: true,
       value: -1,
@@ -144,26 +149,31 @@ foam.CLASS({
     {
       class: 'Function',
       name: 'objToChoice',
+      hidden: true,
       value: function(o) { return [ o.id, o.label ]; },
       documentation: 'A function which adapts an object from the DAO to a [key, value] choice. Required when a DAO is provided.'
     },
     {
       class: 'foam.dao.DAOProperty',
-      name: 'dao'
+      name: 'dao',
+      hidden: true,
     },
     {
       name: 'text',
+      label: 'Default Value',
       postSet: function(o, n) {
         if ( o !== n ) this.choice = this.findChoiceByText(n);
       }
     },
     {
       name: 'data',
+      hidden: true,
       postSet: function(o, n) {
         if ( o !== n && ! foam.Null.isInstance(n) ) this.choice = this.findChoiceByData(n) || [n, n.label || n];
       }
     },
     {
+      class: 'Array',
       name: 'disabledData',
       documentation: 'Optional slot containing list of choice ids that should be disabled',
       factory: function() {
@@ -177,18 +187,27 @@ foam.CLASS({
     },
     {
       class: 'Boolean',
-      name: 'alwaysFloatLabel'
+      name: 'alwaysFloatLabel',
+      hidden: true
     },
     {
       class: 'String',
       name: 'header',
-      documentation: 'if this is set, a custom header will be add to drop down choices'
+      hidden: true,
+      documentation: 'DEPRECATED: if this is set, a custom header will be add to drop down choices'
     },
     {
-      name: 'view_'
+      name: 'view_',
+      hidden: true,
     },
-    'feedback_',
-    'defaultValue',
+    {
+      name: 'feedback_',
+      hidden: true
+    },
+    {
+      name: 'defaultValue',
+      hidden: true
+    },
     {
       class: 'Int',
       name: 'size',
@@ -206,19 +225,25 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'maxSize',
+      hidden: true,
       documentation: `The size of the select element should never be greater
         than this number.`,
       value: Number.MAX_SAFE_INTEGER
     },
-    'prop_',
+    {
+      name: 'prop_',
+      hidden: true
+    },
     {
       class: 'Int',
-      name: 'seq_'
+      name: 'seq_',
+      hidden: true
     }
   ],
 
   methods: [
     function init() {
+      this.SUPER();
       this.onDetach(this.choices$.sub(this.onChoicesUpdate));
     },
 

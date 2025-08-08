@@ -199,6 +199,61 @@ foam.CLASS({
   ]
 });
 
+foam.CLASS({
+  package: 'foam.u2',
+  name: 'WrapperNode',
+  extends: 'foam.u2.Element',
+  documentation: `Special kind of node that can move itself and it's children between elements without causing rerenders
+  Uses the same fake element behaviour as FunctionNode but is not dynamic.
+  `,
+  properties: [
+    {
+      name: 'id',
+      factory: function() {
+        return 'wrapper' + foam.next$UID();
+      }
+    },
+    {
+      class: 'Boolean',
+      name: 'loaded_'
+    },
+    {
+      name: 'element_',
+      factory: function() { return this.document.createComment(this.id); }
+    },
+    {
+      name: 'endElement_',
+      factory: function() { return this.document.createComment('/' + this.id); }
+    },
+    { class: 'Array', name: 'nodesToMove_', hidden: true }
+  ],
+  methods: [
+    function moveTo(e) {
+      this.nodesToMove_ = [];
+      if ( this.parentNode )
+        this.parentNode.childNodes = this.parentNode.childNodes.filter(v => v !== this);
+      this.parentNode = e;
+      for ( let el = this.element_.nextSibling;
+        el != this.endElement_; el = el.nextSibling ) {
+        this.nodesToMove_.push(el);
+      }
+      e.add(this);
+    },
+    function render() {
+      if ( ! this.parentNode ) { this.detach(); return; }
+      this.element_.parentNode.appendChild(this.endElement_);
+      this.nodesToMove_.forEach(v => this.appendChild_(v));
+      this.nodesToMove_ = undefined;
+    },
+
+    // Append 'children' before /dynamic comment
+    function appendChild_(c) {
+      if ( ! this.endElement_.parentNode ) { this.detach(); return; }
+      this.endElement_.parentNode.insertBefore(c, this.endElement_);
+    }
+  ]
+});
+
 
 foam.CLASS({
   package: 'foam.u2',
@@ -476,6 +531,8 @@ foam.CLASS({
     {
       name: 'element_',
       transient: true,
+      hidden: true,
+      copyValueFrom: () => { return true; },
       factory: function() {
         var ret = this.namespace ?
           this.document.createElementNS(this.namespace, this.nodeName) :
@@ -486,16 +543,25 @@ foam.CLASS({
     },
     {
       class: 'String',
-      name: 'id'
+      name: 'id',
+      hidden: true,
+      postSet: function(o,n) {
+        if ( this.hasOwnProperty('element_') ) {
+          this.element_.id = n;
+        }
+      }
     },
     {
       class: 'Enum',
       of: 'foam.u2.ControllerMode',
       name: 'controllerMode',
+      hidden: true,
       factory: function() { return this.__context__.controllerMode || foam.u2.ControllerMode.CREATE; }
     },
     {
       name: 'content',
+      hidden: true,
+      transient: true,
       preSet: function(o, n) {
         // Prevent setting to 'this', which wouldn't change the behaviour.
         return n === this ? null : n ;
@@ -505,6 +571,7 @@ foam.CLASS({
       class: 'String',
       name: 'tooltip',
       attribute: true,
+      hidden: true,
       postSet: function(o, n) {
         if ( n && ! o ) {
           this.Tooltip.create({target: this, text$: this.tooltip$});
@@ -513,11 +580,14 @@ foam.CLASS({
       }
     },
     {
-      name: 'extraStyle'
+      class: 'String',
+      name: 'extraStyle',
+      hidden: true
     },
     {
       name: 'parentNode',
       transient: true,
+      hidden: true,
       postSet: function(o, n) { n.onDetach(this); }
     },
     {
@@ -547,12 +617,14 @@ foam.CLASS({
     */
     {
       name: 'nodeName',
+      hidden: true,
       adapt: function(_, v) { return foam.String.toLowerCase(v); },
       value: 'div'
     },
     {
       class: 'String',
       name: 'namespace',
+      hidden: true,
       factory: function() {
         return this.__context__['namespace'] || (this.nodeName === 'svg' ? 'http://www.w3.org/2000/svg' : '');
       }
@@ -560,22 +632,30 @@ foam.CLASS({
     {
       name: 'classes',
       documentation: 'CSS classes assigned to this Element. Stored as a map of true values.',
+      transient: true,
+      hidden: true,
       factory: function() { return {}; }
     },
     {
+      class: 'Map',
       name: 'css',
+      transient: true,
+      hidden: true,
       documentation: 'Styles added to this Element.',
       factory: function() { return {}; }
     },
     {
       name: 'childNodes',
       documentation: 'Children of this Element.',
+      transient: true,
+      hidden: true,
       factory: function() { return []; }
     },
     {
       name: 'children',
       documentation: 'Virtual property of non-String childNodes.',
       transient: true,
+      hidden: true,
       getter: function() {
         return this.childNodes.filter(function(c) {
           return typeof c !== 'string';
@@ -585,34 +665,45 @@ foam.CLASS({
     {
       class: 'Boolean',
       name: 'focused',
+      hidden: true,
       postSet: function(o, n) {
         if ( n ) this.element_.focus();
       }
     },
     {
-      name: 'scrollHeight'
+      name: 'scrollHeight',
+      hidden: true
     },
     {
       class: 'Int',
       name: 'tabIndex',
+      hidden: true,
       postSet: function(o, n) {
         this.element_.setAttribute('tabindex', n);
       }
     },
     {
-      name: 'clickTarget_'
+      name: 'clickTarget_',
+      hidden: true
     },
     {
       name: '__subSubContext__',
+      transient: true,
+      hidden: true,
       documentation:
         `Current subContext to use when creating children.
         Defaults to __subContext__ unless in a nested startContext().`,
       factory: function() { return this.__subContext__; }
     },
-    'keyMap_',
+    {
+      name: 'keyMap_',
+      hidden: true
+    },
     {
       // TODO: remove after port from U2 to U3
       name: 'onload',
+      transient: true,
+      hidden: true,
       factory: function() {
         return { sub: function(f) {
           console.warn('Deprecated us of ELement.onload.sub().');
@@ -638,8 +729,7 @@ foam.CLASS({
     // from state
 
     function replaceElement_(el) {
-      el.parentNode.replaceChild(this.element_, el);
-      this.load();
+      el.parentNode.replaceChild(this, el);
     },
 
     // TODO: for backward compatibility with U2, remove when all code ported
@@ -1006,7 +1096,7 @@ foam.CLASS({
         if ( cs[i] === oldE ) {
           cs[i] = newE;
           newE.parentNode = this;
-          oldE.element_.parentNode.replaceChild(oldE.element_, newE.element_);
+          oldE.element_.parentNode.replaceChild(newE.element_, oldE.element_);
 //          oldE.element_.outerHTML = '<' + this.nodeName + '></' + this.nodeName + '>';
           newE.load && newE.load();
           oldE.remove();
@@ -2139,7 +2229,8 @@ foam.CLASS({
   properties: [
     {
       name: 'data',
-      attribute: true
+      attribute: true,
+      transient: true
     },
     // {
     //   class: 'String',
@@ -2160,6 +2251,11 @@ foam.CLASS({
   ],
 
   methods: [
+    function init() {
+      if ( this.id )
+        this.element_.u3 = this;
+      this.SUPER();
+    },
     function render() {
       this.SUPER();
       this.updateMode_(this.mode);
@@ -2185,7 +2281,14 @@ foam.CLASS({
 
   documentation: 'A Controller is an Element which exports itself as "data".',
 
-  exports: [ 'as data' ]
+  exports: [ 'as data' ],
+
+  properties: [
+    {
+      name: 'shown',
+      hidden: true
+    }
+  ]
 });
 
 

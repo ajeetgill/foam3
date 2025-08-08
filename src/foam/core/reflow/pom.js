@@ -5,6 +5,7 @@ foam.POM({
   ],
   files: [
     { name: '../../u2/mlang/Table',    flags: 'js|java' },
+    { name: '../../u2/mlang/Pie',    flags: 'js|java' },
     { name: 'AbstractDAOAgent',        flags: 'js' },
     { name: 'CellsSink',               flags: 'js|java' },
     { name: 'Check',                   flags: 'js' },
@@ -29,6 +30,8 @@ foam.POM({
     { name: 'SinkAgent',               flags: 'js|java' },
     { name: 'CommandItemView',         flags: 'js' },
     { name: 'ReflowToolBar',           flags: 'js' },
+    { name: 'ReflowConfigView',        flags: 'web' },
+    { name: 'LayoutBlock',             flags: 'web' },
     { name: 'ModelDAO',                flags: 'js' },
     { name: 'PropertyChoiceView',      flags: 'js' },
     { name: 'PropertySuggestedField',  flags: 'js' },
@@ -62,6 +65,7 @@ foam.POM({
     { name: 'control/HelpControl',     flags: 'js' },
     { name: 'control/CollectionsControl', flags: 'js' },
     { name: 'control/FlowsControl',     flags: 'js' },
-    { name: 'control/ComponentsControl', flags: 'js' }
+    { name: 'control/ComponentsControl', flags: 'js' },
+    { name: 'FlowBrowserView',         flags: 'js' }
   ]
 });

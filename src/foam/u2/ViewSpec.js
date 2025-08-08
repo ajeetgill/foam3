@@ -75,7 +75,7 @@ foam.CLASS({
 
             if ( spec.children ) {
               for ( var i = 0 ; i < spec.children.length ; i++ ) {
-                ret.tag(spec.children[0]);
+                ret.tag(spec.children[i]);
               }
             }
 
@@ -110,7 +110,7 @@ foam.CLASS({
     ],
     {
       name: 'view',
-      value: { class: 'foam.u2.view.MapView' }
+      value: { class: 'foam.u2.view.JSONTextView' }
     },
     {
       name: 'adapt',

@@ -132,6 +132,14 @@ Fields:
   <li>options - defines a property whose value can be manipulated to impact a <b>task</b>.</li>
   <li>tasks - defines a method which acts against the repository. </li>
 </ul>
+<h2>Project specific Tooling</h2>
+<p>The build looks for tooling poms in:</p>
+<ul>
+  <li>tools/</li>
+  <li>foam3/tools/</li>
+</ul>
+<p>For example, <b>Custom</b> tooling located in tools/CustomTooling.pom can be added into the build with: </p>
+<p><b>-T+Custom</b></p>
 
 
 <h4>Creating a POM Environment Variable</h4>
