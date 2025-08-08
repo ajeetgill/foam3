@@ -1233,6 +1233,13 @@ foam.CLASS({
       class: 'String',
       name: 'label',
       value: 'Metric'
+    },
+    {
+      class: 'Boolean',
+      name: 'showCount',
+      label: 'Show Count',
+      value: false,
+      help: 'Display the record count next to the metric value'
     }
   ],
 
@@ -1246,6 +1253,13 @@ foam.CLASS({
       var sink = this.operation.createSink(this.prop);
       var result = await this.dao.select(sink);
       
+      // Get count if showCount is enabled
+      var count = null;
+      if ( this.showCount && this.operation !== 'COUNT' ) {
+        var countResult = await this.dao.select(this.Count.create());
+        count = countResult.value;
+      }
+      
       // Label display
       e.start('div')
         .add(this.getDisplayLabel())
@@ -1255,6 +1269,23 @@ foam.CLASS({
       e.start('div')
         .add(typeof result.value === 'number' ? result.value.toLocaleString() : result.value)
       .end();
+      
+      // Add count below value in smaller font if enabled
+      if ( this.showCount ) {
+        if ( this.operation === 'COUNT' ) {
+          // For COUNT operation, don't show count again
+        } else if ( count !== null ) {
+          e.start('div')
+            .style({
+              fontSize: '0.75em',
+              marginTop: '4px',
+              color: foam.CSS.returnTokenValue('$textSecondary', this.cls_, this.__context__),
+              fontWeight: 'normal'
+            })
+            .add(count.toLocaleString() + ' records')
+          .end();
+        }
+      }
 
       if (this.block) {
         if (this.block.value) {
@@ -1284,6 +1315,7 @@ foam.CLASS({
           add('Operation: ', this.OPERATION).
           add('Property: ', this.PROP).
           add('Label: ', this.LABEL).
+          add('Show Count: ', this.SHOW_COUNT).
         end().
       endContext();
     }
