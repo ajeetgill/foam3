@@ -62,6 +62,7 @@ foam.POM({
     { name: 'control/HelpControl',     flags: 'js' },
     { name: 'control/CollectionsControl', flags: 'js' },
     { name: 'control/FlowsControl',     flags: 'js' },
-    { name: 'control/ComponentsControl', flags: 'js' }
+    { name: 'control/ComponentsControl', flags: 'js' },
+    { name: 'FlowBrowserView',         flags: 'js' }
   ]
 });

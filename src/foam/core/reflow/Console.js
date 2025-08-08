@@ -387,6 +387,8 @@ foam.CLASS({
     ^content {
       overflow-x: auto;
       width: 100%;
+      height: fit-content;
+      overflow-y: hidden;
     }
   `,
 
@@ -1026,10 +1028,11 @@ foam.CLASS({
       var cmds = await this.commandDAO.select();
 
       cmds.array.forEach(c => {
-        this.localScope[c.id] = (...args) => {
+        this.localScope[c.id] = async (...args) => {
           var cmd = c.clone(this.currentBlock);
-          return cmd.execute.apply(cmd, args);
-        };
+          return await cmd.execute.apply(cmd, args);
+        }
+
       });
 
       // If this.value.script changes
