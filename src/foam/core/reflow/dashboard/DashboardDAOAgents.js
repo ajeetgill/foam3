@@ -25,7 +25,7 @@ foam.CLASS({
     'org.chartjs.Donut2',
     'org.chartjs.StackedBar2',
     'foam.mlang.sink.GroupBy',
-    'foam.mlang.sink.TopGroupBy'
+    'foam.mlang.sink.GroupBySortOrder'
   ],
   
   methods: [
@@ -150,28 +150,26 @@ foam.CLASS({
     },
     
     function createLimitedGroupBy(groupBy, sink, topN, sortDescending, includeOthers) {
-      // Helper method to create either GroupBy or TopGroupBy based on topN setting
+      // Create GroupBy with unified groupLimit functionality
+      var sortOrder = this.GroupBySortOrder.NONE;
       if ( topN > 0 ) {
-        return this.TopGroupBy.create({
-          arg1: groupBy,
-          arg2: sink,
-          topLimit: topN,
-          descending: sortDescending,
-          includeOthers: includeOthers
-        });
-      } else {
-        return this.GroupBy.create({
-          arg1: groupBy,
-          arg2: sink
-        });
+        sortOrder = sortDescending ? this.GroupBySortOrder.DESC : this.GroupBySortOrder.ASC;
       }
+      
+      return this.GroupBy.create({
+        arg1: groupBy,
+        arg2: sink,
+        groupLimit: topN > 0 ? topN : -1,
+        sortOrder: sortOrder,
+        includeOthers: includeOthers
+      });
     },
     
     function convertLimitedGroupsToChartData(groups, propLabel, chartType) {
       var data = [];
       var labels = [];
       
-      // Extract data from groups object (either from regular GroupBy or TopGroupBy.getTopGroups())
+      // Extract data from groups object (with built-in groupLimit functionality)
       for ( var key in groups ) {
         if ( groups.hasOwnProperty(key) ) {
           labels.push(key.toString());
@@ -386,26 +384,24 @@ foam.CLASS({
   
   methods: [
     function createGroupBySinkWithLimits(groupByProp, valueSink) {
-      // Helper method to create either GroupBy or TopGroupBy based on topN setting
+      // Create GroupBy with unified groupLimit functionality
+      var sortOrder = this.GroupBySortOrder.NONE;
       if ( this.topN > 0 ) {
-        return this.TopGroupBy.create({
-          arg1: groupByProp,
-          arg2: valueSink,
-          topLimit: this.topN,
-          descending: this.sortDescending,
-          includeOthers: this.includeOthers
-        });
-      } else {
-        return this.GroupBy.create({
-          arg1: groupByProp,
-          arg2: valueSink
-        });
+        sortOrder = this.sortDescending ? this.GroupBySortOrder.DESC : this.GroupBySortOrder.ASC;
       }
+      
+      return this.GroupBy.create({
+        arg1: groupByProp,
+        arg2: valueSink,
+        groupLimit: this.topN > 0 ? this.topN : -1,
+        sortOrder: sortOrder,
+        includeOthers: this.includeOthers
+      });
     },
     
     function extractGroupsFromResult(groupByResult) {
-      // Helper method to extract groups from either GroupBy or TopGroupBy result
-      return this.topN > 0 ? groupByResult.getTopGroups() : groupByResult.groups;
+      // Extract groups from GroupBy result (groupLimit functionality is built-in)
+      return groupByResult.groups;
     },
     
     function addLimitPropertiesToE(e, prefix) {
@@ -430,7 +426,7 @@ foam.CLASS({
 
   requires: [
     'foam.mlang.sink.GroupBy',
-    'foam.mlang.sink.TopGroupBy',
+    'foam.mlang.sink.GroupBySortOrder',
     'foam.mlang.sink.Count',
     'foam.mlang.sink.Sum',
     'foam.mlang.sink.Min',
@@ -473,9 +469,7 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute(e) {
-      var self = this;
-      
+    async function execute(e) {
       if ( ! this.groupBy ) {
         this.showPropertyRequiredMessage(e);
         return;
@@ -495,11 +489,10 @@ foam.CLASS({
       // Group data by property and render bar chart
       var groupBySink = this.createGroupBySinkWithLimits(this.groupBy, sink);
       
-      this.dao.select(groupBySink).then(function(groupByResult) {
-        var groups = self.extractGroupsFromResult(groupByResult);
-        var chartData = self.convertLimitedGroupsToChartData(groups, self.getDisplayLabel(), 'bar');
-        self.renderDirectChart(e, 'bar', chartData, null, self.block);
-      });
+      var groupByResult = await this.dao.select(groupBySink);
+      var groups = this.extractGroupsFromResult(groupByResult);
+      var chartData = this.convertLimitedGroupsToChartData(groups, this.getDisplayLabel(), 'bar');
+      this.renderDirectChart(e, 'bar', chartData, null, this.block);
     },
     
     function getDisplayLabel() {
@@ -589,9 +582,7 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute(e) {
-      var self = this;
-      
+    async function execute(e) {
       if ( ! this.xGroupBy || ! this.stackBy ) {
         e.start('div').
           style({padding: '20px', textAlign: 'center', color: foam.CSS.returnTokenValue('$textTertiary', this.cls_, this.__context__)}).
@@ -612,16 +603,15 @@ foam.CLASS({
       var sink = this.operation.createSink(this.valueProp);
       
       // Group data by both properties for stacked chart
-      this.dao.select(this.GroupBy.create({
+      var outerGroupBy = await this.dao.select(this.GroupBy.create({
         arg1: this.xGroupBy,
         arg2: this.GroupBy.create({
           arg1: this.stackBy,
           arg2: sink
         })
-      })).then(function(outerGroupBy) {
-        var chartData = self.convertToStackedChartData(outerGroupBy);
-        self.renderDirectChart(e, 'stackedbar', chartData, null, self.block);
-      });
+      }));
+      var chartData = this.convertToStackedChartData(outerGroupBy);
+      this.renderDirectChart(e, 'stackedbar', chartData, null, this.block);
     },
     
     function convertToStackedChartData(outerGroupBy) {
@@ -714,9 +704,7 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute(e) {
-      var self = this;
-      
+    async function execute(e) {
       if ( ! this.groupBy ) {
         this.showPropertyRequiredMessage(e);
         return;
@@ -736,12 +724,11 @@ foam.CLASS({
       // Group data by property with limits and render pie chart
       var groupBySink = this.createGroupBySinkWithLimits(this.groupBy, sink);
       
-      this.dao.select(groupBySink).then(function(groupByResult) {
-        var groups = self.extractGroupsFromResult(groupByResult);
-        var chartData = self.convertLimitedGroupsToChartData(groups, self.getDisplayLabel(), 'pie');
-        var config = self.createPieConfig();
-        self.renderDirectChart(e, 'pie', chartData, config, self.block);
-      });
+      var groupByResult = await this.dao.select(groupBySink);
+      var groups = this.extractGroupsFromResult(groupByResult);
+      var chartData = this.convertLimitedGroupsToChartData(groups, this.getDisplayLabel(), 'pie');
+      var config = this.createPieConfig();
+      this.renderDirectChart(e, 'pie', chartData, config, this.block);
     },
 
     function createPieConfig() {
@@ -823,9 +810,7 @@ foam.CLASS({
   extends: 'foam.core.reflow.dashboard.DashboardPieChartDAOAgent',
 
   methods: [
-    function execute(e) {
-      var self = this;
-      
+    async function execute(e) {
       if ( ! this.groupBy ) {
         this.showPropertyRequiredMessage(e);
         return;
@@ -845,12 +830,11 @@ foam.CLASS({
       // Group data by property with limits and render donut chart
       var groupBySink = this.createGroupBySinkWithLimits(this.groupBy, sink);
       
-      this.dao.select(groupBySink).then(function(groupByResult) {
-        var groups = self.extractGroupsFromResult(groupByResult);
-        var chartData = self.convertLimitedGroupsToChartData(groups, self.getDisplayLabel(), 'donut');
-        var config = self.createPieConfig(); // Reuse pie config method
-        self.renderDirectChart(e, 'donut', chartData, config, self.block);
-      });
+      var groupByResult = await this.dao.select(groupBySink);
+      var groups = this.extractGroupsFromResult(groupByResult);
+      var chartData = this.convertLimitedGroupsToChartData(groups, this.getDisplayLabel(), 'donut');
+      var config = this.createPieConfig(); // Reuse pie config method
+      this.renderDirectChart(e, 'donut', chartData, config, this.block);
     }
   ]
 });
@@ -901,9 +885,7 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute(e) {
-      var self = this;
-      
+    async function execute(e) {
       if ( ! this.xProp || ! this.yProp ) {
         e.start('div').
           style({padding: '20px', textAlign: 'center', color: foam.CSS.returnTokenValue('$textTertiary', this.cls_, this.__context__)}).
@@ -913,48 +895,47 @@ foam.CLASS({
       }
       
       // Get all records and create X vs Y line chart
-      this.dao.select().then(function(arraySink) {
-        var chartData = self.convertRecordsToLineChart(arraySink.array);
-        
-        // Configure Chart.js options with proper date handling
-        var isXAxisDate = self.xProp.chartJsFormatter && 
-                         (foam.lang.Date.isInstance(self.xProp) || 
-                          foam.lang.DateTime.isInstance(self.xProp));
-        
-        var options = {
-          scales: {
-            x: {
-              type:  isXAxisDate ? 'time' : 'linear',
-              title: { display: true, text: self.xProp.label }
-            },
-            y: {
-              title: { display: true, text: self.yProp.label }
-            }
+      var arraySink = await this.dao.select();
+      var chartData = this.convertRecordsToLineChart(arraySink.array);
+      
+      // Configure Chart.js options with proper date handling
+      var isXAxisDate = this.xProp.chartJsFormatter && 
+                       (foam.lang.Date.isInstance(this.xProp) || 
+                        foam.lang.DateTime.isInstance(this.xProp));
+      
+      var options = {
+        scales: {
+          x: {
+            type:  isXAxisDate ? 'time' : 'linear',
+            title: { display: true, text: this.xProp.label }
           },
-          plugins: { legend: { display: true } }
+          y: {
+            title: { display: true, text: this.yProp.label }
+          }
+        },
+        plugins: { legend: { display: true } }
+      };
+      
+      // Add time scale configuration for date axes
+      if (isXAxisDate) {
+        var timeUnitValue = this.TimeUnit[this.timeUnit];
+        options.scales.x.time = {
+          unit: timeUnitValue.chartJsUnit,
+          displayFormats: {},
+          tooltipFormat: timeUnitValue.tooltipFormat
         };
         
-        // Add time scale configuration for date axes
-        if (isXAxisDate) {
-          var timeUnitValue = self.TimeUnit[self.timeUnit];
-          options.scales.x.time = {
-            unit: timeUnitValue.chartJsUnit,
-            displayFormats: {},
-            tooltipFormat: timeUnitValue.tooltipFormat
-          };
-          
-          // Set the display format for the selected unit
-          options.scales.x.time.displayFormats[timeUnitValue.chartJsUnit] = timeUnitValue.displayFormat;
-          
-          // Enable time parsing with proper locale
-          options.adapters = {
-            date: {
-              locale: 'en-US' // Default locale, can be customized
-            }
-          };
-        }
-        self.renderDirectChart(e, 'line', chartData, {options: options}, self.block);
-      });
+        // Set the display format for the selected unit
+        options.scales.x.time.displayFormats[timeUnitValue.chartJsUnit] = timeUnitValue.displayFormat;
+        
+        // Enable time parsing with proper locale
+        options.adapters = {
+          date: {
+            locale: 'en-US' // Default locale, can be customized
+          }
+        };
+      }
+      this.renderDirectChart(e, 'line', chartData, {options: options}, this.block);
     },
     
     function convertRecordsToLineChart(records) {
@@ -1064,34 +1045,32 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute(e) {
-      var self = this;
-      
+    async function execute(e) {
       if (this.operation !== 'COUNT' && !this.prop) {
         this.showPropertyRequiredMessage(e);
         return;
       }
 
       var sink = this.operation.createSink(this.prop);
-      this.dao.select(sink).then(function(result) {
-        // Label display
-        e.start('div')
-          .add(self.getDisplayLabel())
-        .end();
-        
-        // Value display
-        e.start('div')
-          .add(typeof result.value === 'number' ? result.value.toLocaleString() : result.value)
-        .end();
+      var result = await this.dao.select(sink);
+      
+      // Label display
+      e.start('div')
+        .add(this.getDisplayLabel())
+      .end();
+      
+      // Value display
+      e.start('div')
+        .add(typeof result.value === 'number' ? result.value.toLocaleString() : result.value)
+      .end();
 
-        if (self.block) {
-          if (self.block.value) {
-            self.block.value.value = result.value;
-          } else {
-            self.block.value = result.value;
-          }
+      if (this.block) {
+        if (this.block.value) {
+          this.block.value.value = result.value;
+        } else {
+          this.block.value = result.value;
         }
-      });
+      }
     },
 
     function getDisplayLabel() {
