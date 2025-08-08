@@ -871,3 +871,26 @@ foam.CLASS({
     }
   ]
 });
+
+foam.CLASS({
+  package: 'foam.core.reflow.cmd',
+  name: 'Layout',
+  extends: 'foam.core.reflow.cmd.Command',
+
+  imports: [ 'block', 'currentBlock' ],
+
+  methods: [
+    function execute(...args) {
+      // Take over old block and replace it
+      let b = foam.core.reflow.LayoutBlock.create({
+        cmd: this.block.cmd,
+        flowParent: this.block.flowParent,
+        flowName: this.block.flowName
+      }, this.block.flowParent);
+      this.block.flowParent.addFlowChild(b);
+      this.block.del();
+      this.currentBlock = b;
+      console.log(this.block, this.currentBlock, b);
+    }
+  ]
+});
