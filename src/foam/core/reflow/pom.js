@@ -1,5 +1,8 @@
 foam.POM({
   name: 'console',
+  projects: [
+    { name: 'dashboard/pom' }
+  ],
   files: [
     { name: '../../u2/mlang/Table',    flags: 'js|java' },
     { name: '../../u2/mlang/Pie',    flags: 'js|java' },
