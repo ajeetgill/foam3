@@ -50,7 +50,7 @@ foam.CLASS({
 
     function findFlowChildByName(n) {
       return this.flowChildren.find(c => {
-        if ( c.flowName === n || (c.flowChildren?.length && c.findFlowChildByName(n)) ) 
+        if ( c.flowName === n || (c.flowChildren?.length && c.findFlowChildByName(n)) )
           return true;
       });
     },
@@ -395,6 +395,7 @@ foam.CLASS({
   properties: [
     {
       name: 'flowName',
+      reactive: false,
       label: 'Block Name',
       supportingLabel: 'Used to as the name for this block and as the variable name in the scope'
     },
@@ -416,7 +417,7 @@ foam.CLASS({
       factory: function() { return foam.u2.borders.NullBorder; },
       view: function(_,X) {
         // TODO: replace with strategizer
-        // TODO: add a new card with title border that uses the foam.u2.borders.CardBorder 
+        // TODO: add a new card with title border that uses the foam.u2.borders.CardBorder
         // rather than foam.dashboard.view.Card
         return {
           class: 'foam.u2.view.ChoiceView',
@@ -567,7 +568,7 @@ foam.CLASS({
       width: 15%;
       border-right: 1px solid $borderLight;
       flex: 0 0 auto;
-      overflow-y: auto; 
+      overflow-y: auto;
     }
     ^middle-holder {
       padding: 16px 16px 0 16px;
@@ -1147,7 +1148,7 @@ foam.CLASS({
         });
       };
       addBindings(this);
-      this.flowScope = s;    
+      this.flowScope = s;
     },
 
     async function eval_(cmd, opt_ignoreSelect, ignoreHistory, flowParent) {
