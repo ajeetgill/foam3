@@ -501,9 +501,6 @@ foam.CLASS({
           // Add error to output for user visibility
           this.output += `<span style="color:red">${errorMsg}</span><br>`;
 
-          // Set errors on the object for tracking
-          if ( ! obj.errors_ ) obj.errors_ = [];
-          obj.errors_.push([mapping, errorMsg]);
         }
       });
 
