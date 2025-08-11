@@ -534,10 +534,11 @@ foam.CLASS({
       isFramed: true,
       on: ['this.propertyChange.borderClass'],
       code: function() {
-          let el = this.borderClass.create({...(this.border || {})}, this);
-          this.out.moveTo(el);
-          el.replaceElement_(this.borderEl_);
-          this.borderEl_ = el;
+        if ( ! this.WrapperNode.isInstance(this.out) ) return;
+        let el = this.borderClass.create({...(this.border || {})}, this);
+        this.out.moveTo(el);
+        el.replaceElement_(this.borderEl_);
+        this.borderEl_ = el;
       }
     },
     {
@@ -1483,7 +1484,8 @@ foam.CLASS({
         let subFn = c => {
           var prev;
           if ( c.value ) {
-            this.flowChildrenSub_.onDetach(c.value.sub(this.onFlowChildChange));
+            if ( c.value.sub )
+              this.flowChildrenSub_.onDetach(c.value.sub(this.onFlowChildChange));
 
             // TODO: this is a little hackish, it would be better if DAOPrompt tracked
             // that itself and updated its own hidden revision property
