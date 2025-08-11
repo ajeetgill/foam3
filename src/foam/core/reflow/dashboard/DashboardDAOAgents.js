@@ -702,7 +702,7 @@ foam.CLASS({
       value: 'DAY',
       help: 'Time unit for X-axis when using date/time properties',
       visibility: function(xProp) {
-        return xProp && (foam.core.Date.isInstance(xProp) || foam.core.DateTime.isInstance(xProp)) ? 
+        return xProp && (foam.lang.Date.isInstance(xProp) || foam.lang.DateTime.isInstance(xProp)) ? 
           foam.u2.DisplayMode.RW : 
           foam.u2.DisplayMode.HIDDEN;
       }

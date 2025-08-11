@@ -579,7 +579,7 @@ foam.CLASS({
     { name: 'animationDuration', value: 1000 },
     {
       name: 'chart_',
-      expression: function(array, xProp, yProp, groupBy, aggregationSink, colors, xAxisLabel, yAxisLabel,
+      expression: function(array, xProp, yProp, groupBy, aggregationSink, timeUnit, colors, xAxisLabel, yAxisLabel,
                           fill, tension, stepped, showPoints, pointRadius, showGridLines,
                           responsive, maintainAspectRatio, showLegend, legendPosition,
                           showTooltips, animate, animationDuration) {
@@ -610,14 +610,26 @@ foam.CLASS({
                 var yVal = obj[yProp.name];
                 
                 if ( xVal != null && yVal != null ) {
-                  var processedXVal = xProp.chartJsFormatter ? 
-                                     xProp.chartJsFormatter(xVal) : xVal;
+                  // For date/time properties, ensure we have a proper Date object or timestamp
+                  var processedXVal = xVal;
+                  if ( foam.lang.Date.isInstance(xProp) || foam.lang.DateTime.isInstance(xProp) ) {
+                    // Convert to Date object if it's a timestamp or string
+                    if ( typeof xVal === 'number' || typeof xVal === 'string' ) {
+                      processedXVal = new Date(xVal);
+                    }
+                  } else if ( xProp.chartJsFormatter ) {
+                    processedXVal = xProp.chartJsFormatter(xVal);
+                  }
                   data.push({x: processedXVal, y: yVal});
                 }
               });
               
               // Sort by X value
               data.sort(function(a, b) {
+                // Handle Date objects
+                if ( a.x instanceof Date && b.x instanceof Date ) {
+                  return a.x.getTime() - b.x.getTime();
+                }
                 return parseFloat(a.x) - parseFloat(b.x);
               });
               
@@ -653,8 +665,16 @@ foam.CLASS({
             var yVal = obj[yProp.name];
             
             if ( xVal != null && yVal != null ) {
-              var processedXVal = xProp.chartJsFormatter ? 
-                                 xProp.chartJsFormatter(xVal) : xVal;
+              // For date/time properties, ensure we have a proper Date object or timestamp
+              var processedXVal = xVal;
+              if ( foam.core.Date.isInstance(xProp) || foam.core.DateTime.isInstance(xProp) ) {
+                // Convert to Date object if it's a timestamp or string
+                if ( typeof xVal === 'number' || typeof xVal === 'string' ) {
+                  processedXVal = new Date(xVal);
+                }
+              } else if ( xProp.chartJsFormatter ) {
+                processedXVal = xProp.chartJsFormatter(xVal);
+              }
               data.push({x: processedXVal, y: yVal});
             }
           });
@@ -680,6 +700,9 @@ foam.CLASS({
             pointHoverRadius: showPoints ? pointRadius + 2 : 0
           });
         }
+        
+        // Check if xProp is a date/time type
+        var isTimeScale = xProp && (foam.lang.Date.isInstance(xProp) || foam.lang.DateTime.isInstance(xProp));
         
         var chartJSOptions = {
           responsive: responsive,
@@ -718,6 +741,25 @@ foam.CLASS({
             }
           }
         };
+        
+        // Configure time scale if dealing with date/time properties
+        if ( isTimeScale && timeUnit ) {
+          chartJSOptions.scales.x.type = 'time';
+          chartJSOptions.scales.x.time = {
+            unit: timeUnit.chartJsUnit || 'day',
+            displayFormats: {}
+          };
+          
+          // Set display format for the selected time unit
+          if ( timeUnit.displayFormat ) {
+            chartJSOptions.scales.x.time.displayFormats[timeUnit.chartJsUnit || 'day'] = timeUnit.displayFormat;
+          }
+          
+          // Configure tooltip format
+          if ( timeUnit.tooltipFormat ) {
+            chartJSOptions.scales.x.time.tooltipFormat = timeUnit.tooltipFormat;
+          }
+        }
         
         return this.Line2.create({
           data: { datasets: datasets },
