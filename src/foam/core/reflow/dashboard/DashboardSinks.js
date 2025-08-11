@@ -21,16 +21,48 @@ foam.CLASS({
   ],
   
   properties: [
+    // Chart-specific properties
+    { name: 'colors' },
+    { name: 'horizontal', value: false },
+    { name: 'barThickness' },
+    { name: 'xAxisLabel' },
+    { name: 'yAxisLabel' },
+    { name: 'showGridLines', value: true },
+    // Display properties
+    { name: 'responsive', value: true },
+    { name: 'maintainAspectRatio', value: false },
+    { name: 'height', value: 300 },
+    { name: 'showLegend', value: true },
+    { name: 'legendPosition', value: 'TOP' },
+    { name: 'showTooltips', value: true },
+    { name: 'animate', value: true },
+    { name: 'animationDuration', value: 1000 },
     {
       name: 'chart_',
-      expression: function(groups) {
+      expression: function(groups, colors, horizontal, barThickness, xAxisLabel, yAxisLabel, 
+                          showGridLines, responsive, maintainAspectRatio, showLegend, 
+                          legendPosition, showTooltips, animate, animationDuration) {
         var labels = [];
         var data = [];
+        var backgroundColors = [];
+        var borderColors = [];
         
+        var index = 0;
         for ( var key in groups ) {
           if ( groups.hasOwnProperty(key) ) {
             labels.push(key.toString());
             data.push(groups[key].value);
+            
+            // Color handling
+            var color;
+            if ( colors && colors.length > 0 ) {
+              color = colors[index % colors.length];
+            } else {
+              color = foam.CSS.returnTokenValue('$primary200', this.cls_, this.__context__);
+            }
+            backgroundColors.push(color);
+            borderColors.push(color.replace('200', '400'));
+            index++;
           }
         }
         
@@ -38,26 +70,69 @@ foam.CLASS({
           labels: labels,
           datasets: [{
             data: data,
-            backgroundColor: foam.CSS.returnTokenValue('$primary200', this.cls_, this.__context__),
-            borderColor: foam.CSS.returnTokenValue('$primary400', this.cls_, this.__context__),
-            borderWidth: 1
+            backgroundColor: backgroundColors,
+            borderColor: borderColors,
+            borderWidth: 1,
+            barThickness: barThickness
           }]
+        };
+        
+        var chartJSOptions = {
+          responsive: responsive,
+          maintainAspectRatio: maintainAspectRatio,
+          indexAxis: horizontal ? 'y' : 'x',
+          plugins: {
+            legend: {
+              display: showLegend,
+              position: (legendPosition || 'TOP').toString().toLowerCase()            },
+            tooltip: {
+              enabled: showTooltips
+            }
+          },
+          animation: animate ? {
+            duration: animationDuration
+          } : false,
+          scales: {
+            x: {
+              title: {
+                display: !!xAxisLabel,
+                text: xAxisLabel
+              },
+              grid: {
+                display: showGridLines
+              }
+            },
+            y: {
+              title: {
+                display: !!yAxisLabel,
+                text: yAxisLabel
+              },
+              grid: {
+                display: showGridLines
+              }
+            }
+          }
         };
         
         return this.Bar2.create({
           data: chartData,
-          chartJSOptions: {
-            responsive: true,
-            maintainAspectRatio: false
-          }
+          chartJSOptions: chartJSOptions
         });
       }
     }
   ],
   
   methods: [
-    function toE(_, x) { return x.E().add(this.chart_$); },
-    function addToE(e) { e.add(this.chart_$); }
+    function toE(_, x) { 
+      return x.E().start('div').style({height: this.height + 'px', position: 'relative'})
+        .add(this.chart_$)
+      .end(); 
+    },
+    function addToE(e) { 
+      e.start('div').style({height: this.height + 'px', position: 'relative'})
+        .add(this.chart_$)
+      .end(); 
+    }
   ]
 });
 
@@ -71,24 +146,29 @@ foam.CLASS({
   ],
   
   properties: [
-    {
-      class: 'Boolean',
-      name: 'showPercentages',
-      value: false
-    },
-    {
-      name: 'labelPosition',
-      value: 'TOP'
-    },
-    {
-      name: 'colors'
-    },
+    // Pie-specific properties
+    { name: 'colors' },
+    { name: 'showPercentages', value: false },
+    { name: 'cutoutPercentage', value: 0 },
+    { name: 'clockwise', value: true },
+    { name: 'rotation', value: -90 },
+    // Display properties
+    { name: 'responsive', value: true },
+    { name: 'maintainAspectRatio', value: false },
+    { name: 'height', value: 300 },
+    { name: 'showLegend', value: true },
+    { name: 'legendPosition', value: 'TOP' },
+    { name: 'showTooltips', value: true },
+    { name: 'animate', value: true },
+    { name: 'animationDuration', value: 1000 },
     {
       name: 'chart_',
-      expression: function(groups, showPercentages, labelPosition) {
+      expression: function(groups, colors, showPercentages, cutoutPercentage, clockwise, rotation,
+                          responsive, maintainAspectRatio, showLegend, 
+                          legendPosition, showTooltips, animate, animationDuration) {
         var labels = [];
         var data = [];
-        var colors = [];
+        var backgroundColors = [];
         
         var index = 0;
         for ( var key in groups ) {
@@ -97,12 +177,12 @@ foam.CLASS({
             data.push(groups[key].value);
             
             // Generate colors
-            if ( this.colors && this.colors.length > 0 ) {
-              colors.push(this.colors[index % this.colors.length]);
+            if ( colors && colors.length > 0 ) {
+              backgroundColors.push(colors[index % colors.length]);
             } else {
               // Default color generation
               var hue = (index / Math.max(1, Object.keys(groups).length - 1)) * 360;
-              colors.push('hsl(' + hue + ', 70%, 50%)');
+              backgroundColors.push('hsl(' + hue + ', 70%, 50%)');
             }
             index++;
           }
@@ -112,30 +192,49 @@ foam.CLASS({
           labels: labels,
           datasets: [{
             data: data,
-            backgroundColor: colors
+            backgroundColor: backgroundColors
           }]
         };
         
         var options = {
-          responsive: true,
-          maintainAspectRatio: false,
+          responsive: responsive,
+          maintainAspectRatio: maintainAspectRatio,
+          cutout: cutoutPercentage + '%',
+          rotation: rotation,
+          circumference: clockwise ? 360 : -360,
           plugins: {
             legend: {
-              position: (labelPosition || 'TOP').toLowerCase()
+              display: showLegend,
+              position:(legendPosition || 'TOP').toString().toLowerCase()            },
+            tooltip: {
+              enabled: showTooltips
+            },
+            datalabels: {
+              display: true,
+              color: 'white',
+              font: {
+                weight: 'bold'
+              }
             }
-          }
+          },
+          animation: animate ? {
+            duration: animationDuration,
+            animateRotate: true,
+            animateScale: true
+          } : false
         };
         
         if ( showPercentages ) {
-          options.plugins.legend.onClick = null;
           options.plugins.legend.labels = {
             generateLabels: function(chart) {
               var dataset = chart.data.datasets[0];
               var total = dataset.data.reduce(function(sum, val) { return sum + val; }, 0);
               
               return chart.data.labels.map(function(label, i) {
-                var percentage = ((dataset.data[i] / total) * 100).toFixed(1);
-                var style = chart.getDatasetMeta(0).controller.getStyle(i);
+                var percentage = total > 0 ? ((dataset.data[i] / total) * 100).toFixed(1) : '0.0';
+                var style = chart.getDatasetMeta(0).controller ? 
+                           chart.getDatasetMeta(0).controller.getStyle(i) : 
+                           { backgroundColor: dataset.backgroundColor[i] };
                 
                 return {
                   text: percentage + '% ' + label,
@@ -157,10 +256,20 @@ foam.CLASS({
   ],
   
   methods: [
-    function toE(_, x) { return x.E().add(this.chart_$); },
-    function addToE(e) { e.add(this.chart_$); }
+    function toE(_, x) { 
+      return x.E().start('div').style({height: this.height + 'px', position: 'relative'})
+        .add(this.chart_$)
+      .end(); 
+    },
+    function addToE(e) { 
+      e.start('div').style({height: this.height + 'px', position: 'relative'})
+        .add(this.chart_$)
+      .end(); 
+    }
   ]
 });
+
+// DashboardDonutSink removed - use DashboardPieSink with cutoutPercentage instead
 
 foam.CLASS({
   package: 'foam.core.reflow.dashboard',
@@ -173,12 +282,17 @@ foam.CLASS({
   
   properties: [
     {
+      name: 'cutoutPercentage',
+      factory: function() { return 50; } // Default 50% for donut
+    },
+    {
       name: 'chart_',
-      expression: function(groups, showPercentages, labelPosition) {
-        // Use the same logic as pie but with Donut2
+      expression: function(groups, colors, showPercentages, cutoutPercentage, clockwise, rotation,
+                          responsive, maintainAspectRatio, showLegend, 
+                          legendPosition, showTooltips, animate, animationDuration) {
         var labels = [];
         var data = [];
-        var colors = [];
+        var backgroundColors = [];
         
         var index = 0;
         for ( var key in groups ) {
@@ -186,11 +300,11 @@ foam.CLASS({
             labels.push(key.toString());
             data.push(groups[key].value);
             
-            if ( this.colors && this.colors.length > 0 ) {
-              colors.push(this.colors[index % this.colors.length]);
+            if ( colors && colors.length > 0 ) {
+              backgroundColors.push(colors[index % colors.length]);
             } else {
               var hue = (index / Math.max(1, Object.keys(groups).length - 1)) * 360;
-              colors.push('hsl(' + hue + ', 70%, 50%)');
+              backgroundColors.push('hsl(' + hue + ', 70%, 50%)');
             }
             index++;
           }
@@ -200,30 +314,49 @@ foam.CLASS({
           labels: labels,
           datasets: [{
             data: data,
-            backgroundColor: colors
+            backgroundColor: backgroundColors
           }]
         };
         
         var options = {
-          responsive: true,
-          maintainAspectRatio: false,
+          responsive: responsive,
+          maintainAspectRatio: maintainAspectRatio,
+          cutout: cutoutPercentage + '%',
+          rotation: rotation,
+          circumference: clockwise ? 360 : -360,
           plugins: {
             legend: {
-              position: (labelPosition || 'TOP').toLowerCase()
+              display: showLegend,
+              position: (legendPosition || 'TOP').toString().toLowerCase()            },
+            tooltip: {
+              enabled: showTooltips
+            },
+            datalabels: {
+              display: true,
+              color: 'white',
+              font: {
+                weight: 'bold'
+              }
             }
-          }
+          },
+          animation: animate ? {
+            duration: animationDuration,
+            animateRotate: true,
+            animateScale: true
+          } : false
         };
         
         if ( showPercentages ) {
-          options.plugins.legend.onClick = null;
           options.plugins.legend.labels = {
             generateLabels: function(chart) {
               var dataset = chart.data.datasets[0];
               var total = dataset.data.reduce(function(sum, val) { return sum + val; }, 0);
               
               return chart.data.labels.map(function(label, i) {
-                var percentage = ((dataset.data[i] / total) * 100).toFixed(1);
-                var style = chart.getDatasetMeta(0).controller.getStyle(i);
+                var percentage = total > 0 ? ((dataset.data[i] / total) * 100).toFixed(1) : '0.0';
+                var style = chart.getDatasetMeta(0).controller ? 
+                           chart.getDatasetMeta(0).controller.getStyle(i) : 
+                           { backgroundColor: dataset.backgroundColor[i] };
                 
                 return {
                   text: percentage + '% ' + label,
@@ -255,30 +388,49 @@ foam.CLASS({
   ],
   
   properties: [
-    {
-      name: 'colors'
-    },
+    // Stacked bar-specific properties
+    { name: 'colors' },
+    { name: 'horizontal', value: false },
+    { name: 'xAxisLabel' },
+    { name: 'yAxisLabel' },
+    { name: 'showGridLines', value: true },
+    // Display properties
+    { name: 'responsive', value: true },
+    { name: 'maintainAspectRatio', value: false },
+    { name: 'height', value: 300 },
+    { name: 'showLegend', value: true },
+    { name: 'legendPosition', value: 'TOP' },
+    { name: 'showTooltips', value: true },
+    { name: 'animate', value: true },
+    { name: 'animationDuration', value: 1000 },
     {
       name: 'chart_',
-      expression: function(groups, cols, rows) {
+      expression: function(groups, cols, rows, colors, horizontal, xAxisLabel, yAxisLabel,
+                          showGridLines, showDataLabels, responsive, maintainAspectRatio,
+                          showLegend, legendPosition, showTooltips, animate, animationDuration) {
         var labels = [];
         var stackGroups = {};
         
         // Extract labels from columns
-        for ( var col in cols ) {
-          if ( cols.hasOwnProperty(col) ) {
+        for ( var col in cols.groups ) {
+          if ( cols.groups.hasOwnProperty(col) ) {
             labels.push(col.toString());
           }
         }
         
         // Group data by stack (rows)
-        for ( var row in rows ) {
-          if ( rows.hasOwnProperty(row) ) {
+        for ( var row in rows.groups ) {
+          if ( rows.groups.hasOwnProperty(row) ) {
             stackGroups[row] = {};
-            for ( var col in cols ) {
-              if ( cols.hasOwnProperty(col) ) {
+            for ( var col in cols.groups ) {
+              if ( cols.groups.hasOwnProperty(col) ) {
                 var key = row + ':' + col;
-                stackGroups[row][col] = groups[key] ? groups[key].value : 0;
+                var group = rows.groups[row];
+                if ( group && group.groups && group.groups[col] ) {
+                  stackGroups[row][col] = group.groups[col].value;
+                } else {
+                  stackGroups[row][col] = 0;
+                }
               }
             }
           }
@@ -296,8 +448,8 @@ foam.CLASS({
             });
             
             var color;
-            if ( this.colors && this.colors.length > 0 ) {
-              color = this.colors[colorIndex % this.colors.length];
+            if ( colors && colors.length > 0 ) {
+              color = colors[colorIndex % colors.length];
             } else {
               var hue = (colorIndex / Math.max(1, Object.keys(stackGroups).length - 1)) * 360;
               color = 'hsl(' + hue + ', 70%, 50%)';
@@ -307,7 +459,8 @@ foam.CLASS({
               label: stackValue.toString(),
               data: data,
               backgroundColor: color,
-              borderColor: color.replace('50%', '40%'), // Darker border
+              borderColor: typeof color === 'string' && color.includes('hsl') ? 
+                          color.replace('50%', '40%') : color,
               borderWidth: 1
             });
             
@@ -315,23 +468,77 @@ foam.CLASS({
           }
         }
         
+        var chartJSOptions = {
+          responsive: responsive,
+          maintainAspectRatio: maintainAspectRatio,
+          indexAxis: horizontal ? 'y' : 'x',
+          plugins: {
+            legend: {
+              display: showLegend,
+              position: (legendPosition || 'TOP').toString().toLowerCase()
+            },
+            tooltip: {
+              enabled: showTooltips,
+              mode: 'index',
+              intersect: false
+            },
+            datalabels: {
+              display: true,
+              color: 'white',
+              font: {
+                weight: 'bold'
+              }
+            }
+          },
+          animation: animate ? {
+            duration: animationDuration
+          } : false,
+          scales: {
+            x: {
+              stacked: true,
+              title: {
+                display: !!xAxisLabel,
+                text: xAxisLabel
+              },
+              grid: {
+                display: showGridLines
+              }
+            },
+            y: {
+              stacked: true,
+              title: {
+                display: !!yAxisLabel,
+                text: yAxisLabel
+              },
+              grid: {
+                display: showGridLines
+              }
+            }
+          }
+        };
+        
         return this.StackedBar2.create({
           data: {
             labels: labels,
             datasets: datasets
           },
-          chartJSOptions: {
-            responsive: true,
-            maintainAspectRatio: false
-          }
+          chartJSOptions: chartJSOptions
         });
       }
     }
   ],
   
   methods: [
-    function toE(_, x) { return x.E().add(this.chart_$); },
-    function addToE(e) { e.add(this.chart_$); }
+    function toE(_, x) { 
+      return x.E().start('div').style({height: this.height + 'px', position: 'relative'})
+        .add(this.chart_$)
+      .end(); 
+    },
+    function addToE(e) { 
+      e.start('div').style({height: this.height + 'px', position: 'relative'})
+        .add(this.chart_$)
+      .end(); 
+    }
   ]
 });
 
@@ -341,79 +548,201 @@ foam.CLASS({
   extends: 'foam.dao.ArraySink',
   
   requires: [
-    'org.chartjs.Line2'
+    'org.chartjs.Line2',
+    'foam.mlang.sink.GroupBy'
   ],
   
   properties: [
-    {
-      name: 'xProp'
-    },
-    {
-      name: 'yProp'
-    },
-    {
-      name: 'groupBy'
-    },
-    {
-      name: 'colors'
-    },
+    // Line-specific properties
+    { name: 'xProp' },
+    { name: 'yProp' },
+    { name: 'groupBy' },
+    { name: 'aggregationSink' },
+    { name: 'timeUnit' },
+    { name: 'colors' },
+    { name: 'xAxisLabel' },
+    { name: 'yAxisLabel' },
+    { name: 'fill', value: false },
+    { name: 'tension', value: 0.1 },
+    { name: 'stepped', value: false },
+    { name: 'showPoints', value: true },
+    { name: 'pointRadius', value: 3 },
+    { name: 'showGridLines', value: true },
+    // Display properties
+    { name: 'responsive', value: true },
+    { name: 'maintainAspectRatio', value: false },
+    { name: 'height', value: 300 },
+    { name: 'showLegend', value: true },
+    { name: 'legendPosition', value: 'TOP' },
+    { name: 'showTooltips', value: true },
+    { name: 'animate', value: true },
+    { name: 'animationDuration', value: 1000 },
     {
       name: 'chart_',
-      expression: function(array) {
-        var data = [];
+      expression: function(array, xProp, yProp, groupBy, aggregationSink, colors, xAxisLabel, yAxisLabel,
+                          fill, tension, stepped, showPoints, pointRadius, showGridLines,
+                          responsive, maintainAspectRatio, showLegend, legendPosition,
+                          showTooltips, animate, animationDuration) {
         var self = this;
+        var datasets = [];
         
-        // Convert records to {x, y} points
-        array.forEach(function(obj) {
-          var xVal = obj[self.xProp.name];
-          var yVal = obj[self.yProp.name];
+        if ( !xProp || !yProp ) {
+          return null;
+        }
+        
+        if ( groupBy ) {
+          // Group data for multiple lines
+          var groups = {};
+          array.forEach(function(obj) {
+            var groupKey = obj[groupBy.name] || 'Default';
+            if ( !groups[groupKey] ) {
+              groups[groupKey] = [];
+            }
+            groups[groupKey].push(obj);
+          });
           
-          if ( xVal != null && yVal != null ) {
-            var processedXVal = self.xProp.chartJsFormatter ? 
-                               self.xProp.chartJsFormatter(xVal) : xVal;
-            data.push({x: processedXVal, y: yVal});
+          var colorIndex = 0;
+          for ( var key in groups ) {
+            if ( groups.hasOwnProperty(key) ) {
+              var data = [];
+              groups[key].forEach(function(obj) {
+                var xVal = obj[xProp.name];
+                var yVal = obj[yProp.name];
+                
+                if ( xVal != null && yVal != null ) {
+                  var processedXVal = xProp.chartJsFormatter ? 
+                                     xProp.chartJsFormatter(xVal) : xVal;
+                  data.push({x: processedXVal, y: yVal});
+                }
+              });
+              
+              // Sort by X value
+              data.sort(function(a, b) {
+                return parseFloat(a.x) - parseFloat(b.x);
+              });
+              
+              var color;
+              if ( colors && colors.length > 0 ) {
+                color = colors[colorIndex % colors.length];
+              } else {
+                var hue = (colorIndex / Math.max(1, Object.keys(groups).length - 1)) * 360;
+                color = 'hsl(' + hue + ', 70%, 50%)';
+              }
+              
+              datasets.push({
+                label: key,
+                data: data,
+                backgroundColor: fill ? color : 'transparent',
+                borderColor: color,
+                borderWidth: 2,
+                fill: fill,
+                tension: tension,
+                stepped: stepped,
+                pointRadius: showPoints ? pointRadius : 0,
+                pointHoverRadius: showPoints ? pointRadius + 2 : 0
+              });
+              
+              colorIndex++;
+            }
           }
-        });
-        
-        // Sort by X value
-        data.sort(function(a, b) {
-          return parseFloat(a.x) - parseFloat(b.x);
-        });
-        
-        var chartData = {
-          datasets: [{
-            label: this.yProp.label + ' vs ' + this.xProp.label,
+        } else {
+          // Single line
+          var data = [];
+          array.forEach(function(obj) {
+            var xVal = obj[xProp.name];
+            var yVal = obj[yProp.name];
+            
+            if ( xVal != null && yVal != null ) {
+              var processedXVal = xProp.chartJsFormatter ? 
+                                 xProp.chartJsFormatter(xVal) : xVal;
+              data.push({x: processedXVal, y: yVal});
+            }
+          });
+          
+          // Sort by X value
+          data.sort(function(a, b) {
+            return parseFloat(a.x) - parseFloat(b.x);
+          });
+          
+          var lineColor = colors && colors[0] ? colors[0] : 
+                         foam.CSS.returnTokenValue('$green500', this.cls_, this.__context__);
+          
+          datasets.push({
+            label: (yProp.label || yProp.name) + ' vs ' + (xProp.label || xProp.name),
             data: data,
-            backgroundColor: foam.CSS.returnTokenValue('$green100', this.cls_, this.__context__),
-            borderColor: foam.CSS.returnTokenValue('$green500', this.cls_, this.__context__),
+            backgroundColor: fill ? lineColor : 'transparent',
+            borderColor: lineColor,
             borderWidth: 2,
-            fill: false,
-            tension: 0.1
-          }]
-        };
+            fill: fill,
+            tension: tension,
+            stepped: stepped,
+            pointRadius: showPoints ? pointRadius : 0,
+            pointHoverRadius: showPoints ? pointRadius + 2 : 0
+          });
+        }
         
-        return this.Line2.create({
-          data: chartData,
-          chartJSOptions: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              x: {
-                title: { display: true, text: this.xProp.label }
+        var chartJSOptions = {
+          responsive: responsive,
+          maintainAspectRatio: maintainAspectRatio,
+          plugins: {
+            legend: {
+              display: showLegend && (datasets.length > 1 || showLegend),
+              position: (legendPosition || 'TOP').toString().toLowerCase()            },
+            tooltip: {
+              enabled: showTooltips,
+              mode: datasets.length > 1 ? 'index' : 'nearest',
+              intersect: false
+            }
+          },
+          animation: animate ? {
+            duration: animationDuration
+          } : false,
+          scales: {
+            x: {
+              title: { 
+                display: true, 
+                text: xAxisLabel || (xProp ? xProp.label : '')
               },
-              y: {
-                title: { display: true, text: this.yProp.label }
+              grid: {
+                display: showGridLines
+              }
+            },
+            y: {
+              title: { 
+                display: true, 
+                text: yAxisLabel || (yProp ? yProp.label : '')
+              },
+              grid: {
+                display: showGridLines
               }
             }
           }
+        };
+        
+        return this.Line2.create({
+          data: { datasets: datasets },
+          chartJSOptions: chartJSOptions
         });
       }
     }
   ],
   
   methods: [
-    function toE(_, x) { return x.E().add(this.chart_$); },
-    function addToE(e) { e.add(this.chart_$); }
+    function toE(_, x) { 
+      if ( !this.chart_ ) return x.E().add('Please select X and Y properties');
+      return x.E().start('div').style({height: this.height + 'px', position: 'relative'})
+        .add(this.chart_$)
+      .end(); 
+    },
+    function addToE(e) { 
+      if ( !this.chart_ ) {
+        e.add('Please select X and Y properties');
+        return;
+      }
+      e.start('div').style({height: this.height + 'px', position: 'relative'})
+        .add(this.chart_$)
+      .end(); 
+    }
   ]
 });
 
@@ -422,96 +751,55 @@ foam.CLASS({
   name: 'DashboardMetricSink',
   extends: 'foam.dao.AbstractSink',
   
+  requires: [
+    'foam.mlang.sink.Count'
+  ],
+  
   properties: [
+    { name: 'operation' },
+    { name: 'prop' },
+    { name: 'label', value: 'Metric' },
+    { name: 'showCount', value: true },
+    { name: 'valueColor' },
+    { name: 'unit' },
+    { name: 'decimalPlaces', value: 0 },
+    { name: 'metricSink_', hidden: true },
+    { name: 'countSink_', hidden: true },
     {
-      name: 'operation'
-    },
-    {
-      name: 'prop'
-    },
-    {
-      name: 'label',
-      value: 'Metric'
-    },
-    {
-      name: 'showCount',
-      value: false
-    },
-    {
-      name: 'renderAsCard',
-      value: true
-    },
-    {
-      name: 'metricSink_'
-    },
-    {
-      name: 'countSink_'
-    },
-    {
-      name: 'display_',
-      expression: function(metricSink_, countSink_, label, showCount, renderAsCard) {
+      name: 'metric_',
+      expression: function(metricSink_, countSink_, label, showCount, valueColor, unit, decimalPlaces) {
         var value = metricSink_ ? metricSink_.value : 0;
         var count = countSink_ ? countSink_.value : null;
+        
+        // Format value with decimal places
+        if ( typeof value === 'number' ) {
+          value = value.toFixed(decimalPlaces);
+          if ( decimalPlaces === 0 ) {
+            value = parseInt(value).toLocaleString();
+          } else {
+            value = parseFloat(value).toLocaleString(undefined, {
+              minimumFractionDigits: decimalPlaces,
+              maximumFractionDigits: decimalPlaces
+            });
+          }
+        }
+        
+        // Add unit if specified
+        if ( unit ) {
+          value = unit.startsWith(' ') || unit.endsWith(' ') ? 
+                  value + unit : value + ' ' + unit;
+        }
         
         var displayLabel = label || 
                           (this.prop ? this.operation.label + ' of ' + this.prop.label : this.operation.label);
         
-        var container = foam.u2.Element.create();
-        
-        if ( renderAsCard ) {
-          container.style({
-            backgroundColor: foam.CSS.returnTokenValue('$backgroundPrimary', this.cls_, this.__context__),
-            border: '1px solid ' + foam.CSS.returnTokenValue('$borderLight', this.cls_, this.__context__),
-            borderRadius: foam.CSS.returnTokenValue('$inputBorderRadius', this.cls_, this.__context__),
-            padding: '24px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            minHeight: '140px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center'
-          });
-        }
-        
-        // Label
-        container.start('div')
-          .style({
-            fontSize: '0.875rem',
-            color: foam.CSS.returnTokenValue('$textSecondary', this.cls_, this.__context__),
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            fontWeight: 'medium',
-            marginBottom: '8px'
-          })
-          .add(displayLabel)
-        .end();
-        
-        // Value
-        container.start('div')
-          .style({
-            fontSize: '3rem',
-            fontWeight: 'bold',
-            color: foam.CSS.returnTokenValue('$primary500', this.cls_, this.__context__),
-            lineHeight: '1'
-          })
-          .add(typeof value === 'number' ? value.toLocaleString() : value)
-        .end();
-        
-        // Count if enabled
-        if ( showCount && count !== null && this.operation && this.operation.name !== 'COUNT' ) {
-          container.start('div')
-            .style({
-              fontSize: '0.75em',
-              marginTop: '4px',
-              color: foam.CSS.returnTokenValue('$textSecondary', this.cls_, this.__context__),
-              fontWeight: 'normal'
-            })
-            .add(count.toLocaleString() + ' records')
-          .end();
-        }
-        
-        return container;
+        return {
+          label: displayLabel,
+          value: value,
+          count: count,
+          showCount: showCount,
+          valueColor: valueColor || foam.CSS.returnTokenValue('$primary500', this.cls_, this.__context__)
+        };
       }
     }
   ],
@@ -524,9 +812,8 @@ foam.CLASS({
         this.metricSink_ = this.operation.createSink(this.prop);
       }
       
-      if ( this.showCount && this.operation && this.operation.name !== 'COUNT' ) {
-        this.countSink_ = foam.mlang.sink.Count.create();
-      }
+      // Always create count sink to track number of records
+      this.countSink_ = this.Count.create();
     },
     
     function put(obj, sub) {
@@ -538,8 +825,102 @@ foam.CLASS({
       }
     },
     
-    function toE(_, x) { return x.E().add(this.display_$); },
-    function addToE(e) { e.add(this.display_$); },
+    function toE(_, x) {
+      var self = this;
+      return x.E().add(this.metric_$.map(function(metric) {
+        var e = foam.u2.Element.create();
+        
+        
+        // Label
+        e.start('div')
+          .style({
+            fontSize: '0.875rem',
+            color: foam.CSS.returnTokenValue('$textSecondary', self.cls_, self.__context__),
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            fontWeight: 'medium',
+            marginBottom: '8px'
+          })
+          .add(metric.label)
+        .end();
+        
+        // Value
+        e.start('div')
+          .style({
+            fontSize: '3rem',
+            fontWeight: 'bold',
+            color: metric.valueColor,
+            lineHeight: '1'
+          })
+          .add(metric.value)
+        .end();
+        
+        // Count - show how many records were processed
+        if ( metric.showCount && metric.count !== null ) {
+          e.start('div')
+            .style({
+              fontSize: '0.75rem',
+              marginTop: '8px',
+              color: foam.CSS.returnTokenValue('$textSecondary', self.cls_, self.__context__),
+              fontWeight: 'normal'
+            })
+            .add('from ' + metric.count.toLocaleString() + ' records')
+          .end();
+        }
+        
+        e.end();
+        return e;
+      }));
+    },
+    
+    function addToE(e) {
+      var self = this;
+      e.add(this.metric_$.map(function(metric) {
+        var container = foam.u2.Element.create();
+        
+    
+        
+        // Label
+        container.start('div')
+          .style({
+            fontSize: '0.875rem',
+            color: foam.CSS.returnTokenValue('$textSecondary', self.cls_, self.__context__),
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            fontWeight: 'medium',
+            marginBottom: '8px'
+          })
+          .add(metric.label)
+        .end();
+        
+        // Value
+        container.start('div')
+          .style({
+            fontSize: '3rem',
+            fontWeight: 'bold',
+            color: metric.valueColor,
+            lineHeight: '1'
+          })
+          .add(metric.value)
+        .end();
+        
+        // Count - show how many records were processed
+        if ( metric.showCount && metric.count !== null ) {
+          container.start('div')
+            .style({
+              fontSize: '0.75rem',
+              marginTop: '8px',
+              color: foam.CSS.returnTokenValue('$textSecondary', self.cls_, self.__context__),
+              fontWeight: 'normal'
+            })
+            .add('from ' + metric.count.toLocaleString() + ' records')
+          .end();
+        }
+        
+        container.end();
+        return container;
+      }));
+    },
     
     function eof() {
       if ( this.metricSink_ && this.metricSink_.eof ) {
