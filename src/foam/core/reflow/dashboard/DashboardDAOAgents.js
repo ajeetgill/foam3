@@ -362,7 +362,7 @@ foam.CLASS({
     function createSink() {
       // Create sink with GroupBy configuration inherited from parent
       // Use the sink from parent GroupByDAOAgent if provided, otherwise COUNT
-      var valueSink = this.sink ? this.sink : this.COUNT();
+      var valueSink = this.sink ? this.sink.createSink() : this.COUNT();
       
       var sink = this.DashboardBarSink.create({
         arg1: this.prop,
@@ -470,7 +470,7 @@ foam.CLASS({
   methods: [
     function createSink() {
       // Use the sink from parent GridByDAOAgent if provided, otherwise COUNT
-      var valueSink = this.sink ? this.sink : this.COUNT();
+      var valueSink = this.sink ? this.sink.createSink() : this.COUNT();
       
       return this.DashboardStackedBarSink.create({
         yFunc: this.prop1,
@@ -575,7 +575,7 @@ foam.CLASS({
     function createSink() {
       // Create sink with GroupBy configuration inherited from parent
       // Use the sink from parent GroupByDAOAgent if provided, otherwise COUNT
-      var valueSink = this.sink ? this.sink : this.COUNT();
+      var valueSink = this.sink ? this.sink.createSink() : this.COUNT();
       
       // Default to DESC sort order for pie charts to show highest values first
       var sink = this.DashboardPieSink.create({
