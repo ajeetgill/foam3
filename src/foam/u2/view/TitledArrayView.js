@@ -126,9 +126,9 @@ foam.CLASS({
           this
             .forEach(data || [], function(e, i) {
               var row = self.CollapsableRow.create({ index: i, value: e, collapsed: self.collapseBehaviour == 'START_COLLAPSED' ? true : false });
-              var summaryType = self.title || row.value.toSummary ? row.value$.map(v => v.toSummary()) : 'default';
-              var label = row.value$.dot('label').map(label => label || 'New ' + self.of.model_.label)
-              var summaryTypeClass =  summaryType.map(v => v && v.code().split(' ')[0].toLowerCase().replace(/\s+/g, ''))
+              var summaryType = self.title || row.value.toSummary ? row.value$.map(v => v.toCSSClassName()) : 'default';
+              var label = row.value$.dot('label').map(label => label || self.of.model_.label)
+              var summaryTypeClass =  summaryType.map(v => v && v.code())
 
               this
                 .startContext({ data: row })
