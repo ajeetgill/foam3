@@ -608,7 +608,6 @@ foam.CLASS({
         // reason. This resets it back to 0.
         // TODO: find out why it is 2 and remove this code.
         this.flow.revision$.sub((sub, _, __, e) => {
-          console.log(e.get());
           if ( e.get() == 2 ) {
             sub.detach();
             setTimeout(() => this.mementoMgr.clear(), 100);
