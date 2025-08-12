@@ -53,20 +53,6 @@ foam.CLASS({
       expression: function(groups, colors, timeUnit, horizontal, barThickness, datasetLabel, xAxisLabel, yAxisLabel, 
                           showGridLines, responsive, maintainAspectRatio, showLegend, 
                           legendPosition, showTooltips, animate, animationDuration) {
-        console.log('=== DashboardBarSink Debug ===');
-        console.log('Input groups:', groups);
-        console.log('Groups type:', typeof groups);
-        console.log('Groups keys:', Object.keys(groups || {}));
-        console.log('First 3 group entries:');
-        var debugIndex = 0;
-        for ( var debugKey in groups ) {
-          if ( groups.hasOwnProperty(debugKey) && debugIndex < 3 ) {
-            console.log('  Key:', debugKey, 'Value:', groups[debugKey], 'Has .value:', groups[debugKey]?.value);
-            debugIndex++;
-          }
-        }
-        console.log('Config - colors:', colors);
-        console.log('Config - horizontal:', horizontal, 'showLegend:', showLegend);
         
         var labels = [];
         var data = [];
@@ -103,9 +89,6 @@ foam.CLASS({
           }
         }
         
-        console.log('Processed data - labels:', labels);
-        console.log('Processed data - values (first 3):', data.slice(0, 3));
-        console.log('=== End DashboardBarSink Debug ===');
         
         var chartData = {
           labels: labels,
@@ -184,24 +167,6 @@ foam.CLASS({
           height: this.height
         });
         
-        console.log('Created Bar2 chart:', barChart);
-        console.log('Chart data structure:', JSON.stringify({
-          labels: chartData.labels,
-          datasets: chartData.datasets.map(function(ds) {
-            return {
-              label: ds.label,
-              data: ds.data,
-              backgroundColor: ds.backgroundColor ? ds.backgroundColor.slice(0, 3) : undefined,
-              borderColor: ds.borderColor ? ds.borderColor.slice(0, 3) : undefined,
-              borderWidth: ds.borderWidth,
-              barThickness: ds.barThickness
-            };
-          })
-        }, null, 2));
-        console.log('Chart options:', chartJSOptions);
-        
-        // Check if the chart has the data after creation
-        console.log('Bar2 chart data property:', barChart.data);
         
         return barChart;
       }
@@ -260,20 +225,6 @@ foam.CLASS({
       expression: function(groups, colors, showPercentages, cutoutPercentage, clockwise, rotation,
                           responsive, maintainAspectRatio, showLegend, 
                           legendPosition, showTooltips, animate, animationDuration) {
-        console.log('=== DashboardPieSink Debug (WORKING) ===');
-        console.log('Input groups:', groups);
-        console.log('Groups type:', typeof groups);
-        console.log('Groups keys:', Object.keys(groups || {}));
-        console.log('First 3 group entries:');
-        var debugIndex = 0;
-        for ( var debugKey in groups ) {
-          if ( groups.hasOwnProperty(debugKey) && debugIndex < 3 ) {
-            console.log('  Key:', debugKey, 'Value:', groups[debugKey], 'Has .value:', groups[debugKey]?.value);
-            debugIndex++;
-          }
-        }
-        console.log('Config - colors:', colors);
-        console.log('Config - showPercentages:', showPercentages, 'cutout:', cutoutPercentage);
         
         var labels = [];
         var data = [];
@@ -297,9 +248,6 @@ foam.CLASS({
           }
         }
         
-        console.log('Processed data - labels:', labels);
-        console.log('Processed data - values (first 3):', data.slice(0, 3));
-        console.log('=== End DashboardPieSink Debug ===');
         
         var chartData = {
           labels: labels,
@@ -414,49 +362,8 @@ foam.CLASS({
       expression: function(cols, rows, colors, timeUnit, horizontal, xAxisLabel, yAxisLabel,
                           showGridLines, responsive, maintainAspectRatio,
                           showLegend, legendPosition, showTooltips, animate, animationDuration) {
-        console.log('=== DashboardStackedBarSink Debug ===');
-        console.log('Input cols:', cols);
-        console.log('Cols type:', typeof cols);
-        console.log('Cols.groups:', cols?.groups);
-        console.log('Input rows:', rows);
-        console.log('Rows type:', typeof rows);
-        console.log('Rows.groups:', rows?.groups);
-        
         var colGroups = cols && cols.groups ? cols.groups : {};
         var rowGroups = rows && rows.groups ? rows.groups : {};
-        
-        console.log('First 3 col group entries:');
-        var debugIndex = 0;
-        for ( var debugKey in colGroups ) {
-          if ( colGroups.hasOwnProperty(debugKey) && debugIndex < 3 ) {
-            console.log('  Col Key:', debugKey, 'Value:', colGroups[debugKey]);
-            debugIndex++;
-          }
-        }
-        
-        console.log('First 3 row group entries:');
-        debugIndex = 0;
-        for ( var debugKey in rowGroups ) {
-          if ( rowGroups.hasOwnProperty(debugKey) && debugIndex < 3 ) {
-            console.log('  Row Key:', debugKey, 'Value:', rowGroups[debugKey]);
-            var rowGroup = rowGroups[debugKey];
-            if ( rowGroup && rowGroup.groups ) {
-              console.log('    Row has nested groups:', Object.keys(rowGroup.groups).slice(0, 3));
-              var subIndex = 0;
-              for ( var subKey in rowGroup.groups ) {
-                if ( rowGroup.groups.hasOwnProperty(subKey) && subIndex < 2 ) {
-                  console.log('      [' + debugKey + '][' + subKey + ']:', rowGroup.groups[subKey], 
-                             'Has .value:', rowGroup.groups[subKey]?.value);
-                  subIndex++;
-                }
-              }
-            }
-            debugIndex++;
-          }
-        }
-        
-        console.log('Config - colors:', colors);
-        console.log('Config - horizontal:', horizontal, 'showLegend:', showLegend);
         
         var labels = [];
         var datasets = [];
@@ -526,16 +433,6 @@ foam.CLASS({
           }
         }
         
-        console.log('Processed data - labels:', labels);
-        console.log('Processed data - datasets count:', datasets.length);
-        if ( datasets.length > 0 ) {
-          console.log('First dataset:', {
-            label: datasets[0].label,
-            data: datasets[0].data.slice(0, 3),
-            backgroundColor: datasets[0].backgroundColor
-          });
-        }
-        console.log('=== End DashboardStackedBarSink Debug ===');
         
         var chartJSOptions = {
           responsive: responsive,
