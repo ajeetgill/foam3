@@ -75,13 +75,20 @@ foam.CLASS({
       class: 'Boolean',
       name: 'maintainAspectRatio',
       label: 'Maintain Aspect Ratio',
-      value: false
+      value: true
     },
     {
       class: 'Int',
       name: 'height',
       label: 'Chart Height (px)',
       value: 300
+    },
+    {
+      class: 'Int',
+      name: 'width',
+      label: 'Chart Width (px)',
+      value: 400,
+      help: 'Width in pixels (default: 400)'
     },
     {
       class: 'Boolean',
@@ -127,7 +134,7 @@ foam.CLASS({
       var self = this;
       // Add chart display configuration fields to the UI
       e.start('div').style({marginBottom: '10px'})
-        .add('Height: ', this.HEIGHT, 'px')
+        .add('Height: ', this.HEIGHT, 'px Width: ', this.WIDTH, 'px')
       .end()
       .start('div').style({marginBottom: '10px'})
         .add('Legend: ', this.SHOW_LEGEND)
@@ -152,163 +159,7 @@ foam.CLASS({
   ]
 });
 
-foam.CLASS({
-  package: 'foam.core.reflow.dashboard',
-  name: 'DirectChartMixin',
-  
-  documentation: 'Mixin providing direct Chart.js integration for DAO agents',
-  
-  requires: [
-    'org.chartjs.Bar2',
-    'org.chartjs.Pie2', 
-    'org.chartjs.Line2',
-    'org.chartjs.Donut2',
-    'org.chartjs.StackedBar2',
-    'foam.mlang.sink.GroupBy',
-    'foam.mlang.sink.GroupBySortOrder'
-  ],
-  
-  methods: [
-    function renderDirectChart(e, chartType, chartData, config, block) {
-      var ChartClass;
-      switch(chartType) {
-        case 'bar': ChartClass = this.Bar2; break;
-        case 'stackedbar': ChartClass = this.StackedBar2; break;
-        case 'pie': ChartClass = this.Pie2; break;
-        case 'donut': ChartClass = this.Donut2; break;
-        case 'line': ChartClass = this.Line2; break;
-        default: throw new Error('Unknown chart type: ' + chartType);
-      }
-      
-      // Create the chart first to get its default options
-      var chart = ChartClass.create({
-        data: chartData
-      }, e.__subContext__);
-      
-      // Get the chart's existing options (preserves stacking config for StackedBar2)
-      var existingOptions = chart.chartJSOptions || {};
-      
-      // Merge with default responsive settings and any additional config
-      var chartJSOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        ...existingOptions  // Preserve chart's built-in options (like stacking)
-      };
-      
-      if (config && config.options) {
-        chartJSOptions = {...chartJSOptions, ...config.options};
-      }
-      
-      // Apply the merged options back to the chart
-      chart.chartJSOptions = chartJSOptions;
-      // Debug logging (remove in production)
-      // console.log('Chart.js config:', { type: chartType, data: chartData, options: chart.chartJSOptions });
-      // Wrap chart in responsive container
-      e.start('div').
-        style({
-          position: 'relative',
-          height: '300px',  // Fixed height for consistent layout
-          width: '100%',
-          overflow: 'hidden'
-        }).
-        add(chart).
-      end();
-      
-      // Set block value
-      if (block) {
-        if (block.value) {
-          block.value.value = chart;
-        } else {
-          block.value = chart;
-        }
-      }
-      
-      return chart;
-    },
-    
-    function showPropertyRequiredMessage(e) {
-      e.start('div').
-        style({padding: '20px', textAlign: 'center', color: foam.CSS.returnTokenValue('$textTertiary', this.cls_, this.__context__)}).
-        add('Please select a property to group by').
-      end();
-    },
-    
-    function convertGroupByToChartData(groupBy, propLabel, chartType) {
-      var data = [];
-      var labels = [];
-      
-      // Extract data from GroupBy sink
-      for ( var key in groupBy.groups ) {
-        if ( groupBy.groups.hasOwnProperty(key) ) {
-          labels.push(key.toString());
-          data.push(groupBy.groups[key].value);
-        }
-      }
-      
-      // Create Chart.js dataset with basic structure
-      var dataset = {
-        label: propLabel || 'Count',
-        data: data
-      };
-      
-      // Let the agent configure its own styling
-      if ( this.configureDatasetStyling ) {
-        this.configureDatasetStyling(dataset, labels, chartType);
-      }
-      
-      return {
-        labels: labels,
-        datasets: [dataset]
-      };
-    },
-    
-    function createLimitedGroupBy(groupBy, sink, topN, sortDescending, includeOthers) {
-      // Create GroupBy with unified groupLimit functionality
-      var sortOrder = this.GroupBySortOrder.NONE;
-      if ( topN > 0 ) {
-        sortOrder = sortDescending ? this.GroupBySortOrder.DESC : this.GroupBySortOrder.ASC;
-      }
-      
-      return this.GroupBy.create({
-        arg1: groupBy,
-        arg2: sink,
-        groupLimit: topN > 0 ? topN : -1,
-        sortOrder: sortOrder,
-        includeOthers: includeOthers
-      });
-    },
-    
-    function convertLimitedGroupsToChartData(groups, propLabel, chartType) {
-      var data = [];
-      var labels = [];
-      
-      // Extract data from groups object (with built-in groupLimit functionality)
-      for ( var key in groups ) {
-        if ( groups.hasOwnProperty(key) ) {
-          labels.push(key.toString());
-          data.push(groups[key].value);
-        }
-      }
-      
-      // Create Chart.js dataset with basic structure
-      var dataset = {
-        label: propLabel || 'Count',
-        data: data
-      };
-      
-      // Let the agent configure its own styling
-      if ( this.configureDatasetStyling ) {
-        this.configureDatasetStyling(dataset, labels, chartType);
-      }
-      
-      return {
-        labels: labels,
-        datasets: [dataset]
-      };
-    }
-  ]
-});
-
+// DirectChartMixin removed - not used after refactoring to sink-based approach
 // CardRenderMixin removed - metrics always render as cards
 
 
@@ -380,6 +231,7 @@ foam.CLASS({
         responsive: this.responsive,
         maintainAspectRatio: this.maintainAspectRatio,
         height: this.height,
+        width: this.width,
         showLegend: this.showLegend,
         legendPosition: this.legendPosition,
         showTooltips: this.showTooltips,
@@ -485,6 +337,7 @@ foam.CLASS({
         responsive: this.responsive,
         maintainAspectRatio: this.maintainAspectRatio,
         height: this.height,
+        width: this.width,
         showLegend: this.showLegend,
         legendPosition: this.legendPosition,
         showTooltips: this.showTooltips,
@@ -594,6 +447,7 @@ foam.CLASS({
         responsive: this.responsive,
         maintainAspectRatio: this.maintainAspectRatio,
         height: this.height,
+        width: this.width,
         showLegend: this.showLegend,
         legendPosition: this.legendPosition,
         showTooltips: this.showTooltips,
@@ -783,6 +637,7 @@ foam.CLASS({
         responsive: this.responsive,
         maintainAspectRatio: this.maintainAspectRatio,
         height: this.height,
+        width: this.width,
         showLegend: this.showLegend,
         legendPosition: this.legendPosition,
         showTooltips: this.showTooltips,

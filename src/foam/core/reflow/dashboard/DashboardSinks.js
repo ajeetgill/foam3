@@ -32,6 +32,10 @@ foam.CLASS({
     { name: 'responsive', value: true },
     { name: 'maintainAspectRatio', value: false },
     { name: 'height', value: 300 },
+    { 
+      name: 'width', 
+      value: 400
+    },
     { name: 'showLegend', value: true },
     { name: 'legendPosition', value: 'TOP' },
     { name: 'showTooltips', value: true },
@@ -116,7 +120,9 @@ foam.CLASS({
         
         return this.Bar2.create({
           data: chartData,
-          chartJSOptions: chartJSOptions
+          chartJSOptions: chartJSOptions,
+          width: this.width,
+          height: this.height
         });
       }
     }
@@ -124,14 +130,10 @@ foam.CLASS({
   
   methods: [
     function toE(_, x) { 
-      return x.E().start('div').style({height: this.height + 'px', position: 'relative'})
-        .add(this.chart_$)
-      .end(); 
+      return x.E().add(this.chart_$);
     },
     function addToE(e) { 
-      e.start('div').style({height: this.height + 'px', position: 'relative'})
-        .add(this.chart_$)
-      .end(); 
+      e.add(this.chart_$);
     }
   ]
 });
@@ -156,7 +158,14 @@ foam.CLASS({
     { name: 'responsive', value: true },
     { name: 'maintainAspectRatio', value: false },
     { name: 'height', value: 300 },
-    { name: 'showLegend', value: true },
+    { 
+      name: 'width', 
+      factory: function() { 
+        // Default to 0 which means auto-width (100% of container)
+        // But when rendered in a canvas, we need a real width
+        return 400; 
+      }
+    },    { name: 'showLegend', value: true },
     { name: 'legendPosition', value: 'TOP' },
     { name: 'showTooltips', value: true },
     { name: 'animate', value: true },
@@ -249,7 +258,9 @@ foam.CLASS({
         
         return this.Pie2.create({
           data: chartData,
-          chartJSOptions: options
+          chartJSOptions: options,
+          width: this.width,
+          height: this.height
         });
       }
     }
@@ -257,14 +268,10 @@ foam.CLASS({
   
   methods: [
     function toE(_, x) { 
-      return x.E().start('div').style({height: this.height + 'px', position: 'relative'})
-        .add(this.chart_$)
-      .end(); 
+      return x.E().add(this.chart_$);
     },
     function addToE(e) { 
-      e.start('div').style({height: this.height + 'px', position: 'relative'})
-        .add(this.chart_$)
-      .end(); 
+      e.add(this.chart_$);
     }
   ]
 });
@@ -371,7 +378,9 @@ foam.CLASS({
         
         return this.Donut2.create({
           data: chartData,
-          chartJSOptions: options
+          chartJSOptions: options,
+          width: this.width,
+          height: this.height
         });
       }
     }
@@ -398,6 +407,7 @@ foam.CLASS({
     { name: 'responsive', value: true },
     { name: 'maintainAspectRatio', value: false },
     { name: 'height', value: 300 },
+    { name: 'width', value: 400 },
     { name: 'showLegend', value: true },
     { name: 'legendPosition', value: 'TOP' },
     { name: 'showTooltips', value: true },
@@ -522,7 +532,9 @@ foam.CLASS({
             labels: labels,
             datasets: datasets
           },
-          chartJSOptions: chartJSOptions
+          chartJSOptions: chartJSOptions,
+          width: this.width,
+          height: this.height
         });
       }
     }
@@ -530,14 +542,10 @@ foam.CLASS({
   
   methods: [
     function toE(_, x) { 
-      return x.E().start('div').style({height: this.height + 'px', position: 'relative'})
-        .add(this.chart_$)
-      .end(); 
+      return x.E().add(this.chart_$);
     },
     function addToE(e) { 
-      e.start('div').style({height: this.height + 'px', position: 'relative'})
-        .add(this.chart_$)
-      .end(); 
+      e.add(this.chart_$);
     }
   ]
 });
@@ -572,6 +580,14 @@ foam.CLASS({
     { name: 'responsive', value: true },
     { name: 'maintainAspectRatio', value: false },
     { name: 'height', value: 300 },
+    { 
+      name: 'width', 
+      factory: function() { 
+        // Default to 0 which means auto-width (100% of container)
+        // But when rendered in a canvas, we need a real width
+        return 400; 
+      }
+    },    
     { name: 'showLegend', value: true },
     { name: 'legendPosition', value: 'TOP' },
     { name: 'showTooltips', value: true },
@@ -763,7 +779,9 @@ foam.CLASS({
         
         return this.Line2.create({
           data: { datasets: datasets },
-          chartJSOptions: chartJSOptions
+          chartJSOptions: chartJSOptions,
+          width: this.width,
+          height: this.height
         });
       }
     }
@@ -772,18 +790,14 @@ foam.CLASS({
   methods: [
     function toE(_, x) { 
       if ( !this.chart_ ) return x.E().add('Please select X and Y properties');
-      return x.E().start('div').style({height: this.height + 'px', position: 'relative'})
-        .add(this.chart_$)
-      .end(); 
+      return x.E().add(this.chart_$);
     },
     function addToE(e) { 
       if ( !this.chart_ ) {
         e.add('Please select X and Y properties');
         return;
       }
-      e.start('div').style({height: this.height + 'px', position: 'relative'})
-        .add(this.chart_$)
-      .end(); 
+      e.add(this.chart_$);
     }
   ]
 });
