@@ -31,6 +31,7 @@ foam.CLASS({
     { name: 'timeUnit' },
     { name: 'horizontal', value: false },
     { name: 'barThickness' },
+    { name: 'datasetLabel', value: '', help: 'Label for the dataset (shown in legend if enabled)' },
     { name: 'xAxisLabel' },
     { name: 'yAxisLabel' },
     { name: 'showGridLines', value: true },
@@ -42,25 +43,46 @@ foam.CLASS({
       name: 'width', 
       value: 400
     },
-    { name: 'showLegend', value: true },
+    { name: 'showLegend', value: false },  // Bar charts typically don't need legend for single dataset
     { name: 'legendPosition', value: 'TOP' },
     { name: 'showTooltips', value: true },
     { name: 'animate', value: true },
     { name: 'animationDuration', value: 1000 },
     {
       name: 'chart_',
-      expression: function(groups, colors, timeUnit, horizontal, barThickness, xAxisLabel, yAxisLabel, 
+      expression: function(groups, colors, timeUnit, horizontal, barThickness, datasetLabel, xAxisLabel, yAxisLabel, 
                           showGridLines, responsive, maintainAspectRatio, showLegend, 
                           legendPosition, showTooltips, animate, animationDuration) {
+        console.log('=== DashboardBarSink Debug ===');
+        console.log('Input groups:', groups);
+        console.log('Groups type:', typeof groups);
+        console.log('Groups keys:', Object.keys(groups || {}));
+        console.log('First 3 group entries:');
+        var debugIndex = 0;
+        for ( var debugKey in groups ) {
+          if ( groups.hasOwnProperty(debugKey) && debugIndex < 3 ) {
+            console.log('  Key:', debugKey, 'Value:', groups[debugKey], 'Has .value:', groups[debugKey]?.value);
+            debugIndex++;
+          }
+        }
+        console.log('Config - colors:', colors);
+        console.log('Config - horizontal:', horizontal, 'showLegend:', showLegend);
+        
         var labels = [];
         var data = [];
         var backgroundColors = [];
         var borderColors = [];
         
+        // Check if we're dealing with dates using the groupBy property
+        var isDateAxis = this.arg1 && (foam.lang.Date.isInstance(this.arg1) || foam.lang.DateTime.isInstance(this.arg1));
+        
         var index = 0;
         for ( var key in groups ) {
           if ( groups.hasOwnProperty(key) ) {
-            labels.push(key.toString());
+            // Use chartJsFormatter if available, otherwise use the key as-is
+            var label = this.arg1 && this.arg1.chartJsFormatter ? 
+                        this.arg1.chartJsFormatter(key) : key;
+            labels.push(label);
             data.push(groups[key].value);
             
             // Color handling
@@ -71,19 +93,29 @@ foam.CLASS({
               color = foam.CSS.returnTokenValue('$primary200', this.cls_, this.__context__);
             }
             backgroundColors.push(color);
-            borderColors.push(color.replace('200', '400'));
+            // Safely create border color - if color contains '200', replace with '400', otherwise use the same color
+            var borderColor = color;
+            if ( typeof color === 'string' && color.includes('200') ) {
+              borderColor = color.replace('200', '400');
+            }
+            borderColors.push(borderColor);
             index++;
           }
         }
         
+        console.log('Processed data - labels:', labels);
+        console.log('Processed data - values (first 3):', data.slice(0, 3));
+        console.log('=== End DashboardBarSink Debug ===');
+        
         var chartData = {
           labels: labels,
           datasets: [{
+            label: datasetLabel || 'Values',  // Use configurable label or default to 'Values'
             data: data,
             backgroundColor: backgroundColors,
             borderColor: borderColors,
-            borderWidth: 1,
-            barThickness: barThickness
+            borderWidth: 1
+            // Don't set barThickness if it's 0 or undefined, let Chart.js use defaults
           }]
         };
         
@@ -94,7 +126,8 @@ foam.CLASS({
           plugins: {
             legend: {
               display: showLegend,
-              position: (legendPosition || 'TOP').toString().toLowerCase()            },
+              position: legendPosition ? legendPosition.toString().toLowerCase() : 'top'
+            },
             tooltip: {
               enabled: showTooltips
             }
@@ -125,10 +158,8 @@ foam.CLASS({
         };
         
         // Configure time scale if dealing with date/time properties
-        // Check if arg1 (groupBy property) is a date/time property
-        var isTimeScale = this.arg1 && (foam.lang.Date.isInstance(this.arg1) || foam.lang.DateTime.isInstance(this.arg1));
-        
-        if ( isTimeScale && timeUnit ) {
+        // Use the isDateAxis flag we set earlier when detecting date keys
+        if ( isDateAxis ) {
           chartJSOptions.scales.x.type = 'time';
           chartJSOptions.scales.x.time = {
             unit: timeUnit.chartJsUnit || 'day',
@@ -146,12 +177,33 @@ foam.CLASS({
           }
         }
         
-        return this.Bar2.create({
+        var barChart = this.Bar2.create({
           data: chartData,
           chartJSOptions: chartJSOptions,
           width: this.width,
           height: this.height
         });
+        
+        console.log('Created Bar2 chart:', barChart);
+        console.log('Chart data structure:', JSON.stringify({
+          labels: chartData.labels,
+          datasets: chartData.datasets.map(function(ds) {
+            return {
+              label: ds.label,
+              data: ds.data,
+              backgroundColor: ds.backgroundColor ? ds.backgroundColor.slice(0, 3) : undefined,
+              borderColor: ds.borderColor ? ds.borderColor.slice(0, 3) : undefined,
+              borderWidth: ds.borderWidth,
+              barThickness: ds.barThickness
+            };
+          })
+        }, null, 2));
+        console.log('Chart options:', chartJSOptions);
+        
+        // Check if the chart has the data after creation
+        console.log('Bar2 chart data property:', barChart.data);
+        
+        return barChart;
       }
     }
   ],
@@ -208,6 +260,21 @@ foam.CLASS({
       expression: function(groups, colors, showPercentages, cutoutPercentage, clockwise, rotation,
                           responsive, maintainAspectRatio, showLegend, 
                           legendPosition, showTooltips, animate, animationDuration) {
+        console.log('=== DashboardPieSink Debug (WORKING) ===');
+        console.log('Input groups:', groups);
+        console.log('Groups type:', typeof groups);
+        console.log('Groups keys:', Object.keys(groups || {}));
+        console.log('First 3 group entries:');
+        var debugIndex = 0;
+        for ( var debugKey in groups ) {
+          if ( groups.hasOwnProperty(debugKey) && debugIndex < 3 ) {
+            console.log('  Key:', debugKey, 'Value:', groups[debugKey], 'Has .value:', groups[debugKey]?.value);
+            debugIndex++;
+          }
+        }
+        console.log('Config - colors:', colors);
+        console.log('Config - showPercentages:', showPercentages, 'cutout:', cutoutPercentage);
+        
         var labels = [];
         var data = [];
         var backgroundColors = [];
@@ -230,6 +297,10 @@ foam.CLASS({
           }
         }
         
+        console.log('Processed data - labels:', labels);
+        console.log('Processed data - values (first 3):', data.slice(0, 3));
+        console.log('=== End DashboardPieSink Debug ===');
+        
         var chartData = {
           labels: labels,
           datasets: [{
@@ -247,7 +318,8 @@ foam.CLASS({
           plugins: {
             legend: {
               display: showLegend,
-              position:(legendPosition || 'TOP').toString().toLowerCase()            },
+              position: legendPosition ? legendPosition.toString().toLowerCase() : 'top'
+            },
             tooltip: {
               enabled: showTooltips
             },
@@ -342,95 +414,107 @@ foam.CLASS({
       expression: function(cols, rows, colors, timeUnit, horizontal, xAxisLabel, yAxisLabel,
                           showGridLines, responsive, maintainAspectRatio,
                           showLegend, legendPosition, showTooltips, animate, animationDuration) {
-        console.log('=== DashboardStackedBarSink Structure Debug ===');
-        console.log('cols type:', typeof cols, 'has groups:', !!cols.groups);
-        console.log('rows type:', typeof rows, 'has groups:', !!rows.groups);
+        console.log('=== DashboardStackedBarSink Debug ===');
+        console.log('Input cols:', cols);
+        console.log('Cols type:', typeof cols);
+        console.log('Cols.groups:', cols?.groups);
+        console.log('Input rows:', rows);
+        console.log('Rows type:', typeof rows);
+        console.log('Rows.groups:', rows?.groups);
         
-        // Check structure of cols.groups
-        var colKeys = Object.keys(cols.groups || {});
-        console.log('Column keys (first 3):', colKeys.slice(0, 3));
+        var colGroups = cols && cols.groups ? cols.groups : {};
+        var rowGroups = rows && rows.groups ? rows.groups : {};
         
-        // Check structure of rows.groups  
-        var rowKeys = Object.keys(rows.groups || {});
-        console.log('Row keys (first 3):', rowKeys.slice(0, 3));
-        
-        // Deep dive into first row structure
-        if ( rowKeys.length > 0 ) {
-          var firstRowKey = rowKeys[0];
-          var firstRow = rows.groups[firstRowKey];
-          console.log('First row structure:');
-          console.log('  - key:', firstRowKey);
-          console.log('  - type:', typeof firstRow);
-          console.log('  - has groups:', !!firstRow.groups);
-          if ( firstRow.groups ) {
-            var firstRowColKeys = Object.keys(firstRow.groups);
-            console.log('  - nested column keys (first 3):', firstRowColKeys.slice(0, 3));
-            if ( firstRowColKeys.length > 0 ) {
-              var firstCell = firstRow.groups[firstRowColKeys[0]];
-              console.log('  - first cell type:', typeof firstCell);
-              console.log('  - first cell has value:', 'value' in firstCell);
-              console.log('  - first cell value:', firstCell.value);
-            }
+        console.log('First 3 col group entries:');
+        var debugIndex = 0;
+        for ( var debugKey in colGroups ) {
+          if ( colGroups.hasOwnProperty(debugKey) && debugIndex < 3 ) {
+            console.log('  Col Key:', debugKey, 'Value:', colGroups[debugKey]);
+            debugIndex++;
           }
         }
         
-        var labels = [];
-        var stackGroups = {};
-        
-        // Extract labels from columns
-        for ( var col in cols.groups ) {
-          if ( cols.groups.hasOwnProperty(col) ) {
-            labels.push(col.toString());
-          }
-        }
-        console.log('Extracted', labels.length, 'labels');
-        
-        // Group data by stack (rows)
-        // The rows structure is: rows.groups[rowKey] = GroupBy object with its own groups property
-        // Each row group contains: groups[colKey] = accumulator with value property
-        for ( var row in rows.groups ) {
-          if ( rows.groups.hasOwnProperty(row) ) {
-            stackGroups[row] = {};
-            var rowGroup = rows.groups[row];
-            
-            // For each column, get the value from this row's nested groups
-            for ( var col in cols.groups ) {
-              if ( cols.groups.hasOwnProperty(col) ) {
-                if ( rowGroup && rowGroup.groups && rowGroup.groups[col] ) {
-                  var value = rowGroup.groups[col].value || 0;
-                  stackGroups[row][col] = value;
-                } else {
-                  stackGroups[row][col] = 0;
+        console.log('First 3 row group entries:');
+        debugIndex = 0;
+        for ( var debugKey in rowGroups ) {
+          if ( rowGroups.hasOwnProperty(debugKey) && debugIndex < 3 ) {
+            console.log('  Row Key:', debugKey, 'Value:', rowGroups[debugKey]);
+            var rowGroup = rowGroups[debugKey];
+            if ( rowGroup && rowGroup.groups ) {
+              console.log('    Row has nested groups:', Object.keys(rowGroup.groups).slice(0, 3));
+              var subIndex = 0;
+              for ( var subKey in rowGroup.groups ) {
+                if ( rowGroup.groups.hasOwnProperty(subKey) && subIndex < 2 ) {
+                  console.log('      [' + debugKey + '][' + subKey + ']:', rowGroup.groups[subKey], 
+                             'Has .value:', rowGroup.groups[subKey]?.value);
+                  subIndex++;
                 }
               }
             }
+            debugIndex++;
           }
         }
         
-        console.log('Created', Object.keys(stackGroups).length, 'stack groups');
+        console.log('Config - colors:', colors);
+        console.log('Config - horizontal:', horizontal, 'showLegend:', showLegend);
         
+        var labels = [];
         var datasets = [];
-        var colorIndex = 0;
         
-        for ( var stackValue in stackGroups ) {
-          if ( stackGroups.hasOwnProperty(stackValue) ) {
+        // The GridBy creates a 2D structure:
+        // cols.groups = x-axis categories  
+        // rows.groups = stack groups (y-axis grouping)
+        // Each intersection contains the aggregated value
+        
+        // Get the actual groups from the GroupBy objects
+        var colGroups = cols && cols.groups ? cols.groups : {};
+        var rowGroups = rows && rows.groups ? rows.groups : {};
+        
+        // Check if we're dealing with dates on x-axis using the xFunc property
+        var isDateAxis = this.xFunc && (foam.lang.Date.isInstance(this.xFunc) || foam.lang.DateTime.isInstance(this.xFunc));
+        
+        // Extract labels from columns (x-axis categories)
+        for ( var col in colGroups ) {
+          if ( colGroups.hasOwnProperty(col) ) {
+            // Use chartJsFormatter if available on xFunc, otherwise use the key as-is
+            var label = this.xFunc && this.xFunc.chartJsFormatter ? 
+                        this.xFunc.chartJsFormatter(col) : col;
+            labels.push(label);
+          }
+        }
+        
+        // Build datasets - one for each row (stack group)
+        var colorIndex = 0;
+        for ( var rowKey in rowGroups ) {
+          if ( rowGroups.hasOwnProperty(rowKey) ) {
             var data = [];
+            var rowGroup = rowGroups[rowKey];
             
-            labels.forEach(function(col) {
-              var value = stackGroups[stackValue][col] || 0;
-              data.push(value);
-            });
+            // For each column, get the value for this row
+            for ( var colKey in colGroups ) {
+              if ( colGroups.hasOwnProperty(colKey) ) {
+                // Access the value at [row][col] intersection
+                var value = 0;
+                // The row group should have its own groups property with column keys
+                if ( rowGroup && rowGroup.groups && rowGroup.groups[colKey] ) {
+                  // The value is stored in the accumulator's value property
+                  value = rowGroup.groups[colKey].value || 0;
+                }
+                data.push(value);
+              }
+            }
             
+            // Generate color for this dataset
             var color;
             if ( colors && colors.length > 0 ) {
               color = colors[colorIndex % colors.length];
             } else {
-              var hue = (colorIndex / Math.max(1, Object.keys(stackGroups).length - 1)) * 360;
+              var hue = (colorIndex / Math.max(1, Object.keys(rowGroups).length - 1)) * 360;
               color = 'hsl(' + hue + ', 70%, 50%)';
             }
             
             datasets.push({
-              label: stackValue.toString(),
+              label: rowKey.toString(),
               data: data,
               backgroundColor: color,
               borderColor: typeof color === 'string' && color.includes('hsl') ? 
@@ -442,14 +526,16 @@ foam.CLASS({
           }
         }
         
-        console.log('Chart.js data structure:');
-        console.log('  - labels count:', labels.length);
-        console.log('  - datasets count:', datasets.length);
+        console.log('Processed data - labels:', labels);
+        console.log('Processed data - datasets count:', datasets.length);
         if ( datasets.length > 0 ) {
-          console.log('  - first dataset label:', datasets[0].label);
-          console.log('  - first dataset data length:', datasets[0].data.length);
-          console.log('  - first dataset data sample:', datasets[0].data.slice(0, 3));
+          console.log('First dataset:', {
+            label: datasets[0].label,
+            data: datasets[0].data.slice(0, 3),
+            backgroundColor: datasets[0].backgroundColor
+          });
         }
+        console.log('=== End DashboardStackedBarSink Debug ===');
         
         var chartJSOptions = {
           responsive: responsive,
@@ -458,7 +544,7 @@ foam.CLASS({
           plugins: {
             legend: {
               display: showLegend,
-              position: (legendPosition || 'TOP').toString().toLowerCase()
+              position: legendPosition ? legendPosition.toString().toLowerCase() : 'top'
             },
             tooltip: {
               enabled: showTooltips,
