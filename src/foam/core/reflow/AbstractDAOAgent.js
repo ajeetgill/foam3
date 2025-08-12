@@ -419,19 +419,20 @@ foam.CLASS({
     },
     {
       class: 'Int',
-      name: 'topN',
-      label: 'Top N Results',
+      name: 'groupLimit',
+      label: 'Group Limit',
       value: 0,
       help: 'Limit results to top N groups (0 for no limit)'
     },
     {
-      class: 'Boolean',
-      name: 'sortDescending',
-      label: 'Sort Descending',
-      value: true,
-      help: 'If true, show top values (highest first). If false, show bottom values (lowest first).',
-      visibility: function(topN) {
-        return topN > 0 ? 'RW' : 'HIDDEN';
+      class: 'Enum',
+      of: 'foam.mlang.sink.GroupBySortOrder',
+      name: 'sortOrder',
+      label: 'Sort Order',
+      value: 'DESC',
+      help: 'Sort order for groups',
+      visibility: function(groupLimit) {
+        return groupLimit > 0 ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
       }
     },
     {
@@ -440,8 +441,18 @@ foam.CLASS({
       label: 'Include Others',
       value: false,
       help: 'If true, includes an "Others" category aggregating remaining groups',
-      visibility: function(topN) {
-        return topN > 0 ? 'RW' : 'HIDDEN';
+      visibility: function(groupLimit) {
+        return groupLimit > 0 ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
+      }
+    },
+    {
+      class: 'String',
+      name: 'othersLabel',
+      label: 'Others Label',
+      value: 'Others',
+      help: 'Label for the "Others" category',
+      visibility: function(includeOthers) {
+        return includeOthers ? 'RW' : 'HIDDEN';
       }
     },
     {
@@ -458,11 +469,11 @@ foam.CLASS({
       var groupBySink = this.GROUP_BY(this.prop, this.sink.createSink());
       
       // Apply grouping limits if specified
-      if ( this.topN > 0 ) {
-        groupBySink.groupLimit = this.topN;
-        groupBySink.sortOrder = this.sortDescending ? 
-          this.GroupBySortOrder.DESC : this.GroupBySortOrder.ASC;
+      if ( this.groupLimit > 0 ) {
+        groupBySink.groupLimit = this.groupLimit;
+        groupBySink.sortOrder = this.sortOrder;
         groupBySink.includeOthers = this.includeOthers;
+        groupBySink.othersLabel = this.othersLabel;
       }
       
       return groupBySink;
@@ -474,8 +485,8 @@ foam.CLASS({
         start().
           style({paddingLeft: '12px'}).
           add(this.PROP, this.SINK).
-          add('Top N: ', this.TOP_N).
-          add('Sort Desc: ', this.SORT_DESCENDING).
+          add('Limit: ', this.GROUP_LIMIT).
+          add('Sort: ', this.SORT_ORDER).
           add('Include Others: ', this.INCLUDE_OTHERS).
           callIf(this.block, function() { this.add(self.BROWSE); });
     }

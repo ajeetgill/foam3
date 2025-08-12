@@ -177,8 +177,8 @@ foam.CLASS({
   ],
 
   properties: [
-    // Inherited from GroupByDAOAgent: prop, sink
-    // From mixins: colors, groupLimit, sortOrder, includeOthers, etc.
+    // Inherited from GroupByDAOAgent: prop, sink, groupLimit, sortOrder, includeOthers, othersLabel
+    // From mixins: colors, chart display options
     {
       class: 'Boolean',
       name: 'horizontal',
@@ -250,6 +250,9 @@ foam.CLASS({
             .add('Grouping: ', this.PROP, ' by ', this.SINK)
           .end()
           .start('div').style({marginBottom: '10px'})
+            .add('Limit: ', this.GROUP_LIMIT, ' Sort: ', this.SORT_ORDER)
+          .end()
+          .start('div').style({marginBottom: '10px'})
             .add('Include Others: ', this.INCLUDE_OTHERS)
             .add(self.dynamic(function(includeOthers) {
               if (includeOthers) {
@@ -310,12 +313,6 @@ foam.CLASS({
       name: 'showGridLines',
       label: 'Show Grid Lines',
       value: true
-    },
-    {
-      class: 'Boolean',
-      name: 'showDataLabels',
-      label: 'Show Data Labels',
-      value: false
     }
   ],
 
@@ -333,7 +330,6 @@ foam.CLASS({
         xAxisLabel: this.xAxisLabel,
         yAxisLabel: this.yAxisLabel,
         showGridLines: this.showGridLines,
-        showDataLabels: this.showDataLabels,
         responsive: this.responsive,
         maintainAspectRatio: this.maintainAspectRatio,
         height: this.height,
@@ -359,7 +355,6 @@ foam.CLASS({
             .add('Display: Horizontal: ', this.HORIZONTAL, ' Grid: ', this.SHOW_GRID_LINES)
           .end()
           .start('div').style({marginBottom: '10px'})
-            .add('Data Labels: ', this.SHOW_DATA_LABELS)
           .end()
           .start('div').style({marginBottom: '10px'})
             .add('X Label: ', this.X_AXIS_LABEL, ' Y Label: ', this.Y_AXIS_LABEL)
@@ -388,8 +383,8 @@ foam.CLASS({
   ],
 
   properties: [
-    // Inherited from GroupByDAOAgent: prop, sink
-    // From mixins: colors, groupLimit, sortOrder, includeOthers, chart display
+    // Inherited from GroupByDAOAgent: prop, sink, groupLimit, sortOrder, includeOthers, othersLabel
+    // From mixins: colors, chart display options
     {
       class: 'Boolean',
       name: 'showPercentages',
@@ -415,12 +410,6 @@ foam.CLASS({
       label: 'Rotation Angle',
       value: -90,
       help: 'Starting angle in degrees'
-    },
-    {
-      class: 'Boolean',
-      name: 'showDataLabels',
-      label: 'Show Data Labels',
-      value: false
     }
   ],
 
@@ -434,8 +423,8 @@ foam.CLASS({
       var sink = this.DashboardPieSink.create({
         arg1: this.prop,
         arg2: valueSink,
-        groupLimit: this.groupLimit || 10,
-        sortOrder: this.sortOrder || this.GroupBySortOrder.DESC,
+        groupLimit: this.groupLimit,
+        sortOrder: this.sortOrder,
         includeOthers: this.includeOthers,
         othersLabel: this.othersLabel,
         colors: this.colors,
@@ -443,7 +432,6 @@ foam.CLASS({
         cutoutPercentage: this.cutoutPercentage,
         clockwise: this.clockwise,
         rotation: this.rotation,
-        showDataLabels: this.showDataLabels,
         responsive: this.responsive,
         maintainAspectRatio: this.maintainAspectRatio,
         height: this.height,
@@ -477,7 +465,7 @@ foam.CLASS({
             }))
           .end()
           .start('div').style({marginBottom: '10px'})
-            .add('Show %: ', this.SHOW_PERCENTAGES, ' Data Labels: ', this.SHOW_DATA_LABELS)
+            .add('Show %: ', this.SHOW_PERCENTAGES)
           .end()
           .start('div').style({marginBottom: '10px'})
             .add('Cutout: ', this.CUTOUT_PERCENTAGE, '% Rotation: ', this.ROTATION, '°')

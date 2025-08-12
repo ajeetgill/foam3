@@ -21,6 +21,11 @@ foam.CLASS({
   ],
   
   properties: [
+    // GroupBy properties (inherited but exposed here for clarity)
+    { name: 'groupLimit', value: 0, help: 'Limit number of groups (0 = no limit)' },
+    { name: 'sortOrder', value: 'DESC', help: 'Sort order for groups' },
+    { name: 'includeOthers', value: false, help: 'Include "Others" category for remaining groups' },
+    { name: 'othersLabel', value: 'Others', help: 'Label for the "Others" category' },
     // Chart-specific properties
     { name: 'colors' },
     { name: 'horizontal', value: false },
@@ -148,6 +153,11 @@ foam.CLASS({
   ],
   
   properties: [
+    // GroupBy properties (inherited but exposed here for clarity)
+    { name: 'groupLimit', value: 10, help: 'Limit number of slices (0 = no limit)' },
+    { name: 'sortOrder', value: 'DESC', help: 'Sort order for slices' },
+    { name: 'includeOthers', value: true, help: 'Include "Others" slice for remaining groups' },
+    { name: 'othersLabel', value: 'Others', help: 'Label for the "Others" slice' },
     // Pie-specific properties
     { name: 'colors' },
     { name: 'showPercentages', value: false },
@@ -276,116 +286,6 @@ foam.CLASS({
   ]
 });
 
-// DashboardDonutSink removed - use DashboardPieSink with cutoutPercentage instead
-
-foam.CLASS({
-  package: 'foam.core.reflow.dashboard',
-  name: 'DashboardDonutSink',
-  extends: 'foam.core.reflow.dashboard.DashboardPieSink',
-  
-  requires: [
-    'org.chartjs.Donut2'
-  ],
-  
-  properties: [
-    {
-      name: 'cutoutPercentage',
-      factory: function() { return 50; } // Default 50% for donut
-    },
-    {
-      name: 'chart_',
-      expression: function(groups, colors, showPercentages, cutoutPercentage, clockwise, rotation,
-                          responsive, maintainAspectRatio, showLegend, 
-                          legendPosition, showTooltips, animate, animationDuration) {
-        var labels = [];
-        var data = [];
-        var backgroundColors = [];
-        
-        var index = 0;
-        for ( var key in groups ) {
-          if ( groups.hasOwnProperty(key) ) {
-            labels.push(key.toString());
-            data.push(groups[key].value);
-            
-            if ( colors && colors.length > 0 ) {
-              backgroundColors.push(colors[index % colors.length]);
-            } else {
-              var hue = (index / Math.max(1, Object.keys(groups).length - 1)) * 360;
-              backgroundColors.push('hsl(' + hue + ', 70%, 50%)');
-            }
-            index++;
-          }
-        }
-        
-        var chartData = {
-          labels: labels,
-          datasets: [{
-            data: data,
-            backgroundColor: backgroundColors
-          }]
-        };
-        
-        var options = {
-          responsive: responsive,
-          maintainAspectRatio: maintainAspectRatio,
-          cutout: cutoutPercentage + '%',
-          rotation: rotation,
-          circumference: clockwise ? 360 : -360,
-          plugins: {
-            legend: {
-              display: showLegend,
-              position: (legendPosition || 'TOP').toString().toLowerCase()            },
-            tooltip: {
-              enabled: showTooltips
-            },
-            datalabels: {
-              display: true,
-              color: 'white',
-              font: {
-                weight: 'bold'
-              }
-            }
-          },
-          animation: animate ? {
-            duration: animationDuration,
-            animateRotate: true,
-            animateScale: true
-          } : false
-        };
-        
-        if ( showPercentages ) {
-          options.plugins.legend.labels = {
-            generateLabels: function(chart) {
-              var dataset = chart.data.datasets[0];
-              var total = dataset.data.reduce(function(sum, val) { return sum + val; }, 0);
-              
-              return chart.data.labels.map(function(label, i) {
-                var percentage = total > 0 ? ((dataset.data[i] / total) * 100).toFixed(1) : '0.0';
-                var style = chart.getDatasetMeta(0).controller ? 
-                           chart.getDatasetMeta(0).controller.getStyle(i) : 
-                           { backgroundColor: dataset.backgroundColor[i] };
-                
-                return {
-                  text: percentage + '% ' + label,
-                  fillStyle: style.backgroundColor,
-                  fontColor: undefined,
-                  index: i
-                };
-              });
-            }
-          };
-        }
-        
-        return this.Donut2.create({
-          data: chartData,
-          chartJSOptions: options,
-          width: this.width,
-          height: this.height
-        });
-      }
-    }
-  ]
-});
 
 foam.CLASS({
   package: 'foam.core.reflow.dashboard',
@@ -416,7 +316,7 @@ foam.CLASS({
     {
       name: 'chart_',
       expression: function(groups, cols, rows, colors, horizontal, xAxisLabel, yAxisLabel,
-                          showGridLines, showDataLabels, responsive, maintainAspectRatio,
+                          showGridLines, responsive, maintainAspectRatio,
                           showLegend, legendPosition, showTooltips, animate, animationDuration) {
         var labels = [];
         var stackGroups = {};
