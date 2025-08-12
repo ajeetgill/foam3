@@ -747,6 +747,7 @@ foam.CLASS({
           properties: [
             { name: 'label', onKey: true },
             { name: 'script', reactive: false  },
+            { name: 'ignoreHistory', value: false, documentation: 'If true, this action will not be added to the history of commands' },
             { name: 'buttonStyle' },
             { name: 'size' },
             { name: 'icon' },
@@ -768,12 +769,17 @@ foam.CLASS({
             rows: 5
           }
         },
+        {class: 'Boolean', name: 'ignoreHistory', value: false, documentation: 'If true, this action will not be added to the history of commands' },
         {
           name: 'code',
-          expression: function(script) {
+          expression: function(script, ignoreHistory) {
             if ( ! script ) return () => {};
             return function(X) {
-              X.eval_(script);
+              X.eval_(script, null, ignoreHistory).then((block) => {
+                if ( ignoreHistory ) {
+                  block.del(); // Remove the block created by eval
+                }
+              });
             }
           }
         },
@@ -792,7 +798,8 @@ foam.CLASS({
             buttonStyle$: this.buttonStyle$,
             size$: this.size$,
             icon$: this.icon$,
-            themeIcon$: this.themeIcon$
+            themeIcon$: this.themeIcon$,
+            ignoreHistory$: this.ignoreHistory$
           }, this, X);
 
           if ( X.data$ && ! ( args && ( args.data || args.data$ ) ) ) {
