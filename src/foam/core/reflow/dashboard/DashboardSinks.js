@@ -28,6 +28,7 @@ foam.CLASS({
     { name: 'othersLabel', value: 'Others', help: 'Label for the "Others" category' },
     // Chart-specific properties
     { name: 'colors' },
+    { name: 'timeUnit' },
     { name: 'horizontal', value: false },
     { name: 'barThickness' },
     { name: 'xAxisLabel' },
@@ -48,7 +49,7 @@ foam.CLASS({
     { name: 'animationDuration', value: 1000 },
     {
       name: 'chart_',
-      expression: function(groups, colors, horizontal, barThickness, xAxisLabel, yAxisLabel, 
+      expression: function(groups, colors, timeUnit, horizontal, barThickness, xAxisLabel, yAxisLabel, 
                           showGridLines, responsive, maintainAspectRatio, showLegend, 
                           legendPosition, showTooltips, animate, animationDuration) {
         var labels = [];
@@ -122,6 +123,28 @@ foam.CLASS({
             }
           }
         };
+        
+        // Configure time scale if dealing with date/time properties
+        // Check if arg1 (groupBy property) is a date/time property
+        var isTimeScale = this.arg1 && (foam.lang.Date.isInstance(this.arg1) || foam.lang.DateTime.isInstance(this.arg1));
+        
+        if ( isTimeScale && timeUnit ) {
+          chartJSOptions.scales.x.type = 'time';
+          chartJSOptions.scales.x.time = {
+            unit: timeUnit.chartJsUnit || 'day',
+            displayFormats: {}
+          };
+          
+          // Set display format for the selected time unit
+          if ( timeUnit.displayFormat ) {
+            chartJSOptions.scales.x.time.displayFormats[timeUnit.chartJsUnit || 'day'] = timeUnit.displayFormat;
+          }
+          
+          // Configure tooltip format
+          if ( timeUnit.tooltipFormat ) {
+            chartJSOptions.scales.x.time.tooltipFormat = timeUnit.tooltipFormat;
+          }
+        }
         
         return this.Bar2.create({
           data: chartData,
@@ -363,6 +386,8 @@ foam.CLASS({
         console.log('Extracted', labels.length, 'labels');
         
         // Group data by stack (rows)
+        // The rows structure is: rows.groups[rowKey] = GroupBy object with its own groups property
+        // Each row group contains: groups[colKey] = accumulator with value property
         for ( var row in rows.groups ) {
           if ( rows.groups.hasOwnProperty(row) ) {
             stackGroups[row] = {};
@@ -474,6 +499,28 @@ foam.CLASS({
             }
           }
         };
+        
+        // Configure time scale if dealing with date/time properties
+        // Check if xFunc is a date/time property
+        var isTimeScale = this.xFunc && (foam.lang.Date.isInstance(this.xFunc) || foam.lang.DateTime.isInstance(this.xFunc));
+        
+        if ( isTimeScale && timeUnit ) {
+          chartJSOptions.scales.x.type = 'time';
+          chartJSOptions.scales.x.time = {
+            unit: timeUnit.chartJsUnit || 'day',
+            displayFormats: {}
+          };
+          
+          // Set display format for the selected time unit
+          if ( timeUnit.displayFormat ) {
+            chartJSOptions.scales.x.time.displayFormats[timeUnit.chartJsUnit || 'day'] = timeUnit.displayFormat;
+          }
+          
+          // Configure tooltip format
+          if ( timeUnit.tooltipFormat ) {
+            chartJSOptions.scales.x.time.tooltipFormat = timeUnit.tooltipFormat;
+          }
+        }
         
         return this.StackedBar2.create({
           data: {

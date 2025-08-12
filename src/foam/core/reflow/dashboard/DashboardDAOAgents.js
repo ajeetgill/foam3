@@ -180,6 +180,19 @@ foam.CLASS({
     // Inherited from GroupByDAOAgent: prop, sink, groupLimit, sortOrder, includeOthers, othersLabel
     // From mixins: colors, chart display options
     {
+      class: 'Enum',
+      of: 'foam.core.reflow.dashboard.TimeUnit',
+      name: 'timeUnit',
+      label: 'Time Unit',
+      value: 'DAY',
+      help: 'Time unit for X-axis when using date/time properties',
+      visibility: function(prop) {
+        return prop && (foam.lang.Date.isInstance(prop) || foam.lang.DateTime.isInstance(prop)) ? 
+          foam.u2.DisplayMode.RW : 
+          foam.u2.DisplayMode.HIDDEN;
+      }
+    },
+    {
       class: 'Boolean',
       name: 'horizontal',
       label: 'Horizontal Bars',
@@ -223,6 +236,7 @@ foam.CLASS({
         includeOthers: this.includeOthers,
         othersLabel: this.othersLabel,
         colors: this.colors,
+        timeUnit: this.timeUnit,
         horizontal: this.horizontal,
         barThickness: this.barThickness,
         xAxisLabel: this.xAxisLabel,
@@ -261,7 +275,7 @@ foam.CLASS({
             }))
           .end()
           .start('div').style({marginBottom: '10px'})
-            .add('Display: Horizontal: ', this.HORIZONTAL, ' Grid: ', this.SHOW_GRID_LINES)
+            .add('Display: Horizontal: ', this.HORIZONTAL, ' Grid: ', this.SHOW_GRID_LINES, ' Time: ', this.TIME_UNIT)
           .end()
           .start('div').style({marginBottom: '10px'})
             .add('X: ', this.X_AXIS_LABEL, ' Y: ', this.Y_AXIS_LABEL)
@@ -292,6 +306,19 @@ foam.CLASS({
   properties: [
     // Inherited from GridByDAOAgent: prop1 (yFunc), prop2 (xFunc), sink
     // From mixins: colors, chart display options
+    {
+      class: 'Enum',
+      of: 'foam.core.reflow.dashboard.TimeUnit',
+      name: 'timeUnit',
+      label: 'Time Unit',
+      value: 'DAY',
+      help: 'Time unit for X-axis when using date/time properties',
+      visibility: function(prop2) {
+        return prop2 && (foam.lang.Date.isInstance(prop2) || foam.lang.DateTime.isInstance(prop2)) ? 
+          foam.u2.DisplayMode.RW : 
+          foam.u2.DisplayMode.HIDDEN;
+      }
+    },
     {
       class: 'Boolean',
       name: 'horizontal',
@@ -326,6 +353,7 @@ foam.CLASS({
         xFunc: this.prop2,
         acc: valueSink,
         colors: this.colors,
+        timeUnit: this.timeUnit,
         horizontal: this.horizontal,
         xAxisLabel: this.xAxisLabel,
         yAxisLabel: this.yAxisLabel,
@@ -346,10 +374,10 @@ foam.CLASS({
       e.startContext({data: this})
         .start('div').style({padding: '10px'})
           .start('div').style({marginBottom: '10px'})
-            .add('Y-Axis: ', this.PROP1, ' X-Axis: ', this.PROP2)
+            .add('X-Axis: ', this.PROP1, ' Stack By: ', this.PROP2)
           .end()
           .start('div').style({marginBottom: '10px'})
-            .add('Accumulator: ', this.SINK)
+            .add('Accumulator: ', this.SINK, ' Time Unit: ', this.TIME_UNIT)
           .end()
           .start('div').style({marginBottom: '10px'})
             .add('Display: Horizontal: ', this.HORIZONTAL, ' Grid: ', this.SHOW_GRID_LINES)
