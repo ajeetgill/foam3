@@ -299,6 +299,7 @@ foam.CLASS({
   properties: [
     // Stacked bar-specific properties
     { name: 'colors' },
+    { name: 'timeUnit' },
     { name: 'horizontal', value: false },
     { name: 'xAxisLabel' },
     { name: 'yAxisLabel' },
@@ -315,9 +316,41 @@ foam.CLASS({
     { name: 'animationDuration', value: 1000 },
     {
       name: 'chart_',
-      expression: function(groups, cols, rows, colors, horizontal, xAxisLabel, yAxisLabel,
+      expression: function(cols, rows, colors, timeUnit, horizontal, xAxisLabel, yAxisLabel,
                           showGridLines, responsive, maintainAspectRatio,
                           showLegend, legendPosition, showTooltips, animate, animationDuration) {
+        console.log('=== DashboardStackedBarSink Structure Debug ===');
+        console.log('cols type:', typeof cols, 'has groups:', !!cols.groups);
+        console.log('rows type:', typeof rows, 'has groups:', !!rows.groups);
+        
+        // Check structure of cols.groups
+        var colKeys = Object.keys(cols.groups || {});
+        console.log('Column keys (first 3):', colKeys.slice(0, 3));
+        
+        // Check structure of rows.groups  
+        var rowKeys = Object.keys(rows.groups || {});
+        console.log('Row keys (first 3):', rowKeys.slice(0, 3));
+        
+        // Deep dive into first row structure
+        if ( rowKeys.length > 0 ) {
+          var firstRowKey = rowKeys[0];
+          var firstRow = rows.groups[firstRowKey];
+          console.log('First row structure:');
+          console.log('  - key:', firstRowKey);
+          console.log('  - type:', typeof firstRow);
+          console.log('  - has groups:', !!firstRow.groups);
+          if ( firstRow.groups ) {
+            var firstRowColKeys = Object.keys(firstRow.groups);
+            console.log('  - nested column keys (first 3):', firstRowColKeys.slice(0, 3));
+            if ( firstRowColKeys.length > 0 ) {
+              var firstCell = firstRow.groups[firstRowColKeys[0]];
+              console.log('  - first cell type:', typeof firstCell);
+              console.log('  - first cell has value:', 'value' in firstCell);
+              console.log('  - first cell value:', firstCell.value);
+            }
+          }
+        }
+        
         var labels = [];
         var stackGroups = {};
         
@@ -327,17 +360,20 @@ foam.CLASS({
             labels.push(col.toString());
           }
         }
+        console.log('Extracted', labels.length, 'labels');
         
         // Group data by stack (rows)
         for ( var row in rows.groups ) {
           if ( rows.groups.hasOwnProperty(row) ) {
             stackGroups[row] = {};
+            var rowGroup = rows.groups[row];
+            
+            // For each column, get the value from this row's nested groups
             for ( var col in cols.groups ) {
               if ( cols.groups.hasOwnProperty(col) ) {
-                var key = row + ':' + col;
-                var group = rows.groups[row];
-                if ( group && group.groups && group.groups[col] ) {
-                  stackGroups[row][col] = group.groups[col].value;
+                if ( rowGroup && rowGroup.groups && rowGroup.groups[col] ) {
+                  var value = rowGroup.groups[col].value || 0;
+                  stackGroups[row][col] = value;
                 } else {
                   stackGroups[row][col] = 0;
                 }
@@ -345,6 +381,8 @@ foam.CLASS({
             }
           }
         }
+        
+        console.log('Created', Object.keys(stackGroups).length, 'stack groups');
         
         var datasets = [];
         var colorIndex = 0;
@@ -354,7 +392,8 @@ foam.CLASS({
             var data = [];
             
             labels.forEach(function(col) {
-              data.push(stackGroups[stackValue][col] || 0);
+              var value = stackGroups[stackValue][col] || 0;
+              data.push(value);
             });
             
             var color;
@@ -376,6 +415,15 @@ foam.CLASS({
             
             colorIndex++;
           }
+        }
+        
+        console.log('Chart.js data structure:');
+        console.log('  - labels count:', labels.length);
+        console.log('  - datasets count:', datasets.length);
+        if ( datasets.length > 0 ) {
+          console.log('  - first dataset label:', datasets[0].label);
+          console.log('  - first dataset data length:', datasets[0].data.length);
+          console.log('  - first dataset data sample:', datasets[0].data.slice(0, 3));
         }
         
         var chartJSOptions = {
