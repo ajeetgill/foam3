@@ -998,6 +998,9 @@ foam.CLASS({
         let args = { ...c };
         if ( args.value )
           delete args.value;
+        // Don't copy flowChildren as they'll be processed separately
+        if ( args.flowChildren )
+          delete args.flowChildren;
         this.currentBlock.copyFrom(args);
 
         if ( this.currentBlock.value && c.value ) {
