@@ -10,6 +10,14 @@ foam.CLASS({
   extends: 'foam.u2.View',
 
   css: `
+    ^ {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    ^filters-container {
+      padding: 12px;
+    }
   `,
 
   methods: [
@@ -24,7 +32,14 @@ foam.CLASS({
         end().
         br().
         start().
+          show(self.data.showSearch$).
           add(self.data.filterView$).
+        end().
+        start().
+          addClass(self.myClass('filters-container')).
+          tag(self.data.filterView$.map(function(fv) {
+            return fv ? fv.filtersContainer$ : null;
+          })).
         end();
     }
   ]
@@ -43,7 +58,7 @@ foam.CLASS({
 
   imports: [ 'block', 'scope' ],
 
-  exports: [ 'dao', 'filteredDAO' ],
+  exports: [ 'dao', 'filteredDAO', 'searchColumns' ],
 
   properties: [
     {
@@ -56,7 +71,28 @@ foam.CLASS({
     {
       class: 'Boolean',
       name: 'visible',
+      value: true
+    },
+    {
+      class: 'Boolean',
+      name: 'showSearch',
+      value: true,
+      postSet: function(o, n) {
+        // Auto-open filters when search is hidden
+        if ( ! n && this.filterView ) {
+          this.isOpen = true;
+        }
+      }
+    },
+    {
+      class: 'Boolean',
+      name: 'isOpen',
+      hidden: true,
       value: false
+    },
+    {
+      name: 'filtersContainer',
+      hidden: true
     },
     {
       class: 'foam.dao.DAOProperty',
@@ -82,6 +118,7 @@ foam.CLASS({
     },
     {
       name: 'predicate',
+      hidden: true,
       factory: function() {
         return this.True.create();
       }
@@ -96,14 +133,34 @@ foam.CLASS({
     },
     {
       name: 'filterView',
-      expression: function(dao) {
+      hidden: true,
+      expression: function(dao, isOpen) {
         if ( ! dao ) return null;
-        return this.FilterView.create({
+        var fv = this.FilterView.create({
           dao: dao,
-          data$: this.predicate$
+          data$: this.predicate$,
+          isOpen$: this.isOpen$
         }, this.__subContext__.createSubContext({
           controllerMode: foam.u2.ControllerMode.EDIT
         }));
+        
+        // Store reference to filtersContainer
+        if ( fv.filtersContainer$ ) {
+          this.filtersContainer = fv.filtersContainer$;
+        }
+        
+        return fv;
+      }
+    },
+    {
+      class: 'StringArray',
+      name: 'searchColumns',
+      hidden: true,
+      factory: null,
+      expression: function(dao) {
+        if ( ! dao || ! dao.of ) return [];
+        var searchColumnsAxiom = dao.of.getAxiomByName('searchColumns');
+        return searchColumnsAxiom ? searchColumnsAxiom.columns : [];
       }
     }
   ],
