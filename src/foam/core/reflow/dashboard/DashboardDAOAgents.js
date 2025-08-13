@@ -81,14 +81,34 @@ foam.CLASS({
       class: 'Int',
       name: 'height',
       label: 'Chart Height (px)',
-      value: 300
+      value: 300,
+      view: {
+        class: 'foam.u2.RangeView',
+        minValue: 100,
+        maxValue: 800,
+        step: 10,
+        onKey: true
+      },
+      visibility: function(responsive) {
+        return !responsive ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
+      }
     },
     {
       class: 'Int',
       name: 'width',
       label: 'Chart Width (px)',
       value: 400,
-      help: 'Width in pixels (default: 400)'
+      view: {
+        class: 'foam.u2.RangeView',
+        minValue: 200,
+        maxValue: 1200,
+        step: 10,
+        onKey: true
+      },
+      help: 'Width in pixels (200-1200)',
+      visibility: function(responsive) {
+        return !responsive ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
+      }
     },
     {
       class: 'Boolean',
@@ -130,6 +150,13 @@ foam.CLASS({
       name: 'animationDuration',
       label: 'Animation Duration (ms)',
       value: 1000,
+      view: {
+        class: 'foam.u2.RangeView',
+        minValue: 100,
+        maxValue: 3000,
+        step: 100,
+        onKey: true
+      },
       visibility: function(animate) {
         return animate ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
       }
@@ -309,6 +336,37 @@ foam.CLASS({
       return sink;
     },
     
+    function addSinkToE(e, s) {
+      var self = this;
+      // Add the sink once
+      e.add(s);
+      
+      // Then update its properties reactively
+      this.onDetach(this.dynamic(function(colors, horizontal, barThickness, xAxisLabel, yAxisLabel, showGridLines, 
+                                  responsive, maintainAspectRatio, height, width, showLegend, legendPosition, 
+                                  showTooltips, showTooltipSum, animate, animationDuration) { 
+        s.colors = colors;
+        s.horizontal = horizontal;
+        s.barThickness = barThickness;
+        s.xAxisLabel = xAxisLabel;
+        s.yAxisLabel = yAxisLabel;
+        s.showGridLines = showGridLines;
+        s.responsive = responsive;
+        s.maintainAspectRatio = maintainAspectRatio;
+        s.height = height;
+        s.width = width;
+        s.showLegend = showLegend;
+        s.legendPosition = legendPosition;
+        s.showTooltips = showTooltips;
+        s.showTooltipSum = showTooltipSum;
+        s.animate = animate;
+        s.animationDuration = animationDuration;
+        
+        // Force chart to update/redraw
+        if ( s.updateChart ) s.updateChart();
+       }));
+    },
+    
     function addToE(e) {
       e.startContext({data: this})
         .tag(this.ReactiveSectionedDetailView, {
@@ -316,6 +374,27 @@ foam.CLASS({
           showTitle: true
         })
       .endContext();
+    },
+    
+    function clone(subContext) {
+      var clone = this.SUPER(subContext);
+      clone.colors$ = this.colors$;
+      clone.horizontal$ = this.horizontal$;
+      clone.barThickness$ = this.barThickness$;
+      clone.xAxisLabel$ = this.xAxisLabel$;
+      clone.yAxisLabel$ = this.yAxisLabel$;
+      clone.showGridLines$ = this.showGridLines$;
+      clone.responsive$ = this.responsive$;
+      clone.maintainAspectRatio$ = this.maintainAspectRatio$;
+      clone.height$ = this.height$;
+      clone.width$ = this.width$;
+      clone.showLegend$ = this.showLegend$;
+      clone.legendPosition$ = this.legendPosition$;
+      clone.showTooltips$ = this.showTooltips$;
+      clone.showTooltipSum$ = this.showTooltipSum$;
+      clone.animate$ = this.animate$;
+      clone.animationDuration$ = this.animationDuration$;
+      return clone;
     }
   ]
 });
@@ -440,6 +519,36 @@ foam.CLASS({
       });
     },
     
+    function addSinkToE(e, s) {
+      var self = this;
+      // Add the sink once
+      e.add(s);
+      
+      // Then update its properties reactively
+      this.onDetach(this.dynamic(function(colors, horizontal, xAxisLabel, yAxisLabel, showGridLines,
+                                  responsive, maintainAspectRatio, height, width, showLegend, legendPosition, 
+                                  showTooltips, showTooltipSum, animate, animationDuration) { 
+        s.colors = colors;
+        s.horizontal = horizontal;
+        s.xAxisLabel = xAxisLabel;
+        s.yAxisLabel = yAxisLabel;
+        s.showGridLines = showGridLines;
+        s.responsive = responsive;
+        s.maintainAspectRatio = maintainAspectRatio;
+        s.height = height;
+        s.width = width;
+        s.showLegend = showLegend;
+        s.legendPosition = legendPosition;
+        s.showTooltips = showTooltips;
+        s.showTooltipSum = showTooltipSum;
+        s.animate = animate;
+        s.animationDuration = animationDuration;
+        
+        // Force chart to update/redraw
+        if ( s.updateChart ) s.updateChart();
+       }));
+    },
+    
     function addToE(e) {
       e.startContext({data: this})
         .tag(this.ReactiveSectionedDetailView, {
@@ -447,6 +556,26 @@ foam.CLASS({
           showTitle: true
         })
       .endContext();
+    },
+    
+    function clone(subContext) {
+      var clone = this.SUPER(subContext);
+      clone.colors$ = this.colors$;
+      clone.horizontal$ = this.horizontal$;
+      clone.xAxisLabel$ = this.xAxisLabel$;
+      clone.yAxisLabel$ = this.yAxisLabel$;
+      clone.showGridLines$ = this.showGridLines$;
+      clone.responsive$ = this.responsive$;
+      clone.maintainAspectRatio$ = this.maintainAspectRatio$;
+      clone.height$ = this.height$;
+      clone.width$ = this.width$;
+      clone.showLegend$ = this.showLegend$;
+      clone.legendPosition$ = this.legendPosition$;
+      clone.showTooltips$ = this.showTooltips$;
+      clone.showTooltipSum$ = this.showTooltipSum$;
+      clone.animate$ = this.animate$;
+      clone.animationDuration$ = this.animationDuration$;
+      return clone;
     }
   ]
 });
@@ -510,6 +639,13 @@ foam.CLASS({
       name: 'cutoutPercentage',
       label: 'Cutout %',
       value: 0,
+      view: {
+        class: 'foam.u2.RangeView',
+        minValue: 0,
+        maxValue: 100,
+        step: 1,
+        onKey: true
+      },
       help: 'For donut effect (0-100)'
     },
     {
@@ -523,7 +659,14 @@ foam.CLASS({
       name: 'rotation',
       label: 'Rotation Angle',
       value: -90,
-      help: 'Starting angle in degrees'
+      view: {
+        class: 'foam.u2.RangeView',
+        minValue: -180,
+        maxValue: 180,
+        step: 1,
+        onKey: true
+      },
+      help: 'Starting angle in degrees (-180 to 180)'
     }
   ],
 
@@ -560,7 +703,35 @@ foam.CLASS({
 
       return sink;
     },
-    
+    function addSinkToE(e, s) {
+      var self = this;
+      // Add the sink once
+      e.add(s);
+      
+      // Then update its properties reactively
+      this.onDetach(this.dynamic(function(cutoutPercentage, rotation, colors, showPercentages, clockwise,
+                                  responsive, maintainAspectRatio, height, width, showLegend, legendPosition, 
+                                  showTooltips, showTooltipSum, animate, animationDuration) { 
+        s.cutoutPercentage = cutoutPercentage;
+        s.rotation = rotation;
+        s.colors = colors;
+        s.showPercentages = showPercentages;
+        s.clockwise = clockwise;
+        s.responsive = responsive;
+        s.maintainAspectRatio = maintainAspectRatio;
+        s.height = height;
+        s.width = width;
+        s.showLegend = showLegend;
+        s.legendPosition = legendPosition;
+        s.showTooltips = showTooltips;
+        s.showTooltipSum = showTooltipSum;
+        s.animate = animate;
+        s.animationDuration = animationDuration;
+        
+        // Force chart to update/redraw
+        if ( s.updateChart ) s.updateChart();
+       }));
+    },
     function addToE(e) {
       e.startContext({data: this})
         .tag(this.ReactiveSectionedDetailView, {
@@ -568,6 +739,25 @@ foam.CLASS({
           showTitle: true
         })
       .endContext();
+    },
+    function clone(subContext) {
+      var clone = this.SUPER(subContext);
+      clone.cutoutPercentage$ = this.cutoutPercentage$;
+      clone.rotation$ = this.rotation$;
+      clone.colors$ = this.colors$;
+      clone.showPercentages$ = this.showPercentages$;
+      clone.clockwise$ = this.clockwise$;
+      clone.responsive$ = this.responsive$;
+      clone.maintainAspectRatio$ = this.maintainAspectRatio$;
+      clone.height$ = this.height$;
+      clone.width$ = this.width$;
+      clone.showLegend$ = this.showLegend$;
+      clone.legendPosition$ = this.legendPosition$;
+      clone.showTooltips$ = this.showTooltips$;
+      clone.showTooltipSum$ = this.showTooltipSum$;
+      clone.animate$ = this.animate$;
+      clone.animationDuration$ = this.animationDuration$;
+      return clone;
     }
   ]
 });
@@ -773,6 +963,40 @@ foam.CLASS({
       return s;
     },
     
+    function addSinkToE(e, s) {
+      var self = this;
+      // Add the sink once
+      e.add(s);
+      
+      // Then update its properties reactively
+      this.onDetach(this.dynamic(function(colors, xAxisLabel, yAxisLabel, fill, tension, stepped, showPoints, pointRadius, showGridLines,
+                                  responsive, maintainAspectRatio, height, width, showLegend, legendPosition, 
+                                  showTooltips, showTooltipSum, animate, animationDuration) { 
+        s.colors = colors;
+        s.xAxisLabel = xAxisLabel;
+        s.yAxisLabel = yAxisLabel;
+        s.fill = fill;
+        s.tension = tension;
+        s.stepped = stepped;
+        s.showPoints = showPoints;
+        s.pointRadius = pointRadius;
+        s.showGridLines = showGridLines;
+        s.responsive = responsive;
+        s.maintainAspectRatio = maintainAspectRatio;
+        s.height = height;
+        s.width = width;
+        s.showLegend = showLegend;
+        s.legendPosition = legendPosition;
+        s.showTooltips = showTooltips;
+        s.showTooltipSum = showTooltipSum;
+        s.animate = animate;
+        s.animationDuration = animationDuration;
+        
+        // Force chart to update/redraw
+        if ( s.updateChart ) s.updateChart();
+       }));
+    },
+    
     function addToE(e) {
       e.startContext({data: this})
         .tag(this.ReactiveSectionedDetailView, {
@@ -780,6 +1004,30 @@ foam.CLASS({
           showTitle: true
         })
       .endContext();
+    },
+    
+    function clone(subContext) {
+      var clone = this.SUPER(subContext);
+      clone.colors$ = this.colors$;
+      clone.xAxisLabel$ = this.xAxisLabel$;
+      clone.yAxisLabel$ = this.yAxisLabel$;
+      clone.fill$ = this.fill$;
+      clone.tension$ = this.tension$;
+      clone.stepped$ = this.stepped$;
+      clone.showPoints$ = this.showPoints$;
+      clone.pointRadius$ = this.pointRadius$;
+      clone.showGridLines$ = this.showGridLines$;
+      clone.responsive$ = this.responsive$;
+      clone.maintainAspectRatio$ = this.maintainAspectRatio$;
+      clone.height$ = this.height$;
+      clone.width$ = this.width$;
+      clone.showLegend$ = this.showLegend$;
+      clone.legendPosition$ = this.legendPosition$;
+      clone.showTooltips$ = this.showTooltips$;
+      clone.showTooltipSum$ = this.showTooltipSum$;
+      clone.animate$ = this.animate$;
+      clone.animationDuration$ = this.animationDuration$;
+      return clone;
     }
   ]
 });
@@ -897,6 +1145,26 @@ foam.CLASS({
       });
     },
     
+    function addSinkToE(e, s) {
+      var self = this;
+      // Add the sink once
+      e.add(s);
+      
+      // Then update its properties reactively
+      this.onDetach(this.dynamic(function(operation, prop, label, showCount, valueColor, unit, decimalPlaces) { 
+        s.operation = operation;
+        s.prop = prop;
+        s.label = label;
+        s.showCount = showCount;
+        s.valueColor = valueColor;
+        s.unit = unit;
+        s.decimalPlaces = decimalPlaces;
+        
+        // Force metric to update/redraw
+        if ( s.updateMetric ) s.updateMetric();
+       }));
+    },
+    
     function addToE(e) {
       e.startContext({data: this})
         .tag(this.ReactiveSectionedDetailView, {
@@ -904,6 +1172,18 @@ foam.CLASS({
           showTitle: true
         })
       .endContext();
+    },
+    
+    function clone(subContext) {
+      var clone = this.SUPER(subContext);
+      clone.operation$ = this.operation$;
+      clone.prop$ = this.prop$;
+      clone.label$ = this.label$;
+      clone.showCount$ = this.showCount$;
+      clone.valueColor$ = this.valueColor$;
+      clone.unit$ = this.unit$;
+      clone.decimalPlaces$ = this.decimalPlaces$;
+      return clone;
     }
   ]
 });
