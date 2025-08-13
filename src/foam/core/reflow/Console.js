@@ -1077,8 +1077,8 @@ foam.CLASS({
         this.tag(self.ReflowHeader, {data: self, showPrompts: showPrompts, resetFlow: self.clearFlow});
       }));
 
-      if ( this.route ) this.ROUTE.postSet.call(this, '', this.route);
       await this.eval_('preLoad', null, true);
+      if ( this.route ) this.ROUTE.postSet.call(this, '', this.route);
     },
 
     function renderSelf(self) {
