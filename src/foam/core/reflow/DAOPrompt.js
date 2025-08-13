@@ -336,10 +336,10 @@ visible      },
       label: '',
       factory: function() { return this.TableDAOAgent.create(); }
     },
-    { class: 'Long',       hidden: true,  name: 'rowCount', visibility: 'RO' },
+    { class: 'Long',       hidden: true,  name: 'rowCount', visibility: 'RO', transient: true },
     { class: 'String',     hidden: true,  name: 'executionTime', value: '-', visibility: 'RO', transient: true, readPermissionRequired: true },
     { class: 'Boolean',    section: 'general',   name: 'autoRun', view: { class: 'foam.u2.Switch' } },
-    { class: 'Int',        hidden: true,  name: 'version', hidden: true },
+    { class: 'Int',        hidden: true,  name: 'version', transient: true },
     { class: 'FObjectProperty',  name: 'value', transient: true, hidden: true, visibility: 'RO' },
     {
       name: 'readyLatch_',
@@ -358,6 +358,7 @@ visible      },
     },
 
     function updateColumnStorage(columns) {
+      if ( ! this.dao ) return;
       if ( columns === this.getColumnNamesFromStorage(this.columnStorage.getItem(this.dao.of.id)) )
         return;
       var defaultCols = JSON.parse(localStorage.getItem(this.dao.of.id));
