@@ -57,10 +57,6 @@ foam.CLASS({
   `,
   properties: [
     {
-      name: 'shown',
-      hidden: true
-    },
-    {
       name: 'tooltip',
       hidden: true
     },
@@ -160,7 +156,10 @@ foam.CLASS({
           })
         };
       }
-    }
+    },
+    {
+      name: 'shown',
+    },
   ],
   methods: [
     function render() {
