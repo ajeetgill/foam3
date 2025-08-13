@@ -126,15 +126,15 @@ foam.CLASS({
           this
             .forEach(data || [], function(e, i) {
               var row = self.CollapsableRow.create({ index: i, value: e, collapsed: self.collapseBehaviour == 'START_COLLAPSED' ? true : false });
-              var summaryType = self.title || row.value.toSummary ? row.value$.map(v => v.toCSSClassName()) : 'default';
+              var summaryType = self.title || row.value.toSummary ? row.value$.map(v => v.toSummary()) : 'default';
               var label = row.value$.dot('label').map(label => label || self.of.model_.label)
-              var summaryTypeClass =  summaryType.map(v => v && v.code())
+              var summaryTypeClass = row.value.toCSSClassName ? row.value$.map(v => v.toCSSClassName().code()) : 'default';
 
               this
                 .startContext({ data: row })
                   .start()
                     .addClass(self.myClass('value-view-container'))
-                    .enableClass('opened', row.collapsed$.map(c => !c))
+                    .enableClass('opened', row.collapsed$, true)
                     .start(self.Cols)
                       .addClass(self.myClass('header-row'))
                       .enableClass('opened', row.collapsed$.map(c => !c))
