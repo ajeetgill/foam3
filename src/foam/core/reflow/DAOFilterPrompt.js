@@ -51,6 +51,7 @@ foam.CLASS({
   name: 'DAOFilterPrompt',
 
   requires: [
+    'foam.dao.ProxyDAO',
     'foam.u2.filter.FilterView',
     'foam.core.reflow.DAOFilterPromptView',
     'foam.mlang.predicate.True'
@@ -125,11 +126,18 @@ foam.CLASS({
     },
     {
       class: 'foam.dao.DAOProperty',
-      name: 'filteredDAO',
+      name: 'filteredDAO_',
+      hidden: true,
+      transient: true,
       expression: function(dao, predicate) {
         if ( ! dao ) return null;
         return predicate ? dao.where(predicate) : dao;
       }
+    },
+    {
+      class: 'foam.dao.DAOProperty',
+      name: 'filteredDAO',
+      factory: function() { return this.ProxyDAO.create({delegate$: this.filteredDAO_$}); }
     },
     {
       name: 'filterView',
