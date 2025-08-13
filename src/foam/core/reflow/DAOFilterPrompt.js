@@ -77,19 +77,7 @@ foam.CLASS({
     {
       class: 'Boolean',
       name: 'showSearch',
-      value: true,
-      postSet: function(o, n) {
-        // Auto-open filters when search is hidden
-        if ( ! n && this.filterView ) {
-          this.isOpen = true;
-        }
-      }
-    },
-    {
-      class: 'Boolean',
-      name: 'isOpen',
-      hidden: true,
-      value: false
+      value: true
     },
     {
       name: 'filtersContainer',
@@ -142,12 +130,12 @@ foam.CLASS({
     {
       name: 'filterView',
       hidden: true,
-      expression: function(dao, isOpen) {
+      expression: function(dao, showSearch) {
         if ( ! dao ) return null;
         var fv = this.FilterView.create({
           dao: dao,
           data$: this.predicate$,
-          isOpen$: this.isOpen$
+          isOpen: ! showSearch  // When search is hidden, filters should be open
         }, this.__subContext__.createSubContext({
           controllerMode: foam.u2.ControllerMode.EDIT
         }));
