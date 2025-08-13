@@ -836,8 +836,9 @@ foam.CLASS({
           .start('div').style({marginBottom: '10px'})
             .add('Label: ', this.LABEL, ' Unit: ', this.UNIT)
           .end()
-          add('Icon: ', this.ICON).
-          add('Alignment: ', this.ALIGNMENT)
+          .start('div').style({marginBottom: '10px'})
+            .add('Icon: ', this.ICON, ' Alignment: ', this.ALIGNMENT)
+          .end()
           .start('div').style({marginBottom: '10px'})
             .add('Show Count: ', this.SHOW_COUNT)
           .end()
