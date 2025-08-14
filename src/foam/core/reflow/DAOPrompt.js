@@ -136,7 +136,12 @@ foam.CLASS({
       label: 'Name',
       onKey: true,
       factory: function() {
-        return this.dao.of.model_.plural;
+        try {
+          return this.dao.of.model_.plural;
+        } catch (e) {
+          console.error('Error getting plural label:', e);
+          return '';
+        }
       },
       displayWidth: 60
     },
