@@ -887,7 +887,7 @@ foam.CLASS({
     { name: 'countSink_', hidden: true },
     {
       name: 'metric_',
-      expression: function(metricSink_, countSink_, label, showCount, valueColor, unit, decimalPlaces) {
+      expression: function(metricSink_, countSink_, label, icon, alignment, showCount, countSuffix, valueColor, unit, decimalPlaces) {
         var value = metricSink_ ? metricSink_.value : 0;
         var count = countSink_ ? countSink_.value : null;
         
@@ -917,7 +917,10 @@ foam.CLASS({
           label: displayLabel,
           value: value,
           count: count,
+          icon: icon,
+          alignment: alignment,
           showCount: showCount,
+          countSuffix: countSuffix,
           valueColor: valueColor || foam.CSS.returnTokenValue('$primary500', this.cls_, this.__context__)
         };
       }

@@ -1158,6 +1158,7 @@ foam.CLASS({
       });
     },
     
+
     function addSinkToE(e, s) {
       var self = this;
       // Add the sink once
@@ -1178,7 +1179,6 @@ foam.CLASS({
         if ( s.updateMetric ) s.updateMetric();
        }));
     },
-    
     function addToE(e) {
       e.startContext({data: this})
         .tag(this.ReactiveSectionedDetailView, {
