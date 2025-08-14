@@ -1056,6 +1056,7 @@ foam.CLASS({
       title: 'Display Options',
       order: 2,
       collapsable: true,
+      // iconColor is hidden for now until implementation is fixed
       properties: ['icon', 'alignment', 'showCount', 'countSuffix', 'valueColor']
     }
   ],
@@ -1095,6 +1096,16 @@ foam.CLASS({
       name: 'icon',
       label: 'Icon',
       help: 'Theme icon name to display above the metric value (e.g., "chart", "users", "dollar")'
+    },
+    {
+      class: 'String',
+      name: 'iconColor',
+      label: 'Icon Color',
+      help: 'Color for the icon (CSS color or token)',
+      view: 'foam.u2.view.ColorEditView',
+      // TODO: Hidden for now as CSS override for SVG fill is not working properly
+      // Need to fix the implementation to properly apply color to icons
+      hidden: true
     },
     {
       class: 'Enum',
@@ -1149,6 +1160,7 @@ foam.CLASS({
         prop: this.prop,
         label: this.label,
         icon: this.icon,
+        iconColor: this.iconColor,
         alignment: this.alignment,
         showCount: this.showCount,
         countSuffix: this.countSuffix,
@@ -1165,9 +1177,10 @@ foam.CLASS({
       e.add(s);
       
       // Then update its properties reactively
-      this.onDetach(this.dynamic(function(label, icon, alignment, showCount, countSuffix, valueColor, unit, decimalPlaces) { 
+      this.onDetach(this.dynamic(function(label, icon, iconColor, alignment, showCount, countSuffix, valueColor, unit, decimalPlaces) { 
         s.label = label;
         s.icon = icon;
+        s.iconColor = iconColor;
         s.alignment = alignment;
         s.showCount = showCount;
         s.countSuffix = countSuffix;
@@ -1194,6 +1207,7 @@ foam.CLASS({
       clone.prop$ = this.prop$;
       clone.label$ = this.label$;
       clone.icon$ = this.icon$;
+      clone.iconColor$ = this.iconColor$;
       clone.alignment$ = this.alignment$;
       clone.showCount$ = this.showCount$;
       clone.countSuffix$ = this.countSuffix$;

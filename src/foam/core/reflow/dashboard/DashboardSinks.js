@@ -872,11 +872,21 @@ foam.CLASS({
     'foam.u2.Label'
   ],
   
+  imports: [
+    'theme'
+  ],
+  
   properties: [
     { name: 'operation' },
     { name: 'prop' },
     { name: 'label', value: 'Metric' },
     { name: 'icon' },
+    {
+      name: 'iconColor',
+      // TODO: Hidden for now as CSS override for SVG fill is not working properly
+      // Need to fix the implementation to properly apply color to icons
+      hidden: true
+    },
     { name: 'alignment' },
     { name: 'showCount', value: true },
     { name: 'countSuffix', value: 'records' },
@@ -887,7 +897,7 @@ foam.CLASS({
     { name: 'countSink_', hidden: true },
     {
       name: 'metric_',
-      expression: function(metricSink_, countSink_, label, icon, alignment, showCount, countSuffix, valueColor, unit, decimalPlaces) {
+      expression: function(metricSink_, countSink_, label, icon, iconColor, alignment, showCount, countSuffix, valueColor, unit, decimalPlaces) {
         var value = metricSink_ ? metricSink_.value : 0;
         var count = countSink_ ? countSink_.value : null;
         
@@ -918,6 +928,7 @@ foam.CLASS({
           value: value,
           count: count,
           icon: icon,
+          iconColor: iconColor,
           alignment: alignment,
           showCount: showCount,
           countSuffix: countSuffix,
@@ -1024,17 +1035,39 @@ foam.CLASS({
         
         // Icon display (if provided)
         if ( self.icon ) {
-          container.start('div')
+          var iconContainer = container.start('div')
             .style({
               fontSize: '2rem',
-              marginBottom: '12px',
-              color: foam.CSS.returnTokenValue('$primary500', self.cls_, self.__context__)
-            })
-            .add(self.Label ? self.Label.create({
+              marginBottom: '12px'
+            });
+          
+          // TODO: Icon color override is not working properly yet
+          // The CSS approach to override SVG fill needs to be fixed
+          /*
+          if ( self.iconColor ) {
+            var colorValue = foam.CSS.returnTokenValue(self.iconColor, self.cls_, self.__context__) || self.iconColor;
+            iconContainer.style({
+              '& svg': {
+                fill: colorValue
+              }
+            });
+          }
+          */
+          
+          // Check if icon is a theme glyph
+          if ( self.theme && self.theme.glyphs && self.theme.glyphs[self.icon] ) {
+            iconContainer.add(self.Label.create({
               themeIcon: self.icon,
               showLabel: false
-            }) : self.icon)
-          .end();
+            }));
+          } else {
+            iconContainer.add(self.Label.create({
+              icon: self.icon,
+              showLabel: false
+            }));
+          }
+          
+          iconContainer.end();
         }
         
         // Label
