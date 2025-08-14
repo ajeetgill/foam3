@@ -868,14 +868,18 @@ foam.CLASS({
   extends: 'foam.dao.AbstractSink',
   
   requires: [
-    'foam.mlang.sink.Count'
+    'foam.mlang.sink.Count',
+    'foam.u2.Label'
   ],
   
   properties: [
     { name: 'operation' },
     { name: 'prop' },
     { name: 'label', value: 'Metric' },
+    { name: 'icon' },
+    { name: 'alignment' },
     { name: 'showCount', value: true },
+    { name: 'countSuffix', value: 'records' },
     { name: 'valueColor' },
     { name: 'unit' },
     { name: 'decimalPlaces', value: 0 },
@@ -980,7 +984,7 @@ foam.CLASS({
               color: foam.CSS.returnTokenValue('$textSecondary', self.cls_, self.__context__),
               fontWeight: 'normal'
             })
-            .add('from ' + metric.count.toLocaleString() + ' records')
+            .add(metric.count.toLocaleString() + (self.countSuffix ? ' ' + self.countSuffix : ''))
           .end();
         }
         
@@ -992,9 +996,43 @@ foam.CLASS({
     function addToE(e) {
       var self = this;
       e.add(this.metric_$.map(function(metric) {
+        // Determine alignment style
+        var alignmentStyle = 'center';
+        var textAlign = 'center';
+        if ( self.alignment && self.alignment.name === 'LEFT' ) {
+          alignmentStyle = 'flex-start';
+          textAlign = 'left';
+        } else if ( self.alignment && self.alignment.name === 'RIGHT' ) {
+          alignmentStyle = 'flex-end';
+          textAlign = 'right';
+        }
+        
         var container = foam.u2.Element.create();
         
-    
+        // Container with alignment
+        container = container.start('div')
+          .style({
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: alignmentStyle,
+            textAlign: textAlign,
+            width: '100%'
+          });
+        
+        // Icon display (if provided)
+        if ( self.icon ) {
+          container.start('div')
+            .style({
+              fontSize: '2rem',
+              marginBottom: '12px',
+              color: foam.CSS.returnTokenValue('$primary500', self.cls_, self.__context__)
+            })
+            .add(self.Label ? self.Label.create({
+              themeIcon: self.icon,
+              showLabel: false
+            }) : self.icon)
+          .end();
+        }
         
         // Label
         container.start('div')
@@ -1029,7 +1067,7 @@ foam.CLASS({
               color: foam.CSS.returnTokenValue('$textSecondary', self.cls_, self.__context__),
               fontWeight: 'normal'
             })
-            .add('from ' + metric.count.toLocaleString() + ' records')
+            .add(metric.count.toLocaleString() + (self.countSuffix ? ' ' + self.countSuffix : ''))
           .end();
         }
         

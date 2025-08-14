@@ -1056,7 +1056,7 @@ foam.CLASS({
       title: 'Display Options',
       order: 2,
       collapsable: true,
-      properties: ['icon', 'alignment', 'showCount', 'valueColor']
+      properties: ['icon', 'alignment', 'showCount', 'countSuffix', 'valueColor']
     }
   ],
 
@@ -1112,6 +1112,16 @@ foam.CLASS({
     },
     {
       class: 'String',
+      name: 'countSuffix',
+      label: 'Count Suffix',
+      value: 'records',
+      help: 'Text to display after the count number',
+      visibility: function(showCount) {
+        return showCount ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
+      }
+    },
+    {
+      class: 'String',
       name: 'valueColor',
       label: 'Value Color',
       help: 'Color for the metric value (CSS color or token)',
@@ -1138,7 +1148,10 @@ foam.CLASS({
         operation: this.operation,
         prop: this.prop,
         label: this.label,
+        icon: this.icon,
+        alignment: this.alignment,
         showCount: this.showCount,
+        countSuffix: this.countSuffix,
         valueColor: this.valueColor,
         unit: this.unit,
         decimalPlaces: this.decimalPlaces
@@ -1151,11 +1164,12 @@ foam.CLASS({
       e.add(s);
       
       // Then update its properties reactively
-      this.onDetach(this.dynamic(function(operation, prop, label, showCount, valueColor, unit, decimalPlaces) { 
-        s.operation = operation;
-        s.prop = prop;
+      this.onDetach(this.dynamic(function(label, icon, alignment, showCount, countSuffix, valueColor, unit, decimalPlaces) { 
         s.label = label;
+        s.icon = icon;
+        s.alignment = alignment;
         s.showCount = showCount;
+        s.countSuffix = countSuffix;
         s.valueColor = valueColor;
         s.unit = unit;
         s.decimalPlaces = decimalPlaces;
@@ -1179,7 +1193,10 @@ foam.CLASS({
       clone.operation$ = this.operation$;
       clone.prop$ = this.prop$;
       clone.label$ = this.label$;
+      clone.icon$ = this.icon$;
+      clone.alignment$ = this.alignment$;
       clone.showCount$ = this.showCount$;
+      clone.countSuffix$ = this.countSuffix$;
       clone.valueColor$ = this.valueColor$;
       clone.unit$ = this.unit$;
       clone.decimalPlaces$ = this.decimalPlaces$;
