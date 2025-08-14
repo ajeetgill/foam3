@@ -51,6 +51,7 @@ and finally remove the file if it was 'handled'.
       `
     },
     {
+      documentation: 'Create unique tmp directory for this watcher',
       name: 'watchDir',
       class: 'String',
       javaFactory: `
@@ -60,7 +61,8 @@ and finally remove the file if it was 'handled'.
       if ( hostname.equals("localhost") ) {
         hostname = System.getProperty("user.name", "localhost");
       }
-      return getTmpDir() + hostname + FileSystems.getDefault().getSeparator() + appName;
+      String name = getClass().getSimpleName().replace("Watcher","").toLowerCase();
+      return getTmpDir() + hostname + FileSystems.getDefault().getSeparator() + appName + FileSystems.getDefault().getSeparator() + name;
       `
     },
     {
@@ -119,14 +121,16 @@ and finally remove the file if it was 'handled'.
           for (WatchEvent<?> event : key.pollEvents()) {
             if ( event.kind() == StandardWatchEventKinds.ENTRY_CREATE ) {
               String request = event.context().toString();
-              logger.info("detected", getWatchDir(), request);
+              logger.info("Detected", request);
               try {
                 if ( acceptRequest(x, request) ) {
-                  postCleanup(x, request);
                   handleRequest(x, request);
+                } else {
+                  logger.warning("Rejected", request);
                 }
+                postCleanup(x, request);
               } catch (Throwable t) {
-                logger.warning(t.getClass().getSimpleName(), t);
+                logger.warning(t);
               }
             }
           }
