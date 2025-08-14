@@ -168,7 +168,7 @@ p({
 //     return new foam.dao.EasyDAO.Builder(x)
 //       .setOf(foam.core.analytics.Candlestick.getOwnClassInfo())
 //       .setAuthorize(false)
-////      .setSAF(true)
+////      .setSaf(true)
 //       .build();
 //   """
 // })
