@@ -49,10 +49,14 @@ foam.CLASS({
   name: 'Layout',
   extends: 'foam.u2.Element',
   documentation: 'Element that acts as a wrapper div, can change between flex and grid based on properties',
+  exports: ['layoutType', 'as layout'],
   css: `
     ^ {
       overflow: auto;
       align-items: stretch;
+    }
+    ^debug > div {
+      border: 1px solid red;
     }
   `,
   properties: [
@@ -76,7 +80,7 @@ foam.CLASS({
       }
     },
     {
-      class: 'String',
+      class: 'Int',
       name: 'rows',
       value: 2,
       supportingLabel: 'Set to 0 for dynamic row sizing, rows will be sized by their biggest element',
@@ -85,7 +89,7 @@ foam.CLASS({
       }
     },
      {
-      class: 'String',
+      class: 'Int',
       name: 'columns',
       value: 2,
        visibility: function(layoutType) {
@@ -158,14 +162,19 @@ foam.CLASS({
       }
     },
     {
-      // redefined here to control the property order, to show it last
-      name: 'shown',
+      class: 'Boolean',
+      name: 'enableDebugBorders'
     },
+    {
+      // redefined here to control the property order, to show it last
+      name: 'shown'
+    }
   ],
   methods: [
     function render() {
       this.SUPER();
       this.addClass();
+      this.enableClass(this.myClass('debug'), this.enableDebugBorders$);
       this.style({
         display: this.layoutType$.map(v => v != 'grid' ? 'flex' : v),
         'flex-direction': this.layoutType$.map(v => v != 'grid' ? v : 'unset'),
@@ -191,6 +200,119 @@ foam.CLASS({
           return autoGap ? align : align[(layoutType === 'row' ? 0 : 1)];
         })
       });
+    }
+  ]
+});
+
+foam.ENUM({
+  package: 'foam.u2.layout',
+  name: 'SizeMode',
+  properties: [
+    {
+      class: 'Function',
+      name: 'flexPropertyValue'
+    }
+  ],
+  values: [
+    // TODO: maybe add initial??, but if that fine of a control is needed we have manual so maybe not
+    {
+      name: 'FILL',
+      documentation: 'Fills available space',
+      flexPropertyValue: function(value) {
+        return 'auto';
+      }
+    },
+    {
+      name: 'FIT_CONTENT',
+      documentation: 'Fits to content size, does not expand',
+      flexPropertyValue: function(value) {
+        return 'none';
+      }
+    },
+    {
+      name: 'FIXED',
+      documentation: 'Fixed pixel width',
+      flexPropertyValue: function(value) {
+        return `0 0 ${value}`;
+      }
+    },
+    {
+      name: 'MANUAL',
+      documentation: 'Allows entering a completely custom "flex" property value',
+      flexPropertyValue: function(value) {
+        return value;
+      }
+    }
+  ]
+});
+
+foam.CLASS({
+  package: 'foam.u2.layouts',
+  name: 'LayoutChild',
+  imports: ['layout'],
+
+  properties:[
+    {
+      class: 'String',
+      name: 'label',
+      hidden: true
+    },
+    {
+      name: 'gridColumns',
+      class: 'Int',
+      visibility: function(layout$layoutType) {
+        return layout$layoutType === 'grid' ? 'RW' : 'HIDDEN';
+      }
+    },
+    {
+      name: 'flexContainerType',
+      label: 'Content Sizing',
+      class: 'Enum',
+      of: 'foam.u2.layout.SizeMode',
+      visibility: function(layout$layoutType) {
+        return layout$layoutType !== 'grid' ? 'RW' : 'HIDDEN';
+      }
+    },
+    {
+      name: 'flexValue',
+      label: 'Value',
+      class: 'String',
+      view: function(_,X) {
+        return {
+          class: 'foam.u2.view.StringView',
+          writeView: {
+            class: 'foam.u2.TextField',
+            placeholder$: X.data$.dot('flexContainerType').map(v => {
+              if ( v == 'FIXED' ) return 'Enter size values (eg. 60px, 2rem, 40%)';
+              return 'Enter values for "flex" css property'
+            })
+          }
+        }
+      },
+      visibility: function(layout$layoutType, flexContainerType) {
+        return layout$layoutType !== 'grid' &&
+        (flexContainerType == 'FIXED' || flexContainerType == 'MANUAL') ?
+        'RW' : 'HIDDEN';
+      }
+    }
+  ],
+  listeners: [
+    {
+      name: 'addLayoutProps',
+      isFramed: true,
+      code: function() {
+        this.style({
+          'grid-column': this.slot(function(layout$columns, layout$layoutType, gridColumns) {
+            if ( layout$layoutType === 'grid' )
+              return `span ${Math.min(gridColumns, layout$columns)}`;
+            return 'initial';
+          }),
+          flex: this.slot(function(layout$layoutType, flexContainerType, flexValue) {
+            if ( layout$layoutType === 'grid' ) return 'unset';
+            return flexContainerType.flexPropertyValue(flexValue);
+          })
+        });
+      }
     }
   ]
 });
