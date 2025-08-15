@@ -893,11 +893,55 @@ foam.CLASS({
     { name: 'valueColor' },
     { name: 'unit' },
     { name: 'decimalPlaces', value: 0 },
+    // Label font controls
+    {
+      class: 'String',
+      name: 'labelFontSize',
+      label: 'Label Font Size',
+      help: 'Font size for the display label (e.g., "1rem", "14px")',
+      value: '0.875rem'
+    },
+    {
+      class: 'String',
+      name: 'labelFontWeight',
+      label: 'Label Font Weight',
+      help: 'Font weight for the display label (e.g., "normal", "bold", "500")',
+      value: 'medium'
+    },
+    {
+      class: 'String',
+      name: 'labelColor',
+      label: 'Label Color',
+      help: 'Color for the display label (CSS color or token)',
+      view: 'foam.u2.view.ColorEditView'
+    },
+    // Count font controls
+    {
+      class: 'String',
+      name: 'countFontSize',
+      label: 'Count Font Size',
+      help: 'Font size for the count text (e.g., "0.75rem", "12px")',
+      value: '0.75rem'
+    },
+    {
+      class: 'String',
+      name: 'countFontWeight',
+      label: 'Count Font Weight',
+      help: 'Font weight for the count text (e.g., "normal", "bold")',
+      value: 'normal'
+    },
+    {
+      class: 'String',
+      name: 'countColor',
+      label: 'Count Color',
+      help: 'Color for the count text (CSS color or token)',
+      view: 'foam.u2.view.ColorEditView'
+    },
     { name: 'metricSink_', hidden: true },
     { name: 'countSink_', hidden: true },
     {
       name: 'metric_',
-      expression: function(metricSink_, countSink_, label, icon, iconColor, alignment, showCount, countSuffix, valueColor, unit, decimalPlaces) {
+      expression: function(metricSink_, countSink_, label, icon, iconColor, alignment, showCount, countSuffix, valueColor, unit, decimalPlaces, labelFontSize, labelFontWeight, labelColor, countFontSize, countFontWeight, countColor) {
         var value = metricSink_ ? metricSink_.value : 0;
         var count = countSink_ ? countSink_.value : null;
         
@@ -932,7 +976,13 @@ foam.CLASS({
           alignment: alignment,
           showCount: showCount,
           countSuffix: countSuffix,
-          valueColor: valueColor || foam.CSS.returnTokenValue('$primary500', this.cls_, this.__context__)
+          valueColor: valueColor || foam.CSS.returnTokenValue('$primary500', this.cls_, this.__context__),
+          labelFontSize: labelFontSize,
+          labelFontWeight: labelFontWeight,
+          labelColor: labelColor || foam.CSS.returnTokenValue('$textSecondary', this.cls_, this.__context__),
+          countFontSize: countFontSize,
+          countFontWeight: countFontWeight,
+          countColor: countColor || foam.CSS.returnTokenValue('$textSecondary', this.cls_, this.__context__)
         };
       }
     }
@@ -1073,11 +1123,11 @@ foam.CLASS({
         // Label
         container.start('div')
           .style({
-            fontSize: '0.875rem',
-            color: foam.CSS.returnTokenValue('$textSecondary', self.cls_, self.__context__),
+            fontSize: metric.labelFontSize || '0.875rem',
+            color: metric.labelColor,
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
-            fontWeight: 'medium',
+            fontWeight: metric.labelFontWeight || 'medium',
             marginBottom: '8px'
           })
           .add(metric.label)
@@ -1098,10 +1148,10 @@ foam.CLASS({
         if ( metric.showCount && metric.count !== null ) {
           container.start('div')
             .style({
-              fontSize: '0.75rem',
+              fontSize: metric.countFontSize || '0.75rem',
               marginTop: '8px',
-              color: foam.CSS.returnTokenValue('$textSecondary', self.cls_, self.__context__),
-              fontWeight: 'normal'
+              color: metric.countColor,
+              fontWeight: metric.countFontWeight || 'normal'
             })
             .add(metric.count.toLocaleString() + (self.countSuffix ? ' ' + self.countSuffix : ''))
           .end();

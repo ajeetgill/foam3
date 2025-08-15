@@ -1058,6 +1058,20 @@ foam.CLASS({
       collapsable: true,
       // iconColor is hidden for now until implementation is fixed
       properties: ['icon', 'alignment', 'showCount', 'countSuffix', 'valueColor']
+    },
+    {
+      name: 'labelFont',
+      title: 'Label Font Options',
+      order: 3,
+      collapsable: true,
+      properties: ['labelFontSize', 'labelFontWeight', 'labelColor']
+    },
+    {
+      name: 'countFont',
+      title: 'Count Font Options',
+      order: 4,
+      collapsable: true,
+      properties: ['countFontSize', 'countFontWeight', 'countColor']
     }
   ],
 
@@ -1106,6 +1120,56 @@ foam.CLASS({
       // TODO: Hidden for now as CSS override for SVG fill is not working properly
       // Need to fix the implementation to properly apply color to icons
       hidden: true
+    },
+    // Label font controls
+    {
+      class: 'String',
+      name: 'labelFontSize',
+      label: 'Label Font Size',
+      help: 'Font size for the display label (e.g., "1rem", "14px")',
+      value: '0.875rem',
+      section: 'labelFont'
+    },
+    {
+      class: 'String',
+      name: 'labelFontWeight',
+      label: 'Label Font Weight',
+      help: 'Font weight for the display label (e.g., "normal", "bold", "500")',
+      value: 'medium',
+      section: 'labelFont'
+    },
+    {
+      class: 'String',
+      name: 'labelColor',
+      label: 'Label Color',
+      help: 'Color for the display label (CSS color or token)',
+      view: 'foam.u2.view.ColorEditView',
+      section: 'labelFont'
+    },
+    // Count font controls
+    {
+      class: 'String',
+      name: 'countFontSize',
+      label: 'Count Font Size',
+      help: 'Font size for the count text (e.g., "0.75rem", "12px")',
+      value: '0.75rem',
+      section: 'countFont'
+    },
+    {
+      class: 'String',
+      name: 'countFontWeight',
+      label: 'Count Font Weight',
+      help: 'Font weight for the count text (e.g., "normal", "bold")',
+      value: 'normal',
+      section: 'countFont'
+    },
+    {
+      class: 'String',
+      name: 'countColor',
+      label: 'Count Color',
+      help: 'Color for the count text (CSS color or token)',
+      view: 'foam.u2.view.ColorEditView',
+      section: 'countFont'
     },
     {
       class: 'Enum',
@@ -1214,6 +1278,12 @@ foam.CLASS({
       clone.valueColor$ = this.valueColor$;
       clone.unit$ = this.unit$;
       clone.decimalPlaces$ = this.decimalPlaces$;
+      clone.labelFontSize$ = this.labelFontSize$;
+      clone.labelFontWeight$ = this.labelFontWeight$;
+      clone.labelColor$ = this.labelColor$;
+      clone.countFontSize$ = this.countFontSize$;
+      clone.countFontWeight$ = this.countFontWeight$;
+      clone.countColor$ = this.countColor$;
       return clone;
     }
   ]
