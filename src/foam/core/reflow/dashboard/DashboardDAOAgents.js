@@ -20,7 +20,7 @@ foam.CLASS({
   
   properties: [
     {
-      class: 'StringArray',
+      class: 'Array',
       of: 'Color',
       name: 'colors',
       label: 'Chart Colors',
@@ -1116,6 +1116,8 @@ foam.CLASS({
       name: 'iconColor',
       label: 'Icon Color',
       help: 'Color for the icon (CSS color or token)',
+      view: 'foam.u2.view.TokenColorEditView',
+      value: '$primary500',
       view: 'foam.u2.view.ColorEditView',
       // TODO: Hidden for now as CSS override for SVG fill is not working properly
       // Need to fix the implementation to properly apply color to icons
@@ -1143,8 +1145,9 @@ foam.CLASS({
       name: 'labelColor',
       label: 'Label Color',
       help: 'Color for the display label (CSS color or token)',
-      view: 'foam.u2.view.ColorEditView',
-      section: 'labelFont'
+      section: 'labelFont',
+      value: '$textSecondary',
+      view: 'foam.u2.view.ColorEditView'
     },
     // Count font controls
     {
@@ -1168,8 +1171,9 @@ foam.CLASS({
       name: 'countColor',
       label: 'Count Color',
       help: 'Color for the count text (CSS color or token)',
-      view: 'foam.u2.view.ColorEditView',
-      section: 'countFont'
+      section: 'countFont',
+      value: '$textSecondary',
+      view: 'foam.u2.view.ColorEditView'
     },
     {
       class: 'Enum',
@@ -1200,6 +1204,7 @@ foam.CLASS({
       name: 'valueColor',
       label: 'Value Color',
       help: 'Color for the metric value (CSS color or token)',
+      value: '$primary500',
       view: 'foam.u2.view.ColorEditView'
     },
     {

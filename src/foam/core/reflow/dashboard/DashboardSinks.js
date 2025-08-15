@@ -27,7 +27,16 @@ foam.CLASS({
     { name: 'includeOthers', value: false, help: 'Include "Others" category for remaining groups' },
     { name: 'othersLabel', value: 'Others', help: 'Label for the "Others" category' },
     // Chart-specific properties
-    { name: 'colors' },
+    {
+      class: 'StringArray',
+      name: 'colors',
+      label: 'Chart Colors',
+      help: 'Array of colors for chart elements',
+      view: {
+        class: 'foam.u2.view.ArrayView',
+        valueView: 'foam.u2.view.ColorEditView'
+      }
+    },
     { name: 'timeUnit' },
     { name: 'horizontal', value: false },
     { name: 'barThickness' },
@@ -209,7 +218,14 @@ foam.CLASS({
     { name: 'includeOthers', value: true, help: 'Include "Others" slice for remaining groups' },
     { name: 'othersLabel', value: 'Others', help: 'Label for the "Others" slice' },
     // Pie-specific properties
-    { name: 'colors' },
+    {
+      class: 'StringArray',
+      of: 'Color',
+      name: 'colors',
+      label: 'Chart Colors',
+      help: 'Array of colors for pie slices',
+      view: 'foam.u2.view.TokenColorArrayView'
+    },
     { name: 'showPercentages', value: false },
     { name: 'cutoutPercentage', value: 0 },
     { name: 'clockwise', value: true },
@@ -361,7 +377,14 @@ foam.CLASS({
   
   properties: [
     // Stacked bar-specific properties
-    { name: 'colors' },
+    {
+      class: 'StringArray',
+      of: 'Color',
+      name: 'colors',
+      label: 'Chart Colors',
+      help: 'Array of colors for stacked datasets',
+      view: 'foam.u2.view.TokenColorArrayView'
+    },
     { name: 'timeUnit' },
     { name: 'horizontal', value: false },
     { name: 'xAxisLabel' },
@@ -575,7 +598,14 @@ foam.CLASS({
     { name: 'groupBy' },
     { name: 'aggregationSink' },
     { name: 'timeUnit' },
-    { name: 'colors' },
+    {
+      class: 'StringArray',
+      of: 'Color',
+      name: 'colors',
+      label: 'Chart Colors',
+      help: 'Array of colors for line datasets',
+      view: 'foam.u2.view.TokenColorArrayView'
+    },
     { name: 'xAxisLabel' },
     { name: 'yAxisLabel' },
     { name: 'fill', value: false },
@@ -882,7 +912,11 @@ foam.CLASS({
     { name: 'label', value: 'Metric' },
     { name: 'icon' },
     {
+      class: 'Color',
       name: 'iconColor',
+      label: 'Icon Color',
+      help: 'Color for the icon (CSS color or token)',
+      value: '$primary500',
       // TODO: Hidden for now as CSS override for SVG fill is not working properly
       // Need to fix the implementation to properly apply color to icons
       hidden: true
@@ -890,7 +924,13 @@ foam.CLASS({
     { name: 'alignment' },
     { name: 'showCount', value: true },
     { name: 'countSuffix', value: 'records' },
-    { name: 'valueColor' },
+    {
+      class: 'Color',
+      name: 'valueColor',
+      label: 'Value Color',
+      help: 'Color for the metric value',
+      value: '$primary500'
+    },
     { name: 'unit' },
     { name: 'decimalPlaces', value: 0 },
     // Label font controls
@@ -909,11 +949,11 @@ foam.CLASS({
       value: 'medium'
     },
     {
-      class: 'String',
+      class: 'Color',
       name: 'labelColor',
       label: 'Label Color',
       help: 'Color for the display label (CSS color or token)',
-      view: 'foam.u2.view.ColorEditView'
+      value: '$textSecondary'
     },
     // Count font controls
     {
@@ -931,11 +971,11 @@ foam.CLASS({
       value: 'normal'
     },
     {
-      class: 'String',
+      class: 'Color',
       name: 'countColor',
       label: 'Count Color',
       help: 'Color for the count text (CSS color or token)',
-      view: 'foam.u2.view.ColorEditView'
+      value: '$textSecondary'
     },
     { name: 'metricSink_', hidden: true },
     { name: 'countSink_', hidden: true },
@@ -976,13 +1016,13 @@ foam.CLASS({
           alignment: alignment,
           showCount: showCount,
           countSuffix: countSuffix,
-          valueColor: valueColor || foam.CSS.returnTokenValue('$primary500', this.cls_, this.__context__),
+          valueColor: valueColor,
           labelFontSize: labelFontSize,
           labelFontWeight: labelFontWeight,
-          labelColor: labelColor || foam.CSS.returnTokenValue('$textSecondary', this.cls_, this.__context__),
+          labelColor: labelColor,
           countFontSize: countFontSize,
           countFontWeight: countFontWeight,
-          countColor: countColor || foam.CSS.returnTokenValue('$textSecondary', this.cls_, this.__context__)
+          countColor: countColor
         };
       }
     }
