@@ -16,6 +16,12 @@ foam.CLASS({
       order: 400,
       subtitle: "Settings for this block in it's current layout",
       properties: ['gridColumns', 'flexContainerType', 'flexValue']
+    },
+    {
+      name: 'borderSettings',
+      isAvailable: function() {
+        return foam.core.reflow.LayoutBlock.isInstance(this);
+      }
     }
   ],
   methods: [
