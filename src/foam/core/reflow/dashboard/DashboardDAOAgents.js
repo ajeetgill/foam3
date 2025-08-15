@@ -452,6 +452,14 @@ foam.CLASS({
   ],
 
   properties: [
+    {
+      name: 'prop2',
+      label: "X Axis"
+    },
+    {
+      name: 'prop1',
+      label: "Stacked By"
+    },
     // Inherited from GridByDAOAgent: prop1 (yFunc), prop2 (xFunc), sink
     // From mixins: colors, chart display options
     {
