@@ -6,6 +6,7 @@ p({
     return new foam.dao.EasyDAO.Builder(x)
       .setOf(foam.core.er.EventRecord.getOwnClassInfo())
       .setFuid(true)
+      .setCluster(false)
       .setSaf(false)
       .setJournalType(foam.dao.JournalType.SINGLE_JOURNAL)
       .setJournalName("eventRecords")
