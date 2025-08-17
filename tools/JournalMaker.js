@@ -72,7 +72,7 @@ exports.end = function() {
     var poms = X.pom.split(',').map(f => path_.relative(process.cwd(), f)).join(',');
     var flgs = '';
     Object.keys(flags).forEach(key => {
-      this.info(`[Journal] flags[${key}]:${flags[key]}`);
+      // this.info(`[Journal] flags[${key}]:${flags[key]}`);
       if ( key.startsWith('-') ||
            flags[key] === true ) {
         flgs = this.comma(flgs, key);
