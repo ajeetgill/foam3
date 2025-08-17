@@ -71,10 +71,11 @@ exports.end = function() {
   if ( X.pom !== 'pom' ) {
     var poms = X.pom.split(',').map(f => path_.relative(process.cwd(), f)).join(',');
     var flgs = '';
-    Object.keys(flags).forEach(k => {
-      // this.info(`[Journal] flags[${k}]:${flags[k]}`);
-      if ( flags[k] === true ) {
-        flgs = this.comma(flgs, k);
+    Object.keys(flags).forEach(key => {
+      this.info(`[Journal] flags[${key}]:${flags[key]}`);
+      if ( key.startsWith('-') ||
+           flags[key] === true ) {
+        flgs = this.comma(flgs, key);
       }
     });
     this.info(`[Journal] flags:${flgs}`);
