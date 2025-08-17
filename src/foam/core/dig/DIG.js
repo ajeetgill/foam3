@@ -854,7 +854,7 @@ NOTE: when using the java client, the first call to a newly started instance may
       type: 'Object',
       javaCode: `
       String url = buildUrl(x, dop, data);
-      Loggers.logger(x, this).debug("submit", "request", dop, url);
+      // Loggers.logger(x, this).debug("submit", "request", dop, url);
       HttpRequest.Builder builder = HttpRequest.newBuilder()
         .uri(URI.create(url))
         .timeout(Duration.ofMillis(getRequestTimeout()))
@@ -908,7 +908,7 @@ NOTE: when using the java client, the first call to a newly started instance may
         Loggers.logger(x, this).warning("submit", "request", dop, url, "response", e.getMessage(), "timeout", getRequestTimeout());
         throw new RuntimeException(e);
       } catch (java.io.IOException | InterruptedException e) {
-        Loggers.logger(x, this).warning("submit", "request", dop, url, "response", e.getMessage(), e);
+        Loggers.logger(x, this).warning("submit", "request", dop, url, "response", e.getMessage());
         throw new RuntimeException(e);
       }
       `
