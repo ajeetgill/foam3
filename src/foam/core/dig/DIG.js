@@ -39,6 +39,7 @@ NOTE: when using the java client, the first call to a newly started instance may
     'foam.core.logger.Loggers',
     'foam.core.pm.PM',
     'foam.core.session.Session',
+    'foam.net.Host',
     'foam.util.SafetyUtil',
     'java.net.Authenticator',
     'java.net.CookieHandler',
@@ -816,7 +817,15 @@ NOTE: when using the java client, the first call to a newly started instance may
         } else {
           sb.append("http://");
         }
-        sb.append(System.getProperty("hostname", "localhost"));
+        String address = System.getProperty("hostname", "localhost");
+        DAO hostDAO = (DAO) x.get("hostDAO");
+        if ( hostDAO != null ) {
+          Host host = (Host) hostDAO.find(address);
+          if ( host != null ) {
+            address = host.getAddress();
+          }
+        }
+        sb.append(address);
         sb.append(":");
         sb.append(System.getProperty("http.port", "8080"));
       }
@@ -845,7 +854,7 @@ NOTE: when using the java client, the first call to a newly started instance may
       type: 'Object',
       javaCode: `
       String url = buildUrl(x, dop, data);
-      // Loggers.logger(x, this).debug("submit", "request", dop, url);
+      Loggers.logger(x, this).debug("submit", "request", dop, url);
       HttpRequest.Builder builder = HttpRequest.newBuilder()
         .uri(URI.create(url))
         .timeout(Duration.ofMillis(getRequestTimeout()))
@@ -899,7 +908,7 @@ NOTE: when using the java client, the first call to a newly started instance may
         Loggers.logger(x, this).warning("submit", "request", dop, url, "response", e.getMessage(), "timeout", getRequestTimeout());
         throw new RuntimeException(e);
       } catch (java.io.IOException | InterruptedException e) {
-        Loggers.logger(x, this).warning("submit", "request", dop, url, "response", e.getMessage());
+        Loggers.logger(x, this).warning("submit", "request", dop, url, "response", e.getMessage(), e);
         throw new RuntimeException(e);
       }
       `
