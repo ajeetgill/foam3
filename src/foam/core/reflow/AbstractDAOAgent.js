@@ -22,6 +22,7 @@ foam.CLASS({
     {
       name: 'of',
       transient: true,
+      hidden: true,
       factory: function() { return this.referenceDAO?.of; }
     }
   ],
@@ -396,6 +397,10 @@ foam.CLASS({
 
   imports: [ 'eval_' ],
 
+  requires: [
+    'foam.mlang.sink.GroupBySortOrder'
+  ],
+
   properties: [
     {
       name: 'prop',
@@ -438,6 +443,44 @@ foam.CLASS({
       }
     },
     {
+      class: 'Int',
+      name: 'groupLimit',
+      label: 'Group Limit',
+      value: 0,
+      help: 'Limit results to top N groups (0 for no limit)'
+    },
+    {
+      class: 'Enum',
+      of: 'foam.mlang.sink.GroupBySortOrder',
+      name: 'sortOrder',
+      label: 'Sort Order',
+      value: 'DESC',
+      help: 'Sort order for groups',
+      visibility: function(groupLimit) {
+        return groupLimit > 0 ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
+      }
+    },
+    {
+      class: 'Boolean',
+      name: 'includeOthers',
+      label: 'Include Others',
+      value: false,
+      help: 'If true, includes an "Others" category aggregating remaining groups',
+      visibility: function(groupLimit) {
+        return groupLimit > 0 ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
+      }
+    },
+    {
+      class: 'String',
+      name: 'othersLabel',
+      label: 'Others Label',
+      value: 'Others',
+      help: 'Label for the "Others" category',
+      visibility: function(includeOthers) {
+        return includeOthers ? 'RW' : 'HIDDEN';
+      }
+    },
+    {
       name: 'browseEnabled',
       hidden: true,
       // Only enable Browse action if this is the top-level DAOAgent
@@ -453,7 +496,17 @@ foam.CLASS({
         //        expr = this.DOT(expr, this.dateFn);
         expr = this.dateFn.create({delegate: expr});
       }
-      return this.GROUP_BY(expr, this.sink.createSink());
+      var groupBySink = this.GROUP_BY(expr, this.sink.createSink());
+      
+      // Apply grouping limits if specified
+      if ( this.groupLimit > 0 ) {
+        groupBySink.groupLimit = this.groupLimit;
+        groupBySink.sortOrder = this.sortOrder;
+        groupBySink.includeOthers = this.includeOthers;
+        groupBySink.othersLabel = this.othersLabel;
+      }
+      
+      return groupBySink;
     },
     function addToE(e) {
       var self = this;
@@ -466,7 +519,11 @@ foam.CLASS({
           if ( foam.lang.Date.isInstance(prop) )
             this.add(self.DATE_FN);
         })).
-        add(this.SINK).callIf(this.block, function() { this.add(self.BROWSE); });
+          add(this.SINK).
+          add('Limit: ', this.GROUP_LIMIT).
+          add('Sort: ', this.SORT_ORDER).
+          add('Include Others: ', this.INCLUDE_OTHERS).
+          callIf(this.block, function() { this.add(self.BROWSE); });
     }
   ],
 
