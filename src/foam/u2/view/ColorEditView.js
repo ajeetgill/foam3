@@ -18,7 +18,7 @@ foam.CLASS({
   properties: [
     {
       name: 'views',
-         factory: () => [
+      factory: () => [
         { class: 'foam.u2.TextField' },
         { class: 'foam.u2.view.ColorPicker' }
       ]
