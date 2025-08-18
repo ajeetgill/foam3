@@ -18,18 +18,10 @@ foam.CLASS({
   properties: [
     {
       name: 'views',
-      factory: function() {
-        var self = this;
-        return [
-          { 
-            class: 'foam.u2.TextField',
-            placeholder: 'Enter color token ($primary500) or hex (#ff0000)',
-            // For Color properties, use the raw value; for String properties, use the value directly
-            data$: self.data$
-          },
-          { class: 'foam.u2.view.ColorPicker' }
-        ];
-      }
+         factory: () => [
+        { class: 'foam.u2.TextField' },
+        { class: 'foam.u2.view.ColorPicker' }
+      ]
     }
   ]
 });
