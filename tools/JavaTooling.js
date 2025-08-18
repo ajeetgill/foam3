@@ -124,9 +124,9 @@ foam.POM({
 
     buildJavaTestOpts: ['build-java-test-ops', 'Add test specific JAVA_OPTS', ['buildJavaOpts'], function() {
       JAVA_OPTS += ` -Dapp.name=${APP_NAME}`;
-      if ( HOST_NAME == this.hostname() ) {
-        HOST_NAME = 'test';
-      }
+      // if ( HOST_NAME == this.hostname() ) {
+      //   HOST_NAME = 'test';
+      // }
       JAVA_OPTS += ` -Dhostname=${HOST_NAME}`;
       JAVA_OPTS += ` -Duser.timezone=${TIMEZONE}`;
 
