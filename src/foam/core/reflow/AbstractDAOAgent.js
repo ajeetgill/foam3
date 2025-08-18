@@ -408,7 +408,6 @@ foam.CLASS({
        return { class: 'foam.core.reflow.PropertyChoiceView', forCls: X.data.of };
       }
     },
-    /* TODO: future
     {
       name: 'dateFn',
       visibility: function(prop) {
@@ -420,15 +419,17 @@ foam.CLASS({
         return {
           class: 'foam.u2.view.ChoiceView',
           choices: [
-            [ null,             '--'       ],
-            [ foam.mlang.Day,   'BY DAY'   ],
-            [ foam.mlang.Month, 'BY MONTH' ],
-//            [ foam.mlang.Year,  'BY YEAR'  ]
+            [ null,                               '--'         ],
+            [ foam.mlang.expr.DateToHHExpr,       'HH'         ],
+            [ foam.mlang.expr.DateToHHMMExpr,     'HH:MM'      ],
+            [ foam.mlang.expr.DateToHHMMSSExpr,   'HH:MM:SS'   ],
+            [ foam.mlang.expr.DateToYYYYMMDDExpr, 'YYYY/MM/DD' ],
+            [ foam.mlang.expr.DateToYYYYMMExpr,   'YYYY/MM'    ],
+            [ foam.mlang.expr.DateToYYYYExpr,     'YYYY'       ]
           ]
         };
       }
-      },
-      */
+    },
     {
       name: 'sink',
       view: { class: 'foam.core.reflow.SinkView', choice: 'foam.core.reflow.CountDAOAgent' },
@@ -491,12 +492,10 @@ foam.CLASS({
     function value(s) { return s; },
     function createSink() {
       var expr = this.prop;
-      /*
-        TODO: future
       if ( foam.lang.Date.isInstance(this.prop) && this.dateFn ) {
-        debugger;
-        expr = this.DOT(expr, this.dateFn);
-      }*/
+        //        expr = this.DOT(expr, this.dateFn);
+        expr = this.dateFn.create({delegate: expr});
+      }
       var groupBySink = this.GROUP_BY(expr, this.sink.createSink());
       
       // Apply grouping limits if specified
@@ -515,11 +514,11 @@ foam.CLASS({
       e.startContext({data: this}).
         start().
           style({paddingLeft: '12px'}).
-          add(this.PROP)./*
+        add(this.PROP).
         add(this.dynamic(function(prop) {
           if ( foam.lang.Date.isInstance(prop) )
             this.add(self.DATE_FN);
-        })).*/
+        })).
           add(this.SINK).
           add('Limit: ', this.GROUP_LIMIT).
           add('Sort: ', this.SORT_ORDER).

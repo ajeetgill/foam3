@@ -176,7 +176,7 @@ p({
   "class":"foam.core.boot.CSpec",
   "name":"emailConfigDAO",
   "serve":true,
-  "authorize":true,
+  "authenticate":true,
   "serviceScript":"""
     return new foam.dao.EasyDAO.Builder(x)
       .setOf(foam.core.notification.email.EmailConfig.getOwnClassInfo())
@@ -217,8 +217,7 @@ p({
   lazy: false,
   service:{
     class:"foam.core.notification.email.EmailFolderAgent",
-    id: 'imap',
-    protocol: 'imaps'
+    id: 'imap'
   }
 })
 
