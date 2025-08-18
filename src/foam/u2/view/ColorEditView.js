@@ -24,8 +24,8 @@ foam.CLASS({
           { 
             class: 'foam.u2.TextField',
             placeholder: 'Enter color token ($primary500) or hex (#ff0000)',
-            // Show the raw token value if available, otherwise show the resolved value
-            data$: self.data$raw
+            // For Color properties, use the raw value; for String properties, use the value directly
+            data$: self.data$
           },
           { class: 'foam.u2.view.ColorPicker' }
         ];

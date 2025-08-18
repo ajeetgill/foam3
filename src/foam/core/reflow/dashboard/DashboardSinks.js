@@ -28,14 +28,7 @@ foam.CLASS({
     { name: 'othersLabel', value: 'Others', help: 'Label for the "Others" category' },
     // Chart-specific properties
     {
-      class: 'StringArray',
-      name: 'colors',
-      label: 'Chart Colors',
-      help: 'Array of colors for chart elements',
-      view: {
-        class: 'foam.u2.view.ArrayView',
-        valueView: 'foam.u2.view.ColorEditView'
-      }
+      name: 'colors',   
     },
     { name: 'timeUnit' },
     { name: 'horizontal', value: false },
@@ -219,12 +212,7 @@ foam.CLASS({
     { name: 'othersLabel', value: 'Others', help: 'Label for the "Others" slice' },
     // Pie-specific properties
     {
-      class: 'StringArray',
-      of: 'Color',
       name: 'colors',
-      label: 'Chart Colors',
-      help: 'Array of colors for pie slices',
-      view: 'foam.u2.view.TokenColorArrayView'
     },
     { name: 'showPercentages', value: false },
     { name: 'cutoutPercentage', value: 0 },
@@ -265,6 +253,7 @@ foam.CLASS({
             
             // Generate colors
             if ( colors && colors.length > 0 ) {
+              console.log(colors);
               backgroundColors.push(colors[index % colors.length]);
             } else {
               // Default color generation
@@ -378,12 +367,7 @@ foam.CLASS({
   properties: [
     // Stacked bar-specific properties
     {
-      class: 'StringArray',
-      of: 'Color',
       name: 'colors',
-      label: 'Chart Colors',
-      help: 'Array of colors for stacked datasets',
-      view: 'foam.u2.view.TokenColorArrayView'
     },
     { name: 'timeUnit' },
     { name: 'horizontal', value: false },
@@ -599,12 +583,7 @@ foam.CLASS({
     { name: 'aggregationSink' },
     { name: 'timeUnit' },
     {
-      class: 'StringArray',
-      of: 'Color',
       name: 'colors',
-      label: 'Chart Colors',
-      help: 'Array of colors for line datasets',
-      view: 'foam.u2.view.TokenColorArrayView'
     },
     { name: 'xAxisLabel' },
     { name: 'yAxisLabel' },
