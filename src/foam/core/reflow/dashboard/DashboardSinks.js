@@ -60,7 +60,6 @@ foam.CLASS({
         var labels = [];
         var data = [];
         var backgroundColors = [];
-        var borderColors = [];
         
         // Check if we're dealing with dates using the groupBy property
         var isDateAxis = this.arg1 && (foam.lang.Date.isInstance(this.arg1) || foam.lang.DateTime.isInstance(this.arg1));
@@ -74,20 +73,14 @@ foam.CLASS({
             labels.push(label);
             data.push(groups[key].value);
             
-            // Color handling
-            var color;
+            // Only handle colors if they are defined
             if ( colors && colors.length > 0 ) {
-              color = colors[index % colors.length];
-            } else {
-              color = foam.CSS.returnTokenValue('$primary200', this.cls_, this.__context__);
+              var color = colors[index % colors.length];
+              if ( color !== undefined && color !== null ) {
+                color = foam.CSS.returnTokenValue(color, this.cls_, this.__context__);
+                backgroundColors.push(color);
+              }
             }
-            backgroundColors.push(color);
-            // Safely create border color - if color contains '200', replace with '400', otherwise use the same color
-            var borderColor = color;
-            if ( typeof color === 'string' && color.includes('200') ) {
-              borderColor = color.replace('200', '400');
-            }
-            borderColors.push(borderColor);
             index++;
           }
         }
@@ -98,9 +91,7 @@ foam.CLASS({
           datasets: [{
             label: datasetLabel || 'Values',  // Use configurable label or default to 'Values'
             data: data,
-            backgroundColor: backgroundColors,
-            borderColor: borderColors,
-            borderWidth: 1
+            backgroundColor: backgroundColors.length > 0 ? backgroundColors : undefined
             // Don't set barThickness if it's 0 or undefined, let Chart.js use defaults
           }]
         };
@@ -251,14 +242,13 @@ foam.CLASS({
             labels.push(key.toString());
             data.push(groups[key].value);
             
-            // Generate colors
+            // Only handle colors if they are defined
             if ( colors && colors.length > 0 ) {
-              console.log(colors);
-              backgroundColors.push(colors[index % colors.length]);
-            } else {
-              // Default color generation
-              var hue = (index / Math.max(1, Object.keys(groups).length - 1)) * 360;
-              backgroundColors.push('hsl(' + hue + ', 70%, 50%)');
+              var color = colors[index % colors.length];
+              if ( color !== undefined && color !== null ) {
+                color = foam.CSS.returnTokenValue(color, this.cls_, this.__context__);
+                backgroundColors.push(color);
+              }
             }
             index++;
           }
@@ -269,10 +259,10 @@ foam.CLASS({
           labels: labels,
           datasets: [{
             data: data,
-            backgroundColor: backgroundColors
+            backgroundColor: backgroundColors.length > 0 ? backgroundColors : undefined
           }]
         };
-        
+
         var options = {
           responsive: responsive,
           maintainAspectRatio: maintainAspectRatio,
@@ -440,22 +430,22 @@ foam.CLASS({
             }
             
             // Generate color for this dataset
-            var color;
+            var datasetConfig = {
+              label: rowKey.toString(),
+              data: data
+            };
+            
+            // Only handle colors if they are defined
             if ( colors && colors.length > 0 ) {
-              color = colors[colorIndex % colors.length];
-            } else {
-              var hue = (colorIndex / Math.max(1, Object.keys(rowGroups).length - 1)) * 360;
-              color = 'hsl(' + hue + ', 70%, 50%)';
+              var color = colors[colorIndex % colors.length];
+              if ( color !== undefined && color !== null ) {
+                color = foam.CSS.returnTokenValue(color, this.cls_, this.__context__);
+                datasetConfig.backgroundColor = color;
+              }
             }
             
-            datasets.push({
-              label: rowKey.toString(),
-              data: data,
-              backgroundColor: color,
-              borderColor: typeof color === 'string' && color.includes('hsl') ? 
-                          color.replace('50%', '40%') : color,
-              borderWidth: 1
-            });
+            
+            datasets.push(datasetConfig);
             
             colorIndex++;
           }
@@ -585,6 +575,10 @@ foam.CLASS({
     {
       name: 'colors',
     },
+    {
+      name: 'borderColors',
+      help: 'Border colors for line elements. If not specified, colors will be used.'
+    },
     { name: 'xAxisLabel' },
     { name: 'yAxisLabel' },
     { name: 'fill', value: false },
@@ -709,26 +703,30 @@ foam.CLASS({
                 return parseFloat(a.x) - parseFloat(b.x);
               });
               
-              var color;
-              if ( colors && colors.length > 0 ) {
-                color = colors[colorIndex % colors.length];
-              } else {
-                var hue = (colorIndex / Math.max(1, Object.keys(groups).length - 1)) * 360;
-                color = 'hsl(' + hue + ', 70%, 50%)';
-              }
-              
-              datasets.push({
+              // Line charts need borderColor for the line
+              var datasetConfig = {
                 label: key,
                 data: data,
-                backgroundColor: fill ? color : 'transparent',
-                borderColor: color,
                 borderWidth: 2,
                 fill: fill,
                 tension: tension,
                 stepped: stepped,
                 pointRadius: showPoints ? pointRadius : 0,
                 pointHoverRadius: showPoints ? pointRadius + 2 : 0
-              });
+              };
+              
+              // Handle colors if defined
+              if ( colors && colors.length > 0 ) {
+                var color = colors[colorIndex % colors.length];
+                if ( color !== undefined && color !== null ) {
+                  color = foam.CSS.returnTokenValue(color, this.cls_, this.__context__);
+                  datasetConfig.backgroundColor = fill ? color : 'transparent';
+                  datasetConfig.borderColor = color;  // Line color
+                }
+              }
+              
+              
+              datasets.push(datasetConfig);
               
               colorIndex++;
             }
@@ -760,21 +758,27 @@ foam.CLASS({
             return parseFloat(a.x) - parseFloat(b.x);
           });
           
-          var lineColor = colors && colors[0] ? colors[0] : 
-                         foam.CSS.returnTokenValue('$green500', this.cls_, this.__context__);
-          
-          datasets.push({
+          // Single line dataset
+          var datasetConfig = {
             label: (yProp.label || yProp.name) + ' vs ' + (xProp.label || xProp.name),
             data: data,
-            backgroundColor: fill ? lineColor : 'transparent',
-            borderColor: lineColor,
             borderWidth: 2,
             fill: fill,
             tension: tension,
             stepped: stepped,
             pointRadius: showPoints ? pointRadius : 0,
             pointHoverRadius: showPoints ? pointRadius + 2 : 0
-          });
+          };
+          
+          // Handle colors if defined
+          if ( colors && colors.length > 0 && colors[0] !== undefined && colors[0] !== null ) {
+            var lineColor = foam.CSS.returnTokenValue(colors[0], this.cls_, this.__context__);
+            datasetConfig.backgroundColor = fill ? lineColor : 'transparent';
+            datasetConfig.borderColor = lineColor;
+          }
+          
+          
+          datasets.push(datasetConfig);
         }
         
         // Check if xProp is a date/time type
