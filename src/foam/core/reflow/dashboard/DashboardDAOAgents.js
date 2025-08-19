@@ -206,7 +206,7 @@ foam.CLASS({
       title: 'Data Configuration',
       order: 1,
       collapsable: true,
-      properties: ['prop', 'dateFn', 'sink', 'groupLimit', 'sortOrder', 'includeOthers', 'othersLabel']
+      properties: ['prop', 'sink', 'groupLimit', 'sortOrder', 'includeOthers', 'othersLabel']
     },
     {
       name: 'barChart',
@@ -292,16 +292,12 @@ foam.CLASS({
 
   methods: [
     function createSink() {
-      var expr = this.prop;
-      if ( (foam.lang.Date.isInstance(this.prop) || foam.lang.DateTime.isInstance(this.prop)) && this.dateFn ) {
-        expr = this.dateFn.create({delegate: expr});
-      }
       // Create sink with GroupBy configuration inherited from parent
       // Use the sink from parent GroupByDAOAgent if provided, otherwise COUNT
       var valueSink = this.sink ? this.sink.createSink() : this.COUNT();
       
       var sink = this.DashboardBarSink.create({
-        arg1: expr,
+        arg1: this.prop,
         arg2: valueSink,
         groupLimit: this.groupLimit,
         sortOrder: this.sortOrder,
@@ -601,7 +597,7 @@ foam.CLASS({
       title: 'Data Configuration',
       order: 1,
       collapsable: true,
-      properties: ['prop', 'dateFn', 'sink', 'groupLimit', 'sortOrder', 'includeOthers', 'othersLabel']
+      properties: ['prop', 'sink', 'groupLimit', 'sortOrder', 'includeOthers', 'othersLabel']
     },
     {
       name: 'pieChart',
@@ -673,18 +669,13 @@ foam.CLASS({
 
   methods: [
     function createSink() {
-      var expr = this.prop;
-      if ( (foam.lang.Date.isInstance(this.prop) || foam.lang.DateTime.isInstance(this.prop)) && this.dateFn ) {
-        //        expr = this.DOT(expr, this.dateFn);
-        expr = this.dateFn.create({delegate: expr});
-      }
       // Create sink with GroupBy configuration inherited from parent
       // Use the sink from parent GroupByDAOAgent if provided, otherwise COUNT
       var valueSink = this.sink ? this.sink.createSink() : this.COUNT();
       
       // Default to DESC sort order for pie charts to show highest values first
       var sink = this.DashboardPieSink.create({
-        arg1: expr,
+        arg1: this.prop,
         arg2: valueSink,
         groupLimit: this.groupLimit,
         sortOrder: this.sortOrder,
