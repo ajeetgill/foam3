@@ -411,7 +411,7 @@ foam.CLASS({
     {
       name: 'dateFn',
       visibility: function(prop) {
-        return foam.lang.DateTime.isInstance(prop) ?
+        return foam.lang.DateTime.isInstance(prop) || foam.lang.Date.isInstance(prop) ?
           foam.u2.DisplayMode.RW :
           foam.u2.DisplayMode.HIDDEN;
       },
