@@ -26,24 +26,13 @@ foam.CLASS({
       label: 'Chart Colors',
       view: {
         class: 'foam.u2.view.ArrayView',
-        valueView: 'foam.u2.view.ColorEditView'
+        valueView: 'foam.u2.view.ColorEditView',
+        defaultNewItem: foam.lang.Color.create()
       }
     }
   ],
   
   methods: [
-    function getColorForCategory(categoryKey, colorIndex) {
-      // Use the color from the array based on index
-      if ( this.colors && this.colors.length > 0 ) {
-        var colorObj = this.colors[colorIndex % this.colors.length];
-        // foam.lang.Color automatically handles token resolution
-        return colorObj;
-      }
-      
-      // Fallback if no colors defined
-      var defaultTokens = ['$green500', '$blue500', '$red500', '$yellow500'];
-      return foam.CSS.returnTokenValue(defaultTokens[colorIndex % defaultTokens.length], this.cls_, this.__context__);
-    },
     
     function addColorMappingToE(e) {
       // Helper method to add color controls to UI
