@@ -113,18 +113,18 @@ foam.CLASS({
                 });
             } else {
               // Clear transformation when property doesn't support transformations
-              // self.selectedTransformation = null;
+              self.selectedTransformation = null;
             }
           } else {
             // Clear transformation when no property is selected
-            // self.selectedTransformation = null;
+            self.selectedTransformation = null;
           }
         }));
 
       // Update data$ based on selections
       this.onDetach(this.dynamic(function(selectedProperty, selectedTransformation) {
         if ( ! selectedProperty ) {
-          // this.data = null;
+          this.data = null;
         } else if ( selectedTransformation ) {
           // Create transformation expression
           this.data = selectedTransformation.create({ delegate: selectedProperty });
