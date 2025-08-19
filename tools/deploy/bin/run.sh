@@ -61,9 +61,9 @@ while getopts "A:D:dH:mN:P:pR:sW:V:" opt ; do
 done
 
 APP_HOME="/${APP_ROOT}/${APP_NAME}"
-# if [[ -z "${APP_HOME}" ]]; then
-#     APP_HOME="/${APP_ROOT}/${APP_NAME}"
-# fi
+if [ -n "${APP_HOME}" ]; then
+    APP_HOME="${APP_HOME}"
+fi
 
 echo "starting $APP_NAME @ $HOST_NAME:$WEB_PORT"
 
