@@ -132,7 +132,7 @@ foam.CLASS({
         if ( depth == colDepth - 1 ) this.colIndexMap.push(key);
 
       }
-      if ( depth = 0 ) rows.forEach(r => r.end());
+      if ( depth === 0 ) rows.forEach(r => r.end());
       return hasChildren ? 
         colSpans.reduce((x,y) => x + y, 0) :
         keys.length;
