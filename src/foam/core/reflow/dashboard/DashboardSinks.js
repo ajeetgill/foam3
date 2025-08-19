@@ -28,14 +28,7 @@ foam.CLASS({
     { name: 'othersLabel', value: 'Others', help: 'Label for the "Others" category' },
     // Chart-specific properties
     {
-      class: 'StringArray',
-      name: 'colors',
-      label: 'Chart Colors',
-      help: 'Array of colors for chart elements',
-      view: {
-        class: 'foam.u2.view.ArrayView',
-        valueView: 'foam.u2.view.ColorEditView'
-      }
+      name: 'colors',   
     },
     { name: 'timeUnit' },
     { name: 'horizontal', value: false },
@@ -67,7 +60,6 @@ foam.CLASS({
         var labels = [];
         var data = [];
         var backgroundColors = [];
-        var borderColors = [];
         
         // Check if we're dealing with dates using the groupBy property
         var isDateAxis = this.arg1 && (foam.lang.Date.isInstance(this.arg1) || foam.lang.DateTime.isInstance(this.arg1));
@@ -81,20 +73,14 @@ foam.CLASS({
             labels.push(label);
             data.push(groups[key].value);
             
-            // Color handling
-            var color;
+            // Only handle colors if they are defined
             if ( colors && colors.length > 0 ) {
-              color = colors[index % colors.length];
-            } else {
-              color = foam.CSS.returnTokenValue('$primary200', this.cls_, this.__context__);
+              var color = colors[index % colors.length];
+              if ( color !== undefined && color !== null ) {
+                color = foam.CSS.returnTokenValue(color, this.cls_, this.__context__);
+                backgroundColors.push(color);
+              }
             }
-            backgroundColors.push(color);
-            // Safely create border color - if color contains '200', replace with '400', otherwise use the same color
-            var borderColor = color;
-            if ( typeof color === 'string' && color.includes('200') ) {
-              borderColor = color.replace('200', '400');
-            }
-            borderColors.push(borderColor);
             index++;
           }
         }
@@ -105,9 +91,7 @@ foam.CLASS({
           datasets: [{
             label: datasetLabel || 'Values',  // Use configurable label or default to 'Values'
             data: data,
-            backgroundColor: backgroundColors,
-            borderColor: borderColors,
-            borderWidth: 1
+            backgroundColor: backgroundColors.length > 0 ? backgroundColors : undefined
             // Don't set barThickness if it's 0 or undefined, let Chart.js use defaults
           }]
         };
@@ -219,12 +203,7 @@ foam.CLASS({
     { name: 'othersLabel', value: 'Others', help: 'Label for the "Others" slice' },
     // Pie-specific properties
     {
-      class: 'StringArray',
-      of: 'Color',
       name: 'colors',
-      label: 'Chart Colors',
-      help: 'Array of colors for pie slices',
-      view: 'foam.u2.view.TokenColorArrayView'
     },
     { name: 'showPercentages', value: false },
     { name: 'cutoutPercentage', value: 0 },
@@ -263,13 +242,13 @@ foam.CLASS({
             labels.push(key.toString());
             data.push(groups[key].value);
             
-            // Generate colors
+            // Only handle colors if they are defined
             if ( colors && colors.length > 0 ) {
-              backgroundColors.push(colors[index % colors.length]);
-            } else {
-              // Default color generation
-              var hue = (index / Math.max(1, Object.keys(groups).length - 1)) * 360;
-              backgroundColors.push('hsl(' + hue + ', 70%, 50%)');
+              var color = colors[index % colors.length];
+              if ( color !== undefined && color !== null ) {
+                color = foam.CSS.returnTokenValue(color, this.cls_, this.__context__);
+                backgroundColors.push(color);
+              }
             }
             index++;
           }
@@ -280,10 +259,10 @@ foam.CLASS({
           labels: labels,
           datasets: [{
             data: data,
-            backgroundColor: backgroundColors
+            backgroundColor: backgroundColors.length > 0 ? backgroundColors : undefined
           }]
         };
-        
+
         var options = {
           responsive: responsive,
           maintainAspectRatio: maintainAspectRatio,
@@ -378,12 +357,7 @@ foam.CLASS({
   properties: [
     // Stacked bar-specific properties
     {
-      class: 'StringArray',
-      of: 'Color',
       name: 'colors',
-      label: 'Chart Colors',
-      help: 'Array of colors for stacked datasets',
-      view: 'foam.u2.view.TokenColorArrayView'
     },
     { name: 'timeUnit' },
     { name: 'horizontal', value: false },
@@ -456,22 +430,22 @@ foam.CLASS({
             }
             
             // Generate color for this dataset
-            var color;
+            var datasetConfig = {
+              label: rowKey.toString(),
+              data: data
+            };
+            
+            // Only handle colors if they are defined
             if ( colors && colors.length > 0 ) {
-              color = colors[colorIndex % colors.length];
-            } else {
-              var hue = (colorIndex / Math.max(1, Object.keys(rowGroups).length - 1)) * 360;
-              color = 'hsl(' + hue + ', 70%, 50%)';
+              var color = colors[colorIndex % colors.length];
+              if ( color !== undefined && color !== null ) {
+                color = foam.CSS.returnTokenValue(color, this.cls_, this.__context__);
+                datasetConfig.backgroundColor = color;
+              }
             }
             
-            datasets.push({
-              label: rowKey.toString(),
-              data: data,
-              backgroundColor: color,
-              borderColor: typeof color === 'string' && color.includes('hsl') ? 
-                          color.replace('50%', '40%') : color,
-              borderWidth: 1
-            });
+            
+            datasets.push(datasetConfig);
             
             colorIndex++;
           }
@@ -599,12 +573,11 @@ foam.CLASS({
     { name: 'aggregationSink' },
     { name: 'timeUnit' },
     {
-      class: 'StringArray',
-      of: 'Color',
       name: 'colors',
-      label: 'Chart Colors',
-      help: 'Array of colors for line datasets',
-      view: 'foam.u2.view.TokenColorArrayView'
+    },
+    {
+      name: 'borderColors',
+      help: 'Border colors for line elements. If not specified, colors will be used.'
     },
     { name: 'xAxisLabel' },
     { name: 'yAxisLabel' },
@@ -730,26 +703,30 @@ foam.CLASS({
                 return parseFloat(a.x) - parseFloat(b.x);
               });
               
-              var color;
-              if ( colors && colors.length > 0 ) {
-                color = colors[colorIndex % colors.length];
-              } else {
-                var hue = (colorIndex / Math.max(1, Object.keys(groups).length - 1)) * 360;
-                color = 'hsl(' + hue + ', 70%, 50%)';
-              }
-              
-              datasets.push({
+              // Line charts need borderColor for the line
+              var datasetConfig = {
                 label: key,
                 data: data,
-                backgroundColor: fill ? color : 'transparent',
-                borderColor: color,
                 borderWidth: 2,
                 fill: fill,
                 tension: tension,
                 stepped: stepped,
                 pointRadius: showPoints ? pointRadius : 0,
                 pointHoverRadius: showPoints ? pointRadius + 2 : 0
-              });
+              };
+              
+              // Handle colors if defined
+              if ( colors && colors.length > 0 ) {
+                var color = colors[colorIndex % colors.length];
+                if ( color !== undefined && color !== null ) {
+                  color = foam.CSS.returnTokenValue(color, this.cls_, this.__context__);
+                  datasetConfig.backgroundColor = fill ? color : 'transparent';
+                  datasetConfig.borderColor = color;  // Line color
+                }
+              }
+              
+              
+              datasets.push(datasetConfig);
               
               colorIndex++;
             }
@@ -781,21 +758,27 @@ foam.CLASS({
             return parseFloat(a.x) - parseFloat(b.x);
           });
           
-          var lineColor = colors && colors[0] ? colors[0] : 
-                         foam.CSS.returnTokenValue('$green500', this.cls_, this.__context__);
-          
-          datasets.push({
+          // Single line dataset
+          var datasetConfig = {
             label: (yProp.label || yProp.name) + ' vs ' + (xProp.label || xProp.name),
             data: data,
-            backgroundColor: fill ? lineColor : 'transparent',
-            borderColor: lineColor,
             borderWidth: 2,
             fill: fill,
             tension: tension,
             stepped: stepped,
             pointRadius: showPoints ? pointRadius : 0,
             pointHoverRadius: showPoints ? pointRadius + 2 : 0
-          });
+          };
+          
+          // Handle colors if defined
+          if ( colors && colors.length > 0 && colors[0] !== undefined && colors[0] !== null ) {
+            var lineColor = foam.CSS.returnTokenValue(colors[0], this.cls_, this.__context__);
+            datasetConfig.backgroundColor = fill ? lineColor : 'transparent';
+            datasetConfig.borderColor = lineColor;
+          }
+          
+          
+          datasets.push(datasetConfig);
         }
         
         // Check if xProp is a date/time type
@@ -1051,25 +1034,26 @@ foam.CLASS({
     
     function toE(_, x) {
       var self = this;
-      return x.E().add(this.metric_$.map(function(metric) {
-        var e = foam.u2.Element.create();
+      return x.E().add(this.dynamic(function(metric_) {
+        var metric = metric_;
+        var container = foam.u2.Element.create();
         
         
         // Label
-        e.start('div')
+        container.start('div')
           .style({
-            fontSize: '0.875rem',
-            color: foam.CSS.returnTokenValue('$textSecondary', self.cls_, self.__context__),
+            fontSize: metric.labelFontSize || '0.875rem',
+            color: metric.labelColor,
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
-            fontWeight: 'medium',
+            fontWeight: metric.labelFontWeight || 'medium',
             marginBottom: '8px'
           })
           .add(metric.label)
         .end();
         
         // Value
-        e.start('div')
+        container.start('div')
           .style({
             fontSize: '3rem',
             fontWeight: 'bold',
@@ -1081,25 +1065,25 @@ foam.CLASS({
         
         // Count - show how many records were processed
         if ( metric.showCount && metric.count !== null ) {
-          e.start('div')
+          container.start('div')
             .style({
-              fontSize: '0.75rem',
+              fontSize: metric.countFontSize || '0.75rem',
               marginTop: '8px',
-              color: foam.CSS.returnTokenValue('$textSecondary', self.cls_, self.__context__),
-              fontWeight: 'normal'
+              color: metric.countColor,
+              fontWeight: metric.countFontWeight || 'normal'
             })
-            .add(metric.count.toLocaleString() + (self.countSuffix ? ' ' + self.countSuffix : ''))
+            .add(metric.count.toLocaleString() + (metric.countSuffix ? ' ' + metric.countSuffix : ''))
           .end();
         }
         
-        e.end();
-        return e;
+        this.add(container);
       }));
     },
     
     function addToE(e) {
       var self = this;
-      e.add(this.metric_$.map(function(metric) {
+      e.add(this.dynamic(function(metric_) {
+        var metric = metric_;
         // Determine alignment style
         var alignmentStyle = 'center';
         var textAlign = 'center';
@@ -1193,11 +1177,12 @@ foam.CLASS({
               color: metric.countColor,
               fontWeight: metric.countFontWeight || 'normal'
             })
-            .add(metric.count.toLocaleString() + (self.countSuffix ? ' ' + self.countSuffix : ''))
+            .add(metric.count.toLocaleString() + (metric.countSuffix ? ' ' + metric.countSuffix : ''))
           .end();
         }
         
         container.end();
+        this.add(container);
         return container;
       }));
     },
