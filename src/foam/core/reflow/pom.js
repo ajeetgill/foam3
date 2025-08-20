@@ -2,7 +2,7 @@ foam.POM({
   name: 'console',
   projects: [
     { name: 'dashboard/pom' },
-    { name: "test/pom" }
+    { name: "pivottest/pom" }
   ],
   files: [
     { name: '../../u2/mlang/Table',    flags: 'js|java' },
