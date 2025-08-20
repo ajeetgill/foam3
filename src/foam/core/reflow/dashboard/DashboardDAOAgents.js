@@ -239,6 +239,14 @@ foam.CLASS({
   ],
 
   properties: [
+    {
+      name: 'sink',
+      view: {
+        class: 'foam.core.reflow.SinkView',
+        choice: 'foam.core.reflow.CountDAOAgent',
+        disabledTypes: [ 'structure', 'format', 'chart' ]
+      }
+    },
     // Inherited from GroupByDAOAgent: prop, sink, groupLimit, sortOrder, includeOthers, othersLabel
     // From mixins: colors, chart display options
     {
@@ -449,6 +457,14 @@ foam.CLASS({
       name: 'prop1',
       label: "Stacked By"
     },
+    {
+      name: 'sink',
+      view: {
+        class: 'foam.core.reflow.SinkView',
+        choice: 'foam.core.reflow.CountDAOAgent',
+        disabledTypes: [ 'structure', 'format', 'chart' ]
+      }
+    },
     // Inherited from GridByDAOAgent: prop1 (yFunc), prop2 (xFunc), sink
     // From mixins: colors, chart display options
     {
@@ -623,6 +639,14 @@ foam.CLASS({
   ],
 
   properties: [
+    {
+      name: 'sink',
+      view: {
+        class: 'foam.core.reflow.SinkView',
+        choice: 'foam.core.reflow.CountDAOAgent',
+        disabledTypes: [ 'structure', 'format', 'chart' ]
+      }
+    },
     // Inherited from GroupByDAOAgent: prop, sink, groupLimit, sortOrder, includeOthers, othersLabel
     // From mixins: colors, chart display options
     {
@@ -853,7 +877,11 @@ foam.CLASS({
     {
       name: 'aggregationSink',
       label: 'Aggregation',
-      view: { class: 'foam.core.reflow.SinkView', choice:  'foam.core.reflow.AvgDAOAgent' },
+      view: { 
+        class: 'foam.core.reflow.SinkView', 
+        choice:  'foam.core.reflow.AvgDAOAgent',
+        disabledTypes: [ 'structure', 'format', 'chart' ]
+      },
       help: 'How to aggregate Y values when grouping',
       visibility: function(groupBy) {
         return groupBy ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
