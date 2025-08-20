@@ -173,7 +173,27 @@ if ( getGroupLimit() == getGroups().size() && sub != null ) sub.detach();
 `
     },
 
-    function eof() { },
+    {
+      name: 'eof',
+      code: function() { 
+        // Call eof on all nested sinks to ensure they finalize their state
+        for ( var key in this.groups ) {
+          var nestedSink = this.groups[key];
+          if ( nestedSink && nestedSink.eof ) {
+            nestedSink.eof();
+          }
+        }
+      },
+      javaCode: `
+// Call eof on all nested sinks to ensure they finalize their state
+for (Object key : getGroups().keySet()) {
+  foam.dao.Sink nestedSink = (foam.dao.Sink) getGroups().get(key);
+  if (nestedSink != null) {
+    nestedSink.eof();
+  }
+}
+      `
+    },
 
     {
       name: 'toString',

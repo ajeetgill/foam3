@@ -21,8 +21,9 @@ foam.CLASS({
   ],
   
   properties: [
-    // GroupBy properties (inherited but exposed here for clarity)
-    { name: 'groupLimit', value: 0, help: 'Limit number of groups (0 = no limit)' },
+    // TopNGroupBy properties (inherited but exposed here for clarity)
+    // IMPORTANT: groupLimit is inherited from GroupBy but should NOT be used with TopNGroupBy sinks
+    // groupLimit cuts off data collection early, while topN properly aggregates all data first
     { name: 'sortOrder', value: 'DESC', help: 'Sort order for groups' },
     { name: 'includeOthers', value: false, help: 'Include "Others" category for remaining groups' },
     { name: 'othersLabel', value: 'Others', help: 'Label for the "Others" category' },
@@ -212,8 +213,10 @@ foam.CLASS({
   ],
   
   properties: [
-    // GroupBy properties (inherited but exposed here for clarity)
-    { name: 'groupLimit', value: 10, help: 'Limit number of slices (0 = no limit)' },
+    // TopNGroupBy properties (inherited but exposed here for clarity)
+    // IMPORTANT: groupLimit is inherited from GroupBy but should NOT be used with TopNGroupBy sinks
+    // groupLimit cuts off data collection early, while topN properly aggregates all data first
+    // The init() method forces groupLimit to -1 to prevent interference
     { name: 'sortOrder', value: 'DESC', help: 'Sort order for slices' },
     { name: 'includeOthers', value: true, help: 'Include "Others" slice for remaining groups' },
     { name: 'othersLabel', value: 'Others', help: 'Label for the "Others" slice' },

@@ -127,7 +127,7 @@ return (sink instanceof foam.mlang.sink.Sum) ||
           this.groups = newGroups;
           this.groupKeys = undefined;
         }
-
+        
       },
       javaCode: `
 if (getTopN() == 0) return;

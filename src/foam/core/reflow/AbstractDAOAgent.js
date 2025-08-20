@@ -467,7 +467,11 @@ foam.CLASS({
       name: 'groupLimit',
       label: 'Group Limit',
       value: 0,
-      help: 'Limit total number of groups returned (0 for no limit).'
+      help: 'Limit total number of groups returned (0 for no limit).',
+      hidden: true,
+      documentation: `groupLimit is hidden to avoid confusion with topN. 
+        groupLimit cuts off data collection early (during put), while topN properly 
+        aggregates all data first then limits groups (during eof). Use topN instead.`
     },
     {
       name: 'browseEnabled',
@@ -478,6 +482,10 @@ foam.CLASS({
   ],
 
   methods: [
+    function init() {
+      /// due to grouplimit breaking the nested logic we will reset it to -1 in here to avoid saved scripts from using it
+      this.groupLimit = -1;
+    },
     function value(s) { return s; },
     function createSink() {
       var expr = this.prop;

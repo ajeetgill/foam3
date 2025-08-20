@@ -206,7 +206,7 @@ foam.CLASS({
       title: 'Data Configuration',
       order: 1,
       collapsable: true,
-      properties: ['prop', 'sink', 'groupLimit', 'topN', 'includeOthers', 'sortOrder', 'othersLabel']
+      properties: ['prop', 'sink', 'topN', 'includeOthers', 'sortOrder', 'othersLabel']
     },
     {
       name: 'barChart',
@@ -597,7 +597,7 @@ foam.CLASS({
       title: 'Data Configuration',
       order: 1,
       collapsable: true,
-      properties: ['prop', 'sink', 'groupLimit', 'topN', 'includeOthers', 'sortOrder', 'othersLabel']
+      properties: ['prop', 'sink', 'topN', 'includeOthers', 'sortOrder', 'othersLabel']
     },
     {
       name: 'pieChart',
@@ -668,6 +668,7 @@ foam.CLASS({
   ],
 
   methods: [
+    
     function createSink() {
       // Create sink with GroupBy configuration inherited from parent
       // Use the sink from parent GroupByDAOAgent if provided, otherwise COUNT
