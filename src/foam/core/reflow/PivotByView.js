@@ -78,13 +78,12 @@ foam.CLASS({
   properties: [
     { name: 'currentHoverCol' },
     { name: 'currentHoverRow' },
-    { name: 'colIndexMap' }
+    { name: 'colIndexMap', documentation: 'flattened list of cols' }
   ],
 
   methods: [
     function render() {
       this.colIndexMap = [];
-      var self = this;
       var rowDepth = this.data.yFunc.length;
       var colDepth = this.data.xFunc.length;
       // get rows/cols as simple nested dictionary instead of groupbys
@@ -95,12 +94,20 @@ foam.CLASS({
       var table = this.start('table').addClass(this.myClass('table'));
       this.renderColHeaders(table, colsDict, [], 0, rowDepth, colDepth);
       if ( ! this.data.rows ) 
-        this.renderColVals(table, colsDict);
+        this.renderColVals(table, colsDict, colDepth);
       else
-        this.renderRows(table, rowsDict, 0, rowDepth);
+        this.renderRows(table, rowsDict, 0, rowDepth, colDepth);
       table.end();
     },
 
+    /**
+     * renders nested column recursively, each time returning the total number of child headers
+     * for each column header to be used as the colspan
+     * @param {*} cols - nested map of column headers
+     * @param {*} rows - array of table rows, initial value = []
+     * @param {*} keyPrefix - used for cell highlighting
+     * @returns 
+     */
     function renderColHeaders(table, cols, rows, depth, rowDepth, colDepth, keyPrefix) {
       if ( ! cols ) return;
       if ( ! keyPrefix ) keyPrefix = '';
@@ -141,7 +148,17 @@ foam.CLASS({
         keys.length;
     },
 
-    function renderRows(table, rows, currDepth, rowDepth, prefix = '') {
+    
+
+    /**
+     * renders nested rows recursively
+     * @param {*} table 
+     * @param {*} rows - nested map of row headers and row values
+     * @param {*} prefix - used for cell highlighting
+     * @returns an object containing the first of a group of child row headers (ret.row) as well
+     * as the number of total child row headers (ret.rowspan), used to insert parent header value and set parent rowspan
+     */
+    function renderRows(table, rows, currDepth, rowDepth, colDepth, prefix = '') {
       var rowKeys = Object.keys(rows);
       if ( currDepth == rowDepth ) {
         return 1;
@@ -150,8 +167,9 @@ foam.CLASS({
       var retData = { rowSpan: 1, row: null };
       for ( var i = 0; i < rowKeys.length; i++ ) {
         const key = prefix + rowKeys[i];
+        // rendering headers with children
         if ( currDepth < rowDepth - 1 ) {
-          var ret = this.renderRows(table, rows[rowKeys[i]], currDepth + 1, rowDepth, key);
+          var ret = this.renderRows(table, rows[rowKeys[i]], currDepth + 1, rowDepth, colDepth, key);
           if ( ret.row ) {
             var el = foam.u2.Element.create({nodeName: 'th'});
             el.attrs({ 'rowspan' : ret.rowSpan })
@@ -165,6 +183,7 @@ foam.CLASS({
           }
           rowSpans.push(ret.rowSpan);
         } else {
+          // rendering childless header with row of values
           var row = table.start('tr').addClass(this.myClass('tr'))
           row.start('th')
             .addClass(this.myClass('th'))
@@ -174,7 +193,9 @@ foam.CLASS({
             .add(rowKeys[i])
             .end();
           if ( this.colIndexMap?.length ) {
-            var map = this.flattenMap(rows[rowKeys[i]], this.data.xFunc.length);
+            // case: table has columns
+            // get flattened map of column keys and values 
+            var map = this.flattenMap(rows[rowKeys[i]], colDepth);
             row.forEach(this.colIndexMap, col => {
               const c = col;
               row.start('td')
@@ -192,6 +213,7 @@ foam.CLASS({
               .end();
             })
           } else {
+            // case: rows only table
             row.start('td')
               .addClass(this.myClass('td'))
               .on('mouseover', () => this.onCellMouseOver(null, key))
@@ -211,8 +233,13 @@ foam.CLASS({
       return retData;
     },
 
-    function renderColVals(table, cols) {
-      cols = this.flattenMap(cols, this.data.xFunc.length);
+    /**
+     * renders column values in the case of columns only table
+     * @param {*} table 
+     * @param {*} cols - nested map of col headers and values
+     */
+    function renderColVals(table, cols, colDepth) {
+      cols = this.flattenMap(cols, colDepth);
       var row = table.start('tr').addClass(this.myClass('tr'));
       for ( const key in cols ) {
         const val = cols[key];
@@ -286,11 +313,11 @@ foam.CLASS({
       return map;
     },
 
+    // helper methods for cell highlighting
     function onCellMouseOver(col, row) {
       if ( col ) this.currentHoverCol = col;
       if ( row ) this.currentHoverRow = row;
     },
-    
     function onCellMouseLeave() {
       this.currentHoverCol = undefined;
       this.currentHoverRow = undefined;
