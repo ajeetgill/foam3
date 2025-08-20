@@ -42,7 +42,16 @@ foam.CLASS({
       hidden: true,
       javaCloneProperty: '// noop',
       factory: function() { return {}; },
-      javaFactory: 'return new java.util.HashMap<Object, foam.dao.Sink>();'
+      javaFactory: 'return new java.util.HashMap<Object, foam.dao.Sink>();',
+      cloneProperty: function(value, cloneMap) {
+        if ( value ) {
+          var tmp = cloneMap[this.name] = {};
+          for ( var key in value ) {
+            tmp[key] = foam.util.clone(value[key]);
+          }
+        }
+      }
+    
     },
     {
       class: 'List',
