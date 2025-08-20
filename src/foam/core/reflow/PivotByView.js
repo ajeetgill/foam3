@@ -87,8 +87,11 @@ foam.CLASS({
       var self = this;
       var rowDepth = this.data.yFunc.length;
       var colDepth = this.data.xFunc.length;
+      // get rows/cols as simple nested dictionary instead of groupbys
       var rowsDict = this.makeDictionary(this.data.rows);
+      // get cols from rows only returns the cols which actually have corresponding row data instead of using data cols
       var colsDict = colDepth > 0 ? this.getColsFromRows(this.data.rows, 0, {}, rowDepth, this.data.cols) : null;
+
       var table = this.start('table').addClass(this.myClass('table'));
       this.renderColHeaders(self, table, colsDict, [], 0, rowDepth, colDepth);
       if ( ! this.data.rows ) 
@@ -113,7 +116,7 @@ foam.CLASS({
       var colSpans = [];
       if ( hasChildren ) {
         keys.forEach(c => {
-          childKeysSpan = 
+          var childKeysSpan = 
             this.renderColHeaders(self, table, cols[c], rows, depth + 1, rowDepth, colDepth, keyPrefix + c);
           colSpans.push(childKeysSpan);
         });
@@ -124,8 +127,8 @@ foam.CLASS({
         rows[depth].start('th')
           .addClass(this.myClass('th'))
           .attrs({ 'colspan' : colSpan  })
-          .on('mouseover', () => self.currentHoverCol = key)
-          .on('mouseleave', function() { self.currentHoverCol = undefined; self.currentHoverRow = undefined; })
+          .on('mouseover', () => self.onCellMouseOver(key, null))
+          .on('mouseleave', () => self.onCellMouseLeave())
           .enableClass(self.myClass('highlighted-col'), self.slot((currentHoverCol) => currentHoverCol === key || currentHoverCol?.startsWith(key) || key.startsWith(currentHoverCol)))
           .add(keys[i])
         .end();
@@ -148,14 +151,14 @@ foam.CLASS({
       for ( var i = 0; i < rowKeys.length; i++ ) {
         const key = prefix + rowKeys[i];
         if ( currDepth < rowDepth - 1 ) {
-          ret = renderRows(self, table, rows[rowKeys[i]], currDepth + 1, rowDepth, key);
+          var ret = renderRows(self, table, rows[rowKeys[i]], currDepth + 1, rowDepth, key);
           if ( ret.row ) {
             var el = foam.u2.Element.create({nodeName: 'th'});
             el.attrs({ 'rowspan' : ret.rowSpan })
               .addClass(self.myClass('th'))
               .add(rowKeys[i])
-              .on('mouseover', () => self.currentHoverRow = key)
-              .on('mouseleave', () => self.currentHoverRow = undefined)
+              .on('mouseover', () => self.onCellMouseOver(null, key))
+              .on('mouseleave', () => self.onCellMouseLeave())
               .enableClass(self.myClass('highlighted-row'), self.slot((currentHoverRow) => currentHoverRow === key || key.startsWith(currentHoverRow) || currentHoverRow?.startsWith(key) ));
             ret.row.insertBefore(el, ret.row.children[0]);
             if ( i == 0 ) retData.row = ret.row;
@@ -165,8 +168,8 @@ foam.CLASS({
           var row = table.start('tr').addClass(self.myClass('tr'))
           row.start('th')
             .addClass(self.myClass('th'))
-            .on('mouseover', () => self.currentHoverRow = key)
-            .on('mouseleave', function() { self.currentHoverCol = undefined; self.currentHoverRow = undefined; })
+            .on('mouseover', () => self.onCellMouseOver(null, key))
+            .on('mouseleave', () => self.onCellMouseLeave())
             .enableClass(self.myClass('highlighted-col'), self.slot((currentHoverRow) => currentHoverRow === key || key.startsWith(currentHoverRow) || currentHoverRow?.startsWith(key) ))
             .add(rowKeys[i])
             .end();
@@ -176,8 +179,8 @@ foam.CLASS({
               const c = col;
               row.start('td')
                 .addClass(self.myClass('td'))
-                .on('mouseover', function() { self.currentHoverCol = c; self.currentHoverRow = key; })
-                .on('mouseleave', function() { self.currentHoverCol = undefined; self.currentHoverRow = undefined; })
+                .on('mouseover', () => self.onCellMouseOver(c, key))
+                .on('mouseleave', () => self.onCellMouseLeave())
                 .enableClass(
                   self.myClass('highlighted-col'),
                   self.slot((currentHoverCol, currentHoverRow) => {
@@ -191,8 +194,8 @@ foam.CLASS({
           } else {
             row.start('td')
               .addClass(self.myClass('td'))
-              .on('mouseover', function() { self.currentHoverRow = key; })
-              .on('mouseleave', function() { self.currentHoverCol = undefined; self.currentHoverRow = undefined; })
+              .on('mouseover', () => self.onCellMouseOver(null, key))
+              .on('mouseleave', () => self.onCellMouseLeave())
               .enableClass(
                 self.myClass('highlighted-col'),
                 self.slot((currentHoverRow) => currentHoverRow === key || key.startsWith(currentHoverRow) ))
@@ -215,8 +218,8 @@ foam.CLASS({
         const val = cols[key];
         row.start('td')
           .addClass(self.myClass('td'))
-          .on('mouseover', function() { self.currentHoverCol = key; })
-          .on('mouseleave', function() { self.currentHoverCol = undefined; self.currentHoverRow = undefined; })
+          .on('mouseover', () => self.onCellMouseOver(key, null))
+          .on('mouseleave', () => self.onCellMouseLeave())
           .enableClass(
             self.myClass('highlighted-col'),
             self.slot((currentHoverCol ) => {
@@ -234,7 +237,6 @@ foam.CLASS({
       if ( ! foam.mlang.sink.GroupBy.isInstance(data) ) return data?.value || data;
       var ret = {};
       var keys = data.sortedKeys();
-      if ( ! keys.length ) return null;
       for ( var i = 0; i < keys.length; i++ ) {
         ret[keys[i]] = makeDictionary(data.groups[keys[i]]);
       }
@@ -272,7 +274,6 @@ foam.CLASS({
 
     // flatten a nested map into a simple one, where the keys are paths of the nested vals
     function flattenMap(obj, colDepth, prefix = '') {
-      if ( ! Object.keys(obj)?.length ) return null;
       var map = {};
       for (var key in obj) {
         var val = obj[key];
@@ -283,6 +284,16 @@ foam.CLASS({
         }
       }
       return map;
+    },
+
+    function onCellMouseOver(col, row) {
+      if ( col ) this.currentHoverCol = col;
+      if ( row ) this.currentHoverRow = row;
+    },
+    
+    function onCellMouseLeave() {
+      this.currentHoverCol = undefined;
+      this.currentHoverRow = undefined;
     }
   ]
 });
