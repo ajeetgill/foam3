@@ -143,7 +143,6 @@ foam.CLASS({
 
     /**
      * renders nested rows recursively
-     * @param {*} table 
      * @param {*} rows - nested map of row headers and row values
      * @param {*} prefix - used for cell highlighting
      * @returns an object containing the first of a group of child row headers (ret.row) as well
@@ -200,7 +199,6 @@ foam.CLASS({
 
     /**
      * renders column values in the case of columns only table
-     * @param {*} table 
      * @param {*} cols - nested map of col headers and values
      */
     function renderColVals(table, cols, colDepth) {
