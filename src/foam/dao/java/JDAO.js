@@ -67,7 +67,7 @@ In this current implementation setDelegate must be called last.`,
       documentation: 'Perform replay synchronously. Manual workaround for deadlock with AsyncAssemblyLine',
       class: 'Boolean',
       name: 'syncReplay',
-      value: false
+      value: true
     },
     {
       documentation: `Force caller to wait on nspec initailzation. The first call to 'get' for an nspec (x.get(servicename)) will have the calling thread wait on reply of service. This is the default behaviour and should be used for all essential services.  Also this should be used if the model is using SeqNo or NUID for id generation.`,
