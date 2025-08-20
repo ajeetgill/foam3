@@ -206,7 +206,7 @@ foam.CLASS({
       title: 'Data Configuration',
       order: 1,
       collapsable: true,
-      properties: ['prop', 'sink', 'groupLimit', 'sortOrder', 'includeOthers', 'othersLabel']
+      properties: ['prop', 'sink', 'groupLimit', 'topN', 'includeOthers', 'sortOrder', 'othersLabel']
     },
     {
       name: 'barChart',
@@ -597,7 +597,7 @@ foam.CLASS({
       title: 'Data Configuration',
       order: 1,
       collapsable: true,
-      properties: ['prop', 'sink', 'groupLimit', 'sortOrder', 'includeOthers', 'othersLabel']
+      properties: ['prop', 'sink', 'groupLimit', 'topN', 'includeOthers', 'sortOrder', 'othersLabel']
     },
     {
       name: 'pieChart',
@@ -678,6 +678,7 @@ foam.CLASS({
         arg1: this.prop,
         arg2: valueSink,
         groupLimit: this.groupLimit,
+        topN: this.topN,
         sortOrder: this.sortOrder,
         includeOthers: this.includeOthers,
         othersLabel: this.othersLabel,

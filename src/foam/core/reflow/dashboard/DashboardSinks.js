@@ -14,7 +14,7 @@
 foam.CLASS({
   package: 'foam.core.reflow.dashboard',
   name: 'DashboardBarSink',
-  extends: 'foam.mlang.sink.GroupBy',
+  extends: 'foam.mlang.sink.TopNGroupBy',
   
   requires: [
     'org.chartjs.Bar2'
@@ -53,6 +53,7 @@ foam.CLASS({
     { name: 'animationDuration', value: 1000 },
     {
       name: 'chart_',
+      transient: true,
       expression: function(groups, colors, timeUnit, horizontal, barThickness, datasetLabel, xAxisLabel, yAxisLabel, 
                           showGridLines, responsive, maintainAspectRatio, showLegend, 
                           legendPosition, showTooltips, showTooltipSum, animate, animationDuration) {
@@ -65,24 +66,25 @@ foam.CLASS({
         var isDateAxis = this.arg1 && (foam.lang.Date.isInstance(this.arg1) || foam.lang.DateTime.isInstance(this.arg1));
         
         var index = 0;
-        for ( var key in groups ) {
-          if ( groups.hasOwnProperty(key) ) {
-            // Use chartJsFormatter if available, otherwise use the key as-is
-            var label = this.arg1 && this.arg1.chartJsFormatter ? 
-                        this.arg1.chartJsFormatter(key) : key;
-            labels.push(label);
-            data.push(groups[key].value);
-            
-            // Only handle colors if they are defined
-            if ( colors && colors.length > 0 ) {
-              var color = colors[index % colors.length];
-              if ( color !== undefined && color !== null ) {
-                color = foam.CSS.returnTokenValue(color, this.cls_, this.__context__);
-                backgroundColors.push(color);
-              }
+        // Use Object.keys to maintain insertion order (Others will be last)
+        var groupKeys = Object.keys(groups);
+        for ( var i = 0; i < groupKeys.length; i++ ) {
+          var key = groupKeys[i];
+          // Use chartJsFormatter if available, otherwise use the key as-is
+          var label = this.arg1 && this.arg1.chartJsFormatter ? 
+                      this.arg1.chartJsFormatter(key) : key;
+          labels.push(label);
+          data.push(groups[key].value);
+          
+          // Only handle colors if they are defined
+          if ( colors && colors.length > 0 ) {
+            var color = colors[index % colors.length];
+            if ( color !== undefined && color !== null ) {
+              color = foam.CSS.returnTokenValue(color, this.cls_, this.__context__);
+              backgroundColors.push(color);
             }
-            index++;
           }
+          index++;
         }
         
         
@@ -103,7 +105,21 @@ foam.CLASS({
           plugins: {
             legend: {
               display: showLegend,
-              position: legendPosition ? legendPosition.toString().toLowerCase() : 'top'
+              position: legendPosition ? legendPosition.toString().toLowerCase() : 'top',
+              labels: {
+                sort: function(a, b, data) {
+                  // Always put "Others" at the end
+                  // Chart.js legend items use 'text' property for the label
+                  var aLabel = (a.text || '').toLowerCase();
+                  var bLabel = (b.text || '').toLowerCase();
+                  var aIsOthers = aLabel.includes('others');
+                  var bIsOthers = bLabel.includes('others');
+                  
+                  if (aIsOthers && !bIsOthers) return 1;  // a goes after b
+                  if (!aIsOthers && bIsOthers) return -1; // a goes before b
+                  return 0; // maintain original order for non-Others items
+                }
+              }
             },
             tooltip: {
               enabled: showTooltips,
@@ -189,7 +205,7 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow.dashboard',
   name: 'DashboardPieSink',
-  extends: 'foam.mlang.sink.GroupBy',
+  extends: 'foam.mlang.sink.TopNGroupBy',
   
   requires: [
     'org.chartjs.Pie2'
@@ -228,30 +244,31 @@ foam.CLASS({
     { name: 'animationDuration', value: 1000 },
     {
       name: 'chart_',
+      transient: true,
       expression: function(groups, colors, showPercentages, cutoutPercentage, clockwise, rotation,
                           responsive, maintainAspectRatio, showLegend, 
                           legendPosition, showTooltips, showTooltipSum, animate, animationDuration) {
-        
         var labels = [];
         var data = [];
         var backgroundColors = [];
         
         var index = 0;
-        for ( var key in groups ) {
-          if ( groups.hasOwnProperty(key) ) {
-            labels.push(key.toString());
-            data.push(groups[key].value);
-            
-            // Only handle colors if they are defined
-            if ( colors && colors.length > 0 ) {
-              var color = colors[index % colors.length];
-              if ( color !== undefined && color !== null ) {
-                color = foam.CSS.returnTokenValue(color, this.cls_, this.__context__);
-                backgroundColors.push(color);
-              }
+        // Use Object.keys to maintain insertion order (Others will be last)
+        var groupKeys = Object.keys(groups);
+        for ( var i = 0; i < groupKeys.length; i++ ) {
+          var key = groupKeys[i];
+          labels.push(key.toString());
+          data.push(groups[key].value);
+          
+          // Only handle colors if they are defined
+          if ( colors && colors.length > 0 ) {
+            var color = colors[index % colors.length];
+            if ( color !== undefined && color !== null ) {
+              color = foam.CSS.returnTokenValue(color, this.cls_, this.__context__);
+              backgroundColors.push(color);
             }
-            index++;
           }
+          index++;
         }
         
         
@@ -272,7 +289,21 @@ foam.CLASS({
           plugins: {
             legend: {
               display: showLegend,
-              position: legendPosition ? legendPosition.toString().toLowerCase() : 'top'
+              position: legendPosition ? legendPosition.toString().toLowerCase() : 'top',
+              labels: {
+                sort: function(a, b, data) {
+                  // Always put "Others" at the end
+                  // Chart.js legend items use 'text' property for the label
+                  var aLabel = (a.text || '').toLowerCase();
+                  var bLabel = (b.text || '').toLowerCase();
+                  var aIsOthers = aLabel.includes('others');
+                  var bIsOthers = bLabel.includes('others');
+                  
+                  if (aIsOthers && !bIsOthers) return 1;  // a goes after b
+                  if (!aIsOthers && bIsOthers) return -1; // a goes before b
+                  return 0; // maintain original order for non-Others items
+                }
+              }
             },
             tooltip: {
               enabled: showTooltips,
@@ -377,6 +408,7 @@ foam.CLASS({
     { name: 'animationDuration', value: 1000 },
     {
       name: 'chart_',
+      transient: true,
       expression: function(cols, rows, colors, timeUnit, horizontal, xAxisLabel, yAxisLabel,
                           showGridLines, responsive, maintainAspectRatio,
                           showLegend, legendPosition, showTooltips, showTooltipSum, animate, animationDuration) {
@@ -607,6 +639,7 @@ foam.CLASS({
     { name: 'animationDuration', value: 1000 },
     {
       name: 'chart_',
+      transient: true,
       expression: function(array, xProp, yProp, groupBy, aggregationSink, timeUnit, colors, xAxisLabel, yAxisLabel,
                           fill, tension, stepped, showPoints, pointRadius, showGridLines,
                           responsive, maintainAspectRatio, showLegend, legendPosition,

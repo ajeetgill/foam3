@@ -30,6 +30,35 @@ foam.CLASS({
   setValue(getArg1().f(obj));
 }`
     },
+    {
+      name: 'reduce',
+      args: 'foam.mlang.sink.Min sink',
+      type: 'foam.mlang.sink.Min',
+      code: function reduce(sink) {
+        if ( ! sink || ! sink.hasOwnProperty('value') ) return this;
+        if ( ! this.hasOwnProperty('value') ) {
+          this.value = sink.value;
+          return this;
+        }
+        
+        if ( foam.util.compare(sink.value, this.value) < 0 ) {
+          this.value = sink.value;
+        }
+        return this;
+      },
+      javaCode: `
+if (sink == null || ((Min) sink).getValue() == null) return this;
+if (getValue() == null) {
+  setValue(((Min) sink).getValue());
+  return this;
+}
+
+if (((Comparable) ((Min) sink).getValue()).compareTo(getValue()) < 0) {
+  setValue(((Min) sink).getValue());
+}
+return this;
+      `
+    },
     function toSummary() { return this.value; },
     function addToE(e) { e.add(this.value); }
   ]
