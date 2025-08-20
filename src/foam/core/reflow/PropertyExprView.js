@@ -23,7 +23,7 @@ foam.CLASS({
       name: 'data',
       documentation: 'The data to be transformed',
       preSet: function(oldValue, newValue) {
-        console.log('PropertyExprView data preSet:', oldValue, '->', newValue);
+        // console.log('PropertyExprView data preSet:', oldValue, '->', newValue);
         if ( this.updatingData_ ) return newValue;
         
         this.updatingData_ = true;
@@ -89,8 +89,9 @@ foam.CLASS({
       name: 'transformationConfig',
       documentation: 'Configuration map of property class IDs to their available transformations',
       factory: function() {
-        return {
-          'foam.lang.Date': {
+        return [
+          {
+            classNames: ['foam.lang.DateTime', 'foam.lang.Date'],
             label: 'Date Format',
             choices: [
               [ null,                               '--'         ],
@@ -102,7 +103,7 @@ foam.CLASS({
               [ foam.mlang.expr.DateToYYYYExpr,     'YYYY'       ]
             ]
           }
-        };
+        ];
       }
     }
   ],
@@ -142,8 +143,17 @@ foam.CLASS({
         // Transformation selector (dynamically shown based on property type and config)
         .add(this.dynamic(function(selectedProperty, transformationConfig) {
           if ( selectedProperty ) {
-            var propertyType = selectedProperty.cls_.id;
-            var config = transformationConfig[propertyType];
+            var config = null;
+            
+            // Find config by checking instanceof against all config entries
+            transformationConfig.forEach(function(configEntry) {
+              configEntry.classNames.forEach(function(className) {
+                var cls = foam.lookup(className);
+                if ( cls && cls.isInstance(selectedProperty) ) {
+                  config = configEntry;
+                }
+              });
+            });
             
             if ( config && config.choices && config.choices.length > 1 ) {
               this
