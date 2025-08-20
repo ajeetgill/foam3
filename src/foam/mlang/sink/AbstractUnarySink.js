@@ -25,8 +25,7 @@ foam.CLASS({
 
   methods: [
     function toString() {
-      return foam.String.constantize(this.cls_.name) +
-          '(' + this.arg1.toString() + ')';
+      return foam.String.constantize(this.cls_.name) + '(' + this.arg1.toString() + ')';
     }
   ]
 });
