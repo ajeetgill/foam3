@@ -131,14 +131,7 @@ foam.CLASS({
       for ( var i = 0; i < keys.length; i++ ) {
         var colSpan = hasChildren ? colSpans[i] : 1;
         const key = keyPrefix + keys[i];
-        rows[depth].start('th')
-          .addClass(this.myClass('th'))
-          .attrs({ 'colspan' : colSpan  })
-          .on('mouseover', () => this.onCellMouseOver(key, null))
-          .on('mouseleave', () => this.onCellMouseLeave())
-          .enableClass(this.myClass('highlighted-col'), this.slot((currentHoverCol) => currentHoverCol === key || currentHoverCol?.startsWith(key) || key.startsWith(currentHoverCol)))
-          .add(keys[i])
-        .end();
+        this.renderCell(rows[depth], 'th', { 'colspan' : colSpan  }, keys[i], key, null);
         if ( depth == colDepth - 1 ) this.colIndexMap.push(key);
 
       }
@@ -147,8 +140,6 @@ foam.CLASS({
         colSpans.reduce((x,y) => x + y, 0) :
         keys.length;
     },
-
-    
 
     /**
      * renders nested rows recursively
@@ -167,7 +158,7 @@ foam.CLASS({
       var retData = { rowSpan: 1, row: null };
       for ( var i = 0; i < rowKeys.length; i++ ) {
         const key = prefix + rowKeys[i];
-        // rendering headers with children
+        // rendering header cell with children
         if ( currDepth < rowDepth - 1 ) {
           var ret = this.renderRows(table, rows[rowKeys[i]], currDepth + 1, rowDepth, colDepth, key);
           if ( ret.row ) {
@@ -185,44 +176,18 @@ foam.CLASS({
         } else {
           // rendering childless header with row of values
           var row = table.start('tr').addClass(this.myClass('tr'))
-          row.start('th')
-            .addClass(this.myClass('th'))
-            .on('mouseover', () => this.onCellMouseOver(null, key))
-            .on('mouseleave', () => this.onCellMouseLeave())
-            .enableClass(this.myClass('highlighted-col'), this.slot((currentHoverRow) => currentHoverRow === key || key.startsWith(currentHoverRow) || currentHoverRow?.startsWith(key) ))
-            .add(rowKeys[i])
-            .end();
+          this.renderCell(row, 'th', {}, rowKeys[i], null, key);
           if ( this.colIndexMap?.length ) {
             // case: table has columns
             // get flattened map of column keys and values 
             var map = this.flattenMap(rows[rowKeys[i]], colDepth);
             row.forEach(this.colIndexMap, col => {
               const c = col;
-              row.start('td')
-                .addClass(this.myClass('td'))
-                .on('mouseover', () => this.onCellMouseOver(c, key))
-                .on('mouseleave', () => this.onCellMouseLeave())
-                .enableClass(
-                  this.myClass('highlighted-col'),
-                  this.slot((currentHoverCol, currentHoverRow) => {
-                    var ret = currentHoverCol === c || currentHoverRow === key
-                      || c.startsWith(currentHoverCol) || key.startsWith(currentHoverRow);
-                    return ret;
-                  }))
-                .add(map[c] || '')
-              .end();
+              this.renderCell(row, 'td', {}, map[c] || '', c, key);
             })
           } else {
             // case: rows only table
-            row.start('td')
-              .addClass(this.myClass('td'))
-              .on('mouseover', () => this.onCellMouseOver(null, key))
-              .on('mouseleave', () => this.onCellMouseLeave())
-              .enableClass(
-                this.myClass('highlighted-col'),
-                this.slot((currentHoverRow) => currentHoverRow === key || key.startsWith(currentHoverRow) ))
-              .add(rows[rowKeys[i]])
-            .end();
+            this.renderCell(row, 'td', {}, rows[rowKeys[i]], null, key);
           }
           row.end();
           if ( i == 0 ) retData.row = row;
@@ -243,20 +208,29 @@ foam.CLASS({
       var row = table.start('tr').addClass(this.myClass('tr'));
       for ( const key in cols ) {
         const val = cols[key];
-        row.start('td')
-          .addClass(this.myClass('td'))
-          .on('mouseover', () => this.onCellMouseOver(key, null))
-          .on('mouseleave', () => this.onCellMouseLeave())
-          .enableClass(
-            this.myClass('highlighted-col'),
-            this.slot((currentHoverCol ) => {
-              var ret = currentHoverCol === key || key.startsWith(currentHoverCol);
-              return ret;
-            }))
-          .add(val)
-        .end();
+        this.renderCell(row, 'td', {}, val, key, null);
       }
       row.end();
+    },
+
+    // render cell helper method
+    function renderCell(parentEl, cellType, attrs, val, mouseOverKeyCol, mouseOverKeyRow) {
+      parentEl.start(cellType)
+        .addClass(this.myClass(cellType))
+        .attrs(attrs)
+        .on('mouseover', () => this.onCellMouseOver(mouseOverKeyCol, mouseOverKeyRow))
+        .on('mouseleave', () => this.onCellMouseLeave())
+        .enableClass(this.myClass('highlighted-col'),
+          this.slot((currentHoverCol, currentHoverRow) =>
+            currentHoverCol === mouseOverKeyCol || 
+            currentHoverCol?.startsWith(mouseOverKeyCol) || 
+            mouseOverKeyCol?.startsWith(currentHoverCol) ||
+            currentHoverRow === mouseOverKeyRow || 
+            currentHoverRow?.startsWith(mouseOverKeyRow) || 
+            mouseOverKeyRow?.startsWith(currentHoverRow)
+          ))
+        .add(val)
+      .end();
     },
 
     // convert the nested groupbys into a simpler nested dictionary
