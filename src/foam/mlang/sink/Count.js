@@ -23,33 +23,30 @@ foam.CLASS({
   methods: [
     {
       name: 'put',
-      code: function() { this.value++ },
+      code: function() { this.value++; },
       swiftCode: 'value+=1',
       javaCode: 'setValue(this.getValue() + 1);'
     },
     {
       name: 'remove',
-      code: function() { this.value-- },
-      swiftCode: 'value-=1',
+      code: function() { this.value--; },
+      swiftCode: 'value-=1'
     },
     {
       name: 'reset',
-      code: function() { this.value = 0 },
-      swiftCode: 'value = 0',
+      code: function() { this.value = 0; },
+      swiftCode: 'value = 0'
     },
     {
       name: 'reduce',
       args: 'foam.mlang.sink.Count sink',
-      type: 'foam.mlang.sink.Count',
       code: function reduce(sink) {
-        if ( ! sink ) return this;
+        if ( ! sink ) return;
         this.value += sink.value;
-        return this;
       },
       javaCode: `
-if (sink == null) return this;
+if (sink == null) return;
 setValue(getValue() + sink.getValue());
-return this;
       `
     },
     function toString() { return 'COUNT()'; },
