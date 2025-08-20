@@ -35,6 +35,7 @@ and finally remove the file if it was 'handled'.
     'java.nio.file.Files',
     'java.nio.file.Path',
     'java.nio.file.Paths',
+    'java.nio.file.FileSystem',
     'java.nio.file.FileSystems',
     'java.nio.file.WatchEvent',
     'java.nio.file.WatchKey',
@@ -47,7 +48,7 @@ and finally remove the file if it was 'handled'.
       name: 'tmpDir',
       class: 'String',
       javaFactory: `
-      return System.getProperty("java.io.tmpdir", FileSystems.getDefault().getSeparator() + "tmp" + FileSystems.getDefault().getSeparator());
+      return System.getProperty("java.io.tmpdir", "tmp");
       `
     },
     {
@@ -62,7 +63,8 @@ and finally remove the file if it was 'handled'.
         hostname = System.getProperty("user.name", "localhost");
       }
       String name = getClass().getSimpleName().replace("Watcher","").toLowerCase();
-      return getTmpDir() + hostname + FileSystems.getDefault().getSeparator() + appName + FileSystems.getDefault().getSeparator() + name;
+      Path path = FileSystems.getDefault().getPath(getTmpDir(), hostname, appName, name);
+      return path.toString();
       `
     },
     {

@@ -16,6 +16,7 @@ import foam.lang.X;
 import java.util.Map;
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,15 +54,16 @@ public class ShutdownHook
     // Generate a thrump dump to help troubleshoot system shutdown issues
     try {
       foam.core.http.ThreadsWebAgent agent = new foam.core.http.ThreadsWebAgent();
-      String tmp = System.getProperty("java.io.tmpdir", FileSystems.getDefault().getSeparator() + "tmp" + FileSystems.getDefault().getSeparator());
+      FileSystem fs = FileSystems.getDefault();
+      String tmp = System.getProperty("java.io.tmpdir", "tmp");
       AppConfig appConfig = (AppConfig) x_.get("appConfig");
       String appName = appConfig.getName().trim().replaceAll(" ","");
       String hostname = System.getProperty("hostname", "localhost");
       if ( hostname.equals("localhost") ) {
         hostname = System.getProperty("user.name", "localhost");
       }
-      String dir = tmp + hostname + FileSystems.getDefault().getSeparator() + appName;
-      Path path = Paths.get(dir);
+
+      Path path = fs.getPath(tmp, hostname, appName);
       if ( ! Files.exists(path) ) {
         path = Files.createDirectories(path);
       }
