@@ -1,7 +1,8 @@
 foam.POM({
   name: 'console',
   projects: [
-    { name: 'dashboard/pom' }
+    { name: 'dashboard/pom' },
+    { name: "test/pom" }
   ],
   files: [
     { name: '../../u2/mlang/Table',    flags: 'js|java' },
@@ -24,6 +25,8 @@ foam.POM({
     { name: 'RoleFlowAccess',          flags: 'js|java' },
     { name: 'UserFlowAccess',          flags: 'js|java' },
     { name: 'Flow',                    flags: 'js|java' },
+    { name: 'PivotBy',                 flags: 'js|java' },
+    { name: 'PivotByView',             flags: 'js' },
     { name: 'GridBy',                  flags: 'js|java' },
     { name: 'GridByView',              flags: 'js' },
     { name: 'Header',                  flags: 'js' },
