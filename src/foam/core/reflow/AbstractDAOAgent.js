@@ -629,7 +629,7 @@ foam.CLASS({
        return { class: 'foam.core.reflow.PropertyListView', forCls$: X.data.of$ };
       }
     },
-    { name: 'sink', view: { class: 'foam.core.reflow.SinkView', choice: 'Count' } }
+    { name: 'sink', view: { class: 'foam.core.reflow.SinkView', choice: 'foam.core.reflow.CountDAOAgent' } }
   ],
 
   methods: [
@@ -637,6 +637,7 @@ foam.CLASS({
     function createSink() {
       var xProps = this.xProps.length ? [...new Set(this.xProps.split(','))].map(p => this.of?.axiomMap_[p]) : null;
       var yProps = this.yProps.length ? [...new Set(this.yProps.split(','))].map(p => this.of?.axiomMap_[p]) : null;
+      this.sink = this.sink || foam.core.reflow.CountDAOAgent.create();
       return this.PivotBy.create({
         yFunc: xProps,
         xFunc: yProps,
