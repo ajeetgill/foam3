@@ -66,8 +66,10 @@ foam.CLASS({
         // Check if we're dealing with dates using the groupBy property
         var isDateAxis = this.arg1 && (foam.lang.Date.isInstance(this.arg1) || foam.lang.DateTime.isInstance(this.arg1));
         
-        // Get sorted keys using FOAM's sorting (from parent GroupBy)
-        var sortedKeys = this.sortedKeys ? this.sortedKeys() : Object.keys(groups);
+        // If topN > 0, TopNGroupBy already provides groups in correct sorted order and limited count
+        // Otherwise, use sortedKeys() for proper sorting
+        var sortedKeys = this.topN > 0 ? Object.keys(groups) : 
+                        (this.sortedKeys ? this.sortedKeys() : Object.keys(groups));
         
         var index = 0;
         for ( var i = 0; i < sortedKeys.length; i++ ) {
@@ -256,8 +258,10 @@ foam.CLASS({
         var data = [];
         var backgroundColors = [];
         
-        // Get sorted keys using FOAM's sorting (from parent GroupBy)
-        var sortedKeys = this.sortedKeys ? this.sortedKeys() : Object.keys(groups);
+        // If topN > 0, TopNGroupBy already provides groups in correct sorted order and limited count
+        // Otherwise, use sortedKeys() for proper sorting
+        var sortedKeys = this.topN > 0 ? Object.keys(groups) : 
+                        (this.sortedKeys ? this.sortedKeys() : Object.keys(groups));
         
         var index = 0;
         for ( var i = 0; i < sortedKeys.length; i++ ) {
@@ -295,20 +299,7 @@ foam.CLASS({
             legend: {
               display: showLegend,
               position: legendPosition ? legendPosition.toString().toLowerCase() : 'top',
-              labels: {
-                sort: function(a, b, data) {
-                  // Always put "Others" at the end
-                  // Chart.js legend items use 'text' property for the label
-                  var aLabel = (a.text || '').toLowerCase();
-                  var bLabel = (b.text || '').toLowerCase();
-                  var aIsOthers = aLabel.includes('others');
-                  var bIsOthers = bLabel.includes('others');
-                  
-                  if (aIsOthers && !bIsOthers) return 1;  // a goes after b
-                  if (!aIsOthers && bIsOthers) return -1; // a goes before b
-                  return 0; // maintain original order for non-Others items
-                }
-              }
+
             },
             tooltip: {
               enabled: showTooltips,
