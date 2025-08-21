@@ -66,11 +66,12 @@ foam.CLASS({
         // Check if we're dealing with dates using the groupBy property
         var isDateAxis = this.arg1 && (foam.lang.Date.isInstance(this.arg1) || foam.lang.DateTime.isInstance(this.arg1));
         
+        // Get sorted keys using FOAM's sorting (from parent GroupBy)
+        var sortedKeys = this.sortedKeys ? this.sortedKeys() : Object.keys(groups);
+        
         var index = 0;
-        // Use Object.keys to maintain insertion order (Others will be last)
-        var groupKeys = Object.keys(groups);
-        for ( var i = 0; i < groupKeys.length; i++ ) {
-          var key = groupKeys[i];
+        for ( var i = 0; i < sortedKeys.length; i++ ) {
+          var key = sortedKeys[i];
           // Use chartJsFormatter if available, otherwise use the key as-is
           var label = this.arg1 && this.arg1.chartJsFormatter ? 
                       this.arg1.chartJsFormatter(key) : key;
@@ -255,11 +256,12 @@ foam.CLASS({
         var data = [];
         var backgroundColors = [];
         
+        // Get sorted keys using FOAM's sorting (from parent GroupBy)
+        var sortedKeys = this.sortedKeys ? this.sortedKeys() : Object.keys(groups);
+        
         var index = 0;
-        // Use Object.keys to maintain insertion order (Others will be last)
-        var groupKeys = Object.keys(groups);
-        for ( var i = 0; i < groupKeys.length; i++ ) {
-          var key = groupKeys[i];
+        for ( var i = 0; i < sortedKeys.length; i++ ) {
+          var key = sortedKeys[i];
           labels.push(key.toString());
           data.push(groups[key].value);
           
@@ -433,35 +435,50 @@ foam.CLASS({
         // Check if we're dealing with dates on x-axis using the xFunc property
         var isDateAxis = this.xFunc && (foam.lang.Date.isInstance(this.xFunc) || foam.lang.DateTime.isInstance(this.xFunc));
         
-        // Extract labels from columns (x-axis categories)
-        for ( var col in colGroups ) {
-          if ( colGroups.hasOwnProperty(col) ) {
-            // Use chartJsFormatter if available on xFunc, otherwise use the key as-is
-            var label = this.xFunc && this.xFunc.chartJsFormatter ? 
-                        this.xFunc.chartJsFormatter(col) : col;
-            labels.push(label);
-          }
+        // Get sorted column keys using FOAM's sorting
+        var sortedColKeys = [];
+        if ( cols && cols.sortedKeys ) {
+          sortedColKeys = cols.sortedKeys();
+        } else {
+          sortedColKeys = Object.keys(colGroups);
         }
         
-        // Build datasets - one for each row (stack group)
+        // Extract labels from sorted columns (x-axis categories)
+        for ( var i = 0; i < sortedColKeys.length; i++ ) {
+          var col = sortedColKeys[i];
+          // Use chartJsFormatter if available on xFunc, otherwise use the key as-is
+          var label = this.xFunc && this.xFunc.chartJsFormatter ? 
+                      this.xFunc.chartJsFormatter(col) : col;
+          labels.push(label);
+        }
+        
+        // Get sorted row keys
+        var sortedRowKeys = [];
+        if ( rows && rows.sortedKeys ) {
+          sortedRowKeys = rows.sortedKeys();
+        } else {
+          sortedRowKeys = Object.keys(rowGroups);
+        }
+        
+        // Build datasets - one for each row (stack group) using sorted keys
         var colorIndex = 0;
-        for ( var rowKey in rowGroups ) {
+        for ( var j = 0; j < sortedRowKeys.length; j++ ) {
+          var rowKey = sortedRowKeys[j];
           if ( rowGroups.hasOwnProperty(rowKey) ) {
             var data = [];
             var rowGroup = rowGroups[rowKey];
             
-            // For each column, get the value for this row
-            for ( var colKey in colGroups ) {
-              if ( colGroups.hasOwnProperty(colKey) ) {
-                // Access the value at [row][col] intersection
-                var value = 0;
-                // The row group should have its own groups property with column keys
-                if ( rowGroup && rowGroup.groups && rowGroup.groups[colKey] ) {
-                  // The value is stored in the accumulator's value property
-                  value = rowGroup.groups[colKey].value || 0;
-                }
-                data.push(value);
+            // For each sorted column, get the value for this row
+            for ( var k = 0; k < sortedColKeys.length; k++ ) {
+              var colKey = sortedColKeys[k];
+              // Access the value at [row][col] intersection
+              var value = 0;
+              // The row group should have its own groups property with column keys
+              if ( rowGroup && rowGroup.groups && rowGroup.groups[colKey] ) {
+                // The value is stored in the accumulator's value property
+                value = rowGroup.groups[colKey].value || 0;
               }
+              data.push(value);
             }
             
             // Generate color for this dataset
@@ -593,27 +610,17 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow.dashboard',
   name: 'DashboardLineSink',
-  extends: 'foam.dao.ArraySink',
+  extends: 'foam.core.reflow.dashboard.LineChartDataSink',
   
   requires: [
-    'org.chartjs.Line2',
-    'foam.mlang.sink.GroupBy'
+    'org.chartjs.Line2'
   ],
   
   properties: [
-    // Line-specific properties
-    { name: 'xProp' },
-    { name: 'yProp' },
-    { name: 'groupBy' },
-    { name: 'aggregationSink' },
+    // Chart rendering properties
     { name: 'timeUnit' },
-    {
-      name: 'colors',
-    },
-    {
-      name: 'borderColors',
-      help: 'Border colors for line elements. If not specified, colors will be used.'
-    },
+    { name: 'colors' },
+    { name: 'borderColors', help: 'Border colors for line elements. If not specified, colors will be used.' },
     { name: 'xAxisLabel' },
     { name: 'yAxisLabel' },
     { name: 'fill', value: false },
@@ -626,14 +633,7 @@ foam.CLASS({
     { name: 'responsive', value: true },
     { name: 'maintainAspectRatio', value: false },
     { name: 'height', value: 300 },
-    { 
-      name: 'width', 
-      factory: function() { 
-        // Default to 0 which means auto-width (100% of container)
-        // But when rendered in a canvas, we need a real width
-        return 400; 
-      }
-    },    
+    { name: 'width', value: 400 },
     { name: 'showLegend', value: true },
     { name: 'legendPosition', value: 'TOP' },
     { name: 'showTooltips', value: true },
@@ -643,190 +643,91 @@ foam.CLASS({
     {
       name: 'chart_',
       transient: true,
-      expression: function(array, xProp, yProp, groupBy, aggregationSink, timeUnit, colors, xAxisLabel, yAxisLabel,
+      expression: function(lineData, xProp, yProp, timeUnit, colors, borderColors, xAxisLabel, yAxisLabel,
                           fill, tension, stepped, showPoints, pointRadius, showGridLines,
                           responsive, maintainAspectRatio, showLegend, legendPosition,
                           showTooltips, showTooltipSum, animate, animationDuration) {
-        var self = this;
-        var datasets = [];
         
-        if ( !xProp || !yProp ) {
-          return null;
+        if ( !xProp || !yProp ) return null;
+        console.log('Chart configuration updated', this.sorted);
+
+        // Ensure data is sorted
+        if ( !this.sorted ) {
+          this.eof();
         }
         
-        if ( groupBy ) {
-          // Group data for multiple lines
-          var groups = {};
-          array.forEach(function(obj) {
-            var groupKey = obj[groupBy.name] || 'Default';
-            if ( !groups[groupKey] ) {
-              groups[groupKey] = [];
-            }
-            groups[groupKey].push(obj);
-          });
-          
-          var colorIndex = 0;
-          for ( var key in groups ) {
-            if ( groups.hasOwnProperty(key) ) {
-              var data = [];
-              
-              // If we have aggregationSink, group by X values and aggregate Y values
-              if ( aggregationSink ) {
-                // Group by X value within this line group
-                var xGroups = {};
-                groups[key].forEach(function(obj) {
-                  var xVal = obj[xProp.name];
-                  var yVal = obj[yProp.name];
-                  
-                  if ( xVal != null && yVal != null ) {
-                    var xKey = xVal;
-                    // For dates, use consistent key format
-                    if ( foam.lang.Date.isInstance(xProp) || foam.lang.DateTime.isInstance(xProp) ) {
-                      xKey = new Date(xVal).toISOString();
-                    }
-                    
-                    if ( !xGroups[xKey] ) {
-                      xGroups[xKey] = {
-                        x: xVal,
-                        sink: aggregationSink.createSink(yProp)
-                      };
-                    }
-                    // Put the object into the sink for aggregation
-                    xGroups[xKey].sink.put(obj);
-                  }
-                });
-                
-                // Extract aggregated values
-                for ( var xKey in xGroups ) {
-                  if ( xGroups.hasOwnProperty(xKey) ) {
-                    var processedXVal = xGroups[xKey].x;
-                    if ( foam.lang.Date.isInstance(xProp) || foam.lang.DateTime.isInstance(xProp) ) {
-                      if ( typeof processedXVal === 'number' || typeof processedXVal === 'string' ) {
-                        processedXVal = new Date(processedXVal);
-                      }
-                    } else if ( xProp.chartJsFormatter ) {
-                      processedXVal = xProp.chartJsFormatter(processedXVal);
-                    }
-                    data.push({x: processedXVal, y: xGroups[xKey].sink.value});
-                  }
-                }
-              } else {
-                // No aggregation - use raw values
-                groups[key].forEach(function(obj) {
-                  var xVal = obj[xProp.name];
-                  var yVal = obj[yProp.name];
-                  
-                  if ( xVal != null && yVal != null ) {
-                    var processedXVal = xVal;
-                    if ( foam.lang.Date.isInstance(xProp) || foam.lang.DateTime.isInstance(xProp) ) {
-                      if ( typeof xVal === 'number' || typeof xVal === 'string' ) {
-                        processedXVal = new Date(xVal);
-                      }
-                    } else if ( xProp.chartJsFormatter ) {
-                      processedXVal = xProp.chartJsFormatter(xVal);
-                    }
-                    data.push({x: processedXVal, y: yVal});
-                  }
-                });
-              }
-              
-              // Sort by X value
-              data.sort(function(a, b) {
-                // Handle Date objects
-                if ( a.x instanceof Date && b.x instanceof Date ) {
-                  return a.x.getTime() - b.x.getTime();
-                }
-                return parseFloat(a.x) - parseFloat(b.x);
-              });
-              
-              // Line charts need borderColor for the line
-              var datasetConfig = {
-                label: key,
-                data: data,
-                borderWidth: 2,
-                fill: fill,
-                tension: tension,
-                stepped: stepped,
-                pointRadius: showPoints ? pointRadius : 0,
-                pointHoverRadius: showPoints ? pointRadius + 2 : 0
-              };
-              
-              // Handle colors if defined
-              if ( colors && colors.length > 0 ) {
-                var color = colors[colorIndex % colors.length];
-                if ( color !== undefined && color !== null ) {
-                  color = foam.CSS.returnTokenValue(color, this.cls_, this.__context__);
-                  datasetConfig.backgroundColor = fill ? color : 'transparent';
-                  datasetConfig.borderColor = color;  // Line color
-                }
-              }
-              
-              
-              datasets.push(datasetConfig);
-              
-              colorIndex++;
-            }
-          }
-        } else {
-          // Single line
-          var data = [];
-          array.forEach(function(obj) {
-            var xVal = obj[xProp.name];
-            var yVal = obj[yProp.name];
+        var datasets = [];
+        var colorIndex = 0;
+        
+        // Convert lineData to Chart.js datasets
+        for ( var lineKey in lineData ) {
+          if ( lineData.hasOwnProperty(lineKey) ) {
+            var points = lineData[lineKey];
+            var data = [];
             
-            if ( xVal != null && yVal != null ) {
-              // For date/time properties, ensure we have a proper Date object or timestamp
-              var processedXVal = xVal;
-              if ( foam.core.Date.isInstance(xProp) || foam.core.DateTime.isInstance(xProp) ) {
-                // Convert to Date object if it's a timestamp or string
-                if ( typeof xVal === 'number' || typeof xVal === 'string' ) {
-                  processedXVal = new Date(xVal);
+            // Process data points for Chart.js
+            points.forEach(function(point) {
+              var xVal = point.x;
+              var yVal = point.y;
+              
+              // Use chartJsFormatter if available for proper formatting
+              if ( xProp && xProp.chartJsFormatter ) {
+                xVal = xProp.chartJsFormatter(xVal);
+              } else if ( foam.lang.Date.isInstance(xProp) || foam.lang.DateTime.isInstance(xProp) ) {
+                // Fallback: Convert to Date object for Chart.js if no formatter
+                if ( typeof xVal === 'number' ) {
+                  xVal = new Date(xVal);
+                } else if ( typeof xVal === 'string' ) {
+                  xVal = new Date(xVal);
                 }
-              } else if ( xProp.chartJsFormatter ) {
-                processedXVal = xProp.chartJsFormatter(xVal);
               }
-              data.push({x: processedXVal, y: yVal});
+              
+              data.push({ x: xVal, y: yVal });
+            });
+            
+            // Create dataset configuration
+            var datasetConfig = {
+              label: lineKey === 'default' ? 
+                     (yProp.label || yProp.name) + ' vs ' + (xProp.label || xProp.name) : 
+                     lineKey,
+              data: data,
+              borderWidth: 2,
+              fill: fill,
+              tension: tension,
+              stepped: stepped,
+              pointRadius: showPoints ? pointRadius : 0,
+              pointHoverRadius: showPoints ? pointRadius + 2 : 0
+            };
+            
+            // Apply colors
+            if ( colors && colors.length > 0 ) {
+              var color = colors[colorIndex % colors.length];
+              if ( color !== undefined && color !== null ) {
+                color = foam.CSS.returnTokenValue(color, this.cls_, this.__context__);
+                datasetConfig.backgroundColor = fill ? color : 'transparent';
+                datasetConfig.borderColor = borderColors && borderColors[colorIndex % borderColors.length] ? 
+                  foam.CSS.returnTokenValue(borderColors[colorIndex % borderColors.length], this.cls_, this.__context__) : 
+                  color;
+              }
             }
-          });
-          
-          // Sort by X value
-          data.sort(function(a, b) {
-            return parseFloat(a.x) - parseFloat(b.x);
-          });
-          
-          // Single line dataset
-          var datasetConfig = {
-            label: (yProp.label || yProp.name) + ' vs ' + (xProp.label || xProp.name),
-            data: data,
-            borderWidth: 2,
-            fill: fill,
-            tension: tension,
-            stepped: stepped,
-            pointRadius: showPoints ? pointRadius : 0,
-            pointHoverRadius: showPoints ? pointRadius + 2 : 0
-          };
-          
-          // Handle colors if defined
-          if ( colors && colors.length > 0 && colors[0] !== undefined && colors[0] !== null ) {
-            var lineColor = foam.CSS.returnTokenValue(colors[0], this.cls_, this.__context__);
-            datasetConfig.backgroundColor = fill ? lineColor : 'transparent';
-            datasetConfig.borderColor = lineColor;
+            
+            datasets.push(datasetConfig);
+            colorIndex++;
           }
-          
-          
-          datasets.push(datasetConfig);
         }
         
         // Check if xProp is a date/time type
         var isTimeScale = xProp && (foam.lang.Date.isInstance(xProp) || foam.lang.DateTime.isInstance(xProp));
         
+        // Configure Chart.js options
         var chartJSOptions = {
           responsive: responsive,
           maintainAspectRatio: maintainAspectRatio,
           plugins: {
             legend: {
               display: showLegend && (datasets.length > 1 || showLegend),
-              position: (legendPosition || 'TOP').toString().toLowerCase()            },
+              position: (legendPosition || 'TOP').toString().toLowerCase()
+            },
             tooltip: {
               enabled: showTooltips,
               mode: datasets.length > 1 ? 'index' : 'nearest',
@@ -848,7 +749,7 @@ foam.CLASS({
           scales: {
             x: {
               title: { 
-                display: true, 
+                display: !!xAxisLabel || !!(xProp && xProp.label),
                 text: xAxisLabel || (xProp ? xProp.label : '')
               },
               grid: {
@@ -857,7 +758,7 @@ foam.CLASS({
             },
             y: {
               title: { 
-                display: true, 
+                display: !!yAxisLabel || !!(yProp && yProp.label),
                 text: yAxisLabel || (yProp ? yProp.label : '')
               },
               grid: {
@@ -875,16 +776,30 @@ foam.CLASS({
             displayFormats: {}
           };
           
-          // Set display format for the selected time unit
           if ( timeUnit.displayFormat ) {
             chartJSOptions.scales.x.time.displayFormats[timeUnit.chartJsUnit || 'day'] = timeUnit.displayFormat;
           }
           
-          // Configure tooltip format
           if ( timeUnit.tooltipFormat ) {
             chartJSOptions.scales.x.time.tooltipFormat = timeUnit.tooltipFormat;
           }
         }
+        // Debug logging to verify data structure
+        console.log('=== Line Chart Debug ===');
+        console.log('Number of lines:', datasets.length);
+        datasets.forEach(function(dataset, index) {
+          console.log('Line ' + index + ' (' + dataset.label + '):');
+          console.log('  - Total points:', dataset.data.length);
+          if ( dataset.data.length > 0 ) {
+            console.log('  - First point:', dataset.data[0]);
+            console.log('  - Last point:', dataset.data[dataset.data.length - 1]);
+            // Check if x values are dates
+            var firstX = dataset.data[0].x;
+            console.log('  - X value type:', typeof firstX, firstX instanceof Date ? '(Date object)' : '');
+          }
+        });
+        console.log('Chart.js Options:', chartJSOptions);
+        console.log('======================');
         
         return this.Line2.create({
           data: { datasets: datasets },
@@ -898,14 +813,9 @@ foam.CLASS({
   
   methods: [
     function toE(_, x) { 
-      if ( !this.chart_ ) return x.E().add('Please select X and Y properties');
       return x.E().add(this.chart_$);
     },
     function addToE(e) { 
-      if ( !this.chart_ ) {
-        e.add('Please select X and Y properties');
-        return;
-      }
       e.add(this.chart_$);
     }
   ]
@@ -1239,6 +1149,215 @@ foam.CLASS({
       if ( this.countSink_ ) {
         this.countSink_.reset(sub);
       }
+    }
+  ]
+});
+
+foam.CLASS({
+  package: 'foam.core.reflow.dashboard',
+  name: 'LineChartDataSink',
+  extends: 'foam.dao.AbstractSink',
+  
+  documentation: 'A sink that collects and organizes data for line charts, supporting both single and multi-line scenarios',
+  
+  implements: [
+    'foam.lang.Serializable'
+  ],
+  
+  properties: [
+    {
+      class: 'foam.mlang.ExprProperty',
+      name: 'xProp',
+      label: 'X-Axis Property',
+      documentation: 'The property to use for x-axis values (typically date/time)',
+    },
+    {
+      class: 'foam.mlang.ExprProperty', 
+      name: 'yProp',
+      label: 'Y-Axis Property',
+      documentation: 'The property to use for y-axis values'
+    },
+    {
+      class: 'foam.mlang.ExprProperty',
+      name: 'groupBy',
+      label: 'Group By Property',
+      documentation: 'Optional property to group data into multiple lines'
+    },
+    {
+      class: 'Map',
+      name: 'lineData',
+      factory: function() { return {}; },
+      documentation: 'Map of line groups to their data points'
+    },
+    {
+      class: 'Boolean',
+      name: 'sorted',
+      value: true,
+      documentation: 'Whether the data has been sorted'
+    },
+    {
+      name: 'value',
+      getter: function() {
+        if ( ! this.sorted ) {
+          this.eof();
+        }
+        return this.lineData;
+      }
+    }
+  ],
+  
+  methods: [
+    {
+      name: 'put',
+      code: function put(obj, sub) {
+        var xValue = this.xProp ? this.xProp.f(obj) : null;
+        var yValue = this.yProp ? this.yProp.f(obj) : null;
+        
+        if ( xValue == null || yValue == null ) return;
+        
+        // Determine which line/group this point belongs to
+        var lineKey = 'default';
+        if ( this.groupBy ) {
+          var groupValue = this.groupBy.f(obj);
+          if ( groupValue != null ) {
+            lineKey = groupValue.toString();
+          }
+        }
+        
+        // Initialize line data array if needed
+        if ( ! this.lineData[lineKey] ) {
+          this.lineData[lineKey] = [];
+        }
+        
+        // Add the data point - store raw values, let the chart renderer handle formatting
+        this.lineData[lineKey].push({
+          x: xValue,
+          y: yValue,
+          obj: obj // Keep original object for potential aggregation
+        });
+              },
+      javaCode: `
+        Object xValue = getXProp() != null ? getXProp().f(obj) : null;
+        Object yValue = getYProp() != null ? getYProp().f(obj) : null;
+        
+        if ( xValue == null || yValue == null ) return;
+        
+        String lineKey = "default";
+        if ( getGroupBy() != null ) {
+          Object groupValue = getGroupBy().f(obj);
+          if ( groupValue != null ) {
+            lineKey = groupValue.toString();
+          }
+        }
+        
+        java.util.Map lineData = getLineData();
+        if ( ! lineData.containsKey(lineKey) ) {
+          lineData.put(lineKey, new java.util.ArrayList());
+        }
+        
+        java.util.Map<String, Object> dataPoint = new java.util.HashMap<>();
+        dataPoint.put("x", xValue);
+        dataPoint.put("y", yValue);
+        dataPoint.put("obj", obj); // Keep original object
+        ((java.util.ArrayList) lineData.get(lineKey)).add(dataPoint);
+              `
+    },
+    
+    {
+      name: 'reset',
+      code: function reset(sub) {
+        this.lineData = {};
+        this.sorted = false;
+      },
+      javaCode: `
+        setLineData(new java.util.HashMap());
+        setSorted(false);
+      `
+    },
+    
+    {
+      name: 'eof',
+      code: function eof() {
+        // Sort each line's data points by x value using FOAM's comparison
+        if ( ! this.sorted ) {
+          var xProp = this.xProp;
+          
+          for ( var lineKey in this.lineData ) {
+            if ( this.lineData.hasOwnProperty(lineKey) ) {
+              // Use FOAM's property comparison if available
+              if ( xProp && xProp.comparePropertyValues ) {
+                this.lineData[lineKey].sort(function(a, b) {
+                  return xProp.comparePropertyValues(a.x, b.x);
+                });
+              } else if ( xProp && xProp.compare ) {
+                this.lineData[lineKey].sort(function(a, b) {
+                  return xProp.compare(a.x, b.x);
+                });
+              } else {
+                // Fallback to foam.util.compare for generic comparison
+                this.lineData[lineKey].sort(function(a, b) {
+                  return foam.util.compare(a.x, b.x);
+                });
+              }
+            }
+          }
+          this.sorted = true;
+        }
+      },
+      javaCode: `
+        if ( ! getSorted() ) {
+          java.util.Map lineData = getLineData();
+          
+          for ( Object key : lineData.keySet() ) {
+            java.util.List dataPoints = (java.util.List) lineData.get(key);
+            
+            // Sort using foam.util.SafetyUtil.compare which handles all types properly
+            java.util.Collections.sort(dataPoints, new java.util.Comparator<java.util.Map<String, Object>>() {
+              public int compare(java.util.Map<String, Object> a, java.util.Map<String, Object> b) {
+                Object xA = a.get("x");
+                Object xB = b.get("x");
+                
+                // SafetyUtil.compare handles nulls, dates, numbers, strings, etc.
+                return foam.util.SafetyUtil.compare(xA, xB);
+              }
+            });
+          }
+          setSorted(true);
+        }
+      `
+    },
+    
+    function getSortedLineData() {
+      if ( ! this.sorted ) {
+        this.eof();
+      }
+      return this.lineData;
+    },
+    
+    function getLineCount() {
+      return Object.keys(this.lineData).length;
+    },
+    
+    function getTotalPointCount() {
+      var total = 0;
+      for ( var key in this.lineData ) {
+        if ( this.lineData.hasOwnProperty(key) ) {
+          total += this.lineData[key].length;
+        }
+      }
+      return total;
+    },
+    
+    function toSummary() {
+      return {
+        lineCount: this.getLineCount(),
+        totalPoints: this.getTotalPointCount(),
+        lineData: this.getSortedLineData()
+      };
+    },
+    
+    function toString() {
+      return 'LineChartData(' + this.getLineCount() + ' lines, ' + this.getTotalPointCount() + ' points)';
     }
   ]
 });

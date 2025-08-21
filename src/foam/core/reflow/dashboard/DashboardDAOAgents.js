@@ -824,7 +824,7 @@ foam.CLASS({
       label: 'X Property',
       view: function(_, X) {
         return { 
-          class: 'foam.core.reflow.PropertyChoiceView', 
+          class: 'foam.core.reflow.PropertyExprView', 
           forCls: X.data.dao.of
         };
       }
