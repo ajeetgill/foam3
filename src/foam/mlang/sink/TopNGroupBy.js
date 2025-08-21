@@ -107,11 +107,12 @@ return (sink instanceof foam.mlang.sink.Sum) ||
           // Reduce all other remaining groups into the first one
           for ( var i = 1; i < remainingGroups.length; i++ ) {
             var currentGroup = remainingGroups[i][1];
-            if ( othersGroup.reduce ) {
-              othersGroup = othersGroup.reduce(currentGroup);
-            } else {
-              // Fallback for sinks without reduce method
-              othersGroup.value += currentGroup.value;
+            // All supported sinks have reduce method that handles null and modifies in place
+            try {
+              othersGroup.reduce(currentGroup);
+            } catch (e) {
+              // This shouldn't happen for supported sink types, but log if it does
+              console.error('TopNGroupBy: Failed to reduce sink of type ' + othersGroup.cls_.name + ': ' + e.message);
             }
           }
           
@@ -170,18 +171,14 @@ if (remainingGroups.size() > 0 && getIncludeOthers()) {
   // Reduce all other remaining groups into the first one
   for (int i = 1; i < remainingGroups.size(); i++) {
     foam.dao.Sink currentGroup = remainingGroups.get(i).getValue();
+    
+    // Use reflection to call reduce method - all supported sinks have it and handle null internally
     try {
       java.lang.reflect.Method reduceMethod = othersGroup.getClass().getMethod("reduce", othersGroup.getClass());
-      othersGroup = (foam.dao.Sink) reduceMethod.invoke(othersGroup, currentGroup);
+      reduceMethod.invoke(othersGroup, currentGroup); // reduce modifies in place
     } catch (Exception e) {
-      // Fallback for sinks without reduce method - simple value addition
-      if (othersGroup instanceof foam.mlang.sink.Count && currentGroup instanceof foam.mlang.sink.Count) {
-        foam.mlang.sink.Count countOthers = (foam.mlang.sink.Count) othersGroup;
-        foam.mlang.sink.Count countCurrent = (foam.mlang.sink.Count) currentGroup;
-        foam.mlang.sink.Count newCount = new foam.mlang.sink.Count();
-        newCount.setValue(countOthers.getValue() + countCurrent.getValue());
-        othersGroup = newCount;
-      }
+      // This shouldn't happen for supported sink types, but log if it does
+      System.err.println("TopNGroupBy: Failed to reduce sink of type " + othersGroup.getClass().getSimpleName() + ": " + e.getMessage());
     }
   }
   
