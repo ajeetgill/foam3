@@ -107,12 +107,9 @@ return (sink instanceof foam.mlang.sink.Sum) ||
           // Reduce all other remaining groups into the first one
           for ( var i = 1; i < remainingGroups.length; i++ ) {
             var currentGroup = remainingGroups[i][1];
-            // All supported sinks have reduce method that handles null and modifies in place
-            try {
+            // Use Reducible interface - all supported sinks implement it
+            if ( foam.mlang.sink.Reducible.isInstance(othersGroup) ) {
               othersGroup.reduce(currentGroup);
-            } catch (e) {
-              // This shouldn't happen for supported sink types, but log if it does
-              console.error('TopNGroupBy: Failed to reduce sink of type ' + othersGroup.cls_.name + ': ' + e.message);
             }
           }
           
@@ -172,13 +169,9 @@ if (remainingGroups.size() > 0 && getIncludeOthers()) {
   for (int i = 1; i < remainingGroups.size(); i++) {
     foam.dao.Sink currentGroup = remainingGroups.get(i).getValue();
     
-    // Use reflection to call reduce method - all supported sinks have it and handle null internally
-    try {
-      java.lang.reflect.Method reduceMethod = othersGroup.getClass().getMethod("reduce", othersGroup.getClass());
-      reduceMethod.invoke(othersGroup, currentGroup); // reduce modifies in place
-    } catch (Exception e) {
-      // This shouldn't happen for supported sink types, but log if it does
-      System.err.println("TopNGroupBy: Failed to reduce sink of type " + othersGroup.getClass().getSimpleName() + ": " + e.getMessage());
+    // Use Reducible interface - all supported sinks implement it
+    if (othersGroup instanceof foam.mlang.sink.Reducible && currentGroup instanceof foam.mlang.sink.Reducible) {
+      ((foam.mlang.sink.Reducible) othersGroup).reduce((foam.mlang.sink.Reducible) currentGroup);
     }
   }
   
