@@ -10,12 +10,12 @@ p({
       .setSeqNo(true)
       .setJournalType(foam.dao.JournalType.SINGLE_JOURNAL)
       .setJournalName(\"pivotObjects\")
-      .setOf(foam.core.reflow.test.PivotTestObject.getOwnClassInfo())
+      .setOf(foam.core.reflow.pivottest.PivotTestObject.getOwnClassInfo())
       .build();
   """,
   "client": """
     {
-      "of":"foam.core.reflow.test.PivotTestObject",
+      "of":"foam.core.reflow.pivottest.PivotTestObject",
       "cache":false
     }
   """

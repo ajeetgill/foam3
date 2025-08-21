@@ -1,5 +1,5 @@
 foam.POM({
-  name: 'test',
+  name: 'pivottest',
   files: [
     { name: 'PivotTestObject',    flags: 'js|java' }
   ]

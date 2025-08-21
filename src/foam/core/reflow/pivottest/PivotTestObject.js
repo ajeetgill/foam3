@@ -1,5 +1,5 @@
 foam.CLASS({
-  package: 'foam.core.reflow.test',
+  package: 'foam.core.reflow.pivottest',
   name: 'PivotTestObject',
   properties: [
     {
