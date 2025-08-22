@@ -571,7 +571,7 @@ foam.CLASS({
       documentation: 'See JDAO and F3FileJournal.  Default journal replay is asynchronous. Some models with business logic that reference self can cause deadlock when parsed out of order.  If journal processing hangs, set syncReplay to true to replay synchronously.',
       class: 'Boolean',
       name: 'syncReplay',
-      value: true
+      value: false
     },
     {
       documentation: `Enable NDiff in JDAO. Enable per DAO with this property or globally via JVM Parameter 'UseNDiff'`,
