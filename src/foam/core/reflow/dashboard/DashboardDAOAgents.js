@@ -1103,7 +1103,7 @@ foam.CLASS({
       title: 'Metric Configuration',
       order: 1,
       collapsable: true,
-      properties: ['operation', 'prop', 'label', 'unit', 'decimalPlaces']
+      properties: ['operation', 'prop', 'label', 'prefix', 'postfix', 'decimalPlaces']
     },
     {
       name: 'display',
@@ -1111,7 +1111,7 @@ foam.CLASS({
       order: 2,
       collapsable: true,
       // iconColor is hidden for now until implementation is fixed
-      properties: ['icon', 'alignment', 'showCount', 'countSuffix', 'valueColor']
+      properties: ['icon', 'iconSize', 'alignment', 'showCount', 'countSuffix', 'valueColor']
     },
     {
       name: 'labelFont',
@@ -1263,9 +1263,22 @@ foam.CLASS({
     },
     {
       class: 'String',
-      name: 'unit',
-      label: 'Unit',
-      help: 'Unit to display after value (e.g., $, %, ms)'
+      name: 'prefix',
+      label: 'Prefix',
+      help: 'Text to display before value (e.g., $, €, #)'
+    },
+    {
+      class: 'String',
+      name: 'postfix',
+      label: 'Postfix',
+      help: 'Text to display after value (e.g., %, ms, USD)'
+    },
+    {
+      class: 'String',
+      name: 'iconSize',
+      label: 'Icon Size',
+      help: 'Size of the icon (CSS size value like "2rem", "24px")',
+      value: '2rem'
     },
     {
       class: 'Int',
@@ -1288,7 +1301,9 @@ foam.CLASS({
         showCount: this.showCount,
         countSuffix: this.countSuffix,
         valueColor: this.valueColor,
-        unit: this.unit,
+        prefix: this.prefix,
+        postfix: this.postfix,
+        iconSize: this.iconSize,
         decimalPlaces: this.decimalPlaces
       });
     },
@@ -1300,7 +1315,7 @@ foam.CLASS({
       e.add(s);
       
       // Then update its properties reactively
-      this.onDetach(this.dynamic(function(label, icon, iconColor, alignment, showCount, countSuffix, valueColor, unit, decimalPlaces) { 
+      this.onDetach(this.dynamic(function(label, icon, iconColor, alignment, showCount, countSuffix, valueColor, prefix, postfix, iconSize, decimalPlaces) { 
         s.label = label;
         s.icon = icon;
         s.iconColor = iconColor;
@@ -1308,7 +1323,9 @@ foam.CLASS({
         s.showCount = showCount;
         s.countSuffix = countSuffix;
         s.valueColor = valueColor;
-        s.unit = unit;
+        s.prefix = prefix;
+        s.postfix = postfix;
+        s.iconSize = iconSize;
         s.decimalPlaces = decimalPlaces;
         
         // Force metric to update/redraw
@@ -1335,7 +1352,9 @@ foam.CLASS({
       clone.showCount$ = this.showCount$;
       clone.countSuffix$ = this.countSuffix$;
       clone.valueColor$ = this.valueColor$;
-      clone.unit$ = this.unit$;
+      clone.prefix$ = this.prefix$;
+      clone.postfix$ = this.postfix$;
+      clone.iconSize$ = this.iconSize$;
       clone.decimalPlaces$ = this.decimalPlaces$;
       clone.labelFontSize$ = this.labelFontSize$;
       clone.labelFontWeight$ = this.labelFontWeight$;
