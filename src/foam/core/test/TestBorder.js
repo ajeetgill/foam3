@@ -135,9 +135,13 @@ foam.CLASS({
         put: function(t) {
           try {
             self.status = 'Testing: ' + t.id;
-            // FIXME: t.run() results in 0 passed, failed when
-            // runtTests is called from render. 
-            // t.run();
+
+            // NOTE t.run vs t.runScript
+            // t.run sets the status to SCHEDULED, puts, then polls
+            // until until it's completed. It does not return a promise.
+            // t.runScript directly runs the sript and returns a promise.
+            // with t.run, Neither sink operatin is garanteed to get
+            // correct results.
 
             t.runScript();
             t.copyFrom(dao.put(t));
