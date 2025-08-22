@@ -271,6 +271,12 @@ foam.POM({
       this.execute('runTests');
     }],
 
+    javaTests: ['java-tests', 'Run all or specified server side test cases. ex: serverTests[:Test1,Test2]. Deprecated, retained for backward compatibility.', [], function(args) {
+      TESTS=args;
+      TEST_SIDE='server';
+      this.execute('runTests');
+    }],
+
     runTests: ['run-tests', 'Run all or specified test cases. Runs both Server and Client side tests. ex: runTests[:Test1,Test2]', [], function(args) {
       if ( ! TESTS && args ) TESTS=args;
       this.execute('testSetup');
