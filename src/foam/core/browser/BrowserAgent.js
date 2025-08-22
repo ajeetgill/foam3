@@ -139,8 +139,6 @@ an operation which will eventually set a completed flag.
       javaCode: `
       final Logger logger = getLogger();
 
-      final StringBuilder sbOut = new StringBuilder();
-      final StringBuilder sbErr = new StringBuilder();
       try {
         List<String> command = buildCommand(x);
         logger.info("Launching", command.toString());
@@ -152,8 +150,6 @@ an operation which will eventually set a completed flag.
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
               String line;
               while ((line = reader.readLine()) != null) {
-                sbOut.append(line);
-                sbOut.append("\\n");
                 logger.info(line);
               }
             } catch (IOException e) {
@@ -164,8 +160,6 @@ an operation which will eventually set a completed flag.
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
               String line;
               while ((line = reader.readLine()) != null) {
-                sbErr.append(line);
-                sbErr.append("\\n");
                 logger.error(line);
               }
             } catch (IOException e) {
@@ -173,8 +167,6 @@ an operation which will eventually set a completed flag.
             }
           });
         } catch ( Throwable t ) {
-          sbErr.append(t.getMessage());
-          sbErr.append("\\n");
           logger.error(t);
         }
       } catch (IOException e) {
