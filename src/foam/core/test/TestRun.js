@@ -15,45 +15,42 @@ foam.CLASS({
 
   tableColumns: [
     'created',
-    'language',
+    'server',
+    'cases',
+    'tests',
     'passed',
     'failed',
-    'total'
+    'completed'
   ],
 
   properties: [
     {
       name: 'id',
-      class: 'String',
-      createVisibility: 'HIDDEN',
-      updateVisibility: 'RO',
-      readVisibility: 'RO'
-    },
-    {
-      name: 'suite',
       class: 'String'
     },
     {
-      name: 'tests',
-      class: 'String',
-      value: 'all'
+      name: 'server',
+      class: 'Boolean',
+      value: true
     },
     {
-      class: 'Enum',
-      of: 'foam.core.script.Language',
-      name: 'language',
-      value: 'BEANSHELL'
+      name: 'suites',
+      class: 'String'
+    },
+    {
+      name: 'filter',
+      class: 'String'
     },
     {
       name: 'completed',
       class: 'Boolean'
     },
     {
-      name: 'units',
+      name: 'cases',
       class: 'Int'
     },
     {
-      name: 'total',
+      name: 'tests',
       class: 'Int'
     },
     {
@@ -66,11 +63,7 @@ foam.CLASS({
     },
     {
       name: 'failures',
-      class: 'String',
-      view: {
-        class: 'foam.u2.tag.TextArea',
-        rows: 5, cols: 60,
-      }
+      class: 'List'
     }
   ]
 });

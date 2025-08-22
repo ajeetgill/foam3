@@ -100,11 +100,11 @@ To build and deploy to a remote linux instance
 All code should follow the [style guide.](doc/guides/StyleGuide.md)
 
 ## Testing
-To run all Java tests from the command-line, run:
-`./build.sh --java-tests`
+To run all, Java and Javacript, tests from the command-line, run:
+`./build.sh --run-tests`
 
 To run individual tests from the command-line, run:
-`./build.sh --java-tests:testName1,testName2,...testNameN`
+`./build.sh --run-tests:testName1,testName2,...testNameN`
 
 <!--
 * _npm test_ runs standard unit tests.

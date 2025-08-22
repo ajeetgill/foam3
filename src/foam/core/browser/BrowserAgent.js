@@ -1,0 +1,282 @@
+/**
+ * @license
+ * Copyright 2025 The FOAM Authors. All Rights Reserved.
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
+foam.CLASS({
+  package: 'foam.core.browser',
+  name: 'BrowserAgent',
+
+  implements: [
+    'foam.lang.ContextAgent'
+  ],
+
+  documentation: `Agent which launches a headless or headed browser.
+Example usage: see foam.core.test.TestRunnerScript.js
+
+The caller creates a new BrowserAgent
+and overrides the terminate method, which BrowserAgent
+will call once the Browser is launched. Returning from
+the terminate method will close the browser process.
+
+In this example, the caller waits for the browser to perform
+an operation which will eventually set a completed flag.
+
+      String path = "admin.tests"; // menu with TestBorder
+      List<String> params = new ArrayList();
+      params.add("testRunId="+testRun.getId());
+      if ( !SafetyUtil.isEmpty(testRun.getFilter()) )
+        params.add("filter=" + testRun.getFilter());
+
+      BrowserAgent agent = new BrowserAgent(x, path, params) {
+        public void terminate(X x, boolean alive) {
+          logger.info("BrowserAgent,terminate", alive);
+          if ( ! alive ) {
+            return;
+          }
+          while ( true ) {
+            try {
+              TestRun tr = (TestRun) dao.find(id);
+              if ( tr.getCompleted() )
+                break;
+              Thread.currentThread().sleep(5000);
+            } catch (InterruptedException e) {
+              // nop
+            }
+          }
+          logger.info("BrowserAgent,terminate,exit");
+        }
+      };
+      // agent.setHeadless(false); // useful during development
+      agent.execute(x);
+`,
+  
+  javaImports: [
+    'foam.core.app.AppConfig',
+    'foam.core.logger.Logger',
+    'foam.core.logger.Loggers',
+    'foam.core.session.Session',
+    'foam.dao.DAO',
+    'foam.lang.Agency',
+    'foam.lang.X',
+    'static foam.mlang.MLang.AND',
+    'static foam.mlang.MLang.EQ',
+    'java.io.BufferedReader',
+    'java.io.IOException',
+    'java.io.InputStreamReader',
+    'java.net.URI',
+    'java.util.concurrent.CompletableFuture',
+    'java.util.concurrent.TimeUnit',
+    'java.util.ArrayList',
+    'java.util.Arrays',
+    'java.util.List'
+  ],
+
+  properties: [
+    {
+      documentation: 'Browser type to locate BrowserConfig',
+      name: 'type',
+      class: 'String',
+      value: 'chrome'
+    },
+    {
+      name: 'userId',
+      class: 'Reference',
+      of: 'foam.core.auth.User',
+      value: 42 // foam admin
+    },
+    {
+      name: 'path',
+      class: 'String'
+    },
+    {
+      name: 'params',
+      class: 'List'
+    },
+    {
+      documentation: 'timeout in seconds',
+      name: 'timeout',
+      class: 'Long',
+      unit: 's',
+      value: 30
+    },
+    {
+      name: 'headless',
+      class: 'Boolean',
+      value: true
+    },
+    {
+      name: 'process',
+      class: 'Object'
+    },
+    {
+      name: 'logger',
+      class: 'FObjectProperty',
+      of: 'foam.core.logger.Logger'
+    }
+  ],
+
+  javaCode: `
+  public BrowserAgent(X x, String path, List params) {
+    setX(x);
+    setPath(path);
+    setParams(params);
+    setLogger(Loggers.logger(x, getClass(), path));
+  }
+  public BrowserAgent(X x, String path, List params, long userId) {
+    setX(x);
+    setPath(path);
+    setParams(params);
+    setUserId(userId);
+    setLogger(Loggers.logger(x, getClass(), path));
+  }
+  `,
+
+  methods: [
+    {
+      name: 'execute',
+      javaCode: `
+      final Logger logger = getLogger();
+
+      final StringBuilder sbOut = new StringBuilder();
+      final StringBuilder sbErr = new StringBuilder();
+      try {
+        List<String> command = buildCommand(x);
+        logger.info("Launching", command.toString());
+        ProcessBuilder pb = new ProcessBuilder(command);
+        final Process process = pb.start();
+        setProcess(process);
+        try {
+          CompletableFuture.runAsync(() -> {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+              String line;
+              while ((line = reader.readLine()) != null) {
+                sbOut.append(line);
+                sbOut.append("\\n");
+                logger.info(line);
+              }
+            } catch (IOException e) {
+              Loggers.logger(x).warning("Process inputstream reader interupted");
+            }
+          });
+          CompletableFuture.runAsync(() -> {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+              String line;
+              while ((line = reader.readLine()) != null) {
+                sbErr.append(line);
+                sbErr.append("\\n");
+                logger.error(line);
+              }
+            } catch (IOException e) {
+              logger.warning("Process errorstream reader interupted");
+            }
+          });
+        } catch ( Throwable t ) {
+          sbErr.append(t.getMessage());
+          sbErr.append("\\n");
+          logger.error(t);
+        }
+      } catch (IOException e) {
+        logger.error(e);
+      } finally {
+        Process process = (Process) getProcess();
+        ProcessHandle processHandle = process.toHandle();
+        ProcessHandle.Info processInfo = processHandle.info();
+        logger.info("pid", processHandle.pid());
+
+        boolean alive = process != null && process.isAlive();
+        terminate(x, alive);
+        process.destroy();
+        if ( alive ) {
+          // TODO: believe chrome creates child processes, and
+          // this only kills the parent.  For example, a 'headed'
+          // browser remains after this call.
+          process.destroyForcibly();
+        }
+        setProcess(null);
+      }
+      `
+    },
+    {
+      documentation: `Hook for caller to control termination. Implement
+terminate and return when browser process can be closed.
+
+new BrowserAgent(...) {
+  public void terminate(X x) {
+    ...
+  }
+}
+`,
+      name: 'terminate',
+      args: 'X x, boolean alive',
+      javaCode: `
+      if ( ! alive ) return;
+      try {
+        ((Process) getProcess()).waitFor(getTimeout(), TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        // nop
+      }
+      `
+    },
+    {
+      name: 'buildUrl',
+      args: 'X x',
+      type: 'String',
+      javaCode: `
+      AppConfig appConfig = (AppConfig) x.get("appConfig");
+      String sessionId = createSession(x);
+      try {
+        StringBuilder sb = new StringBuilder();
+        sb.append(appConfig.getUrl());
+        sb.append("/?sessionId=");
+        sb.append(sessionId);
+        sb.append("#");
+        sb.append(getPath());
+        if ( getParams() != null ) {
+          List<String> params = getParams();
+          for ( int i = 0; i < params.size(); i++ ) {
+            if ( i == 0 )
+              sb.append("?");
+            else 
+              sb.append("&");
+            sb.append(params.get(i));
+          }
+        }
+        return URI.create(sb.toString()).toString();
+      } catch (Exception e) {
+        throw new RuntimeException("Failed url creation", e);
+      }
+      `
+    },
+    {
+      name: 'buildCommand',
+      args: 'X x',
+      type: 'List',
+      javaCode: `
+      BrowserConfig bc = (BrowserConfig) ((DAO) x.get("browserConfigDAO")).find(AND(EQ(BrowserConfig.ENABLED, true), EQ(BrowserConfig.TYPE, getType())));
+      List list = new ArrayList();
+      list.add(bc.getExecutable(x));
+      if ( getHeadless() ) {
+        list.addAll(List.of(bc.getHeadlessFlags()));
+      } else {
+        list.addAll(List.of(bc.getHeadedFlags()));
+      }
+      list.add(buildUrl(x));
+      return list;
+      `
+    },
+    {
+      name: 'createSession',
+      args: 'X x',
+      type: 'String',
+      javaCode: `
+      Session session = new Session();
+      session.setUserId(getUserId());
+      session.setRemoteHost("[0:0:0:0:0:0:0:1]");
+      session = (Session) ((DAO) x.get("sessionDAO")).put_(x, session);
+      return session.getId();
+      `
+    }
+  ]
+});

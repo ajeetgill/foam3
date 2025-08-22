@@ -8,13 +8,19 @@ foam.CLASS({
   package: 'foam.core.test',
   name: 'TestBorder',
   extends: 'foam.u2.View',
-
+  mixins: ['foam.u2.memento.Memorable'],
   implements: ['foam.mlang.Expressions'],
 
-  imports: ['stack'],
+  imports: [
+    'stack',
+    'testRunDAO'
+  ],
 
   requires: [
-    'foam.core.test.Test', 
+    'foam.core.script.Language',
+    'foam.core.script.ScriptStatus',
+    'foam.core.test.Test',
+    'foam.core.test.TestRun',
     'foam.u2.table.TableView'
   ],
 
@@ -31,7 +37,7 @@ foam.CLASS({
       flex: 0 0 0;
       margin-bottom: 10px;
     }
-    ^table{ 
+    ^table{
       /* Add a fixed height and let flex extend to max possible */
       flex: 1;
       height: 424px;
@@ -43,11 +49,49 @@ foam.CLASS({
     { class: 'Int', name: 'total' },
     { class: 'Int', name: 'passed' },
     { class: 'Int', name: 'failed' },
-    { class: 'Map', name: 'selectedObjects' }
+    { class: 'Map', name: 'selectedObjects' },
+    {
+      documentation: 'Intended for remote automation - when set test execution will occur on render',
+      name: 'testRunId',
+      class: 'String',
+      memorable: true,
+      visibility: 'HIDDEN'
+    },
+    {
+      documentation: 'Intended for remote automation - restrict language of tests to consider',
+      name: 'language',
+      class: 'String',
+      value: 'JS',
+      memorable: true,
+      visibility: 'HIDDEN'
+    },
+    {
+      documentation: 'Intended for remote automation - filter tests to run',
+      name: 'filter',
+      class: 'String',
+      memorable: true,
+      visibility: 'HIDDEN'
+    },
+    {
+      name: 'dao',
+      visibility: 'HIDDEN',
+      expression: function(testRunId, language, filter) {
+        var d = this.data;
+        d = d.where(this.EQ(foam.core.test.Test.ENABLED, true));
+        if ( this.testRunId ) {
+          d = d.where(this.EQ(foam.core.test.Test.LANGUAGE, this.language));
+          if ( this.filter ) {
+            d = d.where(this.IN(foam.core.test.Test.ID, this.filter.split(',')));
+          }
+        }
+        return d;
+      }
+    }
   ],
 
   methods: [
-    function render() {
+    async function render() {
+      var self = this;
       this.onDetach(this.stack.setTrailingContainer(
         this.E()
           .startContext({ data: this })
@@ -65,53 +109,81 @@ foam.CLASS({
           .start('span').add('Failed: ', this.failed$).end()
           .start('span').add('Status: ', this.status$).end()
         .end()
-        .start(this.TableView, { data$: this.data$, selectedObjects$: this.selectedObjects$ })
           .addClass(this.myClass('table'))
+        .start(this.TableView, { data$: this.data$, selectedObjects$: this.selectedObjects$ })
         .end();
-        
 
-      this.data.select({
+      this.dao.select({
         put: function(t) {
-          if ( t && t.enabled ) {
             self.total += 1;
           }
-        }
       });
+      if ( this.testRunId ) {
+        await this.runTests(this.dao);
+      }
     },
 
     function runTests(dao) {
       var self = this;
-      var startTime = Date.now();
-
       this.status = 'Testing...';
       this.passed = this.failed = 0;
 
+      console.log('Testing starting');
+      var startTime = Date.now();
+
       dao.select({
         put: function(t) {
-          self.status = 'Testing: ' + t.id;
           try {
-            t.run();
+            self.status = 'Testing: ' + t.id;
+            // FIXME: t.run() results in 0 passed, failed when
+            // runtTests is called from render. 
+            // t.run();
+
+            t.runScript();
+            t.copyFrom(dao.put(t));
+
             self.passed += t.passed;
             self.failed += t.failed;
           } catch (e) {
-            console.error('Failed testing', t.id, e);
+            console.error('Test failed', t.id, e);
             self.failed += 1;
           }
         },
-        eof: function() {
+        eof: async function() {
           var duration = (Date.now() - startTime) / 1000;
           self.status = `${self.passed + self.failed} tests run in ${duration.toFixed(2)} seconds`;
+          console.log('Testing complete.', self.status);
+          if ( self.testRunId ) {
+            var testRun = await self.testRunDAO.find(self.testRunId);
+            if ( ! testRun ||
+                 testRun.completed ) {
+              testRun = self.TestRun.create();
+            }
+            testRun.server = false;
+            testRun.cases = self.total;
+            testRun.passed = self.passed;
+            testRun.failed = self.failed;
+            testRun.tests = self.passed + self.failed;
+            testRun.completed = true;
+            await self.testRunDAO.put(testRun);
+          }
         }
       });
     }
   ],
 
   actions: [
-    function runAll() {
-      this.runTests(this.data);
+    {
+      name: 'runAll',
+      code: function(X) {
+        this.runTests(this.dao);
+      }
     },
-    function runFailedTests() {
-      this.runTests(this.data.where(this.GT(this.Test.FAILED, 0)));
-    },
+    {
+      name: 'runFailedTests',
+      code: function(X) {
+        this.runTests(this.dao.where(this.GT(this.Test.FAILED, 0)));
+      }
+    }
   ]
 });

@@ -48,9 +48,10 @@ foam.POM({
     tar: [ 'k', 'tar', 'TAR', 'Package up a deployment tarball for remote application installation', false, function(arg) { TAR = arg ? this.bool(arg) : true; } ],
     tarball: ['', 'tarball', 'TARBALL', 'Tar file name', () => APP_NAME + '-deploy-' + VERSION + '.tar.gz', arg => TARBALL = arg],
     tarballPath: ['', 'tarball-path', 'TARBALL_PATH', 'Path to the tarball to upload. Defaults to the last tar built.', () => BUILD_DIR + '/package/' + TARBALL, arg => TARBALL_PATH = arg],
-    testArgs: ['', 'test-args', 'TEST_ARGS', 'Arguments passed to test cases or benchmarks via JVM parameter -Dfoam.test.args. Example: --test-args:"identifier1=x,identifier2=y" (quoted list of comma seperated, key=value, pairs)', '', arg => TEST_ARGS = arg],
     tests: ['', 'tests', 'TESTS', 'test cases to execute', '', arg => TESTS = arg],
-    testSuite: ['', 'test-suite', 'TEST_SUITE', 'Run all test in test suite', '', arg => TEST_SUITE = arg],
+    testExit: ['', 'test-exit', 'TEST_EXIT', 'Terminate the foam test application when tests have completed executing. Normally the test app shutdowns but if you want to use or inspect the test environment, set this value to false.', true, function(arg) { TEST_EXIT = arg ? this.bool(arg) : false; }],
+    testSuites: ['', 'test-suite', 'TEST_SUITES', 'Run all or specified test suites', '', arg => TEST_SUITES = arg],
+    testSide: ['', 'test-side', 'TEST_SIDE', 'Specify server or client side testing. Defaults to \'both\'.  ex. --testSide:client.  Choose \'server\' or \'client\'', 'both', arg => TEST_SIDE = arg],
     timezone: ['', 'timezone', 'TIMEZONE', 'Set JVM user.timezone. NOTE: this only affects local deployment. In production the JVM will use the system timezone.', 'GMT', arg => TIMEZOME = arg],
     webPort: [ 'W', 'web-port', 'WEB_PORT', 'Port WebServer will listen on. HTTP defaults to 8080, HTTPS defaults to 8443.  WebSocketServer will use PORT+1', '8080', args => WEB_PORT = args ],
     version: ['', 'version', 'VERSION', 'Application version', '1.0.0', args => VERSION = args ]
@@ -258,8 +259,20 @@ foam.POM({
       }
     }],
 
-    javaTests: ['java-tests', 'Run all or specified test cases. ex: javaTests[:Test1,Test2]', [], function(args) {
+    clientTests: ['client-tests', 'Run all or specified client side test cases. ex: clientTests[:Test1,Test2]', [], function(args) {
       TESTS=args;
+      TEST_SIDE='client';
+      this.execute('runTests');
+    }],
+
+    serverTests: ['server-tests', 'Run all or specified server side test cases. ex: serverTests[:Test1,Test2]', [], function(args) {
+      TESTS=args;
+      TEST_SIDE='server';
+      this.execute('runTests');
+    }],
+
+    runTests: ['run-tests', 'Run all or specified test cases. Runs both Server and Client side tests. ex: runTests[:Test1,Test2]', [], function(args) {
+      if ( ! TESTS && args ) TESTS=args;
       this.execute('testSetup');
       this.execute('pomEnvs');
       if ( CLEAN ) this.execute('clean');
@@ -371,15 +384,14 @@ foam.POM({
         MESSAGE = 'Running benchmarks...';
         if ( BENCHMARKS )
           JAVA_OPTS += ` -Dfoam.benchmarks=${BENCHMARKS}`;
-        if ( TEST_ARGS )
-          JAVA_OPTS += ` -Dfoam.test.args=${TEST_ARGS}`;
       } else {
         if ( TESTS )
           JAVA_OPTS += ` -Dfoam.tests=${TESTS}`;
-        if ( TEST_SUITE )
-          JAVA_OPTS += ` -Dfoam.test.suite=${TEST_SUITE}`;
-        if ( TEST_ARGS )
-          JAVA_OPTS += ` -Dfoam.test.args=${TEST_ARGS}`;
+        if ( TEST_SUITES )
+          JAVA_OPTS += ` -Dfoam.test.suites=${TEST_SUITES}`;
+        if ( TEST_SIDE )
+          JAVA_OPTS += ` -Dfoam.test.side=${TEST_SIDE}`;
+        JAVA_OPTS += ` -Dfoam.test.exit=${TEST_EXIT}`;
       }
 
       this.showSummary();
@@ -441,10 +453,16 @@ foam.POM({
       this.log('  ./build.sh -EAPP_NAME:demo,WEB_PORT:8300,JAR:true,JOURNALS:https');
       this.log('    Build into a unique path \'demo\', launch from JAR, start HTTPS web server on port \'8300\'.');
       this.log('\nRunning Java Test Cases:');
-      this.log('  ./build.sh --java-tests');
-      this.log('    Run all Java test cases.');
-      this.log('  ./build.sh --java-tests:SequenceNumberDAO,MapDAOTest');
-      this.log('    Run specified Java test cases.');
+      this.log('  ./build.sh --run-tests');
+      this.log('    Run all test cases.');
+      this.log('  ./build.sh --server-tests:SequenceNumberDAO,MapDAOTest');
+      this.log('    Run specified server side (Java) test cases.');
+      this.log('  ./build.sh --client-tests');
+      this.log('    Run all client side (Javascript) test cases.');
+      this.log('  ./build.sh --client-tests --test-exit:false');
+      this.log('    Run all client side (Javascript) test cases and leave foam test app running after tests have completed executing.');
+      this.log('  ./build.sh --run-tests:CIDRTest,ClientAddressUtilAddressParsingTest');
+      this.log('    This example is a mix of one server side test and one client side test');
     }],
 
     versions: ['versions', 'Show version information.', ['getProjectRevision', 'getFOAMRevision'], function() {

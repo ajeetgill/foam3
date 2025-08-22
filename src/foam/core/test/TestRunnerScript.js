@@ -9,15 +9,38 @@ foam.CLASS({
   name: 'TestRunnerScript',
   extends: 'foam.core.script.Script',
 
+  documentation: `Script for running Test Scripts - both Server (Java) and Client (Javascript).
+Test execution results are output standard out (log file).
+Example:
+TEST REPORT SERVER - TEST CASES: 77, TESTS: 688
+ PASSED: 688
+ FAILED: 0
+
+TEST REPORT CLIENT - TEST CASES: 8, TESTS: 14
+ PASSED: 14
+ FAILED: 0
+
+Test results are also captured in the TestRun DAO - but since the test
+are normally run from the build, the TestRun DAO is destroyed on each
+run.
+
+To run tests and keep the server alive to inspect, run tests with the
+--text-exit:false flag
+./build.sh --run-tests --test-exit:false
+`,
+
   javaImports: [
+    'foam.core.browser.BrowserAgent',
     'foam.core.logger.LogLevelFilterLogger',
     'foam.core.logger.Logger',
+    'foam.core.logger.Loggers',
     'foam.core.script.Language',
-    'foam.core.script.TestRunnerConfig',
     'foam.core.test.Test',
     'foam.core.test.TestRun',
     'foam.dao.DAO',
     'foam.dao.ArraySink',
+    'foam.lang.Agency',
+    'foam.lang.X',
     'foam.log.LogLevel',
     'static foam.mlang.MLang.AND',
     'static foam.mlang.MLang.EQ',
@@ -52,6 +75,50 @@ foam.CLASS({
       name: 'RESET_COLOR',
       type: 'String',
       value: '\u001B[0m'
+    },
+    {
+      name: 'SERVER_SIDE',
+      type: 'String',
+      value: 'server'
+    },
+    {
+      name: 'CLIENT_SIDE',
+      type: 'String',
+      value: 'client'
+    },
+    {
+      name: 'BOTH_SIDE',
+      type: 'String',
+      value: 'both'
+    },
+    {
+      name: 'SYSTEM_TESTS',
+      type: 'String',
+      value: 'foam.tests'
+    },
+    {
+      name: 'SYSTEM_TEST_SUITES',
+      type: 'String',
+      value: 'foam.test.suites'
+    },
+    {
+      name: 'SYSTEM_TEST_SIDE',
+      type: 'String',
+      value: 'foam.test.side'
+    },
+    {
+      name: 'SYSTEM_TEST_EXIT',
+      type: 'String',
+      value: 'foam.test.exit'
+    }
+  ],
+
+  properties: [
+    {
+      documentation: 'Default user to run test. Refine in applications to use application admin',
+      name: 'userId',
+      class: 'Long',
+      value: 42 // foam admin
     }
   ],
 
@@ -60,34 +127,89 @@ foam.CLASS({
       name: 'runScript',
       args: 'Context x',
       javaCode: `
-      TestRun testRun = runJavaTests(x);
-      if ( testRun.getFailed() > 0 ) {
-        System.exit(1);
+      TestRun serverTestRun  = null;
+      TestRun clientTestRun  = null;
+      List<Test> serverTests = null;
+      List<Test> clientTests = null;
+      DAO testRunDAO = (DAO) x.get("testRunDAO");
+      String side = System.getProperty(SYSTEM_TEST_SIDE);
+      String filter = System.getProperty(SYSTEM_TESTS);
+      String suites = System.getProperty(SYSTEM_TEST_SUITES);
+      boolean exit = Boolean.valueOf(System.getProperty(SYSTEM_TEST_EXIT, "true"));
+
+      if ( SafetyUtil.isEmpty(side) ||
+           SERVER_SIDE.equals(side) ||
+           BOTH_SIDE.equals(side) ) {
+        TestRun testRun = new TestRun();
+        List<Test> tests = getServerSideTests(x, testRun);
+        if ( tests.size() > 0 ) {
+          setupServerSide(x);
+          testRun.setCases(tests.size());
+          testRun = (TestRun) testRunDAO.put(testRun).fclone();
+          testRun = runServerSideTests(x, tests, testRun);
+          teardownServerSide(x);
+        }
+        serverTests = tests;
+        serverTestRun = testRun;
       }
-      if ( ! testRun.getTests().equals("all") &&
-           testRun.getTotal() == 0 ) {
+
+      if ( SafetyUtil.isEmpty(side) ||
+           CLIENT_SIDE.equals(side) ||
+           BOTH_SIDE.equals(side) ) {
+        TestRun testRun = new TestRun();
+        testRun.setServer(false);
+        List<Test> tests = getClientSideTests(x, testRun);
+        if ( tests.size() > 0 ) {
+          setupClientSide(x);
+          testRun.setCases(tests.size());
+          testRun = (TestRun) testRunDAO.put(testRun).fclone();
+          testRun = runClientSideTests(x, tests, testRun);
+          teardownClientSide(x);
+          testRun = (TestRun) testRunDAO.find(testRun.getId());
+        }
+        clientTests = tests;
+        clientTestRun = testRun;
+      }
+
+      if ( ( clientTests == null || clientTests.size() == 0 ) &&
+           ( serverTests == null || serverTests.size() == 0 ) ) {
         StringBuilder sb = new StringBuilder();
         sb.append("ERROR :: Test(s) not found - ");
-        if ( ! SafetyUtil.isEmpty(testRun.getSuite()) ) {
-          sb.append("(Suite: ");
-          sb.append(testRun.getSuite());
+        if ( ! SafetyUtil.isEmpty(suites) ) {
+          sb.append("(Suites: ");
+          sb.append(suites);
           sb.append(") ");
         }
-        if ( ! SafetyUtil.isEmpty(testRun.getTests()) ) {
-          sb.append(testRun.getTests());
+        if ( ! SafetyUtil.isEmpty(filter) ) {
+          sb.append(filter);
         }
         printBold(RED_COLOR + " " + sb.toString() + " " + RESET_COLOR);
-        System.exit(1);
+        if ( exit )
+          System.exit(1);
+      } else {
+        int exitCode = 0;
+        if ( serverTestRun != null ) {
+          reportResults(x, serverTestRun);
+          if ( serverTestRun.getFailed() > 0 )
+            exitCode = 1;
+        }
+        if ( clientTestRun != null ) {
+          reportResults(x, clientTestRun);
+          if (clientTestRun.getFailed() > 0 )
+            exitCode = 1;
+        }
+        System.out.println();
+        if ( exit )
+          System.exit(exitCode);
       }
-      System.exit(0);
-      // runJSTests(x);
       `
     },
     {
-      name: 'runJavaTests',
-      args: 'Context x',
-      type: 'foam.core.test.TestRun',
+      name: 'setupServerSide',
+      args: 'X x',
       javaCode: `
+        x.get("http");
+
         // Control logging level with JVM parameter -Dlog.level=INFO
         // set through the build with --log-level:INFO
 
@@ -96,12 +218,41 @@ foam.CLASS({
         loggerFilter.setLogDebug(logLevel.getOrdinal() <= LogLevel.DEBUG.getOrdinal());
         loggerFilter.setLogInfo(logLevel.getOrdinal() <= LogLevel.INFO.getOrdinal());
         loggerFilter.setLogWarning(logLevel.getOrdinal() <= LogLevel.WARN.getOrdinal());
+      `
+    },
+    {
+      name: 'teardownServerSide',
+      args: 'X x',
+      javaCode: `
+        LogLevelFilterLogger loggerFilter = (LogLevelFilterLogger) x.get("logger");
+        loggerFilter.setLogDebug(false); // easier to see report on stdout
+        loggerFilter.setLogInfo(true);
+        loggerFilter.setLogWarning(true);
+      `
+    },
+    {
+      name: 'setupClientSide',
+      args: 'X x',
+      javaCode: `
+        x.get("http");
 
-        DAO testRunDAO = (DAO) x.get("testRunDAO");
-        TestRun testRun = new TestRun();
-        // testRun.setSomeIdentifier
-        testRun.setLanguage(Language.BEANSHELL);
-
+        LogLevelFilterLogger loggerFilter = (LogLevelFilterLogger) x.get("logger");
+        loggerFilter.setLogDebug(false); // easier to see report on stdout
+        loggerFilter.setLogInfo(true);
+        loggerFilter.setLogWarning(true);
+      `
+    },
+    {
+      name: 'teardownClientSide',
+      args: 'X x',
+      javaCode: `
+      `
+    },
+    {
+      name: 'getServerSideTests',
+      args: 'X x, TestRun testRun',
+      type: 'List',
+      javaCode: `
         DAO testDAO = (DAO) x.get("testDAO");
         testDAO = testDAO.where(
           AND(
@@ -111,34 +262,31 @@ foam.CLASS({
               EQ(Test.LANGUAGE, Language.JSHELL)
             )));
 
-        String testSuite = System.getProperty("foam.test.suite");
-        if ( ! SafetyUtil.isEmpty(testSuite) ) {
-          testRun.setSuite(testSuite);
-          testDAO = testDAO.where(foam.mlang.MLang.EQ(Test.TEST_SUITE, testSuite));
+        String testSuites = System.getProperty(SYSTEM_TEST_SUITES);
+        if ( ! SafetyUtil.isEmpty(testSuites) ) {
+          testRun.setSuites(testSuites);
+          testDAO = testDAO.where(IN(Test.TEST_SUITE, Arrays.asList(testSuites.split(","))));
         }
 
-        String requestedTests = System.getProperty("foam.tests");
-        if ( ! SafetyUtil.isEmpty(requestedTests) ) {
-          List<String> explicitTests = Arrays.asList(requestedTests.split(","));
-          if ( explicitTests.size() > 0 ) {
-            testRun.setTests(requestedTests);
-            testDAO = testDAO.where(IN(Test.ID, explicitTests));
-          }
+        String tests = System.getProperty(SYSTEM_TESTS);
+        if ( ! SafetyUtil.isEmpty(tests) ) {
+          testRun.setFilter(tests);
+          testDAO = testDAO.where(IN(Test.ID, Arrays.asList(tests.split(","))));
         }
 
-        List<Test> tests = (List) ((ArraySink) testDAO.select(new ArraySink())).getArray();
-
-        if ( tests.size() == 0 ) {
-          return testRun;
-        }
-
-        testRun = (TestRun) testRunDAO.put(testRun).fclone();
-
+        return (List) ((ArraySink) testDAO.select(new ArraySink())).getArray();
+      `
+    },
+    {
+      name: 'runServerSideTests',
+      args: 'X x, List tests, TestRun testRun',
+      type: 'TestRun',
+      javaCode: `
         int passed = 0;
         int failed = 0;
         List<Test> failedTests = new ArrayList();
 
-        for ( Test test : tests ) {
+        for ( Test test : (List<Test>)tests ) {
           test = (Test) test.fclone();
 
           printBold(test.getId());
@@ -159,61 +307,117 @@ foam.CLASS({
           }
         }
 
-        testRun.setUnits(tests.size());
+        testRun.setCases(tests.size());
         testRun.setPassed(passed);
         testRun.setFailed(failed);
-        testRun.setTotal(passed + failed);
+        testRun.setTests(passed + failed);
         testRun.setCompleted(true);
 
-        System.out.println("DONE RUNNING " + testRun.getUnits() + " UNITS containing " + testRun.getTotal() + " TESTS");
-        System.out.println("TEST SUITE: " + (testSuite == null ? "all" : testSuite));
-
-        printBold(GREEN_COLOR + " " +  "PASSED: " + Integer.toString(passed) + " " + RESET_COLOR);
-        printBold(RED_COLOR + " " + "FAILED: " + Integer.toString(failed) + " " + RESET_COLOR);
-
-        // Exit with the appropriate output.
         if ( failedTests.size() > 0 ) {
-          StringBuffer sb = new StringBuffer();
-          System.out.println(RED_COLOR + " FAILED TESTS: " + RESET_COLOR);
+          List<String> results = new ArrayList<String>();
           for (Test test: failedTests ) {
-            System.out.println(test.getId());
+            results.add(test.getId());
             String outputs[] = test.getOutput().split("\\n");
             for( String output: outputs ) {
               if ( output.startsWith("FAILURE") ) {
-                System.out.println("\\t" + RED_COLOR + " "+ CROSS_MARK + " " + output + " " + RESET_COLOR);
-                sb.append(output);
-                sb.append("\\n");
+                results.add(output);
               }
             }
           }
-          testRun.setFailures(sb.toString());
+          testRun.setFailures(results);
         }
-        testRun = (TestRun) testRunDAO.put(testRun);
-        return testRun;
+        return (TestRun) ((DAO) x.get("testRunDAO")).put(testRun);
       `
     },
-    // {
-    //   name: 'runClientSideTest',
-    //   args: 'Context x, foam.core.test.Test test',
-    //   javaCode: `
-    //     printBold(test.getId());
-    //     try {
-    //       // test.runScript(x);
-    //       setPassedTests(getPassedTests() + (int) test.getPassed());
-    //       setFailedTests(getFailedTests() + (int) test.getFailed());
-    //       if ( (int) test.getFailed() > 0) {
-    //         addToFailedTestsList(test);
-    //       }
-    //       printOutput(test);
-    //     }
-    //     catch ( Exception e ) {
-    //       Logger logger = (Logger) x.get("logger");
-    //       logger.error(e);
-    //       setFailedTests(getFailedTests() + 1);
-    //       addToFailedTestsList(test);
-    //     }
-    //   `
-    // },
+    {
+      name: 'getClientSideTests',
+      args: 'X x, TestRun testRun',
+      type: 'List',
+      javaCode: `
+        DAO testDAO = (DAO) x.get("testDAO");
+        testDAO = testDAO.where(
+          AND(
+            EQ(Test.ENABLED, true),
+            EQ(Test.LANGUAGE, Language.JS)
+          ));
+
+        String testSuites = System.getProperty(SYSTEM_TEST_SUITES);
+        if ( ! SafetyUtil.isEmpty(testSuites) ) {
+          testRun.setSuites(testSuites);
+          testDAO = testDAO.where(IN(Test.TEST_SUITE, Arrays.asList(testSuites.split(","))));
+        }
+
+        String tests = System.getProperty(SYSTEM_TESTS);
+        if ( ! SafetyUtil.isEmpty(tests) ) {
+          testRun.setFilter(tests);
+          testDAO = testDAO.where(IN(Test.ID, Arrays.asList(tests.split(","))));
+        }
+
+        return (List) ((ArraySink) testDAO.select(new ArraySink())).getArray();
+      `
+    },
+    {
+      name: 'runClientSideTests',
+      args: 'X x, List tests, TestRun testRun',
+      type: 'TestRun',
+      javaCode: `
+      final Logger logger = Loggers.logger(x, this);
+      final DAO dao = (DAO) x.get("testRunDAO");
+      final String id = testRun.getId();
+
+      String path = "admin.tests"; // menu with TestBorder
+      List<String> params = new ArrayList();
+      params.add("testRunId="+testRun.getId());
+      if ( !SafetyUtil.isEmpty(testRun.getFilter()) )
+        params.add("filter=" + testRun.getFilter());
+
+      BrowserAgent agent = new BrowserAgent(x, path, params) {
+        public void terminate(X x, boolean alive) {
+          logger.info("BrowserAgent,terminate", alive);
+          if ( ! alive ) {
+            return;
+          }
+          while ( true ) {
+            try {
+              TestRun tr = (TestRun) dao.find(id);
+              if ( tr.getCompleted() )
+                break;
+              Thread.currentThread().sleep(5000);
+            } catch (InterruptedException e) {
+              // nop
+            }
+          }
+          logger.info("BrowserAgent,terminate,exit");
+        }
+      };
+      // agent.setHeadless(false); // useful during development
+      agent.execute(x);
+      return (TestRun) dao.find(testRun.getId());
+      `
+    },
+    {
+      name: 'reportResults',
+      args: 'X x, TestRun testRun',
+      javaCode: `
+        System.out.println();
+        System.out.println("TEST REPORT" + (testRun.getServer() ? " SERVER - ":" CLIENT - ") + "TEST CASES: " + testRun.getCases() + ", TESTS: " + testRun.getTests());
+        if ( ! SafetyUtil.isEmpty(testRun.getSuites()) )
+          System.out.println("TEST SUITES: " + testRun.getSuites());
+
+        printBold(GREEN_COLOR + " " +  "PASSED: " + Integer.toString(testRun.getPassed()) + " " + RESET_COLOR);
+        printBold(RED_COLOR + " " + "FAILED: " + Integer.toString(testRun.getFailed()) + " " + RESET_COLOR);
+        if ( testRun.getFailures() != null &&
+             testRun.getFailures().size() > 0 ) {
+          for ( String line : (List<String>) testRun.getFailures() ) {
+            if ( line.startsWith("FAILURE") ) {
+              System.out.println("\\t" + RED_COLOR + " "+ CROSS_MARK + " " + line + " " + RESET_COLOR);
+            } else {
+              System.out.println(line);
+            }
+          }
+        }
+      `
+    },
     {
       name: 'printBold',
       args: 'String message',
