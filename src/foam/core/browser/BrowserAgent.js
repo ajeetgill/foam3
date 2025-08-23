@@ -182,9 +182,6 @@ an operation which will eventually set a completed flag.
         terminate(x, alive);
         process.destroy();
         if ( alive ) {
-          // TODO: believe chrome creates child processes, and
-          // this only kills the parent.  For example, a 'headed'
-          // browser remains after this call.
           process.destroyForcibly();
         }
         setProcess(null);
