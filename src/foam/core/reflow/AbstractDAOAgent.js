@@ -32,15 +32,20 @@ foam.CLASS({
     function createSink() { return this.ArraySink.create(); },
     async function execute(e) {
       var sink = this.createSink();
+      let self = this;
       return this.dao.select(sink).then(s => {
         if ( this.block.value && this.block.value.VALUE ) {
           this.block.value.value = this.value(s);
         } else {
           this.block.value = this.value(s);
         }
-        e.startContext({dao: this.dao});
-          this.addSinkToE(e, s);
-        e.endContext();
+        e.startContext({dao: this.dao})
+          .start()
+            .call(function() {
+              self.addSinkToE(this, s);
+            })
+          .end()
+        .endContext();
       });
     },
     function addSinkToE(e, s) {
@@ -583,13 +588,13 @@ foam.CLASS({
     {
       name: 'prop1',
       view: function(_, X) {
-       return { class: 'foam.core.reflow.PropertyChoiceView', forCls: X.data.of };
+       return { class: 'foam.core.reflow.PropertyExprView', forCls: X.data.of };
       }
     },
     {
       name: 'prop2',
       view: function(_, X) {
-       return { class: 'foam.core.reflow.PropertyChoiceView', forCls: X.data.of };
+       return { class: 'foam.core.reflow.PropertyExprView', forCls: X.data.of };
       }
     },
     { name: 'sink', view: { class: 'foam.core.reflow.SinkView', choice: 'foam.core.reflow.CountDAOAgent' } }
