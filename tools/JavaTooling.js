@@ -38,19 +38,20 @@ foam.POM({
     jar: [ 'a', 'jar', 'JAR', 'Run/launch from Java jar file.', false, function(arg) { JAR = arg ? this.bool(arg) : true; } ],
     javaManifestVendor: ['', 'java-manifest-vendor', 'JAVA_MANIFEST_VENDOR', 'Java Manifest Vendor', () => APP_NAME ? `${APP_NAME}` : 'APP_NAME', args => JAVA_MANIFEST_VENDOR = args ],
     javaManifestVendorId: ['', 'java-manifiest-vendor-id', 'JAVA_MANIFEST_VENDOR_ID', 'Java Manifest Vendor ID', '', args => JAVA_MANIFEST_VENDOR_ID = args ],
-    javaOpts: ['', 'java-opts', 'JAVA_OPTS', 'Additional JVM options','', arg => JAVA_OPTS = arg ],
+    javaOpts: ['', 'java-opts', 'JAVA_OPTS', 'Additional JVM options','', arg => JAVA_OPTS = ' '+arg ],
     logLevel: ['L', 'log-level', 'LOG_LEVEL', 'Set JVM Log level for TEST cases. Defaults to ERROR. example: --log-level:INFO',null, arg => LOG_LEVEL = arg.toUpperCase() ],
     javaMainClass: ['', 'java-main-class', 'JAVA_MAIN_CLASS', 'Java \'main\' class', 'foam.core.boot.Boot', arg => JAVA_MAIN_CLASS = arg ],
     javaMainArgs: ['', 'java-main-args', 'JAVA_MAIN_ARGS', 'Comma separated key[:value] arguments passed to the Java \'main\' class', '', function(arg) { JAVA_MAIN_ARGS = this.comma(JAVA_MAIN_ARGS, arg); } ],
     restart: [ 'r', 'restart', 'RESTART', 'Restart CORE Server using last build.', false, function(arg) { RESTART = arg ? this.bool(arg) : true; } ],
     runArgs: ['', 'run-args', 'RUN_ARGS', 'Arguments which will be passed to run.sh to when starting CORE server from JAR','', arg => RUN_ARGS = arg ],
     suspend: [ 's', 'suspend', 'SUSPEND', 'Start JDPA debugging in suspend state.', false, function(arg) { DEBUG = arg ? this.bool(arg) : true; SUSPEND = arg ? this.bool(arg) : true; } ],
-    systemProperty: [ '', 'system-property', 'SYSTEM_PROPERTY', 'Specify a Java System property (minus the -D prefix). Supports a comma seperated list. Each property will be prefixed with -D. ex: --system-property:foam.test.headed=true. Provided as it is not possible to set \' -Dproperty\'values with --java-opts', '', function(arg) { SYSTEM_PROPERTY = this.comma(SYSTEM_PROPERTY, arg); } ],
+    systemProperty: [ '', 'system-property', 'SYSTEM_PROPERTY', 'Specify a Java System property (minus the - prefix). Supports a comma seperated list. Each property will be prefixed with -. ex: --system-property:Dfoam.test.headed=true,Xmx12g. Provided as it is not possible to set \' -Dproperty\'values with --java-opts', '', function(arg) { SYSTEM_PROPERTY = this.comma(SYSTEM_PROPERTY, arg); } ],
     tar: [ 'k', 'tar', 'TAR', 'Package up a deployment tarball for remote application installation', false, function(arg) { TAR = arg ? this.bool(arg) : true; } ],
     tarball: ['', 'tarball', 'TARBALL', 'Tar file name', () => APP_NAME + '-deploy-' + VERSION + '.tar.gz', arg => TARBALL = arg],
     tarballPath: ['', 'tarball-path', 'TARBALL_PATH', 'Path to the tarball to upload. Defaults to the last tar built.', () => BUILD_DIR + '/package/' + TARBALL, arg => TARBALL_PATH = arg],
     tests: ['', 'tests', 'TESTS', 'test cases to execute', '', arg => TESTS = arg],
     testExit: ['', 'test-exit', 'TEST_EXIT', 'Terminate the foam test application when tests have completed executing. Normally the test app shutdowns but if you want to use or inspect the test environment, set this value to false.', true, function(arg) { TEST_EXIT = arg ? this.bool(arg) : false; }],
+    testHeaded: ['', 'test-headed', 'TEST_HEADED', 'Run the client tests from a regular browser view.  Normally client testing is performed via a \'headless\' browser. To see the test activity run with this flag.', false, function(arg) { TEST_HEADED = arg ? this.bool(arg) : true; }],
     testSuites: ['', 'test-suite', 'TEST_SUITES', 'Run all or specified test suites', '', arg => TEST_SUITES = arg],
     testSide: ['', 'test-side', 'TEST_SIDE', 'Specify server or client side testing. Defaults to \'both\'.  ex. --testSide:client.  Choose \'server\' or \'client\'', 'both', arg => TEST_SIDE = arg],
     timezone: ['', 'timezone', 'TIMEZONE', 'Set JVM user.timezone. NOTE: this only affects local deployment. In production the JVM will use the system timezone.', 'GMT', arg => TIMEZOME = arg],
@@ -124,7 +125,7 @@ foam.POM({
       if ( WEB_PORT )
         JAVA_OPTS += ` -Dhttp.port=${WEB_PORT}`;
       if ( SYSTEM_PROPERTY )
-        JAVA_OPTS += ` -D${SYSTEM_PROPERTY.split(',').join(' -D')}`;
+        JAVA_OPTS += ` -${SYSTEM_PROPERTY.split(',').join(' -')}`;
     }],
 
     buildJavaTestOpts: ['build-java-test-ops', 'Add test specific JAVA_OPTS', ['buildJavaOpts'], function() {
@@ -142,7 +143,7 @@ foam.POM({
       if ( DEBUG )
         JAVA_OPTS += ` -agentlib:jdwp=transport=dt_socket,server=y,suspend=${SUSPEND ? 'y' : 'n'},address=127.0.0.1:${DEBUG_PORT}`;
       if ( SYSTEM_PROPERTY )
-        JAVA_OPTS += ` -D${SYSTEM_PROPERTY.split(',').join(' -D')}`;
+        JAVA_OPTS += ` -${SYSTEM_PROPERTY.split(',').join(' -')}`;
     }],
 
     buildTar: ['build-tar', 'Package files into a TAR archive', [()=>TAR=true, 'buildJar'], function() {
@@ -401,6 +402,8 @@ foam.POM({
           JAVA_OPTS += ` -Dfoam.test.suites=${TEST_SUITES}`;
         if ( TEST_SIDE )
           JAVA_OPTS += ` -Dfoam.test.side=${TEST_SIDE}`;
+        if ( TEST_HEADED )
+          JAVA_OPTS += ` -Dfoam.test.headed=${TEST_HEADED}`;
         JAVA_OPTS += ` -Dfoam.test.exit=${TEST_EXIT}`;
       }
 
@@ -452,7 +455,7 @@ foam.POM({
     usage: ['usage', 'Build usage examples', [], function() {
       this.log('\nRunning Java application server:');
       this.log('NOTE: All builds will still start a Java web server (CORE), unless directed otherwise.');
-      this.log('  ./build.sh -aJhttps -EJAVA_OPTS:\"-Xms4g -Xmx8g\"');
+      this.log('  ./build.sh -aJhttps --system-property:Xms4g,Xmx8g');
       this.log('    Start CORE with additional memory, launch from JAR, start HTTPS web server, set JVM max and min memory.');
       this.log('  ./build.sh -Ndemo -W8300 -aJhttps');
       this.log('    Build into a unique path \'demo\', launch from JAR, start HTTPS web server on port \'8300\'.');
@@ -469,8 +472,8 @@ foam.POM({
       this.log('    Run specified server side (Java) test cases.');
       this.log('  ./build.sh --client-tests');
       this.log('    Run all client side (Javascript) test cases.');
-      this.log('  ./build.sh --client-tests --test-exit:false');
-      this.log('    Run all client side (Javascript) test cases and leave foam test app running after tests have completed executing.');
+      this.log('  ./build.sh --client-tests --test-exit:false --test-headed');
+      this.log('    Run all client side (Javascript) test cases and leave foam test app running after tests have completed executing. Also show the browser GUI to monitor test activity.');
       this.log('  ./build.sh --run-tests:CIDRTest,ClientAddressUtilAddressParsingTest');
       this.log('    This example is a mix of one server side test and one client side test');
     }],

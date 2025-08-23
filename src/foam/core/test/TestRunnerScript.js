@@ -29,7 +29,7 @@ To run tests and keep the server alive to inspect, run tests with the
 ./build.sh --run-tests --test-exit:false
 
 To run headed rather than headless, run tests with
-./build.sh --client-tests --system-property:foam.test.headed=true
+./build.sh --client-tests --test-headed
 `,
 
   javaImports: [
