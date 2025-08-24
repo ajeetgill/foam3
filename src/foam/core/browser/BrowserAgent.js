@@ -24,7 +24,7 @@ Optionally implement 'getTeeOutputStreamWriter' to receive data
 from the Process inputStream, and 'getTeeErrorStreamWriter' to
 receive data from the Process error inputStream.
 
-Optioanlly implement destroyed to handled any post shutdown logic.
+Optionally implement destroyed to handled any post shutdown logic.
 
 In this example, the caller waits for the browser to perform
 an operation which will eventually set a completed flag.
@@ -154,7 +154,6 @@ an operation which will eventually set a completed flag.
         ProcessBuilder pb = new ProcessBuilder(command);
         final Process process = pb.start();
         setProcess(process);
-        // started(x, process.getInputStream(), process.getErrorStream());
         final OutputStreamWriter teeOutputWriter = getTeeOutputStreamWriter(x);
         final OutputStreamWriter teeErrorWriter = getTeeOutputErrorStreamWriter(x);
 
@@ -223,39 +222,6 @@ an operation which will eventually set a completed flag.
       type: 'java.io.OutputStreamWriter',
       javaCode: `
       return null;
-      `
-    },
-    {
-      documentation: `Hook for caller to manage Process input and error streams`,
-      name: 'started',
-      args: 'X x, java.io.InputStream inputStream, java.io.InputStream errorStream',
-      javaCode: `
-        try {
-          CompletableFuture.runAsync(() -> {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-              String line = null;
-              Logger logger = getLogger();
-              while ( (line = reader.readLine()) != null ) {
-                logger.info(line);
-              }
-            } catch (IOException e) {
-              getLogger().warning("BrowserAgent,Process inputstream reader interupted");
-            }
-          });
-          CompletableFuture.runAsync(() -> {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(errorStream))) {
-              String line = null;
-              Logger logger = getLogger();
-              while ( (line = reader.readLine()) != null ) {
-                logger.error(line);
-              }
-            } catch (IOException e) {
-              getLogger().warning("BrowserAgent,Process errorstream reader interupted");
-            }
-          });
-        } catch ( Throwable t ) {
-          getLogger().error(t);
-        }
       `
     },
     {
