@@ -256,6 +256,15 @@ foam.CLASS({
       }
     },
     {
+      name: 'confirmCancel',
+      label: 'Yes, Confirm',
+      buttonStyle: foam.u2.ButtonStyle.PRIMARY,
+      size: 'SMALL',
+      code: function() {
+        this.mementoMgr.undoAll();
+      }
+    },
+    {
       name: 'cancel',
       label: 'Cancel Changes',
       buttonStyle: foam.u2.ButtonStyle.SECONDARY,
@@ -265,7 +274,17 @@ foam.CLASS({
         return data$value$revision;
       },
       code: function() {
-        this.mementoMgr.undoAll();
+        let confirmationModal = this.ConfirmationModal.create({
+          title: `Are you sure you want to cancel changes?`,
+          primaryAction: this.CONFIRM_CANCEL,
+          showCancel: true,
+          modalStyle: 'DESTRUCTIVE',
+          maxWidth: '35vw',
+          closeable: false,
+          description: 'This will remove all unsaved changes made to the document.',
+          data: this
+        });
+        this.add(confirmationModal);
       }
     },
     {
