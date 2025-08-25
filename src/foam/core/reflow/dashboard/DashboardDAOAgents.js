@@ -56,13 +56,6 @@ foam.CLASS({
   properties: [
     {
       class: 'Boolean',
-      name: 'responsive',
-      label: 'Responsive',
-      value: true,
-      visibility: 'HIDDEN'
-    },
-    {
-      class: 'Boolean',
       name: 'maintainAspectRatio',
       label: 'Maintain Aspect Ratio',
       value: true
@@ -86,23 +79,6 @@ foam.CLASS({
           },
           { class: 'foam.u2.view.IntView', onKey: true } 
         ]
-      }
-    },
-    {
-      class: 'Int',
-      name: 'width',
-      label: 'Chart Width (px)',
-      value: 400,
-      view: {
-        class: 'foam.u2.RangeView',
-        minValue: 200,
-        maxValue: 1200,
-        step: 10,
-        onKey: true
-      },
-      help: 'Width in pixels (200-1200)',
-      visibility: function(responsive) {
-        return !responsive ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
       }
     },
     {
@@ -163,7 +139,7 @@ foam.CLASS({
       var self = this;
       // Add chart display configuration fields to the UI
       e.start('div').style({marginBottom: '10px'})
-        .add('Height: ', this.HEIGHT, 'px Width: ', this.WIDTH, 'px')
+        .add('Height: ', this.HEIGHT)
       .end()
       .start('div').style({marginBottom: '10px'})
         .add('Legend: ', this.SHOW_LEGEND)
@@ -182,7 +158,7 @@ foam.CLASS({
         }))
       .end()
       .start('div').style({marginBottom: '10px'})
-        .add('Responsive: ', this.RESPONSIVE, ' Maintain Ratio: ', this.MAINTAIN_ASPECT_RATIO)
+        .add(' Maintain Ratio: ', this.MAINTAIN_ASPECT_RATIO)
       .end();
     }
   ]
@@ -233,7 +209,7 @@ foam.CLASS({
       title: 'Display Options',
       order: 4,
       collapsable: true,
-      properties: ['responsive', 'maintainAspectRatio', 'height', 'width', 'showLegend', 'legendPosition', 'showTooltips', 'showTooltipSum', 'animate', 'animationDuration']
+      properties: [ 'maintainAspectRatio', 'height', 'showLegend', 'legendPosition', 'showTooltips', 'showTooltipSum', 'animate', 'animationDuration']
     },
     {
       name: 'colors',
@@ -328,10 +304,8 @@ foam.CLASS({
         xAxisLabel: this.xAxisLabel,
         yAxisLabel: this.yAxisLabel,
         showGridLines: this.showGridLines,
-        responsive: this.responsive,
         maintainAspectRatio: this.maintainAspectRatio,
         height: this.height,
-        width: this.width,
         showLegend: this.showLegend,
         legendPosition: this.legendPosition,
         showTooltips: this.showTooltips,
@@ -350,7 +324,7 @@ foam.CLASS({
       
       // Then update its properties reactively
       this.onDetach(this.dynamic(function(colors, horizontal, barThickness, xAxisLabel, yAxisLabel, showGridLines, 
-                                  responsive, maintainAspectRatio, height, width, showLegend, legendPosition, 
+                                  maintainAspectRatio, height, showLegend, legendPosition, 
                                   showTooltips, showTooltipSum, animate, animationDuration) { 
         s.colors = colors;
         s.horizontal = horizontal;
@@ -358,10 +332,8 @@ foam.CLASS({
         s.xAxisLabel = xAxisLabel;
         s.yAxisLabel = yAxisLabel;
         s.showGridLines = showGridLines;
-        s.responsive = responsive;
         s.maintainAspectRatio = maintainAspectRatio;
         s.height = height;
-        s.width = width;
         s.showLegend = showLegend;
         s.legendPosition = legendPosition;
         s.showTooltips = showTooltips;
@@ -391,10 +363,8 @@ foam.CLASS({
       clone.xAxisLabel$ = this.xAxisLabel$;
       clone.yAxisLabel$ = this.yAxisLabel$;
       clone.showGridLines$ = this.showGridLines$;
-      clone.responsive$ = this.responsive$;
       clone.maintainAspectRatio$ = this.maintainAspectRatio$;
       clone.height$ = this.height$;
-      clone.width$ = this.width$;
       clone.showLegend$ = this.showLegend$;
       clone.legendPosition$ = this.legendPosition$;
       clone.showTooltips$ = this.showTooltips$;
@@ -447,7 +417,7 @@ foam.CLASS({
       title: 'Display Options',
       order: 4,
       collapsable: true,
-      properties: ['responsive', 'maintainAspectRatio', 'height', 'width', 'showLegend', 'legendPosition', 'showTooltips', 'showTooltipSum', 'animate', 'animationDuration']
+      properties: [ 'maintainAspectRatio', 'height',  'showLegend', 'legendPosition', 'showTooltips', 'showTooltipSum', 'animate', 'animationDuration']
     },
     {
       name: 'colors',
@@ -531,10 +501,8 @@ foam.CLASS({
         xAxisLabel: this.xAxisLabel,
         yAxisLabel: this.yAxisLabel,
         showGridLines: this.showGridLines,
-        responsive: this.responsive,
         maintainAspectRatio: this.maintainAspectRatio,
         height: this.height,
-        width: this.width,
         showLegend: this.showLegend,
         legendPosition: this.legendPosition,
         showTooltips: this.showTooltips,
@@ -551,17 +519,15 @@ foam.CLASS({
       
       // Then update its properties reactively
       this.onDetach(this.dynamic(function(colors, horizontal, xAxisLabel, yAxisLabel, showGridLines,
-                                  responsive, maintainAspectRatio, height, width, showLegend, legendPosition, 
+                                  maintainAspectRatio, height, showLegend, legendPosition, 
                                   showTooltips, showTooltipSum, animate, animationDuration) { 
         s.colors = colors;
         s.horizontal = horizontal;
         s.xAxisLabel = xAxisLabel;
         s.yAxisLabel = yAxisLabel;
         s.showGridLines = showGridLines;
-        s.responsive = responsive;
         s.maintainAspectRatio = maintainAspectRatio;
         s.height = height;
-        s.width = width;
         s.showLegend = showLegend;
         s.legendPosition = legendPosition;
         s.showTooltips = showTooltips;
@@ -590,10 +556,8 @@ foam.CLASS({
       clone.xAxisLabel$ = this.xAxisLabel$;
       clone.yAxisLabel$ = this.yAxisLabel$;
       clone.showGridLines$ = this.showGridLines$;
-      clone.responsive$ = this.responsive$;
       clone.maintainAspectRatio$ = this.maintainAspectRatio$;
       clone.height$ = this.height$;
-      clone.width$ = this.width$;
       clone.showLegend$ = this.showLegend$;
       clone.legendPosition$ = this.legendPosition$;
       clone.showTooltips$ = this.showTooltips$;
@@ -639,7 +603,7 @@ foam.CLASS({
       title: 'Display Options',
       order: 3,
       collapsable: true,
-      properties: ['responsive', 'maintainAspectRatio', 'height', 'width', 'showLegend', 'legendPosition', 'showTooltips', 'showTooltipSum', 'animate', 'animationDuration']
+      properties: [ 'maintainAspectRatio', 'height',  'showLegend', 'legendPosition', 'showTooltips', 'showTooltipSum', 'animate', 'animationDuration']
     },
     {
       name: 'colors',
@@ -724,10 +688,9 @@ foam.CLASS({
         cutoutPercentage: this.cutoutPercentage,
         clockwise: this.clockwise,
         rotation: this.rotation,
-        responsive: this.responsive,
         maintainAspectRatio: this.maintainAspectRatio,
         height: this.height,
-        width: this.width,
+        
         showLegend: this.showLegend,
         legendPosition: this.legendPosition,
         showTooltips: this.showTooltips,
@@ -745,17 +708,15 @@ foam.CLASS({
       
       // Then update its properties reactively
       this.onDetach(this.dynamic(function(cutoutPercentage, rotation, colors, showPercentages, clockwise,
-                                  responsive, maintainAspectRatio, height, width, showLegend, legendPosition, 
+                                  maintainAspectRatio, height, showLegend, legendPosition, 
                                   showTooltips, showTooltipSum, animate, animationDuration) { 
         s.cutoutPercentage = cutoutPercentage;
         s.rotation = rotation;
         s.colors = colors;
         s.showPercentages = showPercentages;
         s.clockwise = clockwise;
-        s.responsive = responsive;
         s.maintainAspectRatio = maintainAspectRatio;
         s.height = height;
-        s.width = width;
         s.showLegend = showLegend;
         s.legendPosition = legendPosition;
         s.showTooltips = showTooltips;
@@ -782,10 +743,9 @@ foam.CLASS({
       clone.colors$ = this.colors$;
       clone.showPercentages$ = this.showPercentages$;
       clone.clockwise$ = this.clockwise$;
-      clone.responsive$ = this.responsive$;
       clone.maintainAspectRatio$ = this.maintainAspectRatio$;
       clone.height$ = this.height$;
-      clone.width$ = this.width$;
+
       clone.showLegend$ = this.showLegend$;
       clone.legendPosition$ = this.legendPosition$;
       clone.showTooltips$ = this.showTooltips$;
@@ -843,7 +803,7 @@ foam.CLASS({
       title: 'Display Options',
       order: 4,
       collapsable: true,
-      properties: ['responsive', 'maintainAspectRatio', 'height', 'width', 'showLegend', 'legendPosition', 'showTooltips', 'showTooltipSum', 'animate', 'animationDuration']
+      properties: [ 'maintainAspectRatio', 'height',  'showLegend', 'legendPosition', 'showTooltips', 'showTooltipSum', 'animate', 'animationDuration']
     },
     {
       name: 'colors',
@@ -986,10 +946,8 @@ foam.CLASS({
           showPoints: this.showPoints,
           pointRadius: this.pointRadius,
           showGridLines: this.showGridLines,
-          responsive: this.responsive,
           maintainAspectRatio: this.maintainAspectRatio,
-          height: this.height,
-          width: this.width,
+          height: this.height,    
           showLegend: this.showLegend,
           legendPosition: this.legendPosition,
           showTooltips: this.showTooltips,
@@ -1012,10 +970,8 @@ foam.CLASS({
           showPoints: this.showPoints,
           pointRadius: this.pointRadius,
           showGridLines: this.showGridLines,
-          responsive: this.responsive,
           maintainAspectRatio: this.maintainAspectRatio,
           height: this.height,
-          width: this.width,
           showLegend: this.showLegend,
           legendPosition: this.legendPosition,
           showTooltips: this.showTooltips,
@@ -1037,7 +993,7 @@ foam.CLASS({
       
       // Then update its properties reactively
       this.onDetach(this.dynamic(function(colors, xAxisLabel, yAxisLabel, fill, tension, stepped, showPoints, pointRadius, showGridLines,
-                                  responsive, maintainAspectRatio, height, width, showLegend, legendPosition, 
+                                  maintainAspectRatio, height, showLegend, legendPosition, 
                                   showTooltips, showTooltipSum, animate, animationDuration) { 
         s.colors = colors;
         s.xAxisLabel = xAxisLabel;
@@ -1048,10 +1004,8 @@ foam.CLASS({
         s.showPoints = showPoints;
         s.pointRadius = pointRadius;
         s.showGridLines = showGridLines;
-        s.responsive = responsive;
         s.maintainAspectRatio = maintainAspectRatio;
         s.height = height;
-        s.width = width;
         s.showLegend = showLegend;
         s.legendPosition = legendPosition;
         s.showTooltips = showTooltips;
@@ -1084,10 +1038,8 @@ foam.CLASS({
       clone.showPoints$ = this.showPoints$;
       clone.pointRadius$ = this.pointRadius$;
       clone.showGridLines$ = this.showGridLines$;
-      clone.responsive$ = this.responsive$;
       clone.maintainAspectRatio$ = this.maintainAspectRatio$;
       clone.height$ = this.height$;
-      clone.width$ = this.width$;
       clone.showLegend$ = this.showLegend$;
       clone.legendPosition$ = this.legendPosition$;
       clone.showTooltips$ = this.showTooltips$;
