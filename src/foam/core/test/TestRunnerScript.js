@@ -24,11 +24,8 @@ Test results are also captured in the TestRun DAO - but since the test
 are normally run from the build, the TestRun DAO is destroyed on each
 run.
 
-To run tests and keep the server alive to inspect, run tests with the
---text-exit:false flag
-./build.sh --run-tests --test-exit:false
-
-To run headed rather than headless, run tests with
+To run headed rather than headless, run tests with the following.
+This will also keep the foam application running for inspection from the GUI.
 ./build.sh --client-tests --test-headed
 `,
 
@@ -37,6 +34,7 @@ To run headed rather than headless, run tests with
     'foam.core.logger.LogLevelFilterLogger',
     'foam.core.logger.Logger',
     'foam.core.logger.Loggers',
+    'foam.core.logger.PrefixLogger',
     'foam.core.script.Language',
     'foam.core.test.Test',
     'foam.core.test.TestRun',
@@ -110,11 +108,6 @@ To run headed rather than headless, run tests with
       value: 'foam.test.side'
     },
     {
-      name: 'SYSTEM_TEST_EXIT',
-      type: 'String',
-      value: 'foam.test.exit'
-    },
-    {
       name: 'SYSTEM_TEST_HEADED',
       type: 'String',
       value: 'foam.test.headed'
@@ -127,6 +120,11 @@ To run headed rather than headless, run tests with
       name: 'userId',
       class: 'Long',
       value: 42 // foam admin
+    },
+    {
+      name: 'path',
+      class: 'String',
+      value: 'admin.tests' // menu with TestBorder
     }
   ],
 
@@ -144,13 +142,18 @@ To run headed rather than headless, run tests with
       String filter = System.getProperty(SYSTEM_TESTS);
       int filtered = SafetyUtil.isEmpty(filter) ? 0 : filter.split(",").length;
       String suites = System.getProperty(SYSTEM_TEST_SUITES);
-      boolean exit = Boolean.valueOf(System.getProperty(SYSTEM_TEST_EXIT, "true"));
+      boolean exit = ! Boolean.valueOf(System.getProperty(SYSTEM_TEST_HEADED, "false"));
       int totalTests = 0;
 
       if ( SafetyUtil.isEmpty(side) ||
            SERVER_SIDE.equals(side) ||
            BOTH_SIDE.equals(side) ) {
         TestRun testRun = new TestRun();
+        testRun.setDescription(getPath());
+        if ( ! SafetyUtil.isEmpty(suites) )
+          testRun.setDescription(testRun.getDescription() + "-" + suites);
+        if ( ! SafetyUtil.isEmpty(filter) )
+          testRun.setDescription(testRun.getDescription() + "-" + filter);
         List<Test> tests = getServerSideTests(x, testRun);
         if ( tests.size() > 0 ) {
           setupServerSide(x);
@@ -169,6 +172,11 @@ To run headed rather than headless, run tests with
            BOTH_SIDE.equals(side) ) {
         TestRun testRun = new TestRun();
         testRun.setServer(false);
+        testRun.setDescription(getPath());
+        if ( ! SafetyUtil.isEmpty(suites) )
+          testRun.setDescription(testRun.getDescription() + "-" + suites);
+        if ( ! SafetyUtil.isEmpty(filter) )
+          testRun.setDescription(testRun.getDescription() + "-" + filter);
         List<Test> tests = getClientSideTests(x, testRun);
         if ( tests.size() > 0 ) {
           setupClientSide(x);
@@ -340,8 +348,7 @@ To run headed rather than headless, run tests with
             printOutput(test);
           }
           catch ( Exception e ) {
-            Logger logger = (Logger) x.get("logger");
-            logger.error(e);
+            Loggers.logger(x).error("TestRunnerScript,runServerSideTests", e);
             failed += 1;
             failedTests.add(test);
           }
@@ -401,18 +408,19 @@ To run headed rather than headless, run tests with
       args: 'X x, List tests, TestRun testRun',
       type: 'TestRun',
       javaCode: `
-      final Logger logger = Loggers.logger(x, this);
+      final Logger logger = new PrefixLogger( new Object[] { "TestRunnerScript", getPath(), Loggers.logger(x) );
+      x = x.put("logger", logger);
+
       final DAO dao = (DAO) x.get("testRunDAO");
       final String id = testRun.getId();
 
-      String path = "admin.tests"; // menu with TestBorder
       List<String> params = new ArrayList();
       params.add("testRunId="+testRun.getId());
       if ( !SafetyUtil.isEmpty(testRun.getFilter()) )
         params.add("filter=" + testRun.getFilter());
 
-      BrowserAgent agent = new BrowserAgent(x, path, params) {
-        public void terminate(X x, boolean alive) {
+      BrowserAgent agent = new BrowserAgent(x, getPath(), params) {
+        public void waitTerminate(X x, boolean alive) {
           logger.info("BrowserAgent,terminate", alive);
           if ( ! alive ) {
             return;

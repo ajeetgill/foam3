@@ -16,9 +16,15 @@ foam.CLASS({
 Example usage: see foam.core.test.TestRunnerScript.js
 
 The caller creates a new BrowserAgent
-and overrides the terminate method, which BrowserAgent
+and overrides the waitTerminate method, which BrowserAgent
 will call once the Browser is launched. Returning from
-the terminate method will close the browser process.
+the waitTerminate method will close the browser process.
+
+Optionally implement 'getTeeOutputStreamWriter' to receive data
+from the Process inputStream, and 'getTeeErrorStreamWriter' to
+receive data from the Process error inputStream.
+
+Optionally implement destroyed to handled any post shutdown logic.
 
 In this example, the caller waits for the browser to perform
 an operation which will eventually set a completed flag.
@@ -30,8 +36,8 @@ an operation which will eventually set a completed flag.
         params.add("filter=" + testRun.getFilter());
 
       BrowserAgent agent = new BrowserAgent(x, path, params) {
-        public void terminate(X x, boolean alive) {
-          logger.info("BrowserAgent,terminate", alive);
+        public void waitTerminate(X x, boolean alive) {
+          logger.info("BrowserAgent,waitTerminate", alive);
           if ( ! alive ) {
             return;
           }
@@ -45,13 +51,13 @@ an operation which will eventually set a completed flag.
               break;
             }
           }
-          logger.info("BrowserAgent,terminate,exit");
+          logger.info("BrowserAgent,waitTerminate,exit");
         }
       };
-      // agent.setHeadless(false); // useful during development
+      agent.setHeadless( ! Boolean.getBoolean(SYSTEM_TEST_HEADED) );
       agent.execute(x);
 `,
-  
+
   javaImports: [
     'foam.core.app.AppConfig',
     'foam.core.logger.Logger',
@@ -65,7 +71,9 @@ an operation which will eventually set a completed flag.
     'static foam.mlang.MLang.EQ',
     'java.io.BufferedReader',
     'java.io.IOException',
+    'java.io.InputStream',
     'java.io.InputStreamReader',
+    'java.io.OutputStreamWriter',
     'java.net.URI',
     'java.util.concurrent.CompletableFuture',
     'java.util.concurrent.TimeUnit',
@@ -123,14 +131,12 @@ an operation which will eventually set a completed flag.
     setX(x);
     setPath(path);
     setParams(params);
-    setLogger(new PrefixLogger(new Object[] { "BrowserAgent", path }, Loggers.logger(x)));
   }
   public BrowserAgent(X x, String path, List params, long userId) {
     setX(x);
     setPath(path);
     setParams(params);
     setUserId(userId);
-    setLogger(new PrefixLogger(new Object[] { "BrowserAgent", path }, Loggers.logger(x)));
   }
   `,
 
@@ -138,7 +144,7 @@ an operation which will eventually set a completed flag.
     {
       name: 'execute',
       javaCode: `
-      final Logger logger = getLogger();
+      final Logger logger = new PrefixLogger(new Object[] { "BrowserAgent", path }, Loggers.logger(x)));
 
       try {
         List<String> command = buildCommand(x);
@@ -146,22 +152,31 @@ an operation which will eventually set a completed flag.
         ProcessBuilder pb = new ProcessBuilder(command);
         final Process process = pb.start();
         setProcess(process);
+        final OutputStreamWriter teeOutputWriter = getTeeOutputStreamWriter(x);
+        final OutputStreamWriter teeErrorWriter = getTeeOutputErrorStreamWriter(x);
+
         try {
           CompletableFuture.runAsync(() -> {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-              String line;
-              while ((line = reader.readLine()) != null) {
+              String line = null;
+              while ( (line = reader.readLine()) != null ) {
                 logger.info(line);
+                if ( teeOutputWriter != null ) {
+                  teeOutputWriter.write(line);
+                }
               }
             } catch (IOException e) {
-              Loggers.logger(x).warning("Process inputstream reader interupted");
+              logger.warning("Process inputstream reader interupted");
             }
           });
           CompletableFuture.runAsync(() -> {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
-              String line;
-              while ((line = reader.readLine()) != null) {
+              String line = null;
+              while ( (line = reader.readLine()) != null ) {
                 logger.error(line);
+                if ( teeErrorWriter != null ) {
+                  teeErrorWriter.write(line);
+                }
               }
             } catch (IOException e) {
               logger.warning("Process errorstream reader interupted");
@@ -179,26 +194,45 @@ an operation which will eventually set a completed flag.
         logger.info("pid", processHandle.pid());
 
         boolean alive = process != null && process.isAlive();
-        terminate(x, alive);
+        waitTerminate(x, alive);
         process.destroy();
         if ( alive ) {
           process.destroyForcibly();
         }
+        destroyed(x);
         setProcess(null);
       }
       `
     },
     {
+      documentation: `Hook for caller to tee into the Process InputStream`,
+      name: 'getTeeOutputStreamWriter',
+      args: 'X x',
+      type: 'java.io.OutputStreamWriter',
+      javaCode: `
+      return null;
+      `
+    },
+    {
+      documentation: `Hook for caller to tee into the Process Error InputStream`,
+      name: 'getTeeOutputErrorStreamWriter',
+      args: 'X x',
+      type: 'java.io.OutputStreamWriter',
+      javaCode: `
+      return null;
+      `
+    },
+    {
       documentation: `Hook for caller to control termination. Implement
-terminate and return when browser process can be closed.
+waitTerminate and return when browser process can be closed.
 
 new BrowserAgent(...) {
-  public void terminate(X x) {
+  public void waitTerminate(X x) {
     ...
   }
 }
 `,
-      name: 'terminate',
+      name: 'waitTerminate',
       args: 'X x, boolean alive',
       javaCode: `
       if ( ! alive ) return;
@@ -207,6 +241,13 @@ new BrowserAgent(...) {
       } catch (InterruptedException e) {
         // nop
       }
+      `
+    },
+    {
+      name: 'destroyed',
+      args: 'X x',
+      javaCode: `
+        // nop
       `
     },
     {
