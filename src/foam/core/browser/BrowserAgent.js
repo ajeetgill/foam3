@@ -144,7 +144,7 @@ an operation which will eventually set a completed flag.
     {
       name: 'execute',
       javaCode: `
-      final Logger logger = new PrefixLogger(new Object[] { "BrowserAgent", path }, Loggers.logger(x)));
+      final Logger logger = new PrefixLogger(new Object[] { "BrowserAgent", getPath() }, Loggers.logger(x));
 
       try {
         List<String> command = buildCommand(x);

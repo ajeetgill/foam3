@@ -408,7 +408,7 @@ This will also keep the foam application running for inspection from the GUI.
       args: 'X x, List tests, TestRun testRun',
       type: 'TestRun',
       javaCode: `
-      final Logger logger = new PrefixLogger( new Object[] { "TestRunnerScript", getPath(), Loggers.logger(x) );
+      final Logger logger = new PrefixLogger(new Object[] { "TestRunnerScript", getPath() }, Loggers.logger(x));
       x = x.put("logger", logger);
 
       final DAO dao = (DAO) x.get("testRunDAO");
