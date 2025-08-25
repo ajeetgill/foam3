@@ -66,9 +66,9 @@ foam.CLASS({
         // Check if we're dealing with dates using the groupBy property
         var isDateAxis = this.arg1 && (foam.lang.Date.isInstance(this.arg1) || foam.lang.DateTime.isInstance(this.arg1));
         
-        // If topN > 0, TopNGroupBy already provides groups in correct sorted order and limited count
+        // If topN > 0, use groupKeys to preserve backend order (JavaScript reorders numeric keys)
         // Otherwise, use sortedKeys() for proper sorting
-        var sortedKeys = this.topN > 0 ? Object.keys(groups) : 
+        var sortedKeys = this.topN > 0 ? (this.groupKeys || Object.keys(groups)) : 
                         (this.sortedKeys ? this.sortedKeys() : Object.keys(groups));
         
         var index = 0;
@@ -251,16 +251,16 @@ foam.CLASS({
     {
       name: 'chart_',
       transient: true,
-      expression: function(groups, colors, showPercentages, cutoutPercentage, clockwise, rotation,
+      expression: function(groups,groupKeys, colors, showPercentages, cutoutPercentage, clockwise, rotation,
                           responsive, maintainAspectRatio, showLegend, 
                           legendPosition, showTooltips, showTooltipSum, animate, animationDuration) {
         var labels = [];
         var data = [];
         var backgroundColors = [];
         
-        // If topN > 0, TopNGroupBy already provides groups in correct sorted order and limited count
+        // If topN > 0, use groupKeys to preserve backend order (JavaScript reorders numeric keys)
         // Otherwise, use sortedKeys() for proper sorting
-        var sortedKeys = this.topN > 0 ? Object.keys(groups) : 
+        var sortedKeys = this.topN > 0 ? (this.groupKeys || Object.keys(groups)) : 
                         (this.sortedKeys ? this.sortedKeys() : Object.keys(groups));
         
         var index = 0;
