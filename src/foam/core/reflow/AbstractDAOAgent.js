@@ -474,8 +474,8 @@ foam.CLASS({
       value: 0,
       help: 'Limit total number of groups returned (0 for no limit).',
       hidden: true,
-      documentation: `groupLimit is hidden to avoid confusion with topN. 
-        groupLimit cuts off data collection early (during put), while topN properly 
+      documentation: `groupLimit is hidden to avoid confusion with topN.
+        groupLimit cuts off data collection early (during put), while topN properly
         aggregates all data first then limits groups (during eof). Use topN instead.`
     },
     {
@@ -495,7 +495,7 @@ foam.CLASS({
     function createSink() {
       var expr = this.prop;
       var innerSink = this.sink.createSink();
-      
+
       // Use TopNGroupBy if topN > 0 and sink type is supported
       if ( this.topN > 0 && this.TopNGroupBy.isSupported(innerSink) ) {
         return this.TopNGroupBy.create({
@@ -507,15 +507,15 @@ foam.CLASS({
           includeOthers: this.includeOthers
         });
       }
-      
+
       // Fall back to regular GroupBy
       var groupBySink = this.GROUP_BY(expr, innerSink);
-      
+
       // Apply legacy group limit if specified
       if ( this.groupLimit > 0 ) {
         groupBySink.groupLimit = this.groupLimit;
       }
-      
+
       return groupBySink;
     },
     function addToE(e) {
@@ -815,28 +815,22 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'AllDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
+//  extends: 'foam.core.reflow.AbstractDAOAgent',
 
   requires: [ 'foam.u2.CitationView' ],
 
+  imports: [ 'agentDAO' ],
+
   methods: [
     function execute(e) {
-      foam.core.reflow.SinkView.AGENTS.forEach(a => {
-        a = a[0];
-        if ( a == 'All' ) return;
-        if ( a == 'Duplicate' ) return;
-        if ( a == 'GroupBy' ) return;
-        if ( a == 'GridBy' ) return;
-        if ( a == 'Pivot' ) return;
-        if ( a == 'Pie' ) return;
-        if ( a == 'Min' ) return;
-        if ( a == 'Max' ) return;
-        if ( a == 'Sum' ) return;
-        if ( a == 'Avg' ) return;
-
-        var cls = foam.lookup(this.cls_.package + '.' + a + 'DAOAgent');
+      var exclude = 'All,GroupBy,GridBy,Pivot,Row,Column,Script'.split(',');
+      e.select(this.agentDAO, a => {
+        if ( exclude.indexOf(a.label) != -1 ) return;
+        if ( a.type === 'chart' || a.type === 'calculation' ) return;
+        var cls   = foam.lookup(a.value);
         var agent = cls.create({}, this);
-        e.start('h2').add(a).end().start().call(function () { agent.execute(this); });
+        e.start('h2').add(a.label).end().start().call(function () { agent.execute(this); });
       });
     }
   ]
