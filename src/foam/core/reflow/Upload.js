@@ -655,28 +655,58 @@ foam.CLASS({
             if ( foam.lang.Long.isInstance(o.ID) && ! o.id ) o.id = self.matchedRows;
             await self.data.put(o);
           } else {
-            // Real upload mode: send to DAO
-            if ( ! agent ) agent = self.UploadAgent.create();
-            agent.data.push(o);
-            if ( self.matchedRows && self.matchedRows % 1000 === 0 ) {
-              var oldAgent = agent;
-              agent = undefined;
-              if ( self.matchedRows % 10000 === 0 ) {
-                await self.dao.cmd(oldAgent);
-              } else {
-                self.dao.cmd(oldAgent);
+            // Real upload mode
+            if ( Object.keys(self.validationErrorMap).length > 0 ) {
+              // Validation errors exist - store in preview data for review, don't upload
+              if ( foam.lang.Long.isInstance(o.ID) && ! o.id ) o.id = self.matchedRows;
+              await self.data.put(o);
+            } else {
+              // No validation errors - proceed with actual upload
+              if ( ! agent ) agent = self.UploadAgent.create();
+              agent.data.push(o);
+              if ( self.matchedRows && self.matchedRows % 1000 === 0 ) {
+                var oldAgent = agent;
+                agent = undefined;
+                if ( self.matchedRows % 10000 === 0 ) {
+                  await self.dao.cmd(oldAgent);
+                } else {
+                  self.dao.cmd(oldAgent);
+                }
+                // Wait 0ms so that the GUI (including the upload progress) can update
+                await new Promise(r => self.setTimeout(r, 0));
               }
-              // Wait 0ms so that the GUI (including the upload progress) can update
-              await new Promise(r => self.setTimeout(r, 0));
             }
           }
         },
         eof: async function() {
           try {
-            if ( agent ) await self.dao.cmd(agent);
+            // Only send agent command if no validation errors
+            if ( agent && Object.keys(self.validationErrorMap).length === 0 ) {
+              await self.dao.cmd(agent);
+            }
             self.progress = 100;
             console.timeEnd('upload');
 
+            // Show validation error summary if there were any errors
+            if ( Object.keys(self.validationErrorMap).length > 0 ) {
+              self.output += '<br><div style="border: 1px solid #ff9800; padding: 10px; background: #fff3e0; border-radius: 4px;">';
+              self.output += '<h3 style="color: #e65100; margin-top: 0;">Validation Error Summary</h3>';
+              self.output += '<p style="color: #333;">Total rows processed: ' + totalRows + '</p>';
+              self.output += '<p style="color: #333;">Rows with errors: ' + (totalRows - self.matchedRows) + '</p>';
+              
+              // Group and display errors
+              self.output += '<h4 style="color: #e65100;">Error Details:</h4>';
+              self.output += '<ul style="color: #333;">';
+              
+              var sortedErrors = Object.values(self.validationErrorMap).sort((a, b) => b.count - a.count);
+              for ( var i = 0; i < sortedErrors.length; i++ ) {
+                var errorInfo = sortedErrors[i];
+                self.output += '<li><strong>' + errorInfo.field + '</strong>: ' + errorInfo.error + ' (' + errorInfo.count + ' occurrences)</li>';
+              }
+              
+              self.output += '</ul>';
+              self.output += '</div><br>';
+            }
 
             if ( ! real ) {
               var block = self.block;
