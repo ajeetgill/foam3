@@ -120,9 +120,7 @@ foam.CLASS({
     },
 
     async function normalizeObj() {
-      console.log('Normalizing object...');
       this.compressed = await this.compressData(this.data);
-      console.log('Normalized object:', this);
     },
     {
       name: 'execute',
