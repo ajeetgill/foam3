@@ -50,11 +50,13 @@ foam.CLASS({
             String decompressedJson = new String(baos.toByteArray(), "UTF-8");
             foam.lib.json.JSONParser parser = new foam.lib.json.JSONParser();
             parser.setX(getX());
-            Object parsed = parser.parseString(decompressedJson);
-            
+            Object[] arrayResult = parser.parseStringForArray(decompressedJson, null);
+            Object parsed = arrayResult;
             if ( parsed instanceof foam.lang.FObject[] ) {
+              System.out.println("Successfully decompressed data. length is " + ((foam.lang.FObject[]) parsed).length);
               return (foam.lang.FObject[]) parsed;
             } else {
+              System.err.println("Failed to parse decompressed data.");
               return new foam.lang.FObject[0];
             }
           } catch ( Exception e ) {
@@ -68,52 +70,7 @@ foam.CLASS({
     },
     {
       class: 'String',
-      name: 'compressed',
-      getter: async function(data) {
-        if ( ! data || data.length === 0 ) return null;
-        
-        try {
-          // Serialize data to JSON
-          const jsonData = foam.json.Network.stringify(data);
-          const encoder = new TextEncoder();
-          const dataBytes = encoder.encode(jsonData);
-          
-          // Use browser's CompressionStream
-          const stream = new CompressionStream('gzip');
-          const writer = stream.writable.getWriter();
-          const reader = stream.readable.getReader();
-          
-          // Write data and close writer
-          await writer.write(dataBytes);
-          await writer.close();
-          
-          // Read all compressed chunks
-          const chunks = [];
-          let done = false;
-          while ( ! done ) {
-            const { value, done: readerDone } = await reader.read();
-            done = readerDone;
-            if ( value ) chunks.push(value);
-          }
-          
-          // Combine chunks into single array
-          const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-          const compressedData = new Uint8Array(totalLength);
-          let offset = 0;
-          for ( const chunk of chunks ) {
-            compressedData.set(chunk, offset);
-            offset += chunk.length;
-          }
-          
-          // Convert to base64 string
-          const base64String = btoa(String.fromCharCode.apply(null, compressedData));
-          return base64String;
-          
-        } catch ( e ) {
-          console.error('Failed to compress data:', e);
-          return null;
-        }
-      }
+      name: 'compressed'
     },
     {
       class: 'Int',
@@ -122,8 +79,50 @@ foam.CLASS({
   ],
 
   methods: [
-    function normalizeObj() {
-      this.compressed  = this.compressed;
+    async function compressData(data) {
+      if ( ! data || data.length === 0 ) return null;
+        
+      try {
+        // Serialize data to JSON
+        const jsonData = foam.json.Network.stringify(data);
+        const dataBytes = new TextEncoder().encode(jsonData);
+        
+        // Create compression stream using Response API for efficiency
+        const stream = new CompressionStream('gzip');
+        const compressedResponse = new Response(
+          new Blob([dataBytes]).stream().pipeThrough(stream)
+        );
+        
+        // Get compressed data as array buffer (more efficient than reading chunks)
+        const compressedBuffer = await compressedResponse.arrayBuffer();
+        const compressedArray = new Uint8Array(compressedBuffer);
+        
+        // Optimized base64 encoding
+        const CHUNK_SIZE = 65536; // 64KB chunks to avoid call stack issues
+        
+        if ( compressedArray.length <= CHUNK_SIZE ) {
+          // For smaller data, use direct conversion with spread operator
+          return btoa(String.fromCharCode.apply(null, compressedArray));
+        } else {
+          // For larger data, process in chunks and use array join for efficiency
+          const chunks = [];
+          for ( let i = 0; i < compressedArray.length; i += CHUNK_SIZE ) {
+            const chunk = compressedArray.subarray(i, Math.min(i + CHUNK_SIZE, compressedArray.length));
+            chunks.push(String.fromCharCode.apply(null, chunk));
+          }
+          return btoa(chunks.join(''));
+        }
+        
+      } catch ( e ) {
+        console.error('Failed to compress data:', e);
+        return null;
+      }
+    },
+
+    async function normalizeObj() {
+      console.log('Normalizing object...');
+      this.compressed = await this.compressData(this.data);
+      console.log('Normalized object:', this);
     },
     {
       name: 'execute',
