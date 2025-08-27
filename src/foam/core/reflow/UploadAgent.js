@@ -122,6 +122,9 @@ foam.CLASS({
   ],
 
   methods: [
+    function normalizeObj() {
+      this.compressed  = this.compressed;
+    },
     {
       name: 'execute',
 //      type: 'Void',
@@ -134,7 +137,7 @@ foam.CLASS({
           dao.put(d);
         }
         // Clear compressed data to avoid sending back to client
-        setCompressed(null);
+        clearProperty("compressed");
         // Reset transient data property
         clearProperty("data");
         setProcessed(data.length);

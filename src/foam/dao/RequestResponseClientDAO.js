@@ -112,6 +112,7 @@ Suitable for usage against backends that don't support listen(), such as plain H
     {
       name: 'cmd_',
       code: function cmd_(x, obj) {
+        obj.normalizeObj();
         /** Force the DAO to publish a 'reset' notification. **/
         if ( foam.dao.DAO.RESET_CMD === obj ) {
           this.on.reset.pub();
