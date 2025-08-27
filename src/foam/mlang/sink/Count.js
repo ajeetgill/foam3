@@ -54,6 +54,7 @@ if (other instanceof foam.mlang.sink.Count) {
     function toString() { return 'COUNT()'; },
     function toSummary() { return this.value; },
     function addToE(e) { e.add(this.value); },
+    function valueOf() { return this.value; },
 
     function toProperties() {
       return [ { class: 'Long', name: 'count', label: 'count' } ]

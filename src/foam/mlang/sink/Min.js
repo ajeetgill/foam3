@@ -36,23 +36,23 @@ foam.CLASS({
       args: 'foam.mlang.sink.Reducible other',
       code: function reduce(other) {
         if ( ! other || ! foam.mlang.sink.Min.isInstance(other) ) return;
-        
+
         if ( ! this.hasOwnProperty('value') || foam.util.compare(other.value, this.value) < 0 ) {
           this.value = other.value;
         }
-        
+
       },
       javaCode: `
 if (other == null) return;
 if (other instanceof foam.mlang.sink.Min) {
   foam.mlang.sink.Min min = (foam.mlang.sink.Min) other;
   if (min.getValue() == null) return;
-  
+
   if (getValue() == null) {
     setValue(min.getValue());
     return;
   }
-  
+
   if (((Comparable) min.getValue()).compareTo(getValue()) < 0) {
     setValue(min.getValue());
   }
@@ -60,6 +60,7 @@ if (other instanceof foam.mlang.sink.Min) {
       `
     },
     function toSummary() { return this.value; },
+    function valueOf() { return this.value; },
     function addToE(e) { e.add(this.value); }
   ]
 });

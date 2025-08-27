@@ -55,7 +55,7 @@ if (other == null) return;
 if (other instanceof foam.mlang.sink.Average) {
   foam.mlang.sink.Average avg = (foam.mlang.sink.Average) other;
   if (avg.getCount() == 0) return;
-  
+
   long totalCount = getCount() + avg.getCount();
   double combinedValue = (getValue() * getCount() + avg.getValue() * avg.getCount()) / totalCount;
   setValue(combinedValue);
@@ -64,6 +64,7 @@ if (other instanceof foam.mlang.sink.Average) {
       `
     },
     function toSummary() { return this.value; },
+    function valueOf() { return this.value; },
     function addToE(e) { e.add(this.value); }
   ]
 });

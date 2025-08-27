@@ -42,23 +42,23 @@ foam.CLASS({
       args: 'foam.mlang.sink.Reducible other',
       code: function reduce(other) {
         if ( ! other || ! foam.mlang.sink.Max.isInstance(other) ) return;
-        
+
         if ( ! this.hasOwnProperty('value') || foam.util.compare(other.value, this.value) > 0 ) {
           this.value = other.value;
         }
-        
+
       },
       javaCode: `
 if (other == null) return;
 if (other instanceof foam.mlang.sink.Max) {
   foam.mlang.sink.Max max = (foam.mlang.sink.Max) other;
   if (max.getValue() == null) return;
-  
+
   if (getValue() == null) {
     setValue(max.getValue());
     return;
   }
-  
+
   if (((Comparable) max.getValue()).compareTo(getValue()) > 0) {
     setValue(max.getValue());
   }
@@ -66,6 +66,7 @@ if (other instanceof foam.mlang.sink.Max) {
       `
     },
     function toSummary() { return this.value; },
+    function valueOf() { return this.value; },
     function addToE(e) { e.add(this.value); }
   ]
 });

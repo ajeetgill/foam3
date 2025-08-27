@@ -54,6 +54,8 @@ if (other instanceof foam.mlang.sink.Sum) {
       return [ { class: 'Double', name: name , label: name /* `SUM(${this.arg1.name})`*/ } ];
     },
 
+    function valueOf() { return this.value; },
+
     function setPropertyValues(o, sink, ps) {
       ps[0].set(o, sink.value);
     }
