@@ -95,7 +95,9 @@ foam.CLASS({
       this.onDetach(this.stack.setTrailingContainer(
         this.E()
           .startContext({ data: this })
-          .tag(this.RUN_ALL).tag(this.RUN_FAILED_TESTS)
+          .start().tag(this.RUN_CLIENT).tag(this.RUN_FAILED_CLIENT).end()
+          .start().tag(this.RUN_ALL).tag(this.RUN_FAILED).end()
+          .start().tag(this.RUN_SERVER).tag(this.RUN_FAILED_SERVER).end()
           .endContext()
       ));
       this.SUPER();
@@ -178,15 +180,53 @@ foam.CLASS({
 
   actions: [
     {
+      name: 'runClient',
+      code: function(X) {
+        this.runTests(this.dao.where(this.EQ(this.Test.LANGUAGE, 'JS')));
+      }
+    },
+    {
+      name: 'runFailedClient',
+      code: function(X) {
+        this.runTests(this.dao.where(
+          this.AND(
+            this.GT(this.Test.FAILED, 0),
+            this.EQ(this.Test.LANGUAGE, 'JS')
+          )));
+      }
+    },
+    {
       name: 'runAll',
       code: function(X) {
         this.runTests(this.dao);
       }
     },
     {
-      name: 'runFailedTests',
+      name: 'runFailed',
       code: function(X) {
         this.runTests(this.dao.where(this.GT(this.Test.FAILED, 0)));
+      }
+    },
+    {
+      name: 'runServer',
+      code: function(X) {
+        this.runTests(this.dao.where(
+          this.OR(
+            this.EQ(this.Test.LANGUAGE, 'BEANSHELL'),
+            this.EQ(this.Test.LANGUAGE, 'JSHELL')
+          )));
+      }
+    },
+    {
+      name: 'runFailedServer',
+      code: function(X) {
+        this.runTests(this.dao.where(
+          this.AND(
+            this.GT(this.Test.FAILED, 0),
+            this.OR(
+              this.EQ(this.Test.LANGUAGE, 'BEANSHELL'),
+              this.EQ(this.Test.LANGUAGE, 'JSHELL')
+            ))));
       }
     }
   ]
