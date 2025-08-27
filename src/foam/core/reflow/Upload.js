@@ -629,9 +629,9 @@ foam.CLASS({
           totalRows++;
           self.processing = totalRows;
           self.progress   = self.rows ? Math.max(self.progress, Math.floor(100 * totalRows / self.rows)) : 0;
-
-          if ( o.errors_ ) {
-            self.trackValidationError(o.errors_, { row: totalRows });
+          var errors = o.errors_;
+          if ( errors ) {
+            self.trackValidationError(errors, { row: totalRows });
           }
 
           // Apply filter for both preview and real uploads
@@ -664,18 +664,16 @@ foam.CLASS({
               // No validation errors - proceed with actual upload
               if ( ! agent ) agent = self.UploadAgent.create();
               agent.data.push(o);
-              if ( self.matchedRows && self.matchedRows % 1000 === 0 ) {
+              if ( self.matchedRows && self.matchedRows % 2000 === 0 ) {
                 var oldAgent = agent;
                 agent = undefined;
-                if ( self.matchedRows % 10000 === 0 ) {
-                  await self.dao.cmd(oldAgent);
-                } else {
-                  self.dao.cmd(oldAgent);
-                }
-                // Wait 0ms so that the GUI (including the upload progress) can update
-                await new Promise(r => self.setTimeout(r, 0));
+                await self.dao.cmd(oldAgent);
               }
             }
+          }
+          // give wait time every 2 k rows
+          if ( totalRows && totalRows % 2000 === 0 ) {
+            await new Promise(r => self.setTimeout(r, 0));
           }
         },
         eof: async function() {
