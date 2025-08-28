@@ -25,11 +25,10 @@ foam.CLASS({
       javaCode: `
         Cron newCron = (Cron) obj;
         Cron oldCron = (Cron) getDelegate().find_(x, obj);
-
-        // new or on schedule change.
-        if ( oldCron == null ||
-             oldCron != null &&
-             ! SafetyUtil.equals(oldCron.getSchedule(), newCron.getSchedule()) ) {
+        if ( newCron.getStatus() == ScriptStatus.UNSCHEDULED ||
+             newCron.getStatus() == ScriptStatus.ERROR ||
+             ( oldCron != null &&
+               ! SafetyUtil.equals(oldCron.getSchedule(), newCron.getSchedule()) ) ) {
           newCron = updateScheduledTime(x, newCron);
         }
         return getDelegate().put_(x, newCron);
