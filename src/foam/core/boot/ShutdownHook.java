@@ -10,6 +10,7 @@
 package foam.core.boot;
 
 import foam.core.app.AppConfig;
+import foam.core.app.Mode;
 import foam.core.logger.Logger;
 import foam.core.logger.Loggers;
 import foam.lang.X;
@@ -37,15 +38,16 @@ public class ShutdownHook
 
   @Override
   public void run() {
+    X x = x_;
     Logger logger = Loggers.logger(x_);
     logger.info("Shutdownhook,shutdown requested");
+    AppConfig appConfig = (AppConfig) x.get("appConfig");
 
     // Generate a thrump dump
     try {
       foam.core.http.ThreadsWebAgent agent = new foam.core.http.ThreadsWebAgent();
       FileSystem fs = FileSystems.getDefault();
       String tmp = System.getProperty("java.io.tmpdir", "tmp");
-      AppConfig appConfig = (AppConfig) x_.get("appConfig");
       String appName = appConfig.getName().trim().replaceAll(" ","");
       String hostname = System.getProperty("hostname", "localhost");
       if ( hostname.equals("localhost") ) {
@@ -67,7 +69,8 @@ public class ShutdownHook
       logger.warning("ShutdownHook,shutdown,Failed to generated thread report", t);
     }
 
-    if ( factories_ != null ) {
+    if ( factories_ != null &&
+         appConfig.getMode() != foam.core.app.Mode.TEST ) {
       for ( CSpecFactory factory : factories_.values() ) {
         // Report factory shutdown to troubleshoot services not stoppinp
         logger.debug("Shutdownhook,shutdown,factory",factory.getCSpecName(),"start");
