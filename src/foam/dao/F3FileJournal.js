@@ -75,6 +75,7 @@ foam.CLASS({
           for ( CharSequence entry ; ( entry = getEntry(reader) ) != null ; ) {
             int length = entry.length();
             if ( length == 0 ) continue;
+            if ( COMMENT.matcher(entry).matches() ) continue;
             if ( length < 3 ) {
               // Don't bother reporting lines with just spaces
               if ( entry.toString().trim().length() != 0 ) {
@@ -82,7 +83,6 @@ foam.CLASS({
               }
               continue;
             }
-            if ( COMMENT.matcher(entry).matches() ) continue;
             try {
               final char operation = entry.charAt(0);
               final String strEntry = entry.subSequence(2, length - 1).toString();
