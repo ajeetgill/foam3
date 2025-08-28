@@ -214,6 +214,7 @@ foam.POM({
     { name: "cron/CronSchedule",                                                          flags: "js|java" },
     { name: "cron/CronScheduler",                                                         flags: "js|java" },
     { name: "cron/CronScheduleDAO",                                                       flags: "js|java" },
+    { name: "cron/CronScheduledComparator",                                               flags: "java" },
     { name: "cron/IntervalSchedule",                                                      flags: "js|java" },
     { name: "cron/MonthlyChoice",                                                         flags: "js|java" },
     { name: "cron/NeverSchedule",                                                         flags: "js" },

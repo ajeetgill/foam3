@@ -14,10 +14,6 @@ p({
               .build())
           )
       .setPm(true)
-      .setOrder(new foam.mlang.order.Comparator[] {
-        new foam.mlang.order.Desc.Builder(x).setArg1(foam.core.cron.Cron.ENABLED).build(),
-        new foam.mlang.order.Desc.Builder(x).setArg1(foam.core.cron.Cron.LAST_RUN).build()
-      })
       .setCluster(false)
       .setSaf(false)
       .build()
@@ -36,7 +32,8 @@ p({
     return new foam.dao.EasyDAO.Builder(x)
       .setOf(foam.core.cron.Cron.getOwnClassInfo())
       .setInnerDAO(x.get("localCronJobDAO"))
-      .build();
+      .build()
+      .orderBy(new foam.core.cron.CronScheduledComparator());
   """,
   "client":"""
     {
