@@ -44,10 +44,10 @@ foam.CLASS({
   tableColumns: [
     'id',
     'enabled',
-    'lastDuration',
-    'lastRun',
-    'status',
     'scheduledTime',
+    'status',
+    'lastRun',
+    'lastDuration',
     'run'
   ],
 
