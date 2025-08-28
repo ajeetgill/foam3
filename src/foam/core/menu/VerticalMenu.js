@@ -133,7 +133,7 @@ foam.CLASS({
             .add(this.MENU_SEARCH)
               .addClass(this.myClass('search'))
             .end()
-            .endContext()
+            .endContext();
         })
         .start({
           class: 'foam.u2.view.TreeView',
@@ -144,7 +144,11 @@ foam.CLASS({
           onClickAddOn: function(data, hasChildren) { self.openMenu(data, hasChildren); },
           selection$: self.currentMenu$.map(m => m),
           formatter: function(data) {
-            data.handler.renderMenuItem(this, data);
+            if ( data.handler ) {
+              data.handler.renderMenuItem(this, data);
+            } else {
+              console.warn('VerticalMenu - No menu handler for',data.id);
+            }
           },
           defaultRoot: self.theme.navigationRootMenu
         })

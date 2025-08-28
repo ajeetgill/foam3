@@ -20,6 +20,7 @@ foam.POM({
   projects: [
     { name: "app/pom" },
     { name: "auth/pom" },
+    { name: "browser/pom" },
     { name: "reflow/pom" },
     { name: "er/pom" },
     { name: "jetty/pom" },
@@ -32,7 +33,7 @@ foam.POM({
     { name: "security/pom" },
     { name: "so/pom" },
     { name: "notification/email/ms/pom" },
-    { name: "test/pom", flags: "test" }
+    { name: "test/pom" /*, flags: "test"*/ }
   ],
   files: [
     { name: "client/ClientBuilder",                                                       flags: "js" },
@@ -202,8 +203,6 @@ foam.POM({
     { name: "script/ScriptRunnerDAO",                                                     flags: "js|java" },
     { name: "script/ScriptStatus",                                                        flags: "js|java" },
     { name: "script/Relationships",                                                       flags: "js" },
-    { name: "script/TestRunnerConfig",                                                   flags: "js&test|java&test" },
-    { name: "script/TestRunnerScript",                                                    flags: "js&test|java&test" },
     { name: "servlet/ErrorPageMapping",                                                   flags: "js|java" },
     { name: "servlet/FilterMapping",                                                      flags: "js|java" },
     { name: "servlet/ProxyMapping",                                                       flags: "js|java" },

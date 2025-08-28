@@ -38,7 +38,9 @@ foam.CLASS({
 
   searchColumns: [
     'id',
-    'description'
+    'description',
+    'source',
+    'language'
   ],
 
   documentation: `
