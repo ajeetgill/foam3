@@ -33,7 +33,7 @@ foam.POM({
     { name: "security/pom" },
     { name: "so/pom" },
     { name: "notification/email/ms/pom" },
-    { name: "test/pom" /*, flags: "test"*/ }
+    { name: "test/pom",                                flags: "test" }
   ],
   files: [
     { name: "client/ClientBuilder",                                                       flags: "js" },
