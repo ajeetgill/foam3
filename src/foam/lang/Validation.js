@@ -166,6 +166,7 @@ foam.CLASS({
     {
       name: 'internalValidateObj',
       factory: function(forClass_) {
+        console.log(forClass_?.name, this.name);
         var name     = this.name;
         var label    = this.label;
         var required = this.required;
@@ -610,17 +611,19 @@ foam.CLASS({
   name: 'DatePropertyValidationRefinement',
   refines: 'foam.lang.Date',
 
+  // Is only needed for Java to restrict Dates to JS's range
+  flags: 'java',
+
   properties: [
     {
       class: 'ValidationPredicateArray',
       name: 'internalValidationPredicates',
-      // TODO: Not required for JS, so maybe just make work for Java.
       factory: function() {
-        var query = 'thisValue !exists||thisValue<=maxDate&&thisValue>=minDate'
+        debugger;
         return [
           {
             args: [ this.name ],
-            query: query,
+            query: 'thisValue !exists||thisValue<=maxDate&&thisValue>=minDate',
             errorString: 'Invalid date value'
           }
         ];
