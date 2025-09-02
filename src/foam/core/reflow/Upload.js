@@ -635,11 +635,11 @@ foam.CLASS({
 
           totalRows++;
           // TODO: handle errors more efficiently because errors_ is a dynamic slot
-          /*
+          // and we only need one-time validation here
           var errors = o.errors_;
           if ( errors ) {
             self.trackValidationError(errors, { row: totalRows });
-          }*/
+          }
           /*
           var errors = o.validateObject();
           if ( errors ) {
