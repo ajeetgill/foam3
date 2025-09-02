@@ -54,7 +54,6 @@ foam.CLASS({
           var targetModel = mapping.of;
           var prop = targetModel && targetModel.getAxiomByName(mapping.property);
 
-
           this.
             startContext({ data: mapping }).
             start('tr').
@@ -93,6 +92,7 @@ foam.CLASS({
 
   requires: [
     'foam.dao.MDAO',
+    'foam.lang.CountingSemaphore',
     'foam.lib.csv.CSVParser',
     'foam.core.reflow.ColumnParser',
     'foam.core.reflow.DAOHolder',
@@ -247,6 +247,7 @@ foam.CLASS({
           of: X.data.of
         };
       },
+      hidden: true,
       expression: function(of, fileHeaders) {
         // Auto-calculate mappings from fileHeaders when available
         // Once explicitly set, this expression stops being reactive (FOAM3 behavior)
@@ -314,6 +315,7 @@ foam.CLASS({
     {
       class: 'Boolean',
       name: 'bulkUpload',
+      hidden: true,
       value: true
     },
     {
@@ -418,8 +420,6 @@ foam.CLASS({
         return null;
       }
     },
-
-
 
     function findMatchingHeader(headers, prop) {
       if ( ! headers || headers.length === 0 ) return null;
@@ -612,8 +612,16 @@ foam.CLASS({
       this.clear();
       console.time('upload');
       var totalRows = 0;
+      var matchedRows = 0;
       var agent;
       var filter = self.parseFilter();
+      var semaphore = this.CountingSemaphore.create({limit: 4});
+
+      function updateStatus() {
+        self.processing = totalRows;
+        self.progress   = self.rows ? Math.max(self.progress, Math.floor(100 * totalRows / self.rows)) : 0;
+        self.matchedRows = matchedRows;
+      }
 
       var sink = this.bulkUpload ? {
         put: async function(o) {
@@ -625,12 +633,17 @@ foam.CLASS({
           }
 
           totalRows++;
-          self.processing = totalRows;
-          self.progress   = self.rows ? Math.max(self.progress, Math.floor(100 * totalRows / self.rows)) : 0;
+          // TODO: handle errors more efficiently because errors_ is a dynamic slot
+          /*
           var errors = o.errors_;
           if ( errors ) {
             self.trackValidationError(errors, { row: totalRows });
-          }
+          }*/
+          /*
+          var errors = o.validateObject();
+          if ( errors ) {
+            self.trackValidationError(errors, { row: totalRows });
+          }*/
 
           // Apply filter for both preview and real uploads
           if ( filter ) {
@@ -646,7 +659,7 @@ foam.CLASS({
           }
 
           // Object passed filter or no filter exists
-          self.matchedRows++;
+          matchedRows++;
 
           if ( ! real ) {
             // Preview mode: just store in data
@@ -662,15 +675,19 @@ foam.CLASS({
               // No validation errors - proceed with actual upload
               if ( ! agent ) agent = self.UploadAgent.create();
               agent.data.push(o);
-              if ( self.matchedRows && self.matchedRows % 2000 === 0 ) {
+              if ( matchedRows && matchedRows % 2000 === 0 ) {
                 var oldAgent = agent;
                 agent = undefined;
-                await self.dao.cmd(oldAgent);
+                await new Promise(r => self.setTimeout(r, 0));
+                // Only allow a fixed number of outstanding cmd() calls
+                await semaphore;
+                self.dao.cmd(oldAgent).then(() => semaphore.decr());
               }
             }
           }
-          // give wait time every 2 k rows
+          // pause periodially to avoid blocking the UI
           if ( totalRows && totalRows % 2000 === 0 ) {
+            updateStatus();
             await new Promise(r => self.setTimeout(r, 0));
           }
         },
@@ -680,6 +697,7 @@ foam.CLASS({
             if ( agent && Object.keys(self.validationErrorMap).length === 0 ) {
               await self.dao.cmd(agent);
             }
+            updateStatus();
             self.progress = 100;
             console.timeEnd('upload');
 
@@ -729,6 +747,7 @@ foam.CLASS({
       } : {
         put: self.dao.put.bind(self.dao),
         eof: function() {
+          updateStatus();
           console.timeEnd('upload');
           latch.resolve('eof');
         }
@@ -839,7 +858,6 @@ foam.CLASS({
       for ( var i = 0 ; i < a.length ; i++ ) {
         var sourceObj = a[i];
         var targetObj = this.of.create();
-
         // Create rowData from source object properties
         var rowData = {};
         for ( var prop in sourceObj.instance_ ) {
@@ -890,7 +908,6 @@ foam.CLASS({
 
     async function processCSV(sink) {
       var a = this.input.split('\n');
-
       if ( ! a ) { this.rows = 0; return; }
 
       this.rows = a.length-1;
@@ -921,10 +938,6 @@ foam.CLASS({
               rowData[fileHeaders[index]] = cell.value;
             }
           });
-
-          if ( i % 200 === 0 ) {
-            await new Promise(r => self.setTimeout(r, 0));
-          }
 
           // Process ALL mappings using universal method
           this.processAllMappings(obj, rowData);
