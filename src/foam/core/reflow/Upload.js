@@ -718,7 +718,22 @@ foam.CLASS({
       // Process all objects
       for ( var i = 0 ; i < a.length ; i++ ) {
         var sourceObj = a[i];
-        await sink.put(sourceObj);
+        var targetObj = this.of.create();
+        
+        // Create rowData from source object properties
+        var rowData = {};
+        for ( var prop in sourceObj.instance_ ) {
+          if ( sourceObj.hasOwnProperty(prop) ) {
+            rowData[prop] = sourceObj[prop];
+          }
+        }
+
+        // Apply mappings directly using rowData
+        if ( this.mappings && this.mappings.length > 0 && sink.processAllMappings ) {
+          sink.processAllMappings(targetObj, rowData);
+        }
+
+        await sink.put(targetObj);
       }
       sink.eof();
     },
@@ -749,7 +764,29 @@ foam.CLASS({
       for ( var i = 0 ; i < children.length ; i++ ) {
         var node = children[i];
         if ( this.tagName && node.tagName !== this.tagName ) continue;
-        await sink.put(this.objectifyXML(node, sink));
+        
+        var obj = this.objectifyXML(node);
+        
+        // Extract rowData from XML node for mapping
+        var rowData = {};
+        var nodeAttrs = node.getAttributeNames();
+        for ( var j = 0; j < node.children.length; j++ ) {
+          var childNode = node.children[j];
+          if ( childNode.firstChild ) {
+            rowData[childNode.tagName] = childNode.firstChild.nodeValue;
+          }
+          for ( var k = 0; k < nodeAttrs.length; k++ ) {
+            var attrName = nodeAttrs[k];
+            rowData[childNode.tagName + '.' + attrName] = node.getAttribute(attrName);
+          }
+        }
+
+        // Apply mappings directly using rowData
+        if ( this.mappings && this.mappings.length > 0 && sink.processAllMappings ) {
+          sink.processAllMappings(obj, rowData);
+        }
+
+        await sink.put(obj);
       }
 
       sink.eof();
@@ -786,11 +823,9 @@ foam.CLASS({
             }
           });
 
-          // Copy rowData properties to object for UploadSink to process
-          for ( var key in rowData ) {
-            if ( rowData.hasOwnProperty(key) ) {
-              obj[key] = rowData[key];
-            }
+          // Apply mappings directly using rowData (handles spaces in column names)
+          if ( this.mappings && this.mappings.length > 0 && sink.processAllMappings ) {
+            sink.processAllMappings(obj, rowData);
           }
 
           await sink.put(obj);

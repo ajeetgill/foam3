@@ -159,21 +159,8 @@ foam.CLASS({
       // Object passed filter or no filter exists
       this.matchedRows++;
       
-      // Apply mappings if provided
-      if ( this.mappings && this.mappings.length > 0 ) {
-        var rowData = {};
-        // Extract all properties from object for mapping
-        for ( var prop in o ) {
-          if ( o.hasOwnProperty(prop) ) {
-            rowData[prop] = o[prop];
-          }
-        }
-        
-        // Create new object and apply mappings
-        var mappedObj = this.dao.of.create();
-        this.processAllMappings(mappedObj, rowData);
-        o = mappedObj;
-      }
+      // Note: Mapping processing is now handled by the format processors (CSV, XML, DAO)
+      // before calling put(), so no need to extract properties here
       
       if ( ! this.isRealUpload ) {
         // Preview mode: just store in preview DAO
