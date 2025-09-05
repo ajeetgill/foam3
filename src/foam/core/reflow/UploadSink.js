@@ -7,7 +7,7 @@
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'UploadSink',
-  extends: 'foam.dao.Sink',
+  // extends: 'foam.dao.Sink',
   
   documentation: `
     Sophisticated upload sink with validation, batching, and progress tracking.
