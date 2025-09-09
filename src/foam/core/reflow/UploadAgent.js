@@ -97,7 +97,7 @@ foam.CLASS({
         // Create compression stream using Response API for efficiency
         const stream = new CompressionStream('gzip');
         const compressedResponse = new Response(
-          new Blob([dataBytes]).stream().pipeThrough(stream);
+          new Blob([dataBytes]).stream().pipeThrough(stream)
         );
 
         // Get compressed data as array buffer (more efficient than reading chunks)
