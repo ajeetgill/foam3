@@ -17,6 +17,7 @@ foam.CLASS({
     'foam.dao.DAO',
     'foam.time.TimeZone',
     'foam.util.SafetyUtil',
+    'java.text.SimpleDateFormat',
     'java.time.LocalDate',
     'java.time.LocalDateTime',
     'java.time.ZoneId',
@@ -30,6 +31,8 @@ foam.CLASS({
   ],
 
   javaCode: `
+    public static final Date MAX_DATE = new Date(Long.MAX_VALUE);
+
     /*
      supported formats:
      YYYY/MM/DD, DD/MM/YYYY, YY/MM/DD, DD/MM/YY
@@ -97,22 +100,35 @@ foam.CLASS({
     public static Date adapt(Object o) {
       try {
         if ( o != null ) {
+          Date date;
           if ( o instanceof Number ) {
-            return new java.util.Date(((Number) o).longValue());
+            date = new java.util.Date(((Number) o).longValue());
+          } else if ( o instanceof String ) {
+            SimpleDateFormat format;
+            if ( ((String) o).matches("^\\\\d{4}[-/]?\\\\d{2}[-/]?\\\\d{2}\\\\b.*") ) {
+              format = new SimpleDateFormat("yyyyMMdd");
+              date = format.parse(((String) o).replaceAll("[-/]", ""));
+            } else if ( ((String) o).matches("^\\\\d{2}[-/]?\\\\d{2}[-/]?\\\\d{4}\\\\b.*") ) {
+              format = new SimpleDateFormat("MMddyyyy");
+              date = format.parse(((String) o).replaceAll("[-/]", ""));
+            } else {
+              throw new RuntimeException("Unsupported Date format: " + o);
+            }
+          } else {
+            date = (java.util.Date) o;  
           }
-          if ( o instanceof String ) {
-            // o = (java.util.Date) fromString((String) o);
-          }
-          // convert the Date to be Noon time in GMT
+          // convert the Date to be midnight time in GMT
           var cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("GMT"));
-          cal.setTime((java.util.Date) o);
-          cal.set(java.util.Calendar.HOUR_OF_DAY, 12);
+          cal.setTime(date);
+          cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
           cal.set(java.util.Calendar.MINUTE, 0);
+          cal.set(java.util.Calendar.SECOND, 0);
           return cal.getTime();
         }
         return (java.util.Date) o;
       } catch ( Throwable t ) {
-        throw new RuntimeException(t);
+        System.err.println("Cannot adapt date:" + o + "; assuming " + MAX_DATE.toString());
+        return MAX_DATE;
       }
     }
 
