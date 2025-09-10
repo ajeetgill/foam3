@@ -196,7 +196,6 @@ foam.CLASS({
     {
       name: 'adapt',
       value: function (_, d) {
-        console.log('Date adapt', d);
         if ( typeof d === 'number' )
           d = new Date(d);
         if ( typeof d === 'string' ) {
