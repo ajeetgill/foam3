@@ -125,7 +125,7 @@ p({
     }
   },
   scheduledTime: "2025-06-02T14:00:00.000Z",
-  enabled: true,
+  enabled: false,
   description: "Hourly cron for monitoring disk space",
   code:
   """
