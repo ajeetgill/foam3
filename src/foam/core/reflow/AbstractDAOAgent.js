@@ -285,7 +285,11 @@ foam.CLASS({
     },
     {
       name: 'selection', hidden: true
-    }
+    },
+    {
+      class: 'Map',
+      name: 'selectedObjects'
+    },
   ],
 
   methods: [
@@ -301,7 +305,7 @@ foam.CLASS({
         data: self.unlimitedDAO,
         config: self.DAOControllerConfig.create({
           dao: self.unlimitedDAO,
-          disableSelection: false
+          disableSelection: false,
         })
       };
 
@@ -310,6 +314,13 @@ foam.CLASS({
         if ( cs )
           config.selectedColumnNames = cs;
       }
+
+      if ( this.of.MULTI_SELECT ) {
+        config.multiSelectEnabled = true;
+        config.selectedObjects$ = this.selectedObjects$;
+      }
+
+      console.log('config', config);
 
       e.startContext({click: self.click}).
         start(self.TableView.create({}, this.__subContext__), config).
