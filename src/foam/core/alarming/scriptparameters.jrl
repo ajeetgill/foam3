@@ -3,7 +3,7 @@ p({
   id: "diskSpaceMonitoringCron",
   name: "diskSpaceMonitoringCron",
   parameters: {
-    "THRESHOLD_PERCENT": 10,
+    "THRESHOLD_PERCENT": 90,
     "PATH":"/"
   },
   enabled:true
