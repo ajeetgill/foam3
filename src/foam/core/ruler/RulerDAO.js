@@ -254,16 +254,10 @@ localRuleDAO.listen(
   , null
 );
 
-localRuleDAO = localRuleDAO.where(
-  EQ(Rule.ENABLED, true)
-).orderBy(new Desc(Rule.PRIORITY));
-localRuleDAO.select(new AbstractSink(new ReadOnlyDAOContext(getX())) {
-      @Override
-      public void put(Object obj, Detachable sub) {
-        Rule rule = (Rule) obj;
-        rule.setX(getX());
-      }
-    });
+localRuleDAO = localRuleDAO.where(EQ(Rule.ENABLED, true)).orderBy(new Desc(Rule.PRIORITY));
+// Set rule context to readonly dao context
+localRuleDAO.select(new AbstractSink(new ReadOnlyDAOContext(getX())));
+
 addRuleList(localRuleDAO, getCreateBefore());
 addRuleList(localRuleDAO, getUpdateBefore());
 addRuleList(localRuleDAO, getRemoveBefore());
