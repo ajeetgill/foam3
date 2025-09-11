@@ -320,7 +320,6 @@ foam.CLASS({
         config.selectedObjects$ = this.selectedObjects$;
       }
 
-      console.log('config', config);
 
       e.startContext({click: self.click}).
         start(self.TableView.create({}, this.__subContext__), config).
