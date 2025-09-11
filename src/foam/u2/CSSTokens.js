@@ -180,7 +180,9 @@ foam.CLASS({
 
     { name: 'textOnDestructive', value: '$white' },
 
+    { name: 'font-extra-light', value: '200' }, /* also 100 */
     { name: 'font-light', value: '300' },
+    { name: 'font-normal', value: 'normal' }, /* 400 */
     { name: 'font-regular', value: '500' },
     { name: 'font-medium', value: '600' },
     { name: 'font-semi-bold', value: '700' },

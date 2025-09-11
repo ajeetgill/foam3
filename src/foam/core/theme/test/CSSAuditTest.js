@@ -47,7 +47,8 @@ foam.CLASS({
       name: 'runTest',
       javaCode: `
     Logger logger = new PrefixLogger(new Object[] { "CSSAuditTest"}, (Logger) x.get("logger"));
-    Pattern pattern = Pattern.compile(".*?(color|font):\\s([a-z#][^\\s]*)");
+    Pattern pattern = Pattern.compile(".*?(color|font|font-weight|border|background):\\s*([a-z0-9#][^\\s]*)");
+    // Pattern pattern = Pattern.compile(".*?(color|font|border|background|weight):\\s*([a-z0-9#])");
 
     String projectHome = System.getProperty("project.home");
     test ( ! SafetyUtil.isEmpty(projectHome), "project.home found "+projectHome );
@@ -62,10 +63,13 @@ foam.CLASS({
 
     File file = path.toFile();
     String name = file.getName();
-    if ( name.equals("documents") ||
-         name.equals("tools") ||
-         name.equals("build") ||
+    if ( name.equals("build") ||
+         name.equals("demos") ||
+         name.equals("documents") ||
+         name.equals("foamframework") ||
+         name.equals("google") ||
          name.equals("node_modules") ||
+         name.equals("tools") ||
          name.startsWith("iso") ||
          name.startsWith(".") ) {
       logger.info("skip", path.toString());
@@ -102,6 +106,7 @@ foam.CLASS({
 
           String property = matcher.group(1);
           String value = matcher.group(2);
+
           if ( "color".equals(property) ) {
             if ( value.contains("currentColor") ||
                  value.contains("inherit") ||
@@ -119,6 +124,49 @@ foam.CLASS({
             }
           } else if ( "font".equals(property) ) {
             if ( value.contains("inherit") ) {
+              logger.info("ignoring", property, value);
+              continue;
+            }
+            if ( value.contains(".") ) {
+              // enum
+              logger.info("ignoring", property, value);
+              continue;
+            }
+          } else if ( "font-weight".equals(property) ) {
+            if ( value.contains("bold") ||
+                 value.contains("normal") ||
+                 value.contains("unset") ) {
+//                 value.contains("100") ||
+//                 value.contains("400") ) {
+              logger.info("ignoring", property, value);
+              continue;
+            }
+            if ( value.contains(".") ) {
+              // enum
+              logger.info("ignoring", property, value);
+              continue;
+            }
+          } else if ( "background".equals(property) ) {
+            if ( value.contains("none") ||
+                 value.contains("transparent") ||
+                 value.contains("linear-gradient") ||
+                 value.contains("url(") ) {
+              logger.info("ignoring", property, value);
+              continue;
+            }
+            if ( value.contains(".") ) {
+              // enum
+              logger.info("ignoring", property, value);
+              continue;
+            }
+          } else if ( "border".equals(property) ) {
+            if ( value.contains("none") ||
+                 value.contains("dashed") ||
+                 value.contains("inherit") ||
+                 value.contains("pt") ||
+                 value.contains("px") ||
+                 value.contains("solid") ||
+                 value.contains("transparent") ) {
               logger.info("ignoring", property, value);
               continue;
             }
