@@ -33,7 +33,7 @@ foam.CLASS({
 
     ^:read-only:not(:disabled) {
       border: none;
-      background: $backgroundInverse;
+      background: $backgroundDefault;
     }
   `,
 
