@@ -48,7 +48,6 @@ foam.CLASS({
       javaCode: `
     Logger logger = new PrefixLogger(new Object[] { "CSSAuditTest"}, (Logger) x.get("logger"));
     Pattern pattern = Pattern.compile(".*?(color|font|font-weight|border|background):\\s*([a-z0-9#][^\\s]*)");
-    // Pattern pattern = Pattern.compile(".*?(color|font|border|background|weight):\\s*([a-z0-9#])");
 
     String projectHome = System.getProperty("project.home");
     test ( ! SafetyUtil.isEmpty(projectHome), "project.home found "+projectHome );
@@ -136,10 +135,8 @@ foam.CLASS({
             if ( value.contains("bold") ||
                  value.contains("normal") ||
                  value.contains("unset") ) {
-//                 value.contains("100") ||
-//                 value.contains("400") ) {
-              logger.info("ignoring", property, value);
               continue;
+              logger.info("ignoring", property, value);
             }
             if ( value.contains(".") ) {
               // enum
