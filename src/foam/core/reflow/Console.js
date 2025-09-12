@@ -240,6 +240,7 @@ foam.CLASS({
       themeIcon: 'boldHome',
       size: 'SMALL',
       code: function(X) {
+        this.showNav = true;
         X.routeTo('flows');
       }
     },
