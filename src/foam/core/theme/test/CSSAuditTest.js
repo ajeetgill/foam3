@@ -44,6 +44,7 @@ https://web-toolbox.dev/en/tools/color-converter - hsla
     'java.nio.file.attribute.BasicFileAttributes',
     'java.util.ArrayList',
     'java.util.List',
+    'java.util.concurrent.atomic.AtomicInteger',
     'java.util.regex.Matcher',
     'java.util.regex.Pattern',
     'java.util.stream.Stream'
@@ -90,10 +91,14 @@ https://web-toolbox.dev/en/tools/color-converter - hsla
       name: 'runTest',
       javaCode: `
     Logger logger = new PrefixLogger(new Object[] { "CSSAuditTest"}, (Logger) x.get("logger"));
-    Pattern pattern = Pattern.compile(".*?(color|font|font-weight|border|background):\\s*([a-z0-9#][^\\s]*)");
-
+    Pattern pattern = Pattern.compile(".*?([;']?)(color|font|border|font-weight):\\s*([a-zA-Z0-9#\\s.(]*)");
     String projectHome = System.getProperty("project.home");
-    test ( ! SafetyUtil.isEmpty(projectHome), "project.home found "+projectHome );
+    if ( SafetyUtil.isEmpty(projectHome) ) {
+      test ( false, "project.home found "+projectHome );
+      throw new RuntimeException("project.home not found");
+    }
+
+    final AtomicInteger processed = new AtomicInteger();
 
     try {
       Path start = Paths.get(projectHome);
@@ -142,7 +147,7 @@ https://web-toolbox.dev/en/tools/color-converter - hsla
 
     if ( ! path.toString().endsWith(".js") )
       return FileVisitResult.CONTINUE;
-
+    processed.incrementAndGet();
     String relativePath = path.toString().substring(projectHome.length()+1);
     logger.info("processing", relativePath);
 
@@ -161,10 +166,19 @@ https://web-toolbox.dev/en/tools/color-converter - hsla
             logger.info("ignoring", line);
             continue;
           }
-
-          String property = matcher.group(1);
-          String value = matcher.group(2);
-
+          String embedded = matcher.group(1);
+          if ( ! SafetyUtil.isEmpty(embedded) ) {
+            // style lines, console.log with color, ... 
+            logger.info("ignoring", line);
+            continue;
+          }
+          String property = matcher.group(2);
+          String value = matcher.group(3);
+          if ( SafetyUtil.isEmpty(value) ) {
+            // no match - line is correct
+            // logger.info("ignoring", line);
+            continue;
+          }
           if ( "color".equals(property) ) {
             if ( value.contains("currentColor") ||
                  value.contains("inherit") ||
@@ -262,6 +276,10 @@ https://web-toolbox.dev/en/tools/color-converter - hsla
 );
     } catch ( IOException e ) {
       logger.error(e);
+    } finally {
+      if ( getFailed() == 0 ) {
+        test(true, "procesed "+processed.intValue()+ " .js files");
+      }
     }
     `
     }
