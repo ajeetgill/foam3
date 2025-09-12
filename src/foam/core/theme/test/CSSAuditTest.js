@@ -51,27 +51,33 @@ https://web-toolbox.dev/en/tools/color-converter - hsla
 
   properties: [
     {
-      name: 'skipFoamDirectoryNames',
+      name: 'skipFoamPaths',
       class: 'List',
       javaFactory: `
       List list = new ArrayList();
-      list.add("foamframework");
-      list.add("google");
+      list.add("/build");
+      list.add("/demos");
+      list.add("/doc");
+      list.add("/node_modules");
+      list.add("/tools");
+      list.add("/webroot");
 
       // TODO: Lower priority
-      list.add("layout");
-      list.add("property");
-      list.add("properties");
-      list.add("support");
+      list.add("src/foam/u2/property");
+      list.add("src/foam/u2/layout");
+      list.add("src/foam/u2/filter/properties");
+      list.add("src/foam/support");
 
       // TODO: TBD
-      list.add("graphics");
+      list.add("src/com/foamframework");
+      list.add("src/com/google");
+      list.add("src/foam/graphics");
       return list;
       `
     },
     {
       documentation: 'Refine this model in your application and add directories to skip/ignore.',
-      name: 'skipAppDirectoryNames',
+      name: 'skipAppPaths',
       class: 'List',
       javaFactory: `
       return new ArrayList();
@@ -98,16 +104,31 @@ https://web-toolbox.dev/en/tools/color-converter - hsla
     throws IOException {
 
     File file = path.toFile();
+    String parent = file.getParent();
+    if ( file.isDirectory() ) {
+      parent = path.toString();
+    }
+    parent = parent.substring(projectHome.length());
     String name = file.getName();
-    if ( name.equals("build") ||
-         name.equals("demos") ||
-         name.equals("documents") ||
-         name.equals("node_modules") ||
-         name.equals("tools") ||
+    // logger.info("preVisit,relative", parent, name);
+    boolean skip = false;
+    for ( String p : (List<String>) getSkipFoamPaths() ) {
+      if ( parent.contains(p) ) {
+        skip = true;
+        break;
+      }
+    }
+    if ( ! skip ) {
+      for ( String p : (List<String>) getSkipAppPaths() ) {
+        if ( parent.contains(p) ) {
+          skip = true;
+          break;
+        }
+      }
+    }
+    if ( skip || 
          name.startsWith("iso") ||
-         name.startsWith(".") ||
-         getSkipFoamDirectoryNames().contains(name) ||
-         getSkipAppDirectoryNames().contains(name) )
+         name.startsWith(".") ) 
     {
       logger.info("skip", path.toString());
       return FileVisitResult.SKIP_SUBTREE;
