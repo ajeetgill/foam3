@@ -57,6 +57,15 @@ https://web-toolbox.dev/en/tools/color-converter - hsla
       List list = new ArrayList();
       list.add("foamframework");
       list.add("google");
+
+      // TODO: Lower priority
+      list.add("layout");
+      list.add("property");
+      list.add("properties");
+      list.add("support");
+
+      // TODO: TBD
+      list.add("graphics");
       return list;
       `
     },
@@ -177,6 +186,7 @@ https://web-toolbox.dev/en/tools/color-converter - hsla
             if ( value.contains("none") ||
                  value.contains("transparent") ||
                  value.contains("linear-gradient") ||
+                 value.contains("unset") ||
                  value.contains("url(") ) {
               logger.info("ignoring", property, value);
               continue;
