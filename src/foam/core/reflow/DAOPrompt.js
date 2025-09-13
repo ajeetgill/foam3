@@ -354,14 +354,23 @@ foam.CLASS({
       factory: function() {
         var self = this;
         return Object.create({
-          getItem: function(k) { return this[k] || null; },
-          setItem:    function(k, v) {
+          getItem: function(k) {
+            return this[k] || null;
+          },
+          setItem: function(k, v) {
             this[k] = v;
             // save column updates from tableview
             self.columns = self.getColumnNamesFromStorage(v);
           },
-          removeItem: function(k)    { delete this[k]; },
-          clear:      function()     { for ( const k in this ) delete this[k]; }
+          removeItem: function(k) {
+            delete this[k];
+          },
+          clear: function()  {
+            for ( const k in this ) delete this[k];
+          },
+          toString: function() {
+            return 'DAOPromptColumnStorage(' + JSON.stringify(this) + ')'
+          }
         });
       }
     },
