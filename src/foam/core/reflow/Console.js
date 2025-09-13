@@ -443,6 +443,12 @@ foam.CLASS({
     ^toolbar {
       padding: 16px;
     }
+    ^content:has(> .foam-u2-Element-hidden) {
+      display: none;
+    }
+    ^hidePrompts:has(> ^content > .foam-u2-Element-hidden) {
+      display: none;
+    }
   `,
 
   sections: [
