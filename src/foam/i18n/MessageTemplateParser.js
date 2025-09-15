@@ -11,6 +11,22 @@ foam.CLASS({
     'foam.parse.Parsers',
     'foam.parse.ImperativeGrammar',
   ],
+  documentation: `model messages: [] supports templating for key/value
+replacement at runtime.
+
+general format:
+  messages: [
+    { name: 'MSG_CONSTANT1', message: 'Message text with one \${templateKey1} or more \${templateKey2} template keys' },
+    { name: 'MSG_CONSTANT2', message: '\${this.MSG_CONSTANT1} or \${this.propertyName}' },
+
+templateKey is resolved as follows:
+1. value is explicitly provided during rendering of the message:
+  this.E().... .add(this.MSG_CONSTANT1({ templateKey1: this.data...}))
+2. if preceeded with 'this', attempt match against messages Constants.
+3. if preceeded with 'this', attempt match this.data[key]. Also supports
+dot notation for FObject properties.
+  `,
+
   properties: [
     {
       name: 'value',
