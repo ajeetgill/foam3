@@ -32,7 +32,17 @@ foam.CLASS({
       return () => { return str; } 
     },
     function addParam(a) {
-      return map => { return map[a] } 
+      return map => {
+        if ( a.indexOf('.') != -1 ) {
+          let arr = a.split('.');
+          let ret = map;
+          arr.forEach(element => {
+            ret = ret[element];
+          });
+          return ret;
+        };
+        return map[a];
+      }
     }
   ],
   grammars: [
