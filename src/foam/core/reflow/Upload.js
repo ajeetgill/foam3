@@ -692,9 +692,9 @@ foam.CLASS({
       }
 
       // Process ALL mappings using UploadSink method
-      if ( sink && sink.processAllMappings ) {
-        sink.processAllMappings(obj, rowData);
-      }
+      
+      sink.processAllMappings(obj, rowData);
+      
 
       return obj;
     },
@@ -730,9 +730,9 @@ foam.CLASS({
         }
 
         // Apply mappings directly using rowData
-        if ( this.mappings && this.mappings.length > 0 && sink.processAllMappings ) {
-          sink.processAllMappings(targetObj, rowData);
-        }
+        
+        sink.processAllMappings(targetObj, rowData);
+        
 
         await sink.put(targetObj);
       }
@@ -783,9 +783,8 @@ foam.CLASS({
         }
 
         // Apply mappings directly using rowData
-        if ( this.mappings && this.mappings.length > 0 && sink.processAllMappings ) {
-          sink.processAllMappings(obj, rowData);
-        }
+        sink.processAllMappings(obj, rowData);
+        
 
         await sink.put(obj);
       }
@@ -828,9 +827,8 @@ foam.CLASS({
           });
 
           // Apply mappings directly using rowData (handles spaces in column names)
-          if ( this.mappings && this.mappings.length > 0 && sink.processAllMappings ) {
-            sink.processAllMappings(obj, rowData);
-          }
+          sink.processAllMappings(obj, rowData);
+          
 
           await sink.put(obj);
           /*
