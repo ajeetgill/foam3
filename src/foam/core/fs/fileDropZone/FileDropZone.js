@@ -298,7 +298,7 @@ foam.CLASS({
         // skip files that exceed limit
         if ( files[i].size > ( this.maxSize * 1024 * 1024 ) ) {
           if ( ! errors ) errors = true;
-          this.ctrl.notify(this.ERROR_FILE_TITLE, this.ERROR_FILE_SIZE + ' ' + this.maxSize + 'MB', this.LogLevel.ERROR, true);
+          this.ctrl.notify(this.ERROR_FILE_TITLE, this.ERROR_FILE_SIZE, this.LogLevel.ERROR, true);
           continue;
         }
         var isIncluded = false;
