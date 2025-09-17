@@ -116,6 +116,7 @@ boolean foam.core.auth.AuthService.check(X x, String permission)
 | `service.<serviceName>` | Service access |
 | `service.run.<serviceName>` | WebAgent execution |
 | `<model>.read.<id>` | Read object |
+| `<model>.update.<id>` | Update object |
 | `<model>.remove.<id>` | Delete object |
 | `<model>.create` | Create object |
 | `<model>.ro.<property>` | Read property |
