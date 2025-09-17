@@ -135,6 +135,7 @@ Ex.: `"OpsRole", "ReflowRole"`
 
 ### Permission Management
 - **PermissionMatrix** - Primary permission management interface [9](#1-8)
+- **Security Audit** - run the "Security Audit" FLOW to get a report of all DAO security configurations
 - **Security Principle:** Users cannot grant permissions they don't possess (implicitly or explicitly)
 
 ## Notes
@@ -292,3 +293,6 @@ p({"class":"foam.core.auth.Permission","id":"menu.read.admin","description":"Abi
 p({"class":"foam.core.auth.Permission","id":"menu.read.admin.send-notification","description":"Ability to use Send Notification UI"})
 p({"class":"foam.core.auth.Permission","id":"menu.read.admin.customise-theme","description":"Ability to use Theme Customisation UI"})
 ```
+
+TODO:
+difference between cSpecDAO and AuthenticatedCSpecDAO
