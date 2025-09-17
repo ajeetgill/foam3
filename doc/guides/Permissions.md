@@ -1,5 +1,3 @@
-I'll help you format your FOAM permissions documentation. Your document provides excellent coverage of the FOAM permission system - let me restructure it for better readability and organization.
-
 # FOAM Permissions System Documentation
 
 ## Overview
