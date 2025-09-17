@@ -83,7 +83,7 @@ foam.CLASS({
             // Clone the property and set its label to include our label prefix
             var newProp = p.clone ? p.clone() : foam.util.clone(p);
             newProp.name = this.label;
-            newProp.label = this.label;
+            newProp.label = foam.String.labelize(this.label);
             return newProp;
           });
         }
