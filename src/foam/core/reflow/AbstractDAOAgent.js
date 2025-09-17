@@ -932,13 +932,13 @@ foam.CLASS({
       name: 'label',
       documentation: 'Label to identify this sink result for retrieval in genModel',
       validateObj: function(label) {
-        /// has to be valid JavaScript variable name
-        /// start with letter, underscore, or dollar sign
+        // has to be valid JavaScript variable name
+        // start with letter, underscore, or dollar sign
         if ( ! label.match(/^[a-zA-Z_$]/) ) return 'Label must start with a letter, underscore';
-        /// then only letters, numbers, underscores, or dollar signs (no dashes)
+        // then only letters, numbers, underscores, or dollar signs (no dashes)
         if ( ! label.match(/^[a-zA-Z_$][a-zA-Z0-9_$]*$/) ) return 'Label can only contain letters, numbers, underscores';
 
-        /// check for JavaScript reserved words
+        // check for JavaScript reserved words
         var reservedWords = ['break', 'case', 'catch', 'class', 'const', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'export', 'extends', 'finally', 'for', 'function', 'if', 'import', 'in', 'instanceof', 'new', 'return', 'super', 'switch', 'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'yield', 'let', 'static', 'enum', 'implements', 'package', 'protected', 'interface', 'private', 'public'];
         if ( reservedWords.indexOf(label.toLowerCase()) !== -1 ) return 'Label cannot be a JavaScript reserved word';
       }
