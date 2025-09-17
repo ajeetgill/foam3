@@ -483,9 +483,10 @@ foam.CLASS({
     },
     {
       name: 'browseEnabled',
-      hidden: true,
+      value: true,
+      // hidden: true,
       // Only enable Browse action if this is the top-level DAOAgent
-      factory: function() { return this.block.value.select === this; }
+      // factory: function() { return this.block.value.select === this; }
     }
   ],
 
@@ -529,7 +530,6 @@ foam.CLASS({
           style({paddingLeft: '12px'}).
         add(this.PROP).
           add(this.SINK).
-          add(this.GENERATED_ROW_LABEL.__).
           add(this.TOP_N.__).
           add(this.SORT_ORDER.__).
           add(this.INCLUDE_OTHERS.__).
@@ -908,6 +908,53 @@ foam.CLASS({
   methods: [
     function execute(e) {
       e.tag(this.DownloadView);
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.core.reflow',
+  name: 'LabeledDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
+
+  requires: [ 'foam.mlang.sink.LabeledSink' ],
+
+  properties: [
+    {
+      class: 'String',
+      name: 'label',
+      documentation: 'Label to identify this sink result for retrieval in genModel',
+      validateObj: function(label) {
+        /// dont allow spaces
+        if ( label.indexOf(' ') !== -1 ) return 'Label cannot contain spaces';
+      }
+    },
+    {
+      name: 'sink',
+      view: 'foam.core.reflow.SinkView',
+      documentation: 'The sink to delegate to'
+    }
+  ],
+
+  methods: [
+    function value(s) {
+      return s;
+    },
+    function createSink() {
+      return this.LabeledSink.create({
+        label: this.label,
+        delegate: this.sink ? this.sink.createSink() : null
+      });
+    },
+        function addToE(e) {
+      var self = this;
+      // TODO: figure out why BROWSE doesn't work after reloading
+      e.startContext({data: this}).
+        start().
+        add(this.LABEL.__)
+          .add(this.SINK).
+          end();
     }
   ]
 });
