@@ -61,7 +61,22 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'AbstractSinkDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent'
+  extends: 'foam.core.reflow.AbstractDAOAgent',
+
+  properties: [
+    {
+      name: 'sink',
+      preSet: function(o, n) {
+        // Temporary fix to recontextualize the object after load.
+        // TODO: remove once JSON parsing/loading is fixed
+        if ( n && n.__context__ != this.__subContext__ ) {
+          return n.clone(this.__subContext__);
+        }
+        return n;
+      }
+    }
+  ],
+
 });
 
 
@@ -419,15 +434,7 @@ foam.CLASS({
     },
     {
       name: 'sink',
-      view: { class: 'foam.core.reflow.SinkView', choice: 'foam.core.reflow.CountDAOAgent' },
-      preSet: function(o, n) {
-        // Temporary fix to recontextualize the object after load.
-        // TODO: remove once JSON parsing/loading is fixed
-        if ( n && n.__context__ != this.__subContext__ ) {
-          return n.clone(this.__subContext__);
-        }
-        return n;
-      }
+      view: { class: 'foam.core.reflow.SinkView', choice: 'foam.core.reflow.CountDAOAgent' }
     },
     {
       class: 'Int',
@@ -925,16 +932,15 @@ foam.CLASS({
       name: 'label',
       documentation: 'Label to identify this sink result for retrieval in genModel',
       validateObj: function(label) {
-        /// has to be valid css class name
-        /// start with letter or _
-        if ( ! label.match(/^[a-zA-Z_]/) ) return 'Label must start with a letter or underscore';
-        /// then only letters, numbers, - or _
-        if ( ! label.match(/^[a-zA-Z0-9_-]+$/) ) return 'Label can only contain letters, numbers, underscores or dashes';
-        
-        
-        /// dont allow spaces
-        if ( label.indexOf(' ') !== -1 ) return 'Label cannot contain spaces';
+        /// has to be valid JavaScript variable name
+        /// start with letter, underscore, or dollar sign
+        if ( ! label.match(/^[a-zA-Z_$]/) ) return 'Label must start with a letter, underscore';
+        /// then only letters, numbers, underscores, or dollar signs (no dashes)
+        if ( ! label.match(/^[a-zA-Z_$][a-zA-Z0-9_$]*$/) ) return 'Label can only contain letters, numbers, underscores';
 
+        /// check for JavaScript reserved words
+        var reservedWords = ['break', 'case', 'catch', 'class', 'const', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'export', 'extends', 'finally', 'for', 'function', 'if', 'import', 'in', 'instanceof', 'new', 'return', 'super', 'switch', 'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'yield', 'let', 'static', 'enum', 'implements', 'package', 'protected', 'interface', 'private', 'public'];
+        if ( reservedWords.indexOf(label.toLowerCase()) !== -1 ) return 'Label cannot be a JavaScript reserved word';
       }
     },
     {
