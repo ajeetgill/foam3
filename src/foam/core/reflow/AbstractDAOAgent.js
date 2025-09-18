@@ -689,6 +689,12 @@ foam.CLASS({
     {
       name: 'sinks',
       factory: function() { return []; },
+      preSet: function(o, n) {
+        if ( foam.Array.isInstance(n) ) {
+          n = n.map(o => o && o.__context__ != this.__subContext__ ? o.clone(this.__subContext__) : o);
+        }
+        return n;
+      },
       view: {
         class: 'foam.u2.view.ArrayView',
         valueView: {
