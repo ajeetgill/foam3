@@ -67,8 +67,8 @@ foam.CLASS({
     },
 
     function toProperties() {
-      var allProps = this.args.map(a => a.toProperties ? a.toProperties() : a.VALUE ).flat();
-      var nameCount = {};
+      var allProps     = this.args.map(a => a.toProperties ? a.toProperties() : a.VALUE).flat();
+      var nameCount    = {};
       var renamedProps = [];
 
       // Track name usage and rename duplicates
@@ -95,11 +95,12 @@ foam.CLASS({
 
       return renamedProps;
     },
+
     function setPropertyValues(o, sink, ps) {
       // Map through properties and set values from corresponding sink args
       var propIndex = 0;
       for ( var i = 0 ; i < this.args.length ; i++ ) {
-        var arg = this.args[i];
+        var arg      = sink.args[i];
         var argProps = arg.toProperties ? arg.toProperties() : [{ name: 'value' }];
 
         if ( argProps && Array.isArray(argProps) ) {
