@@ -480,7 +480,6 @@ foam.CLASS({
           this.topRow = 0;
           this.bottomRow = 0;
         }
-        this.daoLoading = true;
         this.isInit = false;
         this.updateRenderedPages_();
         if ( this.topRow > 1) {
@@ -496,8 +495,8 @@ foam.CLASS({
         this.daoLoading = true;
         return this.data$proxy.select(this.Count.create()).then(s => {
           this.daoCount = limit && limit < s.value ? limit : s.value;
-          this.refresh();
           this.daoLoading = false;
+          this.refresh();
         });
       }
     },
