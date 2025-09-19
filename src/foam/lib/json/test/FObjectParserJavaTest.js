@@ -42,6 +42,7 @@ foam.CLASS({
       ps = (StringPStream) ps.apply(FObjectParser.instance(), xp);
       test ( ps != null && ps.value() != null, "parsed");
       Test test = (Test) ps.value();
+      test ( test.getClass() == FObjectParserJavaTestClass.class, "correct class "+test.getClass().getName());
       test ( test.getId().equals(FObjectParserJavaTestClass.class.getSimpleName()), "id set "+test.getId());
       `
     }
