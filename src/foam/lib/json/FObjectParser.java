@@ -66,11 +66,25 @@ public class FObjectParser
             if ( ps1 != null ) {
               var className = ps1.value().toString();
 
-               ci = ctx.getClassInfo(className);
+              ci = ctx.getClassInfo(className);
 
               if ( ci == null ) {
                 try {
                   c = Class.forName(className);
+                } catch (ClassNotFoundException t) {
+                }
+              } else if ( ! ci.getObjClass().getName().equals(className) ) {
+                // getOwnClassInfo() on an explicit java class which extends
+                // a modelled class will resolve to the modelled class,
+                // causing json parsing of class: explicit-java-class to fail.
+                // Alternatively, the class names may not match because
+                // of a context factory, hence the isInstance test.
+                try {
+                  c = Class.forName(className);
+                  if ( ! ci.getObjClass().isInstance(c) ) {
+                    ci.setObjClass(c);
+                    ci.setId(className);
+                  }
                 } catch (ClassNotFoundException t) {
                 }
               } else {
