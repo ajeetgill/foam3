@@ -41,7 +41,8 @@ foam.CLASS({
         end().
         start().show(self.loading$).tag(self.LoadingSpinner, {size: '32px'} ).end().
         br().
-          add(self.dynamic(async function(version) {
+          add(self.dynamic(async function(/*data,*/ version) {
+            // if ( ! data ) return;
             var startTime = Date.now();
             // Clone is needed in case the select was loaded from a DAO and doesnt' have correct context.
             // TODO: fix JSON parsing should setup context correctly
@@ -195,17 +196,17 @@ foam.CLASS({
             }
           } else {
             // Original logic for non-dotted keys
-            if ( this.scope[n] ) {
+            if ( n.endsWith('s') ) {
               this.daoKey = n;
-              n = this.scope[n];
+              n = n.substring(0, n.length-1) + 'DAO';
+            } else if ( this.__context__[n + 'DAO'] ) {
+              n =  n + 'DAO';
             } else if ( this.scope[n + 'DAO'] ) {
               this.daoKey = n + 'DAO';
               n = this.scope[n + 'DAO'];
-            } else if ( this.__context__[n + 'DAO'] ) {
-              n =  n + 'DAO';
-            } else if ( n.endsWith('s') ) {
+            } else if ( this.scope[n] ) {
               this.daoKey = n;
-              n = n.substring(0, n.length-1) + 'DAO';
+              n = this.scope[n];
             }
           }
         }
