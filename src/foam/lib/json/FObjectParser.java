@@ -77,15 +77,14 @@ public class FObjectParser
                 // getOwnClassInfo() on an explicit java class which extends
                 // a modelled class will resolve to the modelled class,
                 // causing json parsing of class: explicit-java-class to fail.
-                // Alternatively, the class names may not match because
-                // of a context factory, hence the isInstance test.
                 try {
                   c = Class.forName(className);
-                  if ( ! ci.getObjClass().isInstance(c) ) {
+                  if ( c != c.getMethod("getOwnClassInfo").getDeclaringClass() ) {
+                    // Update ClassInfo to match
+                    ci.setId(c.getName());
                     ci.setObjClass(c);
-                    ci.setId(className);
                   }
-                } catch (ClassNotFoundException t) {
+                } catch (java.lang.Exception e) {
                 }
               } else {
                 c = ci.getObjClass();
