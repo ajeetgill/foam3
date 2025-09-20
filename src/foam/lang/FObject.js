@@ -775,6 +775,7 @@ foam.CLASS({
       }
 
       if ( foam.Array.isInstance(obj) ) {
+        if ( obj.length == 0 ) console.log('******************** zero arg slot, TODO: return a ConstantSlot');
         return this.onDetach(foam.lang.ExpressionSlot.create({
           obj: this,
           args: obj[0].map(this.slot.bind(this)),
@@ -1069,6 +1070,50 @@ foam.CLASS({
       // Behaves just like Slot.dot().  Makes it easy for creating sub-slots
       // without worrying if you're holding an FObject or a slot.
       return this[name + '$'];
+    },
+
+    function deepSub(listener, opt_prop) {
+      var cleanup = foam.lang.FObject.create();
+      var visited = new Set(); // Prevent infinite recursion
+
+      function listener_() {
+        listener.apply(null, arguments);
+      }
+
+      function updateSub_(o, n, path) {
+        // TODO: cleanup listeners to 'o'
+        if ( foam.lang.FObject.isInstance(n) ) {
+          sub_(n, path);
+        } else if ( foam.Array.isInstance(n) ) {
+          for ( let i = 0 ; i < n.length ; i++ ) {
+            let e = n[i];
+            if ( e && e.cls_ ) {
+              sub_(e, [...path, i]);
+            }
+          }
+        }
+      }
+
+      function sub_(o, path = [], opt_props) {
+        if ( ! o || ! o.cls_ || visited.has(o) ) return;
+
+        visited.add(o);
+
+        var props = opt_props || o.cls_.getAxiomsByClass(foam.lang.Property);
+
+        cleanup.onDetach(o.propertyChange.sub(listener_));
+
+        for ( let prop of props ) {
+          if ( o.hasOwnProperty(prop.name) ) {
+            var value = prop.get(o);
+
+            updateSub_(null, value, [...path, prop.name]);
+          }
+        }
+      }
+
+      sub_(this, opt_prop);
+      return cleanup; // Return detachable subscription
     }
   ]
 });
