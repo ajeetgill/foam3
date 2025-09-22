@@ -4,11 +4,12 @@ FOAM application security centers around **services** and **permissions** to tho
 
 Services are known as CORE Services and their access configuration is modelled under the name **CSpec** (CORE Service Specification).  The CSpec controls how a service is exposed to the rest of the system.
 
+- See `doc/guides/Services.md` for documenation regarding Services themselves.
+- See `doc/guides/Permissions.md` for documentation regarding Permissions themselves.- see `src/foam/core/auth/README.md` for documentation on the Authentication system itself - how authentication is implemented and how permission checking occurs.  Overlaps with this documentation.
+
 CSpecs are deployed in `services.jrl` journals and can also be created and manipulated at runtime.
 
 - See `foam/src/services.jrl` for many examples.
-- See `doc/guides/Services.md` for documenation regarding Services themselves.
-- See `doc/guides/Permissions.md` for documentation regarding Permissions themselves.
 
 Services, by default, are only accessible within the server application. They can be exposed to clients with CSpec property `serve`.
 
@@ -113,7 +114,9 @@ EasyDAO properties relevant to Model level authentication:
         - on the client
             - without the permission, the property is hidden
     - updatePermissionRequired
-        - unused?
+        - unused? 
+            - used but not clear how different from writePermissionRequired
+            - see `foam.u2.Element2.js:1767`, `foam/core/auth/PermissionedPropertyDAO.js:118 & 222`
 - permissionPrefix: by default the permissionPrefix is the model name in lowercase.
 
 ## Q & A (incomplete)
@@ -153,3 +156,4 @@ EasyDAO properties relevant to Model level authentication:
 - SSL Certificates - Sockets, HTTPS
 - Long term session tokens (API Bearer tokens)
 - CSpec creation and manipulation at runtime.
+- Merge this and foam/core/auth/README.md
