@@ -4,22 +4,20 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-// TODO:
-// MQL help
-// orderBy, property help
-
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'DAOPromptView',
   extends: 'foam.u2.View',
+
   requires: [
     'foam.u2.LoadingSpinner',
   ],
+
   css: `
   `,
 
   properties: [
-    { class: 'Long', name: 'version' },
+    { class: 'Long',    name: 'version' },
     { class: 'Boolean', name: 'loading' }
   ],
 
@@ -27,9 +25,7 @@ foam.CLASS({
     function render() {
       var self = this;
 
-      // TODO: Temporary while detailview is hidden (or make into a Controller instead)
       this.data.where$.sub(this.rerun);
-
       this.data.skip$.sub(this.onUpdate);
       this.data.version$.sub(this.onUpdate);
 
@@ -40,14 +36,13 @@ foam.CLASS({
           add(self.data.label$).
         end().
         start().show(self.loading$).tag(self.LoadingSpinner, {size: '32px'} ).end().
-        br().
-          add(self.dynamic(async function(version) {
+          add(self.dynamic(async function(data, version) {
+            if ( ! data ) { debugger; return; }
             var startTime = Date.now();
-            // Clone is needed in case the select was loaded from a DAO and doesnt' have correct context.
-            // TODO: fix JSON parsing should setup context correctly
-            var select    = self.data.select.clone(self.data.__subContext__);
+            var select    = self.data.select;
+            self.data.select = select;
             self.loading = true;
-            await select.execute(this);
+            await self.data.select.execute(this);
             self.loading = false;
             self.data.readyLatch_.resolve();
             self.data.executionTime = foam.lang.Duration.duration(Date.now() - startTime);
@@ -195,17 +190,17 @@ foam.CLASS({
             }
           } else {
             // Original logic for non-dotted keys
-            if ( this.scope[n] ) {
+            if ( n.endsWith('s') ) {
               this.daoKey = n;
-              n = this.scope[n];
+              n = n.substring(0, n.length-1) + 'DAO';
+            } else if ( this.__context__[n + 'DAO'] ) {
+              n =  n + 'DAO';
             } else if ( this.scope[n + 'DAO'] ) {
               this.daoKey = n + 'DAO';
               n = this.scope[n + 'DAO'];
-            } else if ( this.__context__[n + 'DAO'] ) {
-              n =  n + 'DAO';
-            } else if ( n.endsWith('s') ) {
+            } else if ( this.scope[n] ) {
               this.daoKey = n;
-              n = n.substring(0, n.length-1) + 'DAO';
+              n = this.scope[n];
             }
           }
         }
@@ -279,6 +274,7 @@ foam.CLASS({
     {
       class: 'foam.dao.DAOProperty',
       name: 'filteredDAO',
+      transient: true,
       factory: function() { return this.ProxyDAO.create({delegate$: this.filteredDAO_$}); }
     },
     {
@@ -292,14 +288,14 @@ foam.CLASS({
           viewa: { class: 'foam.u2.IntView' },
           viewb: { class: 'foam.u2.RangeView', minValue: 0, maxValue$: X.data.rowCount$.map(c => c-1), onKey: true }
         };
-      },
+      }/*,
       visibility: function(select) {
         // Show skip/limit only for sink agents (agents with getSink method like CSVDAOAgent, JSONDAOAgent)
         // Hide for non-sink agents (agents without getSink method like TableDAOAgent)
         if ( ! select ) return foam.u2.DisplayMode.HIDDEN;
         var isSinkAgent = foam.core.reflow.AbstractSinkDAOAgent.isInstance(select);
         return isSinkAgent ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
-      }
+      }*/
     },
     {
       class: 'Int',
@@ -307,14 +303,14 @@ foam.CLASS({
       section: 'scroll',
       value: 100,
       placeholder: '',
-      displayWidth: 8,
+      displayWidth: 8/*,
       visibility: function(select) {
         // Show skip/limit only for sink agents (agents with getSink method like CSVDAOAgent, JSONDAOAgent)
         // Hide for non-sink agents (agents without getSink method like TableDAOAgent)
         if ( ! select ) return foam.u2.DisplayMode.HIDDEN;
         var isSinkAgent = foam.core.reflow.AbstractSinkDAOAgent.isInstance(select);
         return isSinkAgent ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
-      }
+      }*/
     },
     {
       class: 'String',
@@ -343,7 +339,8 @@ foam.CLASS({
         };
       },
       postSet: function(_, n) {
-        this.updateColumnStorage(n);
+        // ???: KGR: I think this isn't needed because daoPrompt.columns is used to store columns, not the actual column storage
+//        this.updateColumnStorage(n);
       }
     },
     {
@@ -354,14 +351,23 @@ foam.CLASS({
       factory: function() {
         var self = this;
         return Object.create({
-          getItem: function(k) { return this[k] || null; },
-          setItem:    function(k, v) {
+          getItem: function(k) {
+            return this[k] || null;
+          },
+          setItem: function(k, v) {
             this[k] = v;
             // save column updates from tableview
             self.columns = self.getColumnNamesFromStorage(v);
           },
-          removeItem: function(k)    { delete this[k]; },
-          clear:      function()     { for ( const k in this ) delete this[k]; }
+          removeItem: function(k) {
+            delete this[k];
+          },
+          clear: function()  {
+            for ( const k in this ) delete this[k];
+          },
+          toString: function() {
+            return 'DAOPromptColumnStorage(' + JSON.stringify(this) + ')'
+          }
         });
       }
     },
@@ -372,7 +378,7 @@ foam.CLASS({
           sinksOnly: false,
           choice: 'foam.core.reflow.TableDAOAgent',
           dao: X.data.dao}, X.data);
-visible      },
+      },
       preSet: function(o, n) {
         // Temporary fix to recontextualize the object after load.
         // TODO: remove once JSON parsing/loading is fixed
@@ -416,6 +422,8 @@ visible      },
       return JSON.parse(json)?.map(a => a[0]).join(',');
     },
 
+    /*
+      KGR: Not needed because real columns are stored in 'columns'?
     function updateColumnStorage(columns) {
       if ( ! this.dao ) return;
       if ( columns === this.getColumnNamesFromStorage(this.columnStorage.getItem(this.dao.of.id)) )
@@ -430,9 +438,11 @@ visible      },
         defaultCols;
         this.columnStorage[this.dao.of.id] = JSON.stringify(cols);
     },
+        */
 
     function init() {
       this.SUPER();
+
       if ( ! this.columns ) {
         this.columns = this.getColumnNamesFromStorage(localStorage.getItem(this.dao.of.id));
       }
@@ -451,6 +461,16 @@ visible      },
 
     function onLoad() {
       return this.readyLatch_;
+    },
+
+    function copyFrom(o) {
+      // TODO: fix
+      // This is very hackish. On reload the DAOPrompt is created from the command
+      // but then we do a copyFrom() the DAOPrompt stored in the script and then
+      // the columnStorage gets swapped.
+      var old = this.columnStorage;
+      this.SUPER(o);
+      this.columnStorage = old;
     },
 
     function waitForRun() {

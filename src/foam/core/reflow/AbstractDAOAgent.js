@@ -39,7 +39,7 @@ foam.CLASS({
         } else {
           this.block.value = this.value(s);
         }
-//        s = s.clone({columnStorage: sink.__context__.columnStorage});
+        // s = s.clone({columnStorage: sink.__context__.columnStorage});
 
         e.startContext({dao: this.dao/*, columnStorage: sink.__context__.columnStorage*/})
           .start()
@@ -61,7 +61,22 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'AbstractSinkDAOAgent',
-  extends: 'foam.core.reflow.AbstractDAOAgent'
+  extends: 'foam.core.reflow.AbstractDAOAgent',
+
+  properties: [
+    {
+      name: 'sink',
+      preSet: function(o, n) {
+        // Temporary fix to recontextualize the object after load.
+        // TODO: remove once JSON parsing/loading is fixed
+        if ( n && n.__context__ != this.__subContext__ ) {
+          return n.clone(this.__subContext__);
+        }
+        return n;
+      }
+    }
+  ],
+
 });
 
 
@@ -214,7 +229,9 @@ foam.CLASS({
     function value(s) { return s; },
     function createSink() { return this.MIN(this.prop); },
     function addToE(e) {
-      e.startContext({data: this}).start().style({display: 'flex'}).add(this.PROP);
+      e.startContext({data: this}).start().
+        style({display: 'flex'}).
+        add(this.PROP);
     }
   ]
 });
@@ -290,6 +307,19 @@ foam.CLASS({
       class: 'Map',
       name: 'selectedObjects'
     },
+    {
+      class: 'FObjectProperty',
+      of: 'foam.lang.Property',
+      generateJava: false,
+      name: 'groupBy',
+      view: function(_, X) {
+        return {
+          class: 'foam.core.reflow.PropertyChoiceView',
+          forCls: X.dao ? X.dao.of : X.of,
+          allowClearingSelection: true
+        };
+      }
+    }
   ],
 
   methods: [
@@ -305,14 +335,16 @@ foam.CLASS({
         data: self.unlimitedDAO,
         config: self.DAOControllerConfig.create({
           dao: self.unlimitedDAO,
-          disableSelection: false,
-        })
+          disableSelection: false
+        }),
+        groupBy$: self.groupBy$.map(v => v || null)
       };
 
       if ( this.columns.length ) {
-        var cs = JSON.parse(this.columnStorage.getItem(this.of.id));
-        if ( cs )
-          config.selectedColumnNames = cs;
+//        var cs = JSON.parse(this.columnStorage.getItem(this.of.id));
+//        if ( cs )
+        //          config.selectedColumnNames = cs;
+        config.selectedColumnNames$ = this.columns$;
       }
 
       if ( this.of.MULTI_SELECT ) {
@@ -322,9 +354,17 @@ foam.CLASS({
 
 
       e.startContext({click: self.click}).
-        start(self.TableView.create({}, this.__subContext__), config).
+        start(self.TableView, config).
           style({height: '600px'});
 
+    },
+    function addToE(e) {
+      var self = this;
+      e.startContext({data: this})
+        .start()
+          .style({paddingLeft: '12px'})
+        .tag(this.GROUP_BY.__, { data: this })
+        .end();
     }
   ],
 
@@ -428,21 +468,7 @@ foam.CLASS({
     },
     {
       name: 'sink',
-      view: { class: 'foam.core.reflow.SinkView', choice: 'foam.core.reflow.CountDAOAgent' },
-      preSet: function(o, n) {
-        // Temporary fix to recontextualize the object after load.
-        // TODO: remove once JSON parsing/loading is fixed
-        if ( n && n.__context__ != this.__subContext__ ) {
-          return n.clone(this.__subContext__);
-        }
-        return n;
-      }
-    },
-    {
-      class: 'String',
-      name: 'generatedRowLabel', 
-      label: 'Generated Row Label',
-      documentation: 'Label for the generated row property in the model created by genModel().'
+      view: { class: 'foam.core.reflow.SinkView', choice: 'foam.core.reflow.CountDAOAgent' }
     },
     {
       class: 'Int',
@@ -523,12 +549,11 @@ foam.CLASS({
           sortOrder: this.sortOrder,
           othersLabel: this.othersLabel,
           includeOthers: this.includeOthers,
-          generatedRowLabel: this.generatedRowLabel
         });
       }
 
       // Fall back to regular GroupBy
-      var groupBySink = this.GROUP_BY(expr, innerSink, undefined, this.generatedRowLabel);
+      var groupBySink = this.GROUP_BY(expr, innerSink, undefined);
 
       // Apply legacy group limit if specified
       if ( this.groupLimit > 0 ) {
@@ -543,9 +568,8 @@ foam.CLASS({
       e.startContext({data: this}).
         start().
           style({paddingLeft: '12px'}).
-        add(this.PROP).
+          add(this.PROP).
           add(this.SINK).
-          add(this.GENERATED_ROW_LABEL.__).
           add(this.TOP_N.__).
           add(this.SORT_ORDER.__).
           add(this.INCLUDE_OTHERS.__).
@@ -699,6 +723,12 @@ foam.CLASS({
     {
       name: 'sinks',
       factory: function() { return []; },
+      preSet: function(o, n) {
+        if ( foam.Array.isInstance(n) ) {
+          n = n.map(o => o && o.__context__ != this.__subContext__ ? o.clone(this.__subContext__) : o);
+        }
+        return n;
+      },
       view: {
         class: 'foam.u2.view.ArrayView',
         valueView: {
@@ -871,7 +901,7 @@ foam.CLASS({
       var location = this.window.location.origin;
       var dao      = this.block.value.filteredDAO;
       var daoKey   = dao.cmd('serviceName?').substring(8);
-      var url      = `${location}/service/dig?dao=${daoKey}&cmd=select&sessionId=${this.sessionID}`;
+      var url      = `${location}/service/dig?dao=${daoKey}&cmd=select&sessionId=${this.sessionID}&limit=${this.block.value.limit}`;
 
       // We can't just use the DAOPrompt.where because if the DAO is decorated with
       // something like ProgramAwareDAO, then the query added there won't appear.
@@ -924,6 +954,60 @@ foam.CLASS({
   methods: [
     function execute(e) {
       e.tag(this.DownloadView);
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.core.reflow',
+  name: 'LabeledDAOAgent',
+  extends: 'foam.core.reflow.AbstractSinkDAOAgent',
+
+  requires: [ 'foam.mlang.sink.LabeledSink' ],
+
+  properties: [
+    {
+      class: 'String',
+      name: 'label',
+      documentation: 'Label to identify this sink result for retrieval in genModel',
+      validateObj: function(label) {
+        // has to be valid JavaScript variable name
+        // start with letter, underscore, or dollar sign
+        if ( ! label.match(/^[a-zA-Z_$]/) ) return 'Label must start with a letter, underscore';
+        // then only letters, numbers, underscores, or dollar signs (no dashes)
+        if ( ! label.match(/^[a-zA-Z_$][a-zA-Z0-9_$]*$/) ) return 'Label can only contain letters, numbers, underscores';
+
+        // check for JavaScript reserved words
+        var reservedWords = ['break', 'case', 'catch', 'class', 'const', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'export', 'extends', 'finally', 'for', 'function', 'if', 'import', 'in', 'instanceof', 'new', 'return', 'super', 'switch', 'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'yield', 'let', 'static', 'enum', 'implements', 'package', 'protected', 'interface', 'private', 'public'];
+        if ( reservedWords.indexOf(label.toLowerCase()) !== -1 ) return 'Label cannot be a JavaScript reserved word';
+      }
+    },
+    {
+      name: 'sink',
+      view: 'foam.core.reflow.SinkView',
+      documentation: 'The sink to delegate to'
+    }
+  ],
+
+  methods: [
+    function value(s) {
+      return s;
+    },
+    function createSink() {
+      return this.LabeledSink.create({
+        label: this.label,
+        delegate: this.sink ? this.sink.createSink() : null
+      });
+    },
+        function addToE(e) {
+      var self = this;
+      // TODO: figure out why BROWSE doesn't work after reloading
+      e.startContext({data: this}).
+        start().
+        add(this.LABEL.__)
+          .add(this.SINK).
+          end();
     }
   ]
 });

@@ -196,6 +196,8 @@ foam.CLASS({
     {
       name: 'adapt',
       value: function (_, d) {
+        if ( d === undefined || d === null ) return d;
+        var originalDate = d;
         if ( typeof d === 'number' )
           d = new Date(d);
 
@@ -232,9 +234,8 @@ foam.CLASS({
             d.getDate(),
             12));
         }
-
         if ( isNaN(d.getTime()) ) {
-          console.warn("Invalid date: " + d + "; assuming " + foam.Date.MAX_DATE.toISOString() + ".");
+          console.warn("Invalid date: " + originalDate + "; assuming " + foam.Date.MAX_DATE.toISOString() + ".");
           d = foam.Date.MAX_DATE;
         }
 
