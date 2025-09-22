@@ -274,6 +274,7 @@ foam.CLASS({
     {
       class: 'foam.dao.DAOProperty',
       name: 'filteredDAO',
+      transient: true,
       factory: function() { return this.ProxyDAO.create({delegate$: this.filteredDAO_$}); }
     },
     {
