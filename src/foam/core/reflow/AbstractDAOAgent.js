@@ -229,7 +229,9 @@ foam.CLASS({
     function value(s) { return s; },
     function createSink() { return this.MIN(this.prop); },
     function addToE(e) {
-      e.startContext({data: this}).start().style({display: 'flex'}).add(this.PROP);
+      e.startContext({data: this}).start().
+        style({display: 'flex'}).
+        add(this.PROP);
     }
   ]
 });
@@ -307,8 +309,8 @@ foam.CLASS({
       generateJava: false,
       name: 'groupBy',
       view: function(_, X) {
-        return { 
-          class: 'foam.core.reflow.PropertyChoiceView', 
+        return {
+          class: 'foam.core.reflow.PropertyChoiceView',
           forCls: X.dao ? X.dao.of : X.of,
           allowClearingSelection: true
         };
@@ -556,7 +558,7 @@ foam.CLASS({
       e.startContext({data: this}).
         start().
           style({paddingLeft: '12px'}).
-        add(this.PROP).
+          add(this.PROP).
           add(this.SINK).
           add(this.TOP_N.__).
           add(this.SORT_ORDER.__).
