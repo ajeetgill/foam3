@@ -54,6 +54,7 @@ foam.POM({
     { name: 'SinkView',                flags: 'js' },
     { name: 'CopyFromBorder',          flags: 'js' },
     { name: 'Upload',                  flags: 'js' },
+    { name: 'UploadSink',              flags: 'js' },
     { name: 'UploadAgent',             flags: 'js|java' },
     { name: 'ViewSink',                flags: 'js|java' },
     { name: 'XHR',                     flags: 'js' },
@@ -71,6 +72,7 @@ foam.POM({
     { name: 'control/CollectionsControl', flags: 'js' },
     { name: 'control/FlowsControl',     flags: 'js' },
     { name: 'control/ComponentsControl', flags: 'js' },
-    { name: 'FlowBrowserView',         flags: 'js' }
+    { name: 'FlowBrowserView',         flags: 'js' },
+    { name: 'FilteredDAOAgent',        flags: 'js' }
   ]
 });

@@ -52,7 +52,7 @@ foam.CLASS({
           }
         }
       }
-    
+
     },
     {
       class: 'List',
@@ -60,7 +60,7 @@ foam.CLASS({
       name: 'groupKeys',
       javaCloneProperty: '// noop',
       // IMPORTANT: Not transient - must be serialized to preserve backend order
-      // JavaScript automatically sorts numeric string keys (e.g., "554", "036") 
+      // JavaScript automatically sorts numeric string keys (e.g., "554", "036")
       // which breaks the intended display order from the backend.
       // TopNGroupBy sets this explicitly to maintain value-sorted order (DESC/ASC by sum, count, etc.)
       // Without this, JavaScript would reorder keys numerically instead of by their aggregate values.
@@ -79,12 +79,6 @@ foam.CLASS({
     },
     {
       name: 'selection', hidden: true
-    },
-    {
-      class: 'String',
-      name: 'generatedRowLabel', 
-      label: 'Generated Row Label',
-      documentation: 'Label for the generated row property in the model created by genModel().'
     }
   ],
 
@@ -186,7 +180,7 @@ if ( getGroupLimit() == getGroups().size() && sub != null ) sub.detach();
 
     {
       name: 'eof',
-      code: function() { 
+      code: function() {
         // Call eof on all nested sinks to ensure they finalize their state
         for ( var key in this.groups ) {
           var nestedSink = this.groups[key];
@@ -253,7 +247,7 @@ for (Object key : getGroups().keySet()) {
       // Get name and label from the expression, with fallbacks
       var exprName = this.arg1.name || this.arg1.delegate.name || 'group';
       var exprLabel = this.arg1.label || foam.String.labelize(this.arg1.delegate.name) || 'Group';
-      
+
       const model = {
         package: 'foam.tmp',
         name: 'GroupBy' + foam.next$UID(),
@@ -266,10 +260,6 @@ for (Object key : getGroups().keySet()) {
 
       model.plural = model.name;
       var props = this.arg2.toProperties ? this.arg2.toProperties() : this.arg2.VALUE ? [ this.arg2.VALUE ] : [];
-      /// override the label of the prop based on user they define
-      if (this.generatedRowLabel && props.length > 0) {
-        props[0].label = this.generatedRowLabel;
-      }
       model.properties.push.apply(model.properties, props);
 
       return model;
