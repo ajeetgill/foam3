@@ -73,7 +73,7 @@ public class FObjectParser
                   c = Class.forName(className);
                 } catch (ClassNotFoundException t) {
                 }
-              } else if ( ! ci.getObjClass().getName().equals(className) ) {
+              } else if ( ci.getObjClass() != null && ! ci.getObjClass().getName().equals(className) ) {
                 // getOwnClassInfo() on an explicit java class which extends
                 // a modelled class will resolve to the modelled class,
                 // causing json parsing of class: explicit-java-class to fail.
