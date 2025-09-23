@@ -118,6 +118,30 @@ foam.CLASS({
           x.test(false, `Date parsing failed for ${dateStr}: ${e.message}`);
         }
       });
+
+      // Test specific case: 2025/03/17 should create dates in 2025, not 275760
+      var specificQuery = parser.parseString('birthday=2025/03/17');
+      if ( specificQuery && specificQuery.args && specificQuery.args.length === 2 ) {
+        var startDate = (specificQuery.args[0].arg2.value || specificQuery.args[0].arg2);
+        var endDate = (specificQuery.args[1].arg2.value || specificQuery.args[1].arg2);
+
+        if ( startDate instanceof Date ) {
+          x.test(startDate.getFullYear() === 2025,
+                   `2025/03/17 start date should be in year 2025, got ${startDate.getFullYear()}`);
+          x.test(startDate.getMonth() === 2, // March is month 2 (0-based)
+                   `2025/03/17 start date should be in March (month 2), got ${startDate.getMonth()}`);
+          x.test(startDate.getDate() === 17,
+                   `2025/03/17 start date should be day 17, got ${startDate.getDate()}`);
+        }
+
+        if ( endDate instanceof Date ) {
+          x.test(endDate.getFullYear() === 2025,
+                   `2025/03/17 end date should be in year 2025, got ${endDate.getFullYear()}`);
+          // End date should be the next day (March 18)
+          x.test(endDate.getDate() === 18,
+                   `2025/03/17 end date should be day 18, got ${endDate.getDate()}`);
+        }
+      }
     },
 
     function testTimezoneHandling(x) {
@@ -160,36 +184,53 @@ foam.CLASS({
       // YY/MM/DD format creates array [YYYY, '/', MM, '/', DD] with length 5
       // The old code tried to access elements beyond this length
       var testCases = [
-        { format: "2025/03/17", desc: "slash format that caused original bug" },
-        { format: "2025-03-17", desc: "dash format for comparison" },
-        { format: "2025/1/1", desc: "single digit month/day" },
-        { format: "2025/12/31", desc: "max month/day values" }
+        { format: "2025/03/17", expectedYear: 2025, expectedMonth: 2, expectedDay: 17 },
+        { format: "2025-03-17", expectedYear: 2025, expectedMonth: 2, expectedDay: 17 },
+        { format: "2025/1/1", expectedYear: 2025, expectedMonth: 0, expectedDay: 1 },
+        { format: "2025/12/31", expectedYear: 2025, expectedMonth: 11, expectedDay: 31 }
       ];
 
       testCases.forEach(testCase => {
         try {
           var query = parser.parseString(`birthday=${testCase.format}`);
-          x.test(query !== null, `Array bounds fix: ${testCase.desc}`);
+          x.test(query !== null, `Should parse ${testCase.format}`);
 
-          // Verify the query creates valid date ranges
+          // Verify the query creates correct date ranges
           if ( query && query.args && query.args.length === 2 ) {
             var gteClause = query.args[0]; // Greater than or equal
             var ltClause = query.args[1];  // Less than
 
             if ( gteClause && gteClause.arg2 ) {
               var startDateConstant = gteClause.arg2;
-              // FOAM wraps dates in Constant objects, so get the actual value
               var actualStartDate = startDateConstant.value || startDateConstant;
+
               x.test(actualStartDate instanceof Date && !isNaN(actualStartDate.getTime()),
                        `Valid start date for ${testCase.format}`);
+
+              // Test exact expected values
+              x.test(actualStartDate.getFullYear() === testCase.expectedYear,
+                       `${testCase.format} start year should be ${testCase.expectedYear}, got ${actualStartDate.getFullYear()}`);
+              x.test(actualStartDate.getMonth() === testCase.expectedMonth,
+                       `${testCase.format} start month should be ${testCase.expectedMonth}, got ${actualStartDate.getMonth()}`);
+              x.test(actualStartDate.getDate() === testCase.expectedDay,
+                       `${testCase.format} start day should be ${testCase.expectedDay}, got ${actualStartDate.getDate()}`);
             }
 
             if ( ltClause && ltClause.arg2 ) {
               var endDateConstant = ltClause.arg2;
-              // FOAM wraps dates in Constant objects, so get the actual value
               var actualEndDate = endDateConstant.value || endDateConstant;
+
               x.test(actualEndDate instanceof Date && !isNaN(actualEndDate.getTime()),
                        `Valid end date for ${testCase.format}`);
+
+              // End date should be next day - calculate correctly for month/year rollovers
+              var expectedEndDate = new Date(testCase.expectedYear, testCase.expectedMonth, testCase.expectedDay + 1);
+              x.test(actualEndDate.getFullYear() === expectedEndDate.getFullYear(),
+                       `${testCase.format} end year should be ${expectedEndDate.getFullYear()}, got ${actualEndDate.getFullYear()}`);
+              x.test(actualEndDate.getMonth() === expectedEndDate.getMonth(),
+                       `${testCase.format} end month should be ${expectedEndDate.getMonth()}, got ${actualEndDate.getMonth()}`);
+              x.test(actualEndDate.getDate() === expectedEndDate.getDate(),
+                       `${testCase.format} end day should be ${expectedEndDate.getDate()}, got ${actualEndDate.getDate()}`);
             }
           }
         } catch (e) {
