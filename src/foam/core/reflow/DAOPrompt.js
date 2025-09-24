@@ -82,7 +82,8 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'DAOPrompt',
-  extends: 'foam.core.reflow.AbstractDAOCommand',
+
+  mixins: [ 'foam.core.reflow.DAOResolverMixin' ],
 
   sections: [
     {
@@ -131,6 +132,26 @@ foam.CLASS({
   ],
 
   properties: [
+    {
+      class: 'String',
+      name: 'daoKey',
+      section: 'general',
+      hidden: true,
+      transient: true
+    },
+    {
+      class: 'foam.dao.DAOProperty',
+      name: 'dao',
+      section: 'general',
+      hidden: true,
+      transient: true,
+      adapt: function(o, n, p) {
+        return this.adaptDAOProperty(o, n, p);
+      },
+      expression: function(daoKey) {
+        return this.resolveDAOFromKey(daoKey);
+      }
+    },
     {
       class: 'String',
       name: 'label',
