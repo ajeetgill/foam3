@@ -8,7 +8,6 @@ foam.POM({
     { name: '../../u2/mlang/Table',    flags: 'js|java' },
     { name: '../../u2/mlang/Pie',    flags: 'js|java' },
     { name: 'AbstractDAOAgent',        flags: 'js' },
-    { name: 'AbstractDAOCommand',      flags: 'js' },
     { name: 'DAOResolverMixin',        flags: 'js' },
     { name: 'CellsSink',               flags: 'js|java' },
     { name: 'Check',                   flags: 'js' },
