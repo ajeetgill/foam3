@@ -37,7 +37,7 @@ FOAM has no runtime dependencies, but does have build dependencies:
 * npm
 * nodejs (version >= 16)
 * maven
-* java (version >= 11)
+* java (version >= 21)
 
 Once dependencies are installed, update FOAM's javascript dependencies:
 From the root of the FOAM repository, execute:
