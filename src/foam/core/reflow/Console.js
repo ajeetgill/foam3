@@ -515,6 +515,7 @@ foam.CLASS({
       this.out = this.WrapperNode.create({ parentNode: this.content }, this);
       self.borderEl_.add(this.out);
     },
+
     function render() {
       this.on('click', this.onClick);
       this.addClass('block');
@@ -537,12 +538,14 @@ foam.CLASS({
     function removeFlowChild_(c) {
       c.remove();
     },
+
     function log(...args) {
       if ( args.length == 0 ) return;
       if ( this.seen ) this.out.tag('br');
       this.seen = true;
       this.out.add(args.join(' '));
     },
+
     function outputJSON(json) {
       json.outputFObject_(this, this.cls_, [ this.FLOW_NAME, this.CMD, this.VALUE, this.FLOW_CHILDREN, this.REACTIONS_, this.BORDER_CLASS, this.BORDER ]);
     }
@@ -586,6 +589,8 @@ foam.CLASS({
       name: 'onClick',
       code: function(e) {
         this.selected = this;
+        e.preventDefault();
+        e.stopPropagation();
       }
     }
   ]
@@ -689,7 +694,7 @@ foam.CLASS({
     {
       type: 'Int',
       name: 'MIN_SIDEBAR_WIDTH_FALLBACK',
-      value: 200
+      value: 280
     }
   ],
 
@@ -705,7 +710,7 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'rightWidth',
-      value: 300
+      value: 360
     },
     {
       class: 'Int',
