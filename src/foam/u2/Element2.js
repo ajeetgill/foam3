@@ -1516,7 +1516,9 @@ foam.CLASS({
           throw "Invalid CSS classname";
         }
         this.classes[newClass] = true;
-        this.element_.classList.add(newClass);
+        // Could be a FunctionNode which only has a comment
+        if ( this.element_ && this.element_.classList )
+          this.element_.classList.add(newClass);
       }
     },
 
