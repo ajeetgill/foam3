@@ -1531,7 +1531,6 @@ foam.CLASS({
       isMerged: true,
       delay: 500,
       code: function() {
-        console.log("**** FLOW CHILDREN CHANGE", arguments);
         this.maybeRegenScript();
       }
     }
