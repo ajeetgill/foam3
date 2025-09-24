@@ -134,6 +134,18 @@ foam.CLASS({
   properties: [
     {
       class: 'String',
+      name: 'label',
+      label: 'Name',
+      section: 'general',
+      label: 'Name',
+      onKey: true,
+      expression: function(dao) {
+        return dao.of.model_.plural;
+      },
+      displayWidth: 60
+    },
+    {
+      class: 'String',
       name: 'daoKey',
       section: 'general',
       hidden: true,
