@@ -5,3 +5,50 @@ p({class:"foam.core.reflow.Flow",name:"FLOAT: GroupByGroupBytoDAO",status:"PASSE
 
 // Security Audit
 p({class:"foam.core.reflow.Flow",name:"Security Audit",script:"[\n\t{\n\t\t\n\t\t\"flowName\": \"script1\",\n\t\t\"cmd\": \"script\",\n\t\t\"value\": {\n\t\t\t\"class\": \"foam.core.reflow.Script\",\n\t\t\t\"code\": \"foam.ENUM({\\n  package: 'foam.security',\\n  name: 'Status',\\n  values: [\\n    { name: 'PASSED',                        color: 'green' },\\n    { name: 'PASSED_STAR', label: 'PASSED*', color: 'lightgreen' },\\n    { name: 'ALERT',                         color: 'red' },\\n    { name: 'WARNING',                       color: 'orange' }\\n  ]\\n});\\n\\nfoam.CLASS({\\n  package: 'foam.security',\\n  name: 'SecurityAudit',\\n  properties: [\\n    { name: 'id', label: 'DAO' },\\n    { class: 'Enum',    name: 'status', of: 'foam.security.Status' },\\n    { class: 'Boolean', name: 'authenticated' },\\n    { class: 'Boolean', name: 'permissioned' },\\n    { class: 'Boolean', name: 'readOnly' },\\n    { class: 'Boolean', name: 'spidAware', label: 'SPID Aware' },\\n    { class: 'Boolean', name: 'programAware' },\\n    { class: 'String',  name: 'authorizer' },\\n    { class: 'String',  name: 'groups' },\\n    { class: 'String',  name: 'capabilities' },\\n    { class: 'String',  name: 'notes' }\\n  ]\\n});\\n\\nvar dao = foam.dao.EasyDAO.create({\\n  of:      foam.security.SecurityAudit,\\n  daoType: 'MDAO'\\n});\\n\\nvar IGNORED_GROUPS = {\\n  admin:  true,\\n  system: true\\n};\\n\\nvar data   = [];\\nvar groups = await x.groupDAO.select();      groups = groups.array;\\nvar caps   = await x.capabilityDAO.select(); caps   = caps.array;\\n\\n\\nvar array = await x.cSpecDAO.select();\\narray = array.array;\\nfor ( var i = 0 ; i < array.length ; i++ ) {\\n  var n = array[i];\\n  if ( n.name.indexOf('DAO') == -1 ) continue;\\n  if ( ! n.serve )  continue;\\n  if ( ! n.enabled )  continue;\\n\\n  let authorizer   = '';\\n  let permissioned = false;\\n  let readOnly     = false;\\n  let nullDAO      = false;\\n  let spidAware    = false;\\n  let programAware = false;\\n\\n  try {\\n    readOnly   = !! await x[n.name].cmd('CLASS? foam.dao.ReadOnlyDAO');\\n  } catch (x) { }\\n\\n  try {\\n    nullDAO   = !! await x[n.name].cmd('CLASS? foam.dao.NullDAO');\\n  } catch (x) { }\\n\\n  try { authorizer = await x[n.name].cmd('AUTHORIZER?'); } catch (x) { }\\n  try { permissioned = !! await x[n.name].cmd('CLASS? foam.core.auth.PermissionedPropertyDAO'); } catch (x) { }\\n  try { spidAware = !! await x[n.name].cmd('CLASS? foam.core.auth.ServiceProviderAwareDAO'); } catch (x) { }\\n  try { programAware = !! await x[n.name].cmd('CLASS? com.paytic.identity.ProgramAwareDAO'); } catch (x) { }\\n\\n  if ( authorizer ) {\\n    authorizer = authorizer.replace('foam.core.auth.', '');\\n    authorizer = authorizer.replace('foam.core.approval.', '');\\n    authorizer = authorizer.replace('Authorizer', '');\\n  }\\n\\n  var pgroups = [];\\n  for ( var j = 0 ; j < groups.length ; j++ ) {\\n    var g = groups[j];\\n    if ( ! IGNORED_GROUPS[g.id] && await g.implies(x, 'service.' + n.name) ) {\\n      pgroups.push(g.id);\\n    }\\n  }\\n\\n  var pcaps = [];\\n  for ( var j = 0 ; j < caps.length ; j++ ) {\\n    var c = caps[j];\\n    var granted =  c.permissionsGranted.find(p => {\\n      return p === 'service.' + n.name;\\n    });\\n    if ( granted ) {\\n      pcaps.push(c.name);\\n    }\\n  }\\n\\n  let warning = foam.security.Status.PASSED;\\n  if  ( ! authorizer && ! readOnly && ! n.authenticate && ! nullDAO ) {\\n    warning = foam.security.Status.ALERT;\\n  } else if ( ! authorizer && pgroups.length && ! readOnly && ! nullDAO ) {\\n    warning = foam.security.Status.WARNING;\\n  }\\n  if ( warning == foam.security.Status.WARNING && n.authNotes ) warning = foam.security.Status.PASSED_STAR;\\n\\n  dao.put(foam.security.SecurityAudit.create({\\n    id: n.name,\\n    status: warning,\\n    authenticated: n.authenticate,\\n    authorizer: authorizer || '',\\n    permissioned: permissioned,\\n    readOnly: readOnly,\\n    spidAware: spidAware,\\n    programAware: programAware,\\n    groups: pgroups.join(', '),\\n    capabilities: pcaps.join(', '),\\n    notes: n.authNotes\\n  }));\\n}\\n\\nglobalThis.auditDAO = dao;\\n\",\n\t\t\t\"autoRun\": true\n\t\t},\n\t\t\"borderClass\": \"foam.u2.borders.NullBorder\",\n\t\t\"border\": {\n\t\t\t\"cssClasses\": [\n\t\t\t\t\n\t\t\t]\n\t\t}\n\t},\n\t{\n\t\t\n\t\t\"flowName\": \"securityaudits1\",\n\t\t\"cmd\": \"dao(globalThis.auditDAO)\",\n\t\t\"value\": {\n\t\t\t\"class\": \"foam.core.reflow.DAOPrompt\",\n\t\t\t\"label\": \"Security Audits\",\n\t\t\t\"columns\": \"id,status,authenticated,permissioned,readOnly,spidAware,authorizer,groups,capabilities,notes\",\n\t\t\t\"select\": {\n\t\t\t\t\"class\": \"foam.core.reflow.TableDAOAgent\",\n\t\t\t\t\"columns\": [\n\t\t\t\t\t\n\t\t\t\t]\n\t\t\t},\n\t\t\t\"rowCount\": 204,\n\t\t\t\"version\": 1\n\t\t},\n\t\t\"borderClass\": \"foam.u2.borders.NullBorder\",\n\t\t\"border\": {\n\t\t\t\"cssClasses\": [\n\t\t\t\t\n\t\t\t]\n\t\t}\n\t}\n]",lastModified:1755031194724})
+
+p({
+"class":"foam.core.reflow.Flow",
+"name":"ObjectSelectAgent Demo",
+"script":
+"""[
+	{
+		
+		"flowName": "users1",
+		"cmd": "dao user",
+		"value": {
+			"class": "foam.core.reflow.DAOPrompt",
+			"columns": "id,type,lifecycleState,userName,group.id,email",
+			"select": {
+				"class": "foam.core.reflow.ObjectSelectDAOAgent",
+			}
+		},
+		"borderClass": "foam.u2.borders.NullBorder",
+		"border": {
+			"cssClasses": [
+				
+			]
+		}
+	},
+	{
+		
+		"flowName": "accounts1",
+		"cmd": "dao account",
+		"value": {
+			"class": "foam.core.reflow.DAOPrompt",
+			"columns": "summary,balance",
+			"select": {
+				"class": "foam.core.reflow.ObjectSelectDAOAgent"
+			},
+			"reactions_": {
+				"where": "`owner:${users1.value?.id}`"
+			}
+		},
+		"borderClass": "foam.u2.borders.NullBorder",
+		"border": {
+			"cssClasses": [
+				
+			]
+		}
+	}
+]"""
+})
