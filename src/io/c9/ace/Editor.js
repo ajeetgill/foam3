@@ -20,7 +20,10 @@ foam.CLASS({
   ],
 
   axioms: [
-    foam.u2.JsLib.create({src: 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.39.0/ace.js' })
+    // NOTE: when updating this library also update CSP script-src in http CSpec
+    // see https://cdnjs.com/libraries/ace/1.9.6 for urls and SRI Hashes
+    // ace is internally hard-coded to only load non-min support libs from cdn
+    foam.u2.JsLib.create({src: 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.9.6/ace.min.js'})
   ],
 
   reactions: [
