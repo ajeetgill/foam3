@@ -180,7 +180,8 @@ foam.CLASS({
       });
 
       this.addClass()
-        .start().addClass(this.myClass('header-container'))
+        .start()
+          .addClass(this.myClass('header-container'))
           .start().addClass(this.myClass('navigator'))
             .tag(this.HOME)
             .start(foam.u2.tag.Image, {
@@ -401,7 +402,9 @@ foam.CLASS({
       border: none;
       height: 20px;
     }
-    ^.block:hover:not(:has(.block:hover)) { background: $backgroundSecondary; }
+    div.foam-core-reflow-Console-CONSOLE ^.block:hover:not(:has(.block:hover)) {
+      background: $backgroundSecondary; }
+    }
     ^ .foam-u2-ReadWriteView { padding-right: 8px; }
     ^content {
       overflow-x: auto;
@@ -846,25 +849,25 @@ foam.CLASS({
 
   exports: [
     'addToScope',
+    'block',
     'clearFlow',
     'createFlowChildName',
     'currentBlock',
     'eval_',
     'flowChildren',
-    'scope',
-    'localScope',
     'history_',
+    'localScope',
     'log',
     'mementoMgr',
     'moveFlowChild',
     'moveFlowChildAfter',
     'out',
     'save',
+    'scope',
     'scrollToBottom',
     'selected',
     'showPrompts',
-    'value as flow',
-    'block'
+    'value as flow'
   ],
 
   css: `
@@ -1078,6 +1081,9 @@ foam.CLASS({
     async function render() {
       foam.u2.table.UnstyledTableView.SELECTED_COLUMN_NAMES.memorable = false;
       foam.u2.table.TableView.SELECTED_COLUMN_NAMES.memorable = false;
+
+      // Add the Mode as a CSS Class so we can adjust stying based on the mode
+      this.addClass(this.flowMode$.map(m => this.myClass(m.toString())));
 
       let oldShowNav = this.showNav;
       this.showNav = false;
