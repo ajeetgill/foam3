@@ -94,6 +94,7 @@ foam.CLASS({
       this.removeFlowChild_ && this.flowChildren.forEach(c => this.removeFlowChild_(c));
       this.flowChildren = [];
     }
+
   ]
 });
 
@@ -851,6 +852,7 @@ foam.CLASS({
     'addToScope',
     'block',
     'clearFlow',
+    'copyChild',
     'createFlowChildName',
     'currentBlock',
     'eval_',
@@ -1028,7 +1030,7 @@ foam.CLASS({
       var c = this.findFlowChildByName(childName);
       if ( c ) {
         await this.eval_(c.cmd);
-        this.currentBlock.value.copyFrom(c);
+        this.currentBlock.value.copyFrom(c.value);
       }
     },
 
