@@ -887,20 +887,6 @@ foam.CLASS({
 });
 
 
-
-foam.CLASS({
-  package: 'foam.core.reflow',
-  name: 'CellsDAOAgent',
-  extends: 'foam.core.reflow.AbstractColumnAwareDAOAgent',
-
-  requires: [ 'foam.core.reflow.CellsSink' ],
-
-  methods: [
-    function getSink() { return this.CellsSink.create({of: this.of}); }
-  ]
-});
-
-
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'AllDAOAgent',
