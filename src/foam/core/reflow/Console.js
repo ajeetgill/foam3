@@ -11,6 +11,7 @@
 // Features:
 //  ? how are Commands different than flows?
 // ???: Would it be better to have compose rather than mixing Flowable?
+// TODO: user-select: none; to avoid cut&paste when not appropriate
 
 foam.CLASS({
   package: 'foam.core.reflow',
@@ -1022,6 +1023,15 @@ foam.CLASS({
   ],
 
   methods: [
+    async function copyChild(childName) {
+      // Make a copy of a flow child
+      var c = this.findFlowChildByName(childName);
+      if ( c ) {
+        await this.eval_(c.cmd);
+        this.currentBlock.value.copyFrom(c);
+      }
+    },
+
     async function includeFlow(name) {
       if ( ! name ) return;
       var flow = await this.flowDAO.find(name);
