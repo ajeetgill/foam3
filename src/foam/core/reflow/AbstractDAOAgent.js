@@ -260,7 +260,8 @@ foam.CLASS({
           class: 'foam.core.reflow.PropertyChoiceView',
           forCls: X.data.of,
           predicate: function(p) {
-            return foam.lang.Int.isInstance(p) || foam.lang.Float.isInstance(p);
+            // Other number types are all descendents of Int
+            return foam.lang.Int.isInstance(p);
           }
         };
       }
@@ -293,7 +294,7 @@ foam.CLASS({
     'foam.u2.table.TableView'
   ],
 
-  imports: ['columnStorage'],
+  imports: [ 'columnStorage' ],
 
   properties: [
     {
