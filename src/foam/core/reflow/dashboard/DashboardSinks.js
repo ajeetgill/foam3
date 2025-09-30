@@ -1077,7 +1077,7 @@ foam.CLASS({
       help: 'Theme icon name to display above the metric value (e.g., "chart", "users", "dollar")'
     },
     {
-      class: 'String',
+      class: 'Color',
       name: 'iconColor',
       help: 'Color for the icon (CSS color or token)',
       view: 'foam.u2.view.TokenColorEditView',
@@ -1313,7 +1313,6 @@ foam.CLASS({
                 fontSize: self.countFontSize$,
                 marginTop: '8px',
                 color: self.countColor$,
-                textDecoration: 'underline',
                 fontWeight: self.countFontWeight$
               })
               .callIf(self.countOnClick, function() {
