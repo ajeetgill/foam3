@@ -1219,7 +1219,6 @@ foam.CLASS({
 
       s.flow = this.value;
       let addBindings = (flow) => {
-        if ( ! flow.flowChildren.length ) return;
         flow.flowChildren.forEach(c => {
           // Add shortname bindings for DAO children
           if ( c.value && c.flowName.endsWith('DAO') ) {
@@ -1229,11 +1228,11 @@ foam.CLASS({
           if ( c.value ) {
             s[c.flowName] = foam.lang.Holder.isInstance(c.value) ? c.value.value : c.value || c.value;
           }
-          this.Flowable.isInstance(c) && addBindings(c);
+          s[c.flowName + '$block'] = c;
+          if ( this.Flowable.isInstance(c) ) addBindings(c);
         });
       };
       addBindings(this);
-      this.flowScope = s;
     },
 
     async function eval_(cmd, opt_ignoreSelect, ignoreHistory, flowParent) {
