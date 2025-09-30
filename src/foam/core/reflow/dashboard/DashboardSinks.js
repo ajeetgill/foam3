@@ -1010,7 +1010,7 @@ foam.CLASS({
       title: 'Display Options',
       order: 2,
       collapsable: true,
-      properties: ['icon', 'iconColor', 'iconSize', 'alignment', 'countSuffix', 'valueColor']
+      properties: ['icon', 'iconColor', 'iconSize', 'alignment', 'valueColor']
     },
     {
       name: 'labelFont',
