@@ -708,6 +708,12 @@ foam.CLASS({
       generateJava: false,
     },
     {
+      class: 'Boolean',
+      name: 'refreshSessionTimer',
+      value: true,
+      generateJava: false,
+    },
+    {
       name: 'crunchBoxEnabled',
       generateJava: false,
       value: true
@@ -735,7 +741,10 @@ foam.CLASS({
           });
         }
 
-        return this.SessionClientBox.create({delegate: box});
+        return this.SessionClientBox.create({
+          delegate: box,
+          refreshSessionTimer: this.refreshSessionTimer
+        });
       }
     },
     {
