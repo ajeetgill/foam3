@@ -72,8 +72,7 @@ foam.CLASS({
     {
       class: 'String',
       name: 'cspNonce',
-      documentation: 'Content Security Policy nonce value for inline styles and scripts. Must match the nonce in CSP headers.',
-      value: '123455432100000' // random default value, to be overriden in Application code for CSP
+      documentation: 'Content Security Policy nonce value for inline styles and scripts. Must match the nonce in CSP headers. When null, no nonce is applied.'
     }
   ],
 
@@ -194,8 +193,13 @@ foam.CLASS({
       }
 
       // Loading screen styles
-      out.println("<meta name=\\"csp-nonce\\" content=\\"" + getCspNonce() + "\\">");
-      out.println("<style nonce=\\"" + getCspNonce() + "\\">");
+      String nonce = getCspNonce();
+      if ( ! SafetyUtil.isEmpty(nonce) ) {
+        out.println("<meta name=\\"csp-nonce\\" content=\\"" + nonce + "\\">");
+        out.println("<style nonce=\\"" + nonce + "\\">");
+      } else {
+        out.println("<style>");
+      }
       out.println("""
         body {
           margin: 0;
