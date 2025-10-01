@@ -103,6 +103,10 @@ In this current implementation setDelegate must be called last.`,
       `
     },
     {
+      class: 'Boolean',
+      name: 'writeVersionOnFirstPut'
+    },
+    {
       name: 'delegate',
       javaFactory: 'return new MDAO(getOf());',
       javaPostSet: `
@@ -187,7 +191,7 @@ In this current implementation setDelegate must be called last.`,
                 if ( runtimeJrl != null ) {
                   String lastVersion = runtimeJrl.getLastReplayVersion();
                   if ( SafetyUtil.isEmpty(lastVersion) || isCurrentVersionNewer(lastVersion, currentVersion) ) {
-                    runtimeJrl.writeVersion(getX(), currentVersion);
+                    setWriteVersionOnFirstPut(true);
                   }
                 }
               } finally {
@@ -217,6 +221,10 @@ In this current implementation setDelegate must be called last.`,
     {
       name: 'put_',
       javaCode: `
+        if ( getWriteVersionOnFirstPut() ) {
+          ((F3FileJournal) getJournal()).writeVersion(getX(), getVersion());
+          setWriteVersionOnFirstPut(false);
+        }
         return getJournal().put(x, "", getDelegate(), obj);
       `
     },

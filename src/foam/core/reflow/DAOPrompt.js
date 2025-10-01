@@ -189,12 +189,20 @@ foam.CLASS({
               return null;
             }
           } else {
-            // Original logic for non-dotted keys
             if ( n.endsWith('s') ) {
-              this.daoKey = n;
-              n = n.substring(0, n.length-1) + 'DAO';
+              // Try plural+DAO first (preserves exact name), then fallback to singular+DAO
+              if ( this.scope[n + 'DAO'] ) {
+                this.daoKey = n + 'DAO';
+                n = this.scope[n + 'DAO'];
+              } else if ( this.__context__[n + 'DAO'] ) {
+                this.daoKey = n + 'DAO';
+                n = n + 'DAO';
+              } else {
+                this.daoKey = n;
+                n = n.substring(0, n.length-1) + 'DAO';
+              }
             } else if ( this.__context__[n + 'DAO'] ) {
-              n =  n + 'DAO';
+              n = n + 'DAO';
             } else if ( this.scope[n + 'DAO'] ) {
               this.daoKey = n + 'DAO';
               n = this.scope[n + 'DAO'];

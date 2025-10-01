@@ -11,6 +11,7 @@
 // Features:
 //  ? how are Commands different than flows?
 // ???: Would it be better to have compose rather than mixing Flowable?
+// TODO: user-select: none; to avoid cut&paste when not appropriate
 
 foam.CLASS({
   package: 'foam.core.reflow',
@@ -93,6 +94,7 @@ foam.CLASS({
       this.removeFlowChild_ && this.flowChildren.forEach(c => this.removeFlowChild_(c));
       this.flowChildren = [];
     }
+
   ]
 });
 
@@ -180,7 +182,8 @@ foam.CLASS({
       });
 
       this.addClass()
-        .start().addClass(this.myClass('header-container'))
+        .start()
+          .addClass(this.myClass('header-container'))
           .start().addClass(this.myClass('navigator'))
             .tag(this.HOME)
             .start(foam.u2.tag.Image, {
@@ -401,7 +404,9 @@ foam.CLASS({
       border: none;
       height: 20px;
     }
-    ^.block:hover:not(:has(.block:hover)) { background: $backgroundSecondary; }
+    div.foam-core-reflow-Console-CONSOLE ^.block:hover:not(:has(.block:hover)) {
+      background: $backgroundSecondary; }
+    }
     ^ .foam-u2-ReadWriteView { padding-right: 8px; }
     ^content {
       overflow-x: auto;
@@ -589,7 +594,6 @@ foam.CLASS({
       name: 'onClick',
       code: function(e) {
         this.selected = this;
-        e.preventDefault();
         e.stopPropagation();
       }
     }
@@ -847,24 +851,24 @@ foam.CLASS({
   exports: [
     'addToScope',
     'clearFlow',
+    'copyChild',
     'createFlowChildName',
     'currentBlock',
     'eval_',
     'flowChildren',
-    'scope',
-    'localScope',
     'history_',
+    'localScope',
     'log',
     'mementoMgr',
     'moveFlowChild',
     'moveFlowChildAfter',
     'out',
     'save',
+    'scope',
     'scrollToBottom',
     'selected',
     'showPrompts',
-    'value as flow',
-    'block'
+    'value as flow'
   ],
 
   css: `
@@ -1020,6 +1024,15 @@ foam.CLASS({
   ],
 
   methods: [
+    async function copyChild(childName) {
+      // Make a copy of a flow child
+      var c = this.findFlowChildByName(childName);
+      if ( c ) {
+        await this.eval_(c.cmd);
+        this.currentBlock.value.copyFrom(c.value);
+      }
+    },
+
     async function includeFlow(name) {
       if ( ! name ) return;
       var flow = await this.flowDAO.find(name);
@@ -1078,6 +1091,9 @@ foam.CLASS({
     async function render() {
       foam.u2.table.UnstyledTableView.SELECTED_COLUMN_NAMES.memorable = false;
       foam.u2.table.TableView.SELECTED_COLUMN_NAMES.memorable = false;
+
+      // Add the Mode as a CSS Class so we can adjust stying based on the mode
+      this.addClass(this.flowMode$.map(m => this.myClass(m.toString())));
 
       let oldShowNav = this.showNav;
       this.showNav = false;
@@ -1202,7 +1218,6 @@ foam.CLASS({
 
       s.flow = this.value;
       let addBindings = (flow) => {
-        if ( ! flow.flowChildren.length ) return;
         flow.flowChildren.forEach(c => {
           // Add shortname bindings for DAO children
           if ( c.value && c.flowName.endsWith('DAO') ) {
@@ -1212,11 +1227,11 @@ foam.CLASS({
           if ( c.value ) {
             s[c.flowName] = foam.lang.Holder.isInstance(c.value) ? c.value.value : c.value || c.value;
           }
-          this.Flowable.isInstance(c) && addBindings(c);
+          s[c.flowName + '$block'] = c;
+          if ( this.Flowable.isInstance(c) ) addBindings(c);
         });
       };
       addBindings(this);
-      this.flowScope = s;
     },
 
     async function eval_(cmd, opt_ignoreSelect, ignoreHistory, flowParent) {

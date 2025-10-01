@@ -708,6 +708,12 @@ foam.CLASS({
       generateJava: false,
     },
     {
+      class: 'Boolean',
+      name: 'refreshSessionTimer',
+      value: true,
+      generateJava: false,
+    },
+    {
       name: 'crunchBoxEnabled',
       generateJava: false,
       value: true
@@ -735,7 +741,10 @@ foam.CLASS({
           });
         }
 
-        return this.SessionClientBox.create({delegate: box});
+        return this.SessionClientBox.create({
+          delegate: box,
+          refreshSessionTimer: this.refreshSessionTimer
+        });
       }
     },
     {
@@ -994,7 +1003,6 @@ foam.CLASS({
         <p>This process is transparent to the developer, and you can use your
         EasyDAO like any other DAO.</p>
       */
-      this.SUPER.apply(this, arguments);
 
       var daoType = typeof this.daoType === 'string' ?
         this.ALIASES[this.daoType] || this.daoType :
