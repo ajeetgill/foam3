@@ -31,14 +31,6 @@ foam.CLASS({
       class: 'foam.dao.DAOProperty',
       name: 'dao'
     },
-//     {
-//       documentation: `deprecated.  CSpec DAO loading is now a
-// compbination of 'synchronous' replay along with 'asynchronous' non-lazy
-// dao loading, which improves overall startup time.`,
-//       class: 'Boolean',
-//       name: 'syncReplay',
-//       value: true
-//     },
     {
       documentation: 'Report of successfully processed lines during last replay',
       class: 'Int',
