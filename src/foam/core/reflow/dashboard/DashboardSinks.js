@@ -1027,7 +1027,10 @@ foam.CLASS({
   
   requires: ['foam.u2.tag.Image'],
 
-  imports: ['theme'],
+  imports: [
+    'theme',
+    'scope?'
+  ],
 
   exports: ['lastEncounteredObj_ as objData'],
 
@@ -1035,16 +1038,23 @@ foam.CLASS({
     {
       name: 'metricConfig',
       title: 'Metric Configuration',
-      order: 1,
+      order: 0,
       collapsable: true,
       properties: ['operation', 'prop', 'label', 'prefix', 'postfix', 'decimalPlaces', 'convertToLocalString']
+    },
+    {
+      name: 'countConfig',
+      title: 'Count Configuration',
+      order: 1,
+      collapsable: true,
+      properties: ['showCount', 'countOnClick', 'countSuffix', 'countColor', 'countFontSize', 'countFontWeight']
     },
     {
       name: 'display',
       title: 'Display Options',
       order: 2,
       collapsable: true,
-      properties: ['icon', 'iconColor', 'iconSize', 'alignment', 'showCount', 'countSuffix', 'valueColor']
+      properties: ['icon', 'iconColor', 'iconSize', 'alignment', 'valueColor']
     },
     {
       name: 'labelFont',
@@ -1052,13 +1062,6 @@ foam.CLASS({
       order: 3,
       collapsable: true,
       properties: ['labelFontSize', 'labelFontWeight', 'labelColor']
-    },
-    {
-      name: 'countFont',
-      title: 'Count Font Options',
-      order: 4,
-      collapsable: true,
-      properties: ['countFontSize', 'countFontWeight', 'countColor']
     }
   ],
 
@@ -1118,7 +1121,7 @@ foam.CLASS({
       help: 'Theme icon name to display above the metric value (e.g., "chart", "users", "dollar")'
     },
     {
-      class: 'String',
+      class: 'Color',
       name: 'iconColor',
       help: 'Color for the icon (CSS color or token)',
       view: 'foam.u2.view.TokenColorEditView',
@@ -1204,6 +1207,15 @@ foam.CLASS({
       value: 'normal'
     },
     {
+      class: 'String',
+      name: 'countOnClick',
+      reactive: true,
+      visibility: function(showCount) {
+        return showCount ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
+      },
+      help: 'An onClick function to be called when the count is clicked'
+    },
+    {
       class: 'Color',
       name: 'countColor',
       help: 'Color for the count text (CSS color or token)',
@@ -1212,7 +1224,7 @@ foam.CLASS({
     {
       name: 'metric_',
       hidden: true,
-      expression: function(sink, countSink, showCount, decimalPlaces, convertToLocalString, postfix, prefix) {
+      expression: function(sink, countSink, showCount, countOnClick, decimalPlaces, convertToLocalString, postfix, prefix) {
         var value = this.getComputedValue();
         var count = countSink ? countSink.value : null;
         
@@ -1340,15 +1352,20 @@ foam.CLASS({
 
         // Count - show how many records were processed
         if ( self.showCount && metric.count !== null ) {
-          this.start('div')
-            .style({
-              fontSize: self.countFontSize$,
-              marginTop: '8px',
-              color: self.countColor$,
-              fontWeight: self.countFontWeight$
-            })
-            .add(self.countSuffix$.map(v => metric.count.toLocaleString() + (v ? ' ' + v : '')))
-          .end();
+            this.start('a')
+              .style({
+                fontSize: self.countFontSize$,
+                marginTop: '8px',
+                color: self.countColor$,
+                fontWeight: self.countFontWeight$
+              })
+              .callIf(self.countOnClick, function() {
+                this
+                  .on('click', self.onCountClick)
+                  .style({ textDecoration: 'underline' })
+               })
+              .add(self.countSuffix$.map(v => metric.count.toLocaleString() + (v ? ' ' + v : '')))
+            .end();
         }
       }));
     },
@@ -1382,7 +1399,17 @@ foam.CLASS({
           this.sink.copyFrom(sink);
         }
       }
-    }
+    },
+    {
+      name: 'onCountClick',
+      isFramed: true,
+      code: function() {
+        with ( this.scope ) {
+          var result = eval('(async function() { ' + this.countOnClick + ' })').call(this);
+          return result;
+        }
+      }
+    },
   ]
 });
 
