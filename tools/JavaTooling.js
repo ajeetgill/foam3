@@ -262,6 +262,10 @@ foam.POM({
       if ( ! JAVAC_PARAMETERS.includes('--release') ) {
         JAVAC_PARAMETERS += ' --release '+JAVA_RELEASE;
       }
+      if ( Number(JAVA_RELEASE) >= 25 ) {
+        // javax.security.auth.AuthPermission
+        JAVAC_PARAMETERS += ' -Xlint:-deprecation -Xlint:-removal';
+      }
     }],
 
     clientTests: ['client-tests', 'Run all or specified client side test cases. ex: clientTests[:Test1,Test2]', [], function(args) {
