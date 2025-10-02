@@ -1124,8 +1124,13 @@ foam.CLASS({
         let of = (prop || this).of;
         if ( of.isInstance(newValue) ) return newValue.id;
         if ( foam.lang.MultiPartID.isInstance(of.ID) ) return newValue;
-        if ( ! of.ID.adapt ) return newValue;
-        return of.ID.adapt.call(this, newValue);
+        if ( ! of.ID ) {
+          return newValue;
+        }
+        if ( of.ID.adapt ) {
+          return of.ID.adapt.call(this, oldValue, newValue, of.ID);
+        }
+        return newValue;
       }
     },
     {
