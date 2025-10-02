@@ -1383,7 +1383,6 @@ foam.CLASS({
       return 'DashboardMetricSink(' + this.sink.toString() + ')';
     },
     async function onLoad() {
-      // console.log('DashboardMetricSink onLoad called');
       this.updateSink();
     }
   ],
