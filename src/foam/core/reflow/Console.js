@@ -848,6 +848,14 @@ foam.CLASS({
     'showNav'
   ],
 
+  constants: [
+    {
+      type: 'String',
+      name: 'AUTOSAVED_SCRIPT',
+      value: 'foam.reflow.autosavedscript'
+    }
+  ],
+
   exports: [
     'addToScope',
     'clearFlow',
@@ -1130,6 +1138,9 @@ foam.CLASS({
       this.value.script$.sub(this.onScriptChange);
 
       this.deepSub(this.onFlowChildrenChange, [this.FLOW_CHILDREN, this.VALUE]);
+
+      // Check for autosaved script on page load
+      this.checkForAutosavedScript();
 
       var layout = this.start(this.Layout);
 
@@ -1427,6 +1438,19 @@ foam.CLASS({
       } finally {
         this.feedback_ = false;
       }
+    },
+
+    function checkForAutosavedScript() {
+      var autosavedScript = this.window.localStorage[this.AUTOSAVED_SCRIPT];
+      if ( autosavedScript && autosavedScript !== this.value.script ) {
+        var shouldLoad = this.window.confirm('There are unsaved changes. Do you want to load them? Click OK to load, Cancel to discard.');
+        if ( shouldLoad ) {
+          this.value.script = autosavedScript;
+        } else {
+          // Discard by removing from localStorage
+          this.window.localStorage.removeItem(this.AUTOSAVED_SCRIPT);
+        }
+      }
     }
   ],
 
@@ -1547,6 +1571,17 @@ foam.CLASS({
       delay: 500,
       code: function() {
         this.maybeRegenScript();
+      }
+    },
+    {
+      name: 'saveScriptToLocalStorage',
+      isMerged: true,
+      mergeDelay: 1000,
+      on: ['this.propertyChange.value.script'],
+      code: function() {
+        if ( this.value && this.value.script ) {
+          this.window.localStorage[this.AUTOSAVED_SCRIPT] = this.value.script;
+        }
       }
     }
   ]
