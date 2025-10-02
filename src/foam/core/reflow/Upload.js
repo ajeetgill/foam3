@@ -66,8 +66,8 @@ foam.CLASS({
         start('th').add('Property').end().
         start('th').add('Type').end().
         start('th').add('Value').end().
-        start('th').add('Required').end().
         start('th').add('Date Format').end().
+        start('th').add('Required').end().
       end().
       add(this.dynamic(function(data) {
         if ( ! data || data.length === 0 ) return;
@@ -90,12 +90,12 @@ foam.CLASS({
                 add(mapping.FIELD_NAME.__).
                 add(mapping.DYNAMIC_EXPRESSION.__).
               end().
-              start('td').add(prop ? (prop.required || false) : false).end().
               start('td').
                 callIf(isDateProp, function() {
                   this.add(mapping.DATE_FORMAT.__);
                 }).
               end().
+              start('td').add(prop ? (prop.required || false) : false).end().
             end()
             .endContext();
         });

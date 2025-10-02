@@ -133,7 +133,7 @@ foam.CLASS({
       class: 'Enum',
       of: 'foam.core.reflow.DateFormat',
       name: 'dateFormat',
-      label: 'Date Format',
+      label: '',
       value: 'STANDARD',
       help: 'Standard formats support: yyyy-mm-dd, yyyy/mm/dd, yyyymmdd, mm/dd/yyyy, mm-dd-yyyy, mmddyyyy. Select dd/mm/yyyy if your dates are in Day-Month-Year format.',
       documentation: 'Date format for this field (only applies to Date/DateTime properties)',
