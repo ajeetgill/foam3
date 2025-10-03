@@ -1185,7 +1185,7 @@ foam.CLASS({
 
       // Check for autosaved script AFTER route is loaded and name is set
       // Use setTimeout to ensure everything is fully initialized
-      this.setTimeout(() => this.checkForAutosavedScript(), 100);
+      this.setTimeout(() => this.checkForAutosavedScript(this.route), 100);
     },
 
     function renderSelf(self) {
@@ -1475,8 +1475,8 @@ foam.CLASS({
       }
     },
 
-    async function checkForAutosavedScript() {
-      var autosaveData = this.loadAutosaveData();
+    async function checkForAutosavedScript(scriptName) {
+      var autosaveData = this.loadAutosaveData(scriptName);
       if ( ! autosaveData || ! autosaveData.script ) return;
 
       // Check if autosave differs from current script
@@ -1505,8 +1505,10 @@ foam.CLASS({
       var shouldLoad = this.window.confirm('There are unsaved changes. Do you want to load them? Click OK to load, Cancel to discard.');
       if ( shouldLoad ) {
         this.value.script = autosaveData.script;
+        // Clear autosave after loading to prevent double prompt from onScriptNameChange
+        this.clearAutosave(scriptName);
       } else {
-        this.clearAutosave();
+        this.clearAutosave(scriptName);
       }
     }
   ],
