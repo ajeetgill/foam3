@@ -848,6 +848,14 @@ foam.CLASS({
     'showNav'
   ],
 
+  constants: [
+    {
+      type: 'String',
+      name: 'AUTOSAVED_SCRIPT_PREFIX',
+      value: 'foam.reflow.autosavedscript'
+    }
+  ],
+
   exports: [
     'addToScope',
     'clearFlow',
@@ -1024,6 +1032,30 @@ foam.CLASS({
   ],
 
   methods: [
+    function getAutosaveKey(scriptName) {
+      // Include script name in the key to prevent tabs from overwriting each other
+      // Handle unnamed scripts with a separate key
+      scriptName = scriptName || this.value.name || '_unnamed';
+      return this.AUTOSAVED_SCRIPT_PREFIX + ':' + scriptName;
+    },
+
+    function clearAutosave(scriptName) {
+      this.window.localStorage.removeItem(this.getAutosaveKey(scriptName));
+    },
+
+    function loadAutosaveData(scriptName) {
+      var key = this.getAutosaveKey(scriptName);
+      var dataStr = this.window.localStorage[key];
+      if ( ! dataStr ) return null;
+
+      try {
+        return JSON.parse(dataStr);
+      } catch (e) {
+        this.clearAutosave(scriptName);
+        return null;
+      }
+    },
+
     async function copyChild(childName) {
       // Make a copy of a flow child
       var c = this.findFlowChildByName(childName);
@@ -1101,6 +1133,7 @@ foam.CLASS({
       this.SUPER();
 
       var self = this;
+      this.value.name$.sub(this.onScriptNameChange);
       this.value.name$.sub(() => this.route = this.value.name);
 
       // Does this ever happen?
@@ -1145,7 +1178,14 @@ foam.CLASS({
       }));
 
       await this.eval_('preLoad', null, true);
-      if ( this.route ) this.ROUTE.postSet.call(this, '', this.route);
+
+      if ( this.route ) {
+        await this.ROUTE.postSet.call(this, '', this.route);
+      }
+
+      // Check for autosaved script AFTER route is loaded and name is set
+      // Use setTimeout to ensure everything is fully initialized
+      this.setTimeout(() => this.checkForAutosavedScript(), 100);
     },
 
     function renderSelf(self) {
@@ -1394,7 +1434,13 @@ foam.CLASS({
       this.generateScript();
       flow.version++;
       this.mementoMgr.clear();
-      return flow.flowDAO.put(this.value).then(ret => this.value.copyFrom(ret));
+
+      // Clear autosave after successful save since changes are now persisted
+      return flow.flowDAO.put(this.value).then(ret => {
+        this.value.copyFrom(ret);
+        this.clearAutosave();
+        return ret;
+      });
     },
 
     function setSelectedIndex(i) {
@@ -1426,6 +1472,41 @@ foam.CLASS({
         this.generateScript();
       } finally {
         this.feedback_ = false;
+      }
+    },
+
+    async function checkForAutosavedScript() {
+      var autosaveData = this.loadAutosaveData();
+      if ( ! autosaveData || ! autosaveData.script ) return;
+
+      // Check if autosave differs from current script
+      if ( autosaveData.script === this.value.script ) {
+        // Autosave matches current - no need to prompt
+        return;
+      }
+
+      // Check if we have a saved version in the database
+      var savedFlow = null;
+      if ( this.value.name ) {
+        try {
+          savedFlow = await this.flowDAO.find(this.value.name);
+        } catch (e) {
+          // Flow doesn't exist in database yet
+        }
+      }
+
+      // If autosave matches the saved version, no need to prompt
+      if ( savedFlow && autosaveData.script === savedFlow.script ) {
+        this.clearAutosave();
+        return;
+      }
+
+      // Autosave is different from both current and saved - prompt user
+      var shouldLoad = this.window.confirm('There are unsaved changes. Do you want to load them? Click OK to load, Cancel to discard.');
+      if ( shouldLoad ) {
+        this.value.script = autosaveData.script;
+      } else {
+        this.clearAutosave();
       }
     }
   ],
@@ -1503,6 +1584,41 @@ foam.CLASS({
 
   listeners: [
     {
+      name: 'onScriptNameChange',
+      isMerged: true,
+      delay: 500,
+      code: function(_, __, ___, evt) {
+        // evt contains: { instance_, obj, prop, oldValue }
+        var oldValue = evt.oldValue;
+        var newValue = this.value.name;
+
+        // When script name changes, check if there's existing autosave for new name
+        if ( oldValue === newValue ) return;
+
+        // Check if the new name has existing autosave data that differs from current
+        var existingData = this.loadAutosaveData(newValue);
+
+        if ( existingData && existingData.script !== this.value.script ) {
+          // There's already autosaved data for the new name that differs from current
+          var shouldLoad = this.window.confirm(
+            'The script name "' + newValue + '" already has different unsaved changes. ' +
+            'Click OK to load those changes, or Cancel to keep your current changes and overwrite.'
+          );
+
+          if ( shouldLoad ) {
+            // Load the existing autosave data for the new name
+            this.value.script = existingData.script;
+          }
+          // else: Keep current changes - autosave will naturally update with current script
+        }
+
+        // Clean up old autosave entries (from intermediate typing states)
+        if ( oldValue ) {
+          this.clearAutosave(oldValue);
+        }
+      }
+    },
+    {
       name: 'onInput',
       code: function() {
         var input = this.input;
@@ -1547,6 +1663,26 @@ foam.CLASS({
       delay: 500,
       code: function() {
         this.maybeRegenScript();
+        this.saveScriptToLocalStorage();
+      }
+    },
+    {
+      name: 'saveScriptToLocalStorage',
+      isMerged: true,
+      delay: 500,
+      code: function() {
+        if ( ! this.value || ! this.value.script ) return;
+
+        // Only autosave if there are unsaved changes (revision > 0)
+        if ( this.value.revision > 0 ) {
+          var autosaveData = {
+            script: this.value.script
+          };
+          this.window.localStorage[this.getAutosaveKey()] = JSON.stringify(autosaveData);
+        } else {
+          // No unsaved changes - clear autosave
+          this.clearAutosave();
+        }
       }
     }
   ]
