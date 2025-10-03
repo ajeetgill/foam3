@@ -471,8 +471,10 @@ foam.POM({
       this.log('\nRunning Java Test Cases:');
       this.log('  ./build.sh --run-tests');
       this.log('    Run all test cases.');
-      this.log('  ./build.sh --server-tests:SequenceNumberDAO,MapDAOTest');
+      this.log('  ./build.sh --server-tests:SequenceNumberDAOTest,MapDAOTest');
       this.log('    Run specified server side (Java) test cases.');
+      this.log('  ./build.sh --server-tests:-SequenceNumberDAOTest,-MapDAOTest');
+      this.log('    Exclude specified server side (Java) test cases.');
       this.log('  ./build.sh --client-tests');
       this.log('    Run all client side (Javascript) test cases.');
       this.log('  ./build.sh --client-tests --test-headed');
