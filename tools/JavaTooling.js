@@ -22,6 +22,7 @@ foam.POM({
     JOURNAL_OUT:       ['Build journals directory',() => `${PROJECT_HOME}/${BUILD_DIR}/journals`],
     LOG_HOME:          ['Application logs directory',() => APP_NAME ? `${APP_HOME}/logs`: 'APP_HOME/logs'],
     SAF_HOME:          ['Application sf (store and forward) directory',() => `${APP_HOME}/saf`],
+    WEBROOT:           ['Webroot for non-jar builds, defaults to PROJECT_HOME', () => PROJECT_HOME],
   },
 
   options: {
@@ -262,6 +263,10 @@ foam.POM({
       if ( ! JAVAC_PARAMETERS.includes('--release') ) {
         JAVAC_PARAMETERS += ' --release '+JAVA_RELEASE;
       }
+      if ( Number(JAVA_RELEASE) >= 25 ) {
+        // javax.security.auth.AuthPermission
+        JAVAC_PARAMETERS += ' -Xlint:-deprecation -Xlint:-removal';
+      }
     }],
 
     clientTests: ['client-tests', 'Run all or specified client side test cases. ex: clientTests[:Test1,Test2]', [], function(args) {
@@ -318,7 +323,7 @@ foam.POM({
         JAVA_OPTS += ` -Dhostname=${HOST_NAME}`;
       }
       JAVA_OPTS += ` -Dapp.name=${APP_NAME}`;
-      JAVA_OPTS += ` -Dcore.webroot=${PROJECT_HOME}`;
+      JAVA_OPTS += ` -Dcore.webroot=${WEBROOT}`;
       JAVA_OPTS += ` -Duser.timezone=${TIMEZONE}`;
 
       if ( DEBUG )
@@ -338,7 +343,7 @@ foam.POM({
         JAVA_OPTS += ` -Dhostname=${HOST_NAME}`;
       }
       JAVA_OPTS += ` -Dapp.name=${APP_NAME}`;
-      JAVA_OPTS += ` -Dcore.webroot=${PROJECT_HOME}`;
+      JAVA_OPTS += ` -Dcore.webroot=${WEBROOT}`;
       JAVA_OPTS += ` -Duser.timezone=${TIMEZONE}`;
 
       if ( DEBUG )
@@ -467,8 +472,10 @@ foam.POM({
       this.log('\nRunning Java Test Cases:');
       this.log('  ./build.sh --run-tests');
       this.log('    Run all test cases.');
-      this.log('  ./build.sh --server-tests:SequenceNumberDAO,MapDAOTest');
+      this.log('  ./build.sh --server-tests:SequenceNumberDAOTest,MapDAOTest');
       this.log('    Run specified server side (Java) test cases.');
+      this.log('  ./build.sh --server-tests:-SequenceNumberDAOTest,-MapDAOTest');
+      this.log('    Exclude specified server side (Java) test cases.');
       this.log('  ./build.sh --client-tests');
       this.log('    Run all client side (Javascript) test cases.');
       this.log('  ./build.sh --client-tests --test-headed');

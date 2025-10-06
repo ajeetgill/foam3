@@ -166,6 +166,7 @@ foam.CLASS({
             sym('me'),
             sym('date'),
             sym('string'),
+            sym('float'),
             sym('number')
           ),
 
@@ -240,7 +241,9 @@ foam.CLASS({
           char: alt(range('a', 'z'), range('A', 'Z'), range('0', '9'), '-', '^',
             '_', '@', '%', '.'),
 
-          number: repeat(range('0', '9'), null, 1)
+          number: repeat(range('0', '9'), null, 1),
+
+          float: str(seq(optional('-'), str(sym('number')), '.', str(sym('number'))))
         };
       }
     },
@@ -306,8 +309,7 @@ foam.CLASS({
         // If a Date-valued field is set to a single number, it expands into a
         // range spanning that whole year.
         var maybeConvertYearToDateRange = function(prop, num) {
-          var isDateField = foam.lang.Date.isInstance(prop) ||
-            foam.lang.Date.isInstance(prop);
+          var isDateField = foam.lang.Date.isInstance(prop);
           var isDateRange = Array.isArray(num) && num[0] instanceof Date;
 
           if ( isDateField && ! isDateRange ) {
@@ -350,6 +352,10 @@ foam.CLASS({
 
           number: function(v) {
             return parseInt(compactToString(v));
+          },
+
+          float: function(v) {
+            return parseFloat(v);
           },
 
           me: function() {
