@@ -1230,9 +1230,7 @@ foam.CLASS({
     },
 
     function scrollToBottom() {
-      if ( this.U3 ) {
-        this.out.element_.scrollTop = this.out.element_.scrollHeight;
-      }
+      this.out.element_.scrollTop = this.out.element_.scrollHeight;
     },
 
     function addHistory(cmd) {

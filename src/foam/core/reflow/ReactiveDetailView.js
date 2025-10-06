@@ -197,7 +197,6 @@ foam.CLASS({
       var self = this;
 
       this.
-        enableClass(this.myClass('u2'), ! this.U3).
         addClass().
         show(visibilitySlot).
         start().

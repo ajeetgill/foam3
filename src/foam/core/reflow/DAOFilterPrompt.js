@@ -118,6 +118,7 @@ foam.CLASS({
       hidden: true,
       transient: true,
       expression: function(dao, predicate) {
+        console.log('********************', predicate.toString());
         if ( ! dao ) return null;
         return predicate ? dao.where(predicate) : dao;
       }
@@ -139,12 +140,12 @@ foam.CLASS({
         }, this.__subContext__.createSubContext({
           controllerMode: foam.u2.ControllerMode.EDIT
         }));
-        
+
         // Store reference to filtersContainer
         if ( fv.filtersContainer$ ) {
           this.filtersContainer = fv.filtersContainer$;
         }
-        
+
         return fv;
       }
     },

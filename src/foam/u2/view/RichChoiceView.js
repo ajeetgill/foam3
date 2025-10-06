@@ -572,11 +572,7 @@ foam.CLASS({
                           })
                         .end();
                       }
-                      if ( this.U3 ) {
-                        this.call(addRow);
-                      } else {
-                        return this.E().call(addRow);
-                      }
+                      this.call(addRow);
                     }, false, self.comparator)
                   .end()
                   .callIf(section.choicesLimit, function() {
