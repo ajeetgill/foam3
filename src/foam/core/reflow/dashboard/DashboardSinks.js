@@ -15,15 +15,14 @@ foam.CLASS({
   package: 'foam.core.reflow.dashboard',
   name: 'TimeSeriesGapFillingSinkMixin',
 
-  documentation: 'Mixin for sinks that provides time series gap filling functionality',
+  documentation: 'Mixin for sinks that provides time series period range display functionality',
 
   properties: [
-    { class: 'Boolean', name: 'fillTimeGaps', value: false, help: 'Fill missing time periods with zero values (for date properties only)' },
     {
       class: 'Int',
-      name: 'fillGapPeriods',
-      value: 12,
-      help: 'Number of periods to fill back from today (e.g., 12 months, 52 weeks, 4 quarters)'
+      name: 'periodCount',
+      value: 0,
+      help: 'Number of periods to display from today backwards (e.g., 12 for last 12 months). Set to 0 to show only existing data.'
     }
   ],
 
@@ -57,16 +56,18 @@ foam.CLASS({
       var maxDate = new Date(now);
 
       // Calculate start date based on granularity and periods
+      // Subtract (periods - 1) to get the correct range including current period
+      // Example: periods=12 for months means current month + 11 previous = 12 total
       if ( granularity === 'week' ) {
-        minDate.setDate(minDate.getDate() - (periods * 7));
+        minDate.setDate(minDate.getDate() - ((periods - 1) * 7));
       } else if ( granularity === 'quarter' ) {
-        minDate.setMonth(minDate.getMonth() - (periods * 3));
+        minDate.setMonth(minDate.getMonth() - ((periods - 1) * 3));
       } else if ( granularity === 'month' ) {
-        minDate.setMonth(minDate.getMonth() - periods);
+        minDate.setMonth(minDate.getMonth() - (periods - 1));
       } else if ( granularity === 'year' ) {
-        minDate.setFullYear(minDate.getFullYear() - periods);
+        minDate.setFullYear(minDate.getFullYear() - (periods - 1));
       } else if ( granularity === 'date' || granularity === 'day' ) {
-        minDate.setDate(minDate.getDate() - periods);
+        minDate.setDate(minDate.getDate() - (periods - 1));
       }
 
       // Generate keys using the property expression
@@ -230,23 +231,34 @@ foam.CLASS({
       transient: true,
       expression: function(groups, colors, timeUnit, horizontal, barThickness, datasetLabel, xAxisLabel, yAxisLabel,
                           showGridLines, responsive, maintainAspectRatio, showLegend,
-                          legendPosition, showTooltips, showTooltipSum, animate, animationDuration, fillTimeGaps, fillGapPeriods) {
+                          legendPosition, showTooltips, showTooltipSum, animate, animationDuration, periodCount) {
 
         var labels = [];
         var data = [];
         var backgroundColors = [];
 
-        // Check if we're dealing with dates using the groupBy property
-        var isDateAxis = this.arg1 && (foam.lang.Date.isInstance(this.arg1) || foam.lang.DateTime.isInstance(this.arg1));
+        // Check if we're dealing with dates - either the arg1 itself is a date property,
+        // or it's a date transformation expression with a date delegate
+        var isDateAxis = false;
+        if ( this.arg1 ) {
+          // Check if arg1 is directly a Date/DateTime property
+          if ( foam.lang.Date.isInstance(this.arg1) || foam.lang.DateTime.isInstance(this.arg1) ) {
+            isDateAxis = true;
+          }
+          // Check if arg1 is a date transformation expression (has a date delegate)
+          else if ( this.arg1.delegate && (foam.lang.Date.isInstance(this.arg1.delegate) || foam.lang.DateTime.isInstance(this.arg1.delegate)) ) {
+            isDateAxis = true;
+          }
+        }
 
         // If topN > 0, use groupKeys to preserve backend order (JavaScript reorders numeric keys)
         // Otherwise, use sortedKeys() for proper sorting
         var sortedKeys = this.topN > 0 ? (this.groupKeys || Object.keys(groups)) :
                         (this.sortedKeys ? this.sortedKeys() : Object.keys(groups));
 
-        // Fill time gaps if enabled and this is a date/time axis
-        if ( fillTimeGaps && isDateAxis ) {
-          sortedKeys = this.fillTimeGapKeys(sortedKeys, groups, fillGapPeriods, this.arg1);
+        // Apply period range if enabled (periodCount > 0) and this is a date/time axis
+        if ( periodCount > 0 && isDateAxis ) {
+          sortedKeys = this.fillTimeGapKeys(sortedKeys, groups, periodCount, this.arg1);
         }
 
         var index = 0;
@@ -344,20 +356,23 @@ foam.CLASS({
           }
         };
         
-        // Configure time scale if dealing with date/time properties
-        // Use the isDateAxis flag we set earlier when detecting date keys
-        if ( isDateAxis ) {
+        // Configure time scale if dealing with RAW date/time properties (not transformed)
+        // Only use Chart.js time scale for raw Date/DateTime properties, not for date transformation expressions
+        // Date transformation expressions already format the dates as strings (e.g., "2024/10")
+        var isRawDateProperty = this.arg1 && (foam.lang.Date.isInstance(this.arg1) || foam.lang.DateTime.isInstance(this.arg1));
+
+        if ( isRawDateProperty ) {
           chartJSOptions.scales.x.type = 'time';
           chartJSOptions.scales.x.time = {
             unit: timeUnit.chartJsUnit || 'day',
             displayFormats: {}
           };
-          
+
           // Set display format for the selected time unit
           if ( timeUnit.displayFormat ) {
             chartJSOptions.scales.x.time.displayFormats[timeUnit.chartJsUnit || 'day'] = timeUnit.displayFormat;
           }
-          
+
           // Configure tooltip format
           if ( timeUnit.tooltipFormat ) {
             chartJSOptions.scales.x.time.tooltipFormat = timeUnit.tooltipFormat;
@@ -649,7 +664,7 @@ foam.CLASS({
       expression: function(cols, rows, colors, timeUnit, horizontal, xAxisLabel, yAxisLabel,
                           showGridLines, responsive, maintainAspectRatio,
                           showLegend, legendPosition, showTooltips, showTooltipSum, animate, animationDuration,
-                          fillTimeGaps, fillGapPeriods) {
+                          periodCount) {
         var colGroups = cols && cols.groups ? cols.groups : {};
         var rowGroups = rows && rows.groups ? rows.groups : {};
         
@@ -665,8 +680,16 @@ foam.CLASS({
         var colGroups = cols && cols.groups ? cols.groups : {};
         var rowGroups = rows && rows.groups ? rows.groups : {};
         
-        // Check if we're dealing with dates on x-axis using the xFunc property
-        var isDateAxis = this.xFunc && (foam.lang.Date.isInstance(this.xFunc) || foam.lang.DateTime.isInstance(this.xFunc));
+        // Check if we're dealing with dates on x-axis - either xFunc is a date property,
+        // or it's a date transformation expression with a date delegate
+        var isDateAxis = false;
+        if ( this.xFunc ) {
+          if ( foam.lang.Date.isInstance(this.xFunc) || foam.lang.DateTime.isInstance(this.xFunc) ) {
+            isDateAxis = true;
+          } else if ( this.xFunc.delegate && (foam.lang.Date.isInstance(this.xFunc.delegate) || foam.lang.DateTime.isInstance(this.xFunc.delegate)) ) {
+            isDateAxis = true;
+          }
+        }
         
         // Get sorted column keys using FOAM's sorting
         var sortedColKeys = [];
@@ -676,9 +699,9 @@ foam.CLASS({
           sortedColKeys = Object.keys(colGroups);
         }
 
-        // Fill time gaps if enabled and x-axis is a date
-        if ( fillTimeGaps && isDateAxis ) {
-          sortedColKeys = this.fillTimeGapKeys(sortedColKeys, colGroups, fillGapPeriods, this.xFunc);
+        // Apply period range if enabled (periodCount > 0) and x-axis is a date
+        if ( periodCount > 0 && isDateAxis ) {
+          sortedColKeys = this.fillTimeGapKeys(sortedColKeys, colGroups, periodCount, this.xFunc);
         }
 
         // Extract labels from sorted columns (x-axis categories)
@@ -1012,19 +1035,26 @@ foam.CLASS({
                         fill, tension, stepped, showPoints, pointRadius, showGridLines,
                         responsive, maintainAspectRatio, showLegend, legendPosition,
                         showTooltips, showTooltipSum, animate, animationDuration,
-                        fillTimeGaps, fillGapPeriods) {
+                        periodCount) {
 
       if ( !arg1 || !arg2 ) return null;
 
       var data = [];
       var sortedKeys = this.sortedKeys ? this.sortedKeys() : Object.keys(groups);
 
-      // Check if arg1 is a date property for gap filling
-      var isDateAxis = arg1 && (foam.lang.Date.isInstance(arg1) || foam.lang.DateTime.isInstance(arg1));
+      // Check if arg1 is a date property for period range display
+      var isDateAxis = false;
+      if ( arg1 ) {
+        if ( foam.lang.Date.isInstance(arg1) || foam.lang.DateTime.isInstance(arg1) ) {
+          isDateAxis = true;
+        } else if ( arg1.delegate && (foam.lang.Date.isInstance(arg1.delegate) || foam.lang.DateTime.isInstance(arg1.delegate)) ) {
+          isDateAxis = true;
+        }
+      }
 
-      // Fill time gaps if enabled and x-axis is a date
-      if ( fillTimeGaps && isDateAxis ) {
-        sortedKeys = this.fillTimeGapKeys(sortedKeys, groups, fillGapPeriods, arg1);
+      // Apply period range if enabled (periodCount > 0) and x-axis is a date
+      if ( periodCount > 0 && isDateAxis ) {
+        sortedKeys = this.fillTimeGapKeys(sortedKeys, groups, periodCount, arg1);
       }
 
       // Process GroupBy results to Chart.js format
@@ -1128,7 +1158,7 @@ foam.CLASS({
                         fill, tension, stepped, showPoints, pointRadius, showGridLines,
                         responsive, maintainAspectRatio, showLegend, legendPosition,
                         showTooltips, showTooltipSum, animate, animationDuration,
-                        fillTimeGaps, fillGapPeriods) {
+                        periodCount) {
 
       if ( !xFunc || !yFunc || !acc ) return null;
 
@@ -1141,12 +1171,19 @@ foam.CLASS({
       var sortedColKeys = cols && cols.sortedKeys ? cols.sortedKeys() : Object.keys(colGroups);
       var sortedRowKeys = rows && rows.sortedKeys ? rows.sortedKeys() : Object.keys(rowGroups);
 
-      // Check if xFunc is a date property for gap filling
-      var isDateAxis = xFunc && (foam.lang.Date.isInstance(xFunc) || foam.lang.DateTime.isInstance(xFunc));
+      // Check if xFunc is a date property for period range display
+      var isDateAxis = false;
+      if ( xFunc ) {
+        if ( foam.lang.Date.isInstance(xFunc) || foam.lang.DateTime.isInstance(xFunc) ) {
+          isDateAxis = true;
+        } else if ( xFunc.delegate && (foam.lang.Date.isInstance(xFunc.delegate) || foam.lang.DateTime.isInstance(xFunc.delegate)) ) {
+          isDateAxis = true;
+        }
+      }
 
-      // Fill time gaps if enabled and x-axis is a date
-      if ( fillTimeGaps && isDateAxis ) {
-        sortedColKeys = this.fillTimeGapKeys(sortedColKeys, colGroups, fillGapPeriods, xFunc);
+      // Apply period range if enabled (periodCount > 0) and x-axis is a date
+      if ( periodCount > 0 && isDateAxis ) {
+        sortedColKeys = this.fillTimeGapKeys(sortedColKeys, colGroups, periodCount, xFunc);
       }
 
       // Create a dataset for each line (row group)

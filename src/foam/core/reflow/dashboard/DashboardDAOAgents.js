@@ -47,35 +47,21 @@ foam.CLASS({
   package: 'foam.core.reflow.dashboard',
   name: 'TimeSeriesGapFillingMixin',
 
-  documentation: 'Mixin providing time series gap filling functionality for dashboard charts',
+  documentation: 'Mixin providing time series period range display functionality for dashboard charts',
 
   properties: [
     {
-      class: 'Boolean',
-      name: 'fillTimeGaps',
-      label: 'Fill Time Gaps',
+      class: 'Int',
+      name: 'periodCount',
+      label: 'Period Count',
       section: 'dataConfig',
-      value: false,
-      help: 'Fill missing time periods with zero values (only for date properties)',
+      value: 0,
+      help: 'Number of periods to display from today backwards (e.g., 12 for last 12 months). Set to 0 to show only existing data.',
       visibility: function(prop) {
-        // Check if prop is a date/time expression
+        // Only show for date/time properties
         var isDateProp = prop && prop.delegate &&
           (foam.lang.Date.isInstance(prop.delegate) || foam.lang.DateTime.isInstance(prop.delegate));
         return isDateProp ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
-      }
-    },
-    {
-      class: 'Int',
-      name: 'fillGapPeriods',
-      label: 'Periods to Fill',
-      section: 'dataConfig',
-      value: 12,
-      help: 'Number of periods back from today (e.g., 12 months, 52 weeks, 4 quarters, 365 days)',
-      visibility: function(fillTimeGaps, prop) {
-        // Only show when fillTimeGaps is enabled and property is a date
-        var isDateProp = prop && prop.delegate &&
-          (foam.lang.Date.isInstance(prop.delegate) || foam.lang.DateTime.isInstance(prop.delegate));
-        return fillTimeGaps && isDateProp ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
       }
     }
   ]
@@ -234,7 +220,7 @@ foam.CLASS({
       title: 'Data Configuration',
       order: 1,
       collapsable: true,
-      properties: ['prop', 'sink', 'topN', 'fillTimeGaps', 'fillGapPeriods', 'includeOthers', 'sortOrder', 'othersLabel']
+      properties: ['prop', 'sink', 'topN', 'periodCount', 'includeOthers', 'sortOrder', 'othersLabel']
     },
     {
       name: 'barChart',
@@ -287,7 +273,7 @@ foam.CLASS({
         return isDateProp ? foam.u2.DisplayMode.HIDDEN : foam.u2.DisplayMode.RW;
       }
     },
-    // From mixins: fillTimeGaps, fillGapPeriods, colors, chart display options
+    // From mixins: periodCount, colors, chart display options
     {
       class: 'Enum',
       of: 'foam.core.reflow.dashboard.TimeUnit',
@@ -361,8 +347,7 @@ foam.CLASS({
         xAxisLabel: this.xAxisLabel,
         yAxisLabel: this.yAxisLabel,
         showGridLines: this.showGridLines,
-        fillTimeGaps: this.fillTimeGaps,
-        fillGapPeriods: this.fillGapPeriods,
+        periodCount: this.periodCount,
         maintainAspectRatio: this.maintainAspectRatio,
         height: this.height,
         showLegend: this.showLegend,
@@ -384,7 +369,7 @@ foam.CLASS({
 
       // Then update its properties reactively
       this.onDetach(this.dynamic(function(colors, horizontal, barThickness, xAxisLabel, yAxisLabel, showGridLines,
-                                  fillTimeGaps, fillGapPeriods, maintainAspectRatio, height, showLegend, legendPosition,
+                                  periodCount, maintainAspectRatio, height, showLegend, legendPosition,
                                   showTooltips, showTooltipSum, animate, animationDuration, alignment) {
         s.colors = colors;
         s.horizontal = horizontal;
@@ -392,8 +377,7 @@ foam.CLASS({
         s.xAxisLabel = xAxisLabel;
         s.yAxisLabel = yAxisLabel;
         s.showGridLines = showGridLines;
-        s.fillTimeGaps = fillTimeGaps;
-        s.fillGapPeriods = fillGapPeriods;
+        s.periodCount = periodCount;
         s.maintainAspectRatio = maintainAspectRatio;
         s.height = height;
         s.showLegend = showLegend;
@@ -427,8 +411,7 @@ foam.CLASS({
       clone.xAxisLabel$ = this.xAxisLabel$;
       clone.yAxisLabel$ = this.yAxisLabel$;
       clone.showGridLines$ = this.showGridLines$;
-      clone.fillTimeGaps$ = this.fillTimeGaps$;
-      clone.fillGapPeriods$ = this.fillGapPeriods$;
+      clone.periodCount$ = this.periodCount$;
       clone.maintainAspectRatio$ = this.maintainAspectRatio$;
       clone.height$ = this.height$;
       clone.showLegend$ = this.showLegend$;
@@ -463,7 +446,7 @@ foam.CLASS({
       title: 'Data Configuration',
       order: 1,
       collapsable: true,
-      properties: ['prop2', 'prop1', 'sink', 'fillTimeGaps', 'fillGapPeriods', 'timeUnit']
+      properties: ['prop2', 'prop1', 'sink', 'periodCount', 'timeUnit']
     },
     {
       name: 'stackedBarChart',
@@ -513,24 +496,15 @@ foam.CLASS({
       }
     },
     // Inherited from GridByDAOAgent: prop1 (yFunc), prop2 (xFunc), sink
-    // Inherited from TimeSeriesGapFillingMixin: fillTimeGaps, fillGapPeriods
-    // Override fillTimeGaps visibility to check prop2 (X-axis) instead of prop
+    // Inherited from TimeSeriesGapFillingMixin: periodCount
+    // Override periodCount visibility to check prop2 (X-axis) instead of prop
     {
-      name: 'fillTimeGaps',
+      name: 'periodCount',
       visibility: function(prop2) {
         // For stacked charts, check prop2 (X-axis) for date properties
         var isDateProp = prop2 && prop2.delegate &&
           (foam.lang.Date.isInstance(prop2.delegate) || foam.lang.DateTime.isInstance(prop2.delegate));
         return isDateProp ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
-      }
-    },
-    {
-      name: 'fillGapPeriods',
-      visibility: function(fillTimeGaps, prop2) {
-        // For stacked charts, check prop2 (X-axis) for date properties
-        var isDateProp = prop2 && prop2.delegate &&
-          (foam.lang.Date.isInstance(prop2.delegate) || foam.lang.DateTime.isInstance(prop2.delegate));
-        return fillTimeGaps && isDateProp ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
       }
     },
     // From mixins: colors, chart display options
@@ -588,8 +562,7 @@ foam.CLASS({
         xAxisLabel: this.xAxisLabel,
         yAxisLabel: this.yAxisLabel,
         showGridLines: this.showGridLines,
-        fillTimeGaps: this.fillTimeGaps,
-        fillGapPeriods: this.fillGapPeriods,
+        periodCount: this.periodCount,
         maintainAspectRatio: this.maintainAspectRatio,
         height: this.height,
         showLegend: this.showLegend,
@@ -616,8 +589,7 @@ foam.CLASS({
         s.xAxisLabel = xAxisLabel;
         s.yAxisLabel = yAxisLabel;
         s.showGridLines = showGridLines;
-        s.fillTimeGaps = fillTimeGaps;
-        s.fillGapPeriods = fillGapPeriods;
+        s.periodCount = periodCount;
         s.maintainAspectRatio = maintainAspectRatio;
         s.height = height;
         s.showLegend = showLegend;
@@ -650,8 +622,7 @@ foam.CLASS({
       clone.xAxisLabel$ = this.xAxisLabel$;
       clone.yAxisLabel$ = this.yAxisLabel$;
       clone.showGridLines$ = this.showGridLines$;
-      clone.fillTimeGaps$ = this.fillTimeGaps$;
-      clone.fillGapPeriods$ = this.fillGapPeriods$;
+      clone.periodCount$ = this.periodCount$;
       clone.maintainAspectRatio$ = this.maintainAspectRatio$;
       clone.height$ = this.height$;
       clone.showLegend$ = this.showLegend$;
@@ -889,7 +860,7 @@ foam.CLASS({
       title: 'Line Chart Settings',
       order: 2,
       collapsable: true,
-      properties: ['fill', 'tension', 'stepped', 'showPoints', 'pointRadius', 'showGridLines', 'fillTimeGaps', 'fillGapPeriods']
+      properties: ['fill', 'tension', 'stepped', 'showPoints', 'pointRadius', 'showGridLines', 'periodCount']
     },
     {
       name: 'axisLabels',
@@ -1158,8 +1129,7 @@ foam.CLASS({
       clone.showPoints$ = this.showPoints$;
       clone.pointRadius$ = this.pointRadius$;
       clone.showGridLines$ = this.showGridLines$;
-      clone.fillTimeGaps$ = this.fillTimeGaps$;
-      clone.fillGapPeriods$ = this.fillGapPeriods$;
+      clone.periodCount$ = this.periodCount$;
       clone.maintainAspectRatio$ = this.maintainAspectRatio$;
       clone.height$ = this.height$;
       clone.showLegend$ = this.showLegend$;
