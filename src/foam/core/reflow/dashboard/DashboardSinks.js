@@ -1254,13 +1254,9 @@ foam.CLASS({
     
     function addToE(e) {
       var self = this;
-      e.add(self.dynamic(function(metric_, iconColor, labelColor, countColor, valueColor) {
+      e.add(self.dynamic(function(metric_) {
 
         const metric = metric_;
-        const iconColorToken = self.getColorFromToken(iconColor);
-        const labelColorToken = self.getColorFromToken(labelColor);
-        const valueColorToken = self.getColorFromToken(valueColor);
-        const countColorToken = self.getColorFromToken(countColor);
 
         e.style({
           display: 'flex',
@@ -1289,7 +1285,7 @@ foam.CLASS({
             .style({
               width: self.iconSize$,
               height: self.iconSize$,
-              color: iconColorToken
+              color: self.iconColor$.map(v => self.getColorFromToken(v))
             })
             .end()
           .end();
@@ -1297,7 +1293,7 @@ foam.CLASS({
         this.start('div')
             .style({
               fontSize: self.labelFontSize$,
-              color: labelColorToken,
+              color: self.labelColor$.map(v => self.getColorFromToken(v)),
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
               fontWeight: self.labelFontWeight$,
@@ -1311,7 +1307,7 @@ foam.CLASS({
           .style({
             fontSize: '3rem',
             fontWeight: 'bold',
-            color: valueColorToken,
+            color: self.valueColor$.map(v => self.getColorFromToken(v)),
             lineHeight: '1'
           })
           .callIfElse(foam.lang.Property.isInstance(self.sink.arg1) && self.lastEncounteredObj_, function() {
@@ -1327,7 +1323,7 @@ foam.CLASS({
             .style({
               fontSize: self.countFontSize$,
               marginTop: '8px',
-              color: countColorToken,
+              color: self.countColor$.map(v => self.getColorFromToken(v)),
               fontWeight: self.countFontWeight$
             })
             .callIf(self.countOnClick, function() {
