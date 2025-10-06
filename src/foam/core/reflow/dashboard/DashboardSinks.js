@@ -1121,12 +1121,11 @@ foam.CLASS({
       help: 'Theme icon name to display above the metric value (e.g., "chart", "users", "dollar")'
     },
     {
-      class: 'Color',
+      class: 'String',
       name: 'iconColor',
       help: 'Color for the icon (CSS color or token)',
-      view: 'foam.u2.view.TokenColorEditView',
-      value: '$primary500',
-      view: 'foam.u2.view.ColorEditView'
+      view: 'foam.u2.view.ColorEditView',
+      value: '$primary500'
     },
     {
       class: 'Enum',
@@ -1145,9 +1144,10 @@ foam.CLASS({
       }
     },
     {
-      class: 'Color',
+      class: 'String',
       name: 'valueColor',
       help: 'Color for the metric value',
+      view: 'foam.u2.view.ColorEditView',
       value: '$primary500'
     },
     {
@@ -1188,9 +1188,10 @@ foam.CLASS({
       value: 'medium'
     },
     {
-      class: 'Color',
+      class: 'String',
       name: 'labelColor',
       help: 'Color for the display label (CSS color or token)',
+      view: 'foam.u2.view.ColorEditView',
       value: '$textSecondary'
     },
     // Count font controls
@@ -1209,16 +1210,18 @@ foam.CLASS({
     {
       class: 'String',
       name: 'countOnClick',
+      label: 'OnClick Script',
       reactive: true,
       visibility: function(showCount) {
         return showCount ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
       },
-      help: 'An onClick function to be called when the count is clicked'
+      help: 'Script to execute when the count is clicked'
     },
     {
-      class: 'Color',
+      class: 'String',
       name: 'countColor',
       help: 'Color for the count text (CSS color or token)',
+      view: 'foam.u2.view.ColorEditView',
       value: '$textSecondary'
     },
     {
@@ -1279,6 +1282,10 @@ foam.CLASS({
       `
     },
     
+    function getColorFromToken(token) {
+      return foam.CSS.returnTokenValue(token, this.cls_, this.__context__);
+    },
+    
     function getComputedValue() {
       return this.sink && this.sink.value !== undefined ? this.sink.value : 0;
     },
@@ -1321,7 +1328,7 @@ foam.CLASS({
           .style({
             width: this.iconSize$,
             height: this.iconSize$,
-            color: this.iconColor$
+            color: this.iconColor$.map(v => self.getColorFromToken(v))
           })
           .end()
         .end();
@@ -1329,7 +1336,7 @@ foam.CLASS({
       e.start('div')
           .style({
             fontSize: this.labelFontSize$,
-            color: this.labelColor$,
+            color: this.labelColor$.map(v => self.getColorFromToken(v)),
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
             fontWeight: this.labelFontWeight$,
@@ -1344,7 +1351,7 @@ foam.CLASS({
           .style({
             fontSize: '3rem',
             fontWeight: 'bold',
-            color: self.valueColor$,
+            color: self.valueColor$.map(v => self.getColorFromToken(v)),
             lineHeight: '1'
           })
           .callIfElse(foam.lang.Property.isInstance(self.sink.arg1) && self.lastEncounteredObj_, function() {
@@ -1360,7 +1367,7 @@ foam.CLASS({
               .style({
                 fontSize: self.countFontSize$,
                 marginTop: '8px',
-                color: self.countColor$,
+                color: self.countColor$.map(v => self.getColorFromToken(v)),
                 fontWeight: self.countFontWeight$
               })
               .callIf(self.countOnClick, function() {
