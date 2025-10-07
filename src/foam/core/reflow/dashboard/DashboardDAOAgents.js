@@ -56,13 +56,9 @@ foam.CLASS({
       label: 'Period Count',
       section: 'dataConfig',
       value: 0,
-      help: 'Number of periods to display from today backwards (e.g., 12 for last 12 months). Set to 0 to show only existing data.',
-      visibility: function(prop) {
-        // Only show for date/time properties
-        var isDateProp = prop && prop.delegate &&
-          (foam.lang.Date.isInstance(prop.delegate) || foam.lang.DateTime.isInstance(prop.delegate));
-        return isDateProp ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
-      }
+      help: 'Number of periods to display from today backwards (e.g., 12 for last 12 months). Set to 0 to show only existing data.'
+      // Note: visibility function must be defined in each agent that uses this mixin,
+      // since different agents have different property names (prop vs prop2)
     }
   ]
 });
@@ -262,18 +258,28 @@ foam.CLASS({
       }
     },
     // Inherited from GroupByDAOAgent: prop, sink, groupLimit, sortOrder, includeOthers, othersLabel
-    // Inherited from TimeSeriesGapFillingMixin: fillTimeGaps, fillGapPeriods
-    // Override topN visibility to hide when prop is a date (mutually exclusive with fillTimeGaps)
+    // Inherited from TimeSeriesGapFillingMixin: periodCount (visibility defined below)
+    // Override topN visibility to hide when prop is a date (mutually exclusive with periodCount)
     {
       name: 'topN',
       visibility: function(prop) {
-        // Hide topN when property is a date/time (use fillTimeGaps instead)
+        // Hide topN when property is a date/time (use periodCount instead)
         var isDateProp = prop && prop.delegate &&
           (foam.lang.Date.isInstance(prop.delegate) || foam.lang.DateTime.isInstance(prop.delegate));
         return isDateProp ? foam.u2.DisplayMode.HIDDEN : foam.u2.DisplayMode.RW;
       }
     },
-    // From mixins: periodCount, colors, chart display options
+    // Define visibility for periodCount (from mixin)
+    {
+      name: 'periodCount',
+      visibility: function(prop) {
+        // Only show for date/time properties
+        var isDateProp = prop && prop.delegate &&
+          (foam.lang.Date.isInstance(prop.delegate) || foam.lang.DateTime.isInstance(prop.delegate));
+        return isDateProp ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
+      }
+    },
+    // From mixins: colors, chart display options
     {
       class: 'Enum',
       of: 'foam.core.reflow.dashboard.TimeUnit',
@@ -923,6 +929,17 @@ foam.CLASS({
       view: { class: 'foam.core.reflow.SinkView', choice:  'foam.core.reflow.CountDAOAgent' },
       help: 'How to aggregate values when multiple records have the same X-value',
 
+    },
+    // Inherited from TimeSeriesGapFillingMixin: periodCount (visibility defined below)
+    // Define visibility for periodCount (from mixin)
+    {
+      name: 'periodCount',
+      visibility: function(xProp) {
+        // Only show for date/time properties on X-axis
+        var isDateProp = xProp && xProp.delegate &&
+          (foam.lang.Date.isInstance(xProp.delegate) || foam.lang.DateTime.isInstance(xProp.delegate));
+        return isDateProp ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
+      }
     },
     {
       class: 'Enum',
