@@ -58,7 +58,7 @@ foam.CLASS({
       value: 0,
       help: 'Number of periods to display from today backwards (e.g., 12 for last 12 months). Set to 0 to show only existing data.'
       // Note: visibility function must be defined in each agent that uses this mixin,
-      // since different agents have different property names (prop vs prop2)
+      // since different agents have different property names (prop vs prop2 vs xProp)
     }
   ]
 });
@@ -588,7 +588,7 @@ foam.CLASS({
       
       // Then update its properties reactively
       this.onDetach(this.dynamic(function(colors, horizontal, xAxisLabel, yAxisLabel, showGridLines,
-                                  fillTimeGaps, fillGapPeriods, maintainAspectRatio, height, showLegend, legendPosition,
+                                  periodCount, maintainAspectRatio, height, showLegend, legendPosition,
                                   showTooltips, showTooltipSum, animate, animationDuration, alignment) {
         s.colors = colors;
         s.horizontal = horizontal;
@@ -1043,8 +1043,7 @@ foam.CLASS({
           animate: this.animate,
           animationDuration: this.animationDuration,
           alignment: this.alignment,
-          fillTimeGaps: this.fillTimeGaps,
-          fillGapPeriods: this.fillGapPeriods
+          periodCount: this.periodCount
         });
       } else {
         // Single-line chart: Use GroupBy-based sink
@@ -1070,12 +1069,11 @@ foam.CLASS({
           animate: this.animate,
           animationDuration: this.animationDuration,
           alignment: this.alignment,
-          fillTimeGaps: this.fillTimeGaps,
-          fillGapPeriods: this.fillGapPeriods
+          periodCount: this.periodCount
         });
       }
     },
-    
+
     function value(s) {
       return s;
     },
@@ -1089,7 +1087,7 @@ foam.CLASS({
       this.onDetach(this.dynamic(function(colors, xAxisLabel, yAxisLabel, fill, tension, stepped, showPoints, pointRadius, showGridLines,
                                   maintainAspectRatio, height, showLegend, legendPosition,
                                   showTooltips, showTooltipSum, animate, animationDuration, alignment,
-                                  fillTimeGaps, fillGapPeriods) {
+                                  periodCount) {
         s.colors = colors;
         s.xAxisLabel = xAxisLabel;
         s.yAxisLabel = yAxisLabel;
@@ -1108,9 +1106,8 @@ foam.CLASS({
         s.animate = animate;
         s.animationDuration = animationDuration;
         s.alignment = alignment;
-        s.fillTimeGaps = fillTimeGaps;
-        s.fillGapPeriods = fillGapPeriods;
-        
+        s.periodCount = periodCount;
+
         // Force chart to update/redraw
         if ( s.updateChart ) s.updateChart();
        }));
