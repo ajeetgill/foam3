@@ -1269,7 +1269,7 @@ foam.CLASS({
         });
       }
     },
-    
+
     function value(s) {
       return s;
     },
