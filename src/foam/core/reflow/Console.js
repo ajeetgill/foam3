@@ -846,8 +846,7 @@ foam.CLASS({
     'setTimeout',
     'toolbarControlDAO',
     'window',
-    'showNav',
-    'ctrl'
+    'showNav'
   ],
 
   constants: [
@@ -1533,7 +1532,7 @@ foam.CLASS({
         });
 
         modal.add('There are unsaved changes. Do you want to load them?');
-        self.ctrl.add(modal);
+        self.add(modal);
       });
     }
   ],
@@ -1650,7 +1649,7 @@ foam.CLASS({
           });
 
           modal.add('The script name "' + newValue + '" already has different unsaved changes. Load those changes, or keep your current changes?');
-          this.ctrl.add(modal);
+          this.add(modal);
         }
 
         // Clean up old autosave entries (from intermediate typing states)
