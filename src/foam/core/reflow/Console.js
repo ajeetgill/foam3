@@ -94,7 +94,6 @@ foam.CLASS({
       this.removeFlowChild_ && this.flowChildren.forEach(c => this.removeFlowChild_(c));
       this.flowChildren = [];
     }
-
   ]
 });
 
