@@ -349,7 +349,7 @@ foam.CLASS({
       }
 
       var multiSelectActions = this.of.getAxiomsByClass(foam.lang.Action)?.filter(a => a.multiSelect)
-      
+
       if ( multiSelectActions?.length ) {
         config.multiSelectEnabled = true;
         config.selectedObjects$ = this.selectedObjects$;
@@ -602,7 +602,7 @@ foam.CLASS({
         var cls   = block?.value?.value?.cls_;
 
         await block.value.waitForRun();
-        this.eval_(`dao(${block.flowName}.value.asDAO(), '${block.flowName}GroupBy')`);
+        this.eval_(`dao(${block.flowName}.valueDAO, '${block.flowName}GroupBy')`);
       }
     }
   ]
