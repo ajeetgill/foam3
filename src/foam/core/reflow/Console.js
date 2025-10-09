@@ -1077,6 +1077,8 @@ foam.CLASS({
       if ( flow ) {
         await this.includeScript(flow.script);
       }
+
+      await this.eval_('postLoad', null, true);
     },
 
     async function includeScript(script, parent, skipParse) {
@@ -1110,8 +1112,6 @@ foam.CLASS({
         }
       }
 
-      // Call postLoad after all blocks have executed
-      await this.eval_('postLoad', null, true);
     },
 
     function clearFlow() {
