@@ -183,7 +183,17 @@ foam.CLASS({
             }
           }
         },
-        new foam.core.fs.ResourceStorage("documents")
+        new foam.core.fs.ResourceStorage("documents") {
+          @Override
+          protected java.nio.file.Path getPath(String name) {
+            try {
+              getFS();
+              return super.getPath(name);
+            } catch (RuntimeException e) {
+              return null;
+            }
+          }
+        }
       );`
     }
   ]
