@@ -1554,30 +1554,33 @@ foam.CLASS({
         textAlign: self.alignment$.map(function(alignment) { return alignment.textAlign }),
         width: '100%'
       });
-      if ( self.icon ) {
-        e.start('div')
-          .style({
-            marginBottom: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          })
-          .start(self.Image, {
-            role: 'presentation',
-            ...(
-              self.theme && self.theme.glyphs && self.theme.glyphs[self.icon] ? 
-              { glyph: self.theme.glyphs[self.icon] } : 
-              { data: self.icon, embedSVG: true }
-            )
-          })
-          .style({
-            width: this.iconSize$,
-            height: this.iconSize$,
-            color: this.iconColor$.map(v => self.getColorFromToken(v))
-          })
-          .end()
-        .end();
-      }
+
+      e.add(this.dynamic(function(icon) {
+        if ( icon ) {
+          this.start('div')
+            .style({
+              marginBottom: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            })
+            .start(self.Image, {
+              role: 'presentation',
+              ...(
+                self.theme && self.theme.glyphs && self.theme.glyphs[icon] ?
+                { glyph: self.theme.glyphs[icon] } :
+                { data: icon, embedSVG: true }
+              )
+            })
+            .style({
+              width: self.iconSize$,
+              height: self.iconSize$,
+              color: self.iconColor$.map(v => self.getColorFromToken(v))
+            })
+            .end()
+          .end();
+        }
+      }));
       e.start('div')
           .style({
             fontSize: this.labelFontSize$,
