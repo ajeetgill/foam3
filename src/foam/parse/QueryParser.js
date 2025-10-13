@@ -226,6 +226,7 @@ foam.CLASS({
             seq(sym('number'), '-', sym('number')),
             // YY/MM/DD
             seq(sym('number'), '/', sym('number'), '/', sym('number'))
+            // TODO: add support for YY or YYYY
           ),
 
           'relative date': seq(key('today'), optional(seq('-', sym('number')))),
