@@ -230,8 +230,6 @@ foam.CLASS({
                           showGridLines, responsive, maintainAspectRatio, showLegend,
                           legendPosition, showTooltips, showTooltipSum, animate, animationDuration, periodCount) {
 
-        console.log('[DashboardBarSink.chart_] Expression evaluating, groups:', Object.keys(groups || {}).length, 'items');
-
         var labels = [];
         var data = [];
         var backgroundColors = [];
