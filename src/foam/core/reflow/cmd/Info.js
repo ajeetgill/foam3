@@ -38,9 +38,9 @@ Hostname:        ${health.hostname}
 Application:     ${health.appName}
 Version:         ${health.version}
 Address:         ${window.location.origin}
+Port:            ${health.port}
 Flags:           ${appConfig.flags}
 POM:             ${appConfig.pom}
-Port:            ${health.port}
 User             (${user.id}) ${user.toSummary()}
 RealUser         (${realUser.id}) ${realUser.toSummary()}
 Group:           ${group.toSummary()}
@@ -52,11 +52,11 @@ Mode:            ${foam.core.app.Mode.forOrdinal(health.mode).label}
 Current Time:    ${new Date().toISOString()}
 Boot Time:       ${new Date(health.bootTime).toISOString()}
 Uptime:          ${Math.floor(health.upTime / 1000 / 60)} minutes
-Memory Max:      ${(health.memoryMax / 1024 / 1024).toFixed(2)} MB
-Memory Total:    ${(health.memoryTotal / 1024 / 1024).toFixed(2)} MB
-Memory Free:     ${(health.memoryFree / 1024 / 1024).toFixed(2)} MB
-Memory Used:     ${(health.memoryUsed / 1024 / 1024).toFixed(2)} MB
-Memory Used %:   ${health.memoryUsedPercent.toFixed(2)}%
+Memory Max:      ${(health.memoryMax / 1024 / 1024).toFixed(1)} MB
+Memory Total:    ${(health.memoryTotal / 1024 / 1024).toFixed(1)} MB
+Memory Free:     ${(health.memoryFree / 1024 / 1024).toFixed(1)} MB
+Memory Used:     ${(health.memoryUsed / 1024 / 1024).toFixed(1)} MB
+Memory Used %:   ${health.memoryUsedPercent.toFixed(1)}%
 Active Alarms:   ${health.alarms}
       `).end();
     }
