@@ -33,7 +33,7 @@ foam.CLASS({
       }).add(`
 System Information:
 ------------------------------------
-Flow:            ${flow.name} v${flow.version}
+Flow:            "${flow.name}" v${flow.version}
 Hostname:        ${health.hostname}
 Application:     ${health.appName}
 Version:         ${health.version}
@@ -58,7 +58,7 @@ Memory Max:      ${(health.memoryMax / 1024 / 1024).toFixed(1)} MB
 Memory Total:    ${(health.memoryTotal / 1024 / 1024).toFixed(1)} MB
 Memory Free:     ${(health.memoryFree / 1024 / 1024).toFixed(1)} MB
 Memory Used:     ${(health.memoryUsed / 1024 / 1024).toFixed(1)} MB
-Memory Used:     ${health.memoryUsedPercent.toFixed(1)}%
+Memory Used %:   ${health.memoryUsedPercent.toFixed(1)}%
 Client Memory:   ${navigator.deviceMemory} GB
 Active Alarms:   ${health.alarms}
       `).end();
