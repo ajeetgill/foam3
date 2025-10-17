@@ -77,15 +77,8 @@ falling back to the CONTENT_SECURITY_POLICY defined in CSpec "http".
       args: 'ServletRequest request, ServletResponse response, FilterChain chain',
       javaThrows: [ 'java.io.IOException', 'ServletException' ],
       javaCode: `
-        String name = request.getServerName();
-        String domain = name;
-        String subDomain = null;
-        String[] parts = domain.split(".");
-        if ( parts.length > 1 ) {
-          subDomain = parts[0];
-          domain = parts[1];
-        }
-        String policy = (String) getCache().get(name);
+        String domain = request.getServerName();
+        String policy = (String) getCache().get(domain);
         if ( SafetyUtil.isEmpty(policy) ) {
           policy = getDefaultCSP();
 
@@ -93,25 +86,21 @@ falling back to the CONTENT_SECURITY_POLICY defined in CSpec "http".
           if ( x != null ) {
             DAO themeDomainDAO = (DAO) x.get("themeDomainDAO");
             if ( themeDomainDAO != null ) {
-              Predicate pred = EQ(ThemeDomain.ID, domain);
-              if ( ! SafetyUtil.isEmpty(subDomain) ) {
-                pred = AND(pred, EQ(ThemeDomain.SUBDOMAIN, subDomain));
-              }
-              ThemeDomain themeDomain = (ThemeDomain) themeDomainDAO.find(pred);
+              ThemeDomain themeDomain = (ThemeDomain) themeDomainDAO.find(domain);
               if ( themeDomain != null &&
                    ! SafetyUtil.isEmpty(themeDomain.getContentSecurityPolicy()) ) {
                 DAO cspDAO = (DAO) x.get("cspDAO");
                 CSP csp = (CSP) cspDAO.find(themeDomain.getContentSecurityPolicy());
                 if ( csp != null &&
                      ! SafetyUtil.isEmpty(csp.getPolicy()) ) {
-                  foam.core.logger.StdoutLogger.instance().info("CSPFilter,doFilter,found domain policy for", name);
+                  foam.core.logger.StdoutLogger.instance().info("CSPFilter,doFilter,found domain policy for", domain);
                   policy = csp.getPolicy();
                   policy = policy.replaceAll("\\n", "");
                 }
               }
             }
           }
-          getCache().put(name, policy);
+          getCache().put(domain, policy);
         }
 
         if ( ! SafetyUtil.isEmpty(policy) ) {
