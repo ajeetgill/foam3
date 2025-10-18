@@ -11,6 +11,12 @@ foam.CLASS({
 
   properties: [
     {
+      class: 'Boolean',
+      name: 'isRetryable',
+      documentation: 'Indicates whether the originating exception is safe to retry. Defaults to true.',
+      value: true
+    },
+    {
       class: 'FObjectProperty',
       of: 'foam.lang.Exception',
       name: 'exception'

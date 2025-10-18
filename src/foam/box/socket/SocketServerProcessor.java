@@ -129,6 +129,15 @@ public class SocketServerProcessor
             foam.box.RemoteException remote = new foam.box.RemoteException();
             remote.setId(t.getClass().getName());
             remote.setMessage(t.getMessage());
+            boolean retryable = true;
+            if ( t instanceof foam.util.retry.Retryable ) {
+              try {
+                retryable = ((foam.util.retry.Retryable) t).isRetryable();
+              } catch ( Throwable ignore ) {
+                retryable = true;
+              }
+            }
+            remote.setIsRetryable(retryable);
             if ( t instanceof foam.lang.FOAMException ) {
               remote.setException((foam.lang.FOAMException) t);
             }
