@@ -9,8 +9,11 @@ foam.CLASS({
   name: 'CSPFilter',
 
   documentation: `Content-Security-Policy servlet filter.
-Attempts to find a 'domain' specific policy via ThemeDomain,
-falling back to the CONTENT_SECURITY_POLICY defined in CSpec "http".
+Attempts to find a 'domain' specific policy via ThemeDomain.
+NOTE: A http CSpec CONTENT_SECURITY_POLICY supersedes all for backward compatibility.
+By default the system will use the 'default' CSP. To override,
+either override the 'default' CSP in an application level csps.jrl,
+or add a new CSP and set it's 'id' in ThemeDomain.contentSecurityPolicy.
 `,
 
   javaImplements: [ 'jakarta.servlet.Filter' ],
@@ -32,9 +35,32 @@ falling back to the CONTENT_SECURITY_POLICY defined in CSpec "http".
     'java.util.Map'
   ],
 
+  constants: [
+    {
+      documenatation: 'Deprecated HttpServer CSPFilter initParameters key.',
+      name: 'CONTENT_SECURITY_POLICY',
+      type: 'String',
+      value: 'CONTENT_SECURITY_POLICY'
+    },
+    {
+      documentation: 'Sytem provided CSP when none explicitly configured by the application',
+      name: 'DEFAULT',
+      type: 'String',
+      value: 'defualt'
+    },
+    {
+      documentation: 'Cache key when no policy found.',
+      name: 'NONE',
+      type: 'String',
+      value: 'none'
+    }
+  ],
+
   properties: [
     {
-      name: 'defaultCSP',
+      documentation: `Provides backward compatibility for http CSpecs
+which provide CONTENT_SECURITY_POLICY as init parameters of CSPFilter.`,
+      name: 'initParameterCSP',
       class: 'String',
       visibility: 'HIDDEN'
     },
@@ -52,7 +78,7 @@ falling back to the CONTENT_SECURITY_POLICY defined in CSpec "http".
       args: 'FilterConfig config',
       javaThrows: [ 'ServletException' ],
       javaCode: `
-        setDefaultCSP(config.getInitParameter("CONTENT_SECURITY_POLICY"));
+        setInitParameterCSP(config.getInitParameter(CONTENT_SECURITY_POLICY));
 
         X x = (X) config.getServletContext().getAttribute("X");
         DAO themeDomainDAO = (DAO) x.get("themeDomainDAO");
@@ -77,33 +103,9 @@ falling back to the CONTENT_SECURITY_POLICY defined in CSpec "http".
       args: 'ServletRequest request, ServletResponse response, FilterChain chain',
       javaThrows: [ 'java.io.IOException', 'ServletException' ],
       javaCode: `
-        String domain = request.getServerName();
-        String policy = (String) getCache().get(domain);
-        if ( SafetyUtil.isEmpty(policy) ) {
-          policy = getDefaultCSP();
-
-          X x = (X) request.getServletContext().getAttribute("X");
-          if ( x != null ) {
-            DAO themeDomainDAO = (DAO) x.get("themeDomainDAO");
-            if ( themeDomainDAO != null ) {
-              ThemeDomain themeDomain = (ThemeDomain) themeDomainDAO.find(domain);
-              if ( themeDomain != null &&
-                   ! SafetyUtil.isEmpty(themeDomain.getContentSecurityPolicy()) ) {
-                DAO cspDAO = (DAO) x.get("cspDAO");
-                CSP csp = (CSP) cspDAO.find(themeDomain.getContentSecurityPolicy());
-                if ( csp != null &&
-                     ! SafetyUtil.isEmpty(csp.getPolicy()) ) {
-                  foam.core.logger.StdoutLogger.instance().info("CSPFilter,doFilter,found domain policy for", domain);
-                  policy = csp.getPolicy();
-                  policy = policy.replaceAll("\\n", "");
-                }
-              }
-            }
-          }
-          getCache().put(domain, policy);
-        }
-
-        if ( ! SafetyUtil.isEmpty(policy) ) {
+        String policy = getPolicy((X) request.getServletContext().getAttribute("X"), request.getServerName());
+        if ( ! SafetyUtil.isEmpty(policy) &&
+             ! policy.equals(NONE) ) {
           ((HttpServletResponse) response).setHeader("Content-Security-Policy", policy);
         }
 
@@ -113,6 +115,43 @@ falling back to the CONTENT_SECURITY_POLICY defined in CSpec "http".
     {
       name: 'destroy',
       javaCode: '// noop'
+    },
+    {
+      name: 'getPolicy',
+      args: 'X x, String domain',
+      type: 'String',
+      javaCode: `
+        String policy = (String) getCache().get(domain);
+        if ( SafetyUtil.isEmpty(policy) ) {
+          policy = getInitParameterCSP();
+        }
+        if ( SafetyUtil.isEmpty(policy) ) {
+          // Default to the 'default' policy so no additional configuration
+          // is required to get a secure system.
+
+          String name = DEFAULT;
+          DAO themeDomainDAO = (DAO) x.get("themeDomainDAO");
+          if ( themeDomainDAO != null ) {
+            ThemeDomain themeDomain = (ThemeDomain) themeDomainDAO.find(domain);
+            if ( themeDomain != null ) {
+              name = themeDomain.getContentSecurityPolicy();
+            }
+          }
+          DAO cspDAO = (DAO) x.get("cspDAO");
+          CSP csp = (CSP) cspDAO.find(name);
+          if ( csp != null &&
+               ! SafetyUtil.isEmpty(csp.getPolicy()) ) {
+            foam.core.logger.StdoutLogger.instance().info("CSPFilter,doFilter,found domain policy for", domain);
+            policy = csp.getPolicy();
+            policy = policy.replaceAll("\\n", "");
+          } else {
+            policy = NONE;
+          }
+
+          getCache().put(domain, policy);
+        }
+        return policy;
+      `
     }
   ]
 });
