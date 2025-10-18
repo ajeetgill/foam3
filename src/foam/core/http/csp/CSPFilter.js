@@ -14,6 +14,9 @@ NOTE: A http CSpec CONTENT_SECURITY_POLICY supersedes all for backward compatibi
 By default the system will use the 'default' CSP. To override,
 either override the 'default' CSP in an application level csps.jrl,
 or add a new CSP and set it's 'id' in ThemeDomain.contentSecurityPolicy.
+To completely disable CSP:
+- globally: Create an application level CSP (csps.jrl) for id 'default' with an empty policy.
+- per domain: Create an application level ThemeDomain (themeDomains.jrl) with 'none' as the contentSecurityPolicy value.
 `,
 
   javaImplements: [ 'jakarta.servlet.Filter' ],
