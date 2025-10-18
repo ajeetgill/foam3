@@ -56,9 +56,11 @@ foam.CLASS({
       var self = this;
       var retryReplyBox = {
         send: function(replyEnvelope) {
+          // TODO: This should probably also check instanceof Error for local JS exceptions
+
           // Determine if the reply is an error and whether it should be retried
           var msg = replyEnvelope.message;
-          var isError = foam.lang.Exception.isInstance(msg) || ( msg instanceof Error );
+          var isError = foam.lang.Exception.isInstance(msg);
           var retryable = true;
           if ( self.RPCErrorMessage.isInstance(msg) ) {
             var data = msg.data;
