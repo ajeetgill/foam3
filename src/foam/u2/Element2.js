@@ -1516,7 +1516,9 @@ foam.CLASS({
           throw "Invalid CSS classname";
         }
         this.classes[newClass] = true;
-        this.element_.classList.add(newClass);
+        // Could be a FunctionNode which only has a comment
+        if ( this.element_ && this.element_.classList )
+          this.element_.classList.add(newClass);
       }
     },
 
@@ -2071,6 +2073,24 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.u2',
+  name: 'CurrencyCodeViewRefinement',
+  refines: 'foam.lang.CurrencyCode',
+
+  properties: [
+    {
+      name: 'view',
+      value: {
+        class: 'foam.u2.view.ModeAltView',
+        writeView: { class: 'foam.u2.view.StringView', onKey: false },
+        readView:  { class: 'foam.u2.view.ReadReferenceView' }
+      }
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.u2',
   name: 'EnumViewRefinement',
   refines: 'foam.lang.Enum',
 
@@ -2240,6 +2260,7 @@ foam.CLASS({
       class: 'Enum',
       of: 'foam.u2.DisplayMode',
       name: 'mode',
+      hidden: true,
       attribute: true,
       postSet: function(_, mode) { this.updateMode_(mode); },
       expression: function(controllerMode) {

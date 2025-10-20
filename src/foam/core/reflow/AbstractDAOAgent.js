@@ -39,9 +39,12 @@ foam.CLASS({
         } else {
           this.block.value = this.value(s);
         }
-        // s = s.clone({columnStorage: sink.__context__.columnStorage});
 
-        e.startContext({dao: this.dao/*, columnStorage: sink.__context__.columnStorage*/})
+        // This is needed in case the Sink traveled across the network but needs values
+        // (like 'block') from the current context.
+        s = s.clone(this.__subContext__);
+
+        e.startContext({dao: this.dao})
           .start()
             .call(function() {
               self.addSinkToE(this, s);
@@ -180,7 +183,6 @@ foam.CLASS({
           with ( { o: o, log: this.__context__.log } ) {
             eval(this.code);
           }
-//          console.log(i);
         }
       });
     },
@@ -260,7 +262,8 @@ foam.CLASS({
           class: 'foam.core.reflow.PropertyChoiceView',
           forCls: X.data.of,
           predicate: function(p) {
-            return foam.lang.Int.isInstance(p) || foam.lang.Float.isInstance(p);
+            // Other number types are all descendents of Int
+            return foam.lang.Int.isInstance(p);
           }
         };
       }
@@ -293,7 +296,7 @@ foam.CLASS({
     'foam.u2.table.TableView'
   ],
 
-  imports: ['columnStorage'],
+  imports: [ 'columnStorage' ],
 
   properties: [
     {
@@ -347,13 +350,27 @@ foam.CLASS({
         config.selectedColumnNames$ = this.columns$;
       }
 
-      if ( this.of.MULTI_SELECT ) {
+      var multiSelectActions = this.of.getAxiomsByClass(foam.lang.Action)?.filter(a => a.multiSelect)
+
+      if ( multiSelectActions?.length ) {
         config.multiSelectEnabled = true;
         config.selectedObjects$ = this.selectedObjects$;
       }
 
-
-      e.startContext({click: self.click}).
+      e.startContext({click: self.click, columnStorage: this.columnStorage}).
+        callIf(config.multiSelectEnabled, function() {
+          this.startContext({data: self})
+            .start()
+              .show(self.selectedObjects$.map(o => Object.keys(o).length > 0 ))
+              .style({
+                'display':'flex',
+                'justify-content':'flex-end',
+                'padding':'12px 0'
+              })
+              .add(multiSelectActions)
+            .end()
+          .endContext();
+          }).
         start(self.TableView, config).
           style({height: '600px'});
 
@@ -587,7 +604,7 @@ foam.CLASS({
         var cls   = block?.value?.value?.cls_;
 
         await block.value.waitForRun();
-        this.eval_(`dao(${block.flowName}.value.asDAO(), '${block.flowName}GroupBy')`);
+        this.eval_(`dao(${block.flowName}.valueDAO, '${block.flowName}GroupBy')`);
       }
     }
   ]
@@ -834,6 +851,45 @@ foam.CLASS({
   ]
 });
 
+foam.CLASS({
+  package: 'foam.core.reflow',
+  name: 'ObjectSelectDAOAgent',
+  extends: 'foam.core.reflow.AbstractDAOAgent',
+  documentation: 'Allows selecting an object from a dao that can then be accessed using selectedObj',
+
+  imports: [ 'sinkDAO as limitedDAO', 'block'],
+
+  exports: ['as data'],
+  properties: [
+    {
+      name: 'selectedObj',
+      transient: true
+    }
+  ],
+  methods: [
+    function value(s) {
+      return this.selectedObj;
+    },
+    function execute(e) {
+      if ( this.block.value && this.block.value.VALUE ) {
+        this.onDetach(this.block.value.value$.follow(this.selectedObj$));
+      } else {
+        this.onDetach(this.block.value$.follow(this.selectedObj$));
+      }
+      e.tag(foam.u2.view.RichChoiceReferenceView, {
+        placeholder: '--',
+        fullObject_$: this.selectedObj$,
+        sections: [
+          {
+            name: 'Objects',
+            dao$: this.limitedDAO$
+          }
+        ]
+      });
+    }
+  ]
+});
+
 
 foam.CLASS({
   package: 'foam.core.reflow',
@@ -844,20 +900,6 @@ foam.CLASS({
 
   methods: [
     function createSink() { return this.CitationSink.create({of: this.of}); }
-  ]
-});
-
-
-
-foam.CLASS({
-  package: 'foam.core.reflow',
-  name: 'CellsDAOAgent',
-  extends: 'foam.core.reflow.AbstractColumnAwareDAOAgent',
-
-  requires: [ 'foam.core.reflow.CellsSink' ],
-
-  methods: [
-    function getSink() { return this.CellsSink.create({of: this.of}); }
   ]
 });
 

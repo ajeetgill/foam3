@@ -47,6 +47,15 @@ foam.CLASS({
       this.startReaction_(name, formula);
     },
     function startReaction_(name, formula) {
+      /**
+       * Starts a reactive formula evaluation that re-runs whenever dependencies change.
+       * Supports synchronous values, Promises, and async/await.
+       *
+       * Examples:
+       *   Sync:    "service.name"
+       *   Promise: "serviceDAO.find(this.serviceId).then(s => s.name)"
+       *   Await:   "await serviceDAO.find(this.serviceId)"
+       */
       // HACK: delay starting reaction in case we're loading a file
       // and dependent variables haven't loaded yet.
       window.setTimeout(function() {
@@ -54,16 +63,19 @@ foam.CLASS({
         var f;
 
         with ( this.__context__.scope ) {
+          // Create function - can be sync or return a Promise
+          // The timer will handle both cases by checking if result is a Promise
           f = eval('(function() { return ' + formula + '})');
         }
         f.toString = function() { return formula; };
 
         var detached = false;
         self.onDetach(function() { detached = true; });
-        var timer = function() {
+        var timer = async function() {
           if ( detached ) return;
           if ( self.reactions_[name] !== f ) return;
-          self[name] = f.call(self);
+          // Await handles both Promises and non-Promises
+          self[name] = await f.call(self);
           self.__context__.requestAnimationFrame(timer);
         };
 
@@ -106,7 +118,12 @@ foam.CLASS({
       border: 1px solid $borderLight;
     }
     ^switch { color: $textTertiary;  }
-    ^propHolder.reactive > div{
+    ^switch:hover {
+      padding-inline: 5px;
+      border-radius: 2px;
+      background-color: $backgroundSecondary;
+    }
+    ^switch.reactive {
       color: $textBrand!important;
     }
     ^formulaInput input:focus {
@@ -134,10 +151,6 @@ foam.CLASS({
       flex-direction: row;
       align-items: center;
       justify-content: space-between;
-    }
-    ^labelHolder:hover {
-      padding-inline: 5px;
-      background-color: $backgroundSecondary;
     }
     ^layoutView {
       width: 100%;
@@ -196,16 +209,14 @@ foam.CLASS({
       var self = this;
 
       this.
-        enableClass(this.myClass('u2'), ! this.U3).
         addClass().
         show(visibilitySlot).
         start().
           addClass(this.myClass('propHolder')).addClass(this.myClass('labelHolder')).
-          enableClass('reactive', this.reactive$).
-          on('click', this.toggleMode).
           add(labelSlot).
-          start().
+          start().on('click', this.toggleMode).
             addClass(this.myClass('switch')).
+            enableClass('reactive', this.reactive$).
             add(this.dynamic(function(reactive) {
               if ( reactive ) {
                 this.start().

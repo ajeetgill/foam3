@@ -65,11 +65,6 @@ In this current implementation setDelegate must be called last.`,
       name: 'journal'
     },
     {
-      documentation: 'See F3FileJournal. Default journal replay is asynchronous. Some models with business logic that reference self can cause deadlock when parsed out of order.  If journal processing hangs, set syncReplay to true to replay synchronously.',
-      class: 'Boolean',
-      name: 'syncReplay'
-    },
-    {
       documentation: `Force caller to wait on nspec initailzation. The first call to 'get' for an nspec (x.get(servicename)) will have the calling thread wait on reply of service. This is the default behaviour and should be used for all essential services.  Also this should be used if the model is using SeqNo or NUID for id generation.`,
       class: 'Boolean',
       name: 'waitReplay',
@@ -103,6 +98,10 @@ In this current implementation setDelegate must be called last.`,
       `
     },
     {
+      class: 'Boolean',
+      name: 'writeVersionOnFirstPut'
+    },
+    {
       name: 'delegate',
       javaFactory: 'return new MDAO(getOf());',
       javaPostSet: `
@@ -119,14 +118,12 @@ In this current implementation setDelegate must be called last.`,
                   .setDao(delegate)
                   .setFilename(getFilename())
                   .setCreateFile(true)
-                  .setSyncReplay(getSyncReplay())
                   .build());
               } else {
                 setJournal(new F3FileJournal.Builder(runtimeStorageX)
                   .setDao(delegate)
                   .setFilename(getFilename())
                   .setCreateFile(false)
-                  .setSyncReplay(getSyncReplay())
                   .build());
               }
             }
@@ -187,7 +184,7 @@ In this current implementation setDelegate must be called last.`,
                 if ( runtimeJrl != null ) {
                   String lastVersion = runtimeJrl.getLastReplayVersion();
                   if ( SafetyUtil.isEmpty(lastVersion) || isCurrentVersionNewer(lastVersion, currentVersion) ) {
-                    runtimeJrl.writeVersion(getX(), currentVersion);
+                    setWriteVersionOnFirstPut(true);
                   }
                 }
               } finally {
@@ -217,6 +214,10 @@ In this current implementation setDelegate must be called last.`,
     {
       name: 'put_',
       javaCode: `
+        if ( getWriteVersionOnFirstPut() ) {
+          ((F3FileJournal) getJournal()).writeVersion(getX(), getVersion());
+          setWriteVersionOnFirstPut(false);
+        }
         return getJournal().put(x, "", getDelegate(), obj);
       `
     },

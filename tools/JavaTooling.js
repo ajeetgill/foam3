@@ -22,6 +22,7 @@ foam.POM({
     JOURNAL_OUT:       ['Build journals directory',() => `${PROJECT_HOME}/${BUILD_DIR}/journals`],
     LOG_HOME:          ['Application logs directory',() => APP_NAME ? `${APP_HOME}/logs`: 'APP_HOME/logs'],
     SAF_HOME:          ['Application sf (store and forward) directory',() => `${APP_HOME}/saf`],
+    WEBROOT:           ['Webroot for non-jar builds, defaults to PROJECT_HOME', () => PROJECT_HOME],
   },
 
   options: {
@@ -30,7 +31,7 @@ foam.POM({
     bootScriptAux: ['', 'boot-script-aux', 'BOOT_SCRIPT_AUX', 'Additional boot script to execute after the main bootScript. This bootscript is how Test cases are run. TODO: elaborate.  bootScriptAux:testRunnerScript','', arg => BOOT_SCRIPT_AUX = arg ],
     buildOnly: [ 'o', 'build-only', 'BUILD_ONLY', "Only execute java generation and java compilation build steps, don't start CORE server.", false, function(arg) { BUILD_ONLY = arg ? this.bool(arg) : true; } ],
     debug: [ 'd', 'debug', 'DEBUG', 'Launch JVM with JDPA debugging enabled. Default port 8000.', false, function(arg) { DEBUG = arg ? this.bool(arg) : true; } ],
-    debugPort: [ 'D', 'debug-port', 'DEBUG_PORT', 'Port JVM will listen on for debuggers (JDPA) connections.',8000, args => DEBUG_PORT = args],
+    debugPort: [ 'D', 'debug-port', 'DEBUG_PORT', 'Port JVM will listen on for debuggers (JDPA) connections.',8000, function(arg) { DEBUG_PORT = arg; DEBUG = true; }],
     deleteRuntimeJournals: [ 'j', 'delete-runtime-journals', 'DELETE_RUNTIME_JOURNALS', 'Delete runtime journals.', false, function(arg) { DELETE_RUNTIME_JOURNALS = arg ? this.bool(arg) : true; } ],
     javacParameters: ['', 'javac-parameters', 'JAVAC_PARAMETERS', 'Parameters passed to Java Compiler','-proc:none', arg => JAVAC_PARAMETERS = arg ],
     javaRelease: ['', 'java-release', 'JAVA_RELEASE', 'Java target version. Can also be set in root pom. ex: java: \'11\'', '21', args => JAVA_RELEASE = args],
@@ -150,7 +151,8 @@ foam.POM({
       this.ensureDir(this.join(BUILD_DIR, 'package'));
       // Notice that the argument to the second -C is relative to the directory from the first -C, since -C
       this.log(`buildTar TARBALL_PATH:${TARBALL_PATH}`);
-      this.execSync(`tar -a -cf ${TARBALL_PATH} -C ./foam3/tools/deploy bin etc -C${require('path').resolve(BUILD_DIR)} lib`, { stdio: VERBOSE ? 'inherit' : 'ignore' });
+      const toolsDeploy = this.join(FOAM_TOOLS_DIR, 'deploy');
+      this.execSync(`tar -a -cf ${TARBALL_PATH} -C ${toolsDeploy} bin etc -C${require('path').resolve(BUILD_DIR)} lib`, { stdio: VERBOSE ? 'inherit' : 'ignore' });
     }],
 
     clean: ['clean', 'Remove generated files', ['cleanJava'], function() {
@@ -173,6 +175,7 @@ foam.POM({
       this.info('Runtime journals deleted.');
       this.emptyDir(JOURNAL_HOME);
       this.emptyDir(SAF_HOME);
+      this.emptyDir(DOCUMENT_HOME);
     }],
 
     genImages: ['gen-images', 'Prepare images from inclusion in jar.', [], function() {
@@ -195,9 +198,9 @@ foam.POM({
 
     deployBin: ['deploy-bin', 'Copy bash files to deployment', [], function() {
       this.ensureDir(this.join(APP_HOME, 'bin'));
-      this.copyDir('./foam3/tools/deploy/bin', this.join(APP_HOME, 'bin'));
+      this.copyDir(this.join(FOAM_TOOLS_DIR, 'deploy', 'bin'), this.join(APP_HOME, 'bin'));
       this.ensureDir(this.join(APP_HOME, 'etc'));
-      this.copyDir('./foam3/tools/deploy/etc', this.join(APP_HOME, 'etc'));
+      this.copyDir(this.join(FOAM_TOOLS_DIR, 'deploy', 'etc'), this.join(APP_HOME, 'etc'));
     }],
 
     deployDocuments: ['deploy-documents', 'Deploy documents from DOCUMENT_OUT to DOCUMENT_HOME.', ['setupDirs'], function() {
@@ -262,6 +265,10 @@ foam.POM({
       if ( ! JAVAC_PARAMETERS.includes('--release') ) {
         JAVAC_PARAMETERS += ' --release '+JAVA_RELEASE;
       }
+      if ( Number(JAVA_RELEASE) >= 25 ) {
+        // javax.security.auth.AuthPermission
+        JAVAC_PARAMETERS += ' -Xlint:-deprecation -Xlint:-removal';
+      }
     }],
 
     clientTests: ['client-tests', 'Run all or specified client side test cases. ex: clientTests[:Test1,Test2]', [], function(args) {
@@ -318,7 +325,7 @@ foam.POM({
         JAVA_OPTS += ` -Dhostname=${HOST_NAME}`;
       }
       JAVA_OPTS += ` -Dapp.name=${APP_NAME}`;
-      JAVA_OPTS += ` -Dcore.webroot=${PROJECT_HOME}`;
+      JAVA_OPTS += ` -Dcore.webroot=${WEBROOT}`;
       JAVA_OPTS += ` -Duser.timezone=${TIMEZONE}`;
 
       if ( DEBUG )
@@ -338,7 +345,7 @@ foam.POM({
         JAVA_OPTS += ` -Dhostname=${HOST_NAME}`;
       }
       JAVA_OPTS += ` -Dapp.name=${APP_NAME}`;
-      JAVA_OPTS += ` -Dcore.webroot=${PROJECT_HOME}`;
+      JAVA_OPTS += ` -Dcore.webroot=${WEBROOT}`;
       JAVA_OPTS += ` -Duser.timezone=${TIMEZONE}`;
 
       if ( DEBUG )
@@ -442,13 +449,14 @@ foam.POM({
       }
     }],
 
-    testSetup: ['test-setup', 'Common Prepare to run test cases.  Include test journals from foam3/deployment/test and project deployment/test. Set test flag, appName, appRoot.', [], function() {
+    testSetup: ['test-setup', 'Common Prepare to run test cases.  Include test journals from foam3/deployment/test, foam3/deployment/demo and project deployment/test. Set test flag, appName, appRoot.', [], function() {
       APP_NAME = 'test';
       APP_ROOT = ! APP_ROOT || APP_ROOT == '/opt' ? '/tmp' : APP_ROOT;
       FLAGS = this.comma(FLAGS, 'test');
-      this.addJournal('../foam3/deployment/test');
-      this.addJournal('../foam3/deployment/demo');
-      this.addJournal('test');
+      // Load foam3 defaults first, then project-specific overrides
+      this.addJournal('test', 'foam3');
+      this.addJournal('demo', 'foam3');
+      this.addJournal('test', 'project');
     }],
 
     usage: ['usage', 'Build usage examples', [], function() {
@@ -467,8 +475,10 @@ foam.POM({
       this.log('\nRunning Java Test Cases:');
       this.log('  ./build.sh --run-tests');
       this.log('    Run all test cases.');
-      this.log('  ./build.sh --server-tests:SequenceNumberDAO,MapDAOTest');
+      this.log('  ./build.sh --server-tests:SequenceNumberDAOTest,MapDAOTest');
       this.log('    Run specified server side (Java) test cases.');
+      this.log('  ./build.sh --server-tests:-SequenceNumberDAOTest,-MapDAOTest');
+      this.log('    Exclude specified server side (Java) test cases.');
       this.log('  ./build.sh --client-tests');
       this.log('    Run all client side (Javascript) test cases.');
       this.log('  ./build.sh --client-tests --test-headed');
