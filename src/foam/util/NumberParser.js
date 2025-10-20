@@ -171,7 +171,7 @@ foam.CLASS({
 
         try {
           // Ensure separators are initialized for current locale (lazy initialization)
-          if ( getInitializedLocale_() == null || !getInitializedLocale_().equals(getLocale()) ) {
+          if ( getInitializedLocale_() == null || ! getInitializedLocale_().equals(getLocale()) ) {
             initSeparators();
           }
 
