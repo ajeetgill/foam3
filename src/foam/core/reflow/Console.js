@@ -231,7 +231,7 @@ foam.CLASS({
                 horizontal: false
               })
               .start('span').addClass(this.myClass('separator')).end()
-              .tag(this.FULL_SCREEN, { themeIcon$: self.data.flowMode$.map(c => c.name == 'CONSOLE' ? 'fullScreen' : 'minimize') })
+              .tag(this.FULL_SCREEN, { themeIcon$: self.data.flowMode$.map(c => c == self.FlowMode.CONSOLE ? 'fullScreen' : 'minimize') })
             .endContext()
             // callIf(this.data.showPrompts$, function() {
             //   this.start().addClass(self.myClass('save-text'))
@@ -363,10 +363,14 @@ foam.CLASS({
       toolTip: 'Toggle Presentation Mode / ESC',
       label: '',
       buttonStyle: foam.u2.ButtonStyle.SECONDARY,
+      isAvailable: function(data$flowMode) {
+        // Hide toggle button in PRESENTATION_ONLY mode
+        return data$flowMode != this.FlowMode.PRESENTATION_ONLY;
+      },
       code: function() {
-        if (this.data.flowMode.name == 'CONSOLE') {
+        if (this.data.flowMode == this.FlowMode.CONSOLE) {
           this.data.flowMode = this.FlowMode.PRESENTATION;
-        } else {
+        } else if (this.data.flowMode == this.FlowMode.PRESENTATION) {
           this.data.flowMode = this.FlowMode.CONSOLE;
         }
       }
@@ -817,7 +821,7 @@ foam.CLASS({
 foam.ENUM({
   package: 'foam.core.reflow',
   name: 'FlowMode',
-  values: [ 'CONSOLE', 'PRESENTATION' ]
+  values: [ 'CONSOLE', 'PRESENTATION', 'PRESENTATION_ONLY' ]
 });
 
 
@@ -1182,7 +1186,7 @@ foam.CLASS({
 
       layout.showLeft$  = this.showPrompts$;
       layout.showRight$ = this.showPrompts$;
-      layout.showHeader = true;
+      layout.showHeader$ = this.flowMode$.map(m => m != this.FlowMode.PRESENTATION_ONLY);
       layout.left.tag(this.FlowableTree, {data: this, selected$: this.selected$, isMenuOpen$: layout.isMenuOpen$});
       layout.middle.call(this.renderSelf, [this]);
       layout.right.tag(this.ReflowConfigView, { data$: this.selected$});
@@ -1492,8 +1496,8 @@ foam.CLASS({
     },
 
     async function checkForAutosavedScript(scriptName) {
-      // Don't retrieve autosave for unnamed flows
-      if ( ! scriptName ) return false;
+      // Don't retrieve autosave for unnamed flows or in PRESENTATION_ONLY mode
+      if ( ! scriptName || this.flowMode == this.FlowMode.PRESENTATION_ONLY ) return false;
 
       var autosaveData = this.loadAutosaveData(scriptName);
       if ( ! autosaveData || ! autosaveData.script ) return false;
@@ -1571,6 +1575,9 @@ foam.CLASS({
       name: 'toggleMode',
       // You can do this.showPrompts = true|false; from flow scripts
       code: function() {
+        // Don't allow toggling out of PRESENTATION_ONLY mode
+        if ( this.flowMode == this.FlowMode.PRESENTATION_ONLY ) return;
+
         this.flowMode = this.flowMode == this.FlowMode.CONSOLE ?
           this.FlowMode.PRESENTATION :
           this.FlowMode.CONSOLE ;
@@ -1727,6 +1734,9 @@ foam.CLASS({
       isMerged: true,
       delay: 250,
       code: function() {
+        // Don't auto-save in PRESENTATION_ONLY mode
+        if ( this.flowMode == this.FlowMode.PRESENTATION_ONLY ) return;
+
         if ( ! this.value || ! this.value.script ) return;
 
         // Don't save unnamed flows to local storage
