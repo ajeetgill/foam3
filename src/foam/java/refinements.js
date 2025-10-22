@@ -1489,8 +1489,7 @@ foam.CLASS({
   properties: [
     ['javaInfoType',    'foam.lang.AbstractDatePropertyInfo'],
     ['javaJSONParser',  'foam.lib.json.DateParser.instance()'],
-    ['sqlType',         'TIMESTAMP WITHOUT TIME ZONE'],
-    ['javaAdapt',       '']
+    ['sqlType',         'TIMESTAMP WITHOUT TIME ZONE']
   ],
 
   methods: [
@@ -1531,8 +1530,7 @@ foam.CLASS({
      `
       // convert the Date to be noon in GMT
       val = new java.util.Date(val.getTime() / 86400000l * 86400000l + 43200000l);
-     `
-    ]
+     ` ]
   ],
 
    methods: [
