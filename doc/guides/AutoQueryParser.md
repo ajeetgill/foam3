@@ -6,7 +6,9 @@
   - [Basic Syntax](#basic-syntax)
   - [Logical Operators](#logical-operators)
     - [AND](#and)
+    - [NOT](#not)
     - [OR](#or)
+    - [OR](#or-1)
   - [Grouping](#grouping)
   - [Property Values](#property-values)
   - [Expressions](#expressions)
@@ -37,6 +39,19 @@ Combine expressions with spaces or explicit AND:
 ```
 expression1 AND expression2
 expression1 & expression2
+```
+
+### NOT
+Negate expressions with NOT:
+```
+NOT expression
+```
+
+### OR
+Combine expressions with OR or pipe:
+```
+expression1 OR expression2
+expression1 | expression2
 ```
 
 ### OR
