@@ -70,7 +70,6 @@ foam.CLASS({
         JSONFObjectFormatter b = new JSONFObjectFormatter();
         b.setPropertyPredicate(new StoragePropertyPredicate());
         b.setOutputShortNames(true);
-        b.setOutputDefaultClassNames(false);
         return b;
       }
       @Override
