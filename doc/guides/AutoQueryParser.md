@@ -1,3 +1,30 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [SimpleQueryParser Syntax Guide](#simplequeryparser-syntax-guide)
+  - [Basic Syntax](#basic-syntax)
+  - [Logical Operators](#logical-operators)
+    - [AND](#and)
+    - [OR](#or)
+  - [Grouping](#grouping)
+  - [Property Values](#property-values)
+  - [Expressions](#expressions)
+    - [Strings](#strings)
+      - [String Examples](#string-examples)
+    - [Numbers](#numbers)
+      - [Number Examples](#number-examples)
+    - [Booleans](#booleans)
+      - [Boolean Examples](#boolean-examples)
+    - [Date and DateTime Expressions](#date-and-datetime-expressions)
+      - [Date and DateTime Examples](#date-and-datetime-examples)
+    - [Enum Expressions](#enum-expressions)
+      - [Enum Examples](#enum-examples)
+    - [StringArrays](#stringarrays)
+      - [StringArray Examples](#stringarray-examples)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # SimpleQueryParser Syntax Guide
 
 ## Basic Syntax
