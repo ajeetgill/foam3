@@ -28,7 +28,6 @@ foam.CLASS({
     {
       class: 'String',
       name: 'flowName',
-      onKey: true
     },
     {
       class: 'Array',
@@ -203,7 +202,7 @@ foam.CLASS({
                 class: 'foam.u2.TextField',
                 data$: this.data.value.name$,
                 placeholder: 'Unnamed',
-                onKey: true
+                onKey: false
               })
                 .addClass(this.myClass('name'))
               .end()
@@ -932,6 +931,13 @@ foam.CLASS({
       }
     },
     {
+      class: 'Enum',
+      of: 'foam.core.reflow.FlowMode',
+      name: 'flowMode',
+      value: 'CONSOLE',
+      memorable: true
+    },
+    {
       class: 'String',
       name: 'route',
       memorable: true,
@@ -970,13 +976,6 @@ foam.CLASS({
     'input_', // Element pointer
     {
       name: 'out'
-    },
-    {
-      class: 'Enum',
-      of: 'foam.core.reflow.FlowMode',
-      name: 'flowMode',
-      value: 'CONSOLE',
-      memorable: true
     },
     {
       // class: 'Boolean',
@@ -1647,6 +1646,7 @@ foam.CLASS({
 
         // When script name changes, check if there's existing autosave for new name
         if ( oldValue === newValue ) return;
+        if ( this.flowMode == this.FlowMode.PRESENTATION_ONLY ) return;
 
         // Check if the new name has existing autosave data that differs from current
         var existingData = this.loadAutosaveData(newValue);
