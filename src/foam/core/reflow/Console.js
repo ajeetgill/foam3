@@ -79,8 +79,8 @@ foam.CLASS({
     function addFlowChild(f) {
       if ( f.deleted_ ) return;
       f.flowParent = this;
-      this.addFlowChild_ && this.addFlowChild_(f);
       this.flowChildren$push(f);
+      this.addFlowChild_ && this.addFlowChild_(f);
     },
 
     function removeFlowChild(f) {
