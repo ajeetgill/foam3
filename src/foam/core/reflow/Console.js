@@ -833,6 +833,12 @@ foam.CLASS({
   implements: [ 'foam.core.reflow.Flowable' ],
   mixins: [ 'foam.u2.memento.Memorable' ],
 
+  documentation: `
+    If you want to embed FLOWs in regular U3 views without all of the editing UI, you can do it like this:
+    requires: [ 'foam.core.reflow.Console' ]
+    ...
+    this.add(self.Console.create({route: 'name of flow to load', flowMode: foam.core.reflow.FlowMode.PRESENTATION_ONLY});
+  `,
   requires: [
     'foam.core.reflow.Flowable',
     'foam.core.reflow.ReflowHeader',
