@@ -658,7 +658,7 @@ foam.CLASS({
     }
     ^r {
       overflow-y: auto;
-      width: 30%;
+      width: 40%;
       background-color: $backgroundDefault;
       flex: 0 0 auto;
     }
@@ -725,7 +725,7 @@ foam.CLASS({
     {
       class: 'Int',
       name: 'rightWidth',
-      value: 360
+      value: 550
     },
     {
       class: 'Int',
