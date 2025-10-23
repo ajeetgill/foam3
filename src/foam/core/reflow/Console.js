@@ -1033,8 +1033,7 @@ foam.CLASS({
       class: 'Boolean',
       name: 'isLoading_',
       hidden: true,
-      transient: true,
-      value: false
+      transient: true
     },
     {
       name: 'selected',
