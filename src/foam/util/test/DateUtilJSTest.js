@@ -189,8 +189,9 @@ foam.CLASS({
     },
 
     function testParseDateString_DDMMMYYYY(x) {
-      // Test DDMMMYYYY format with separators (31-JAN-2025, 03-FEB-2025)
-      var date1 = foam.util.DateUtil.parseDateString('31-JAN-2025', 'ddmmmyyyy');
+      // Test DDMMMYYYY format - works in STANDARD format (no opt_name needed!)
+      // Month names are unambiguous, so they work without specifying format
+      var date1 = foam.util.DateUtil.parseDateString('31-JAN-2025');
       var year1 = date1.getFullYear();
       var month1 = date1.getMonth();
       var day1 = date1.getDate();
@@ -198,7 +199,7 @@ foam.CLASS({
       x.test(month1 === 0, `DDMMMYYYY format (31-JAN-2025) - month is January (0) (expected 0, got ${month1})`);
       x.test(day1 === 31, `DDMMMYYYY format (31-JAN-2025) - day is 31 (expected 31, got ${day1})`);
 
-      var date2 = foam.util.DateUtil.parseDateString('03-FEB-2025', 'ddmmmyyyy');
+      var date2 = foam.util.DateUtil.parseDateString('03-FEB-2025');
       var year2 = date2.getFullYear();
       var month2 = date2.getMonth();
       var day2 = date2.getDate();
@@ -207,7 +208,7 @@ foam.CLASS({
       x.test(day2 === 3, `DDMMMYYYY format (03-FEB-2025) - day is 3 (expected 3, got ${day2})`);
 
       // Test with slash separator
-      var date3 = foam.util.DateUtil.parseDateString('15/MAR/2024', 'ddmmmyyyy');
+      var date3 = foam.util.DateUtil.parseDateString('15/MAR/2024');
       var year3 = date3.getFullYear();
       var month3 = date3.getMonth();
       var day3 = date3.getDate();
@@ -215,8 +216,8 @@ foam.CLASS({
       x.test(month3 === 2, `DDMMMYYYY format (15/MAR/2024) - month is March (2) (expected 2, got ${month3})`);
       x.test(day3 === 15, `DDMMMYYYY format (15/MAR/2024) - day is 15 (expected 15, got ${day3})`);
 
-      // Test compact format (no separators)
-      var date4 = foam.util.DateUtil.parseDateString('31JAN2025', 'ddmmmyyyy');
+      // Test compact format (no separators) - works without opt_name (letters make it unambiguous!)
+      var date4 = foam.util.DateUtil.parseDateString('31JAN2025');
       var year4 = date4.getFullYear();
       var month4 = date4.getMonth();
       var day4 = date4.getDate();
@@ -225,13 +226,31 @@ foam.CLASS({
       x.test(day4 === 31, `DDMMMYYYY compact (31JAN2025) - day is 31 (expected 31, got ${day4})`);
 
       // Test case insensitivity
-      var date5 = foam.util.DateUtil.parseDateString('15-jun-2025', 'ddmmmyyyy');
+      var date5 = foam.util.DateUtil.parseDateString('15-jun-2025');
       var month5 = date5.getMonth();
       x.test(month5 === 5, `DDMMMYYYY lowercase (15-jun-2025) - month is June (5) (expected 5, got ${month5})`);
 
-      var date6 = foam.util.DateUtil.parseDateString('10-Jul-2025', 'ddmmmyyyy');
+      var date6 = foam.util.DateUtil.parseDateString('10-Jul-2025');
       var month6 = date6.getMonth();
       x.test(month6 === 6, `DDMMMYYYY mixed case (10-Jul-2025) - month is July (6) (expected 6, got ${month6})`);
+
+      // Test YYYY-DD-MMM format with separators works without opt_name
+      var date7 = foam.util.DateUtil.parseDateString('2025-31-JAN');
+      var year7 = date7.getFullYear();
+      var month7 = date7.getMonth();
+      var day7 = date7.getDate();
+      x.test(year7 === 2025, `YYYYDDMMM format (2025-31-JAN) - year is 2025 (expected 2025, got ${year7})`);
+      x.test(month7 === 0, `YYYYDDMMM format (2025-31-JAN) - month is January (0) (expected 0, got ${month7})`);
+      x.test(day7 === 31, `YYYYDDMMM format (2025-31-JAN) - day is 31 (expected 31, got ${day7})`);
+
+      // Test compact YYYYDDMMM works without opt_name (letters make it unambiguous!)
+      var date9 = foam.util.DateUtil.parseDateString('202531JAN');
+      var year9 = date9.getFullYear();
+      var month9 = date9.getMonth();
+      var day9 = date9.getDate();
+      x.test(year9 === 2025, `YYYYDDMMM compact (202531JAN) - year is 2025 (expected 2025, got ${year9})`);
+      x.test(month9 === 0, `YYYYDDMMM compact (202531JAN) - month is January (0) (expected 0, got ${month9})`);
+      x.test(day9 === 31, `YYYYDDMMM compact (202531JAN) - day is 31 (expected 31, got ${day9})`);
     },
 
     function testParseDateString_InvalidDate(x) {
