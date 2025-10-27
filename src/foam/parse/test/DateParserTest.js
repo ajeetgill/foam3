@@ -370,7 +370,8 @@ foam.CLASS({
     function testDDMMMYYYYFormats(x) {
       let parser = this.DateParser.create();
 
-      // Test DDMMMYYYY with separators - requires opt_name='ddmmmyyyy'
+      // Test DDMMMYYYY with separators - now works in STANDARD format (no opt_name needed!)
+      // Also works with ddmmyyyy format for backwards compatibility
       let ddmmmyyyySep = [
         { input: '31-JAN-2025', year: 2025, month: 0, day: 31 },
         { input: '03-FEB-2025', year: 2025, month: 1, day: 3 },
@@ -382,21 +383,22 @@ foam.CLASS({
         { input: '10-Jul-2025', year: 2025, month: 6, day: 10 }  // Mixed case
       ];
 
+      // Test with STANDARD format (no opt_name) - month names are unambiguous!
       ddmmmyyyySep.forEach((testCase, i) => {
         try {
-          let result = parser.parseString(testCase.input, 'ddmmmyyyy');
+          let result = parser.parseString(testCase.input);  // No opt_name!
           let pass = result &&
                      result.getUTCFullYear() === testCase.year &&
                      result.getUTCMonth() === testCase.month &&
                      result.getUTCDate() === testCase.day &&
                      result.getUTCHours() === 12;
-          x.test(pass, `DDMMMYYYY-Sep Test${i + 1}: ${testCase.input} (opt_name='ddmmmyyyy')`);
+          x.test(pass, `DDMMMYYYY-Sep Test${i + 1}: ${testCase.input} (STANDARD format)`);
         } catch (e) {
           x.test(false, `DDMMMYYYY-Sep Test${i + 1}: ${testCase.input} - ${e.message}`);
         }
       });
 
-      // Test DDMMMYYYY compact (no separators) - requires opt_name='ddmmmyyyy'
+      // Test DDMMMYYYY compact (no separators) - works in STANDARD (has letters, unambiguous!)
       let ddmmmyyyyCompact = [
         { input: '31JAN2025', year: 2025, month: 0, day: 31 },
         { input: '03FEB2025', year: 2025, month: 1, day: 3 },
@@ -407,15 +409,16 @@ foam.CLASS({
         { input: '10Jul2025', year: 2025, month: 6, day: 10 }  // Mixed case
       ];
 
+      // Test with STANDARD format (no opt_name) - letters make it unambiguous!
       ddmmmyyyyCompact.forEach((testCase, i) => {
         try {
-          let result = parser.parseString(testCase.input, 'ddmmmyyyy');
+          let result = parser.parseString(testCase.input);  // No opt_name!
           let pass = result &&
                      result.getUTCFullYear() === testCase.year &&
                      result.getUTCMonth() === testCase.month &&
                      result.getUTCDate() === testCase.day &&
                      result.getUTCHours() === 12;
-          x.test(pass, `DDMMMYYYY-Compact Test${i + 1}: ${testCase.input} (opt_name='ddmmmyyyy')`);
+          x.test(pass, `DDMMMYYYY-Compact Test${i + 1}: ${testCase.input} (STANDARD format)`);
         } catch (e) {
           x.test(false, `DDMMMYYYY-Compact Test${i + 1}: ${testCase.input} - ${e.message}`);
         }
@@ -437,16 +440,37 @@ foam.CLASS({
         { input: '15-DEC-2025', month: 11 }
       ];
 
+      // Test all months with STANDARD format
       allMonths.forEach((testCase, i) => {
         try {
-          let result = parser.parseString(testCase.input, 'ddmmmyyyy');
+          let result = parser.parseString(testCase.input);  // No opt_name!
           let pass = result &&
                      result.getUTCFullYear() === 2025 &&
                      result.getUTCMonth() === testCase.month &&
                      result.getUTCDate() === 15;
-          x.test(pass, `DDMMMYYYY All Months Test${i + 1}: ${testCase.input} should parse to month ${testCase.month}`);
+          x.test(pass, `DDMMMYYYY All Months Test${i + 1}: ${testCase.input} should parse to month ${testCase.month} (STANDARD format)`);
         } catch (e) {
           x.test(false, `DDMMMYYYY All Months Test${i + 1}: ${testCase.input} - ${e.message}`);
+        }
+      });
+
+      // Test YYYY-DD-MMM formats - all work in STANDARD (letters make it unambiguous!)
+      let yyyyddmmmTests = [
+        { input: '2025-31-JAN', year: 2025, month: 0, day: 31 },
+        { input: '2024/15/MAR', year: 2024, month: 2, day: 15 },
+        { input: '202531JAN', year: 2025, month: 0, day: 31 }  // Compact works too!
+      ];
+
+      yyyyddmmmTests.forEach((testCase, i) => {
+        try {
+          let result = parser.parseString(testCase.input);  // No opt_name!
+          let pass = result &&
+                     result.getUTCFullYear() === testCase.year &&
+                     result.getUTCMonth() === testCase.month &&
+                     result.getUTCDate() === testCase.day;
+          x.test(pass, `YYYYDDMMM Test${i + 1}: ${testCase.input} (STANDARD format)`);
+        } catch (e) {
+          x.test(false, `YYYYDDMMM Test${i + 1}: ${testCase.input} - ${e.message}`);
         }
       });
     },

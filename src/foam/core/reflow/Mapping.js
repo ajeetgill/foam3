@@ -36,22 +36,17 @@ foam.ENUM({
     {
       name: 'STANDARD',
       label: 'Standard',
-      documentation: 'Standard formats: yyyy-mm-dd, yyyy/mm/dd, yyyymmdd, mm/dd/yyyy, mm-dd-yyyy, mmddyyyy'
+      documentation: 'Standard formats: yyyy-mm-dd, yyyy/mm/dd, yyyymmdd, mm/dd/yyyy, mm-dd-yyyy, mmddyyyy, plus ALL month name formats (unambiguous!): 31-JAN-2025, 31JAN2025, 2025-31-JAN, 202531JAN'
     },
     {
       name: 'DDMMYYYY',
       label: 'dd/mm/yyyy',
-      documentation: 'Day-Month-Year format (dd/mm/yyyy, dd-mm-yyyy, ddmmyyyy, dd/mm/yy, dd-mm-yy, ddmmyy)'
+      documentation: 'Day-Month-Year format for NUMERIC dates: dd/mm/yyyy, dd-mm-yyyy, ddmmyyyy, dd/mm/yy, dd-mm-yy, ddmmyy (month names work automatically in STANDARD)'
     },
     {
       name: 'YYYYDDMM',
       label: 'yyyy/dd/mm',
-      documentation: 'Year-Day-Month format (yyyy/dd/mm, yyyy-dd-mm, yyyyddmm, yy/dd/mm, yy-dd-mm, yyddmm)'
-    },
-    {
-      name: 'DDMMMYYYY',
-      label: 'dd-mmm-yyyy',
-      documentation: 'Day-MonthName-Year format (31-JAN-2025, 03-FEB-2025, 31JAN2025, 03FEB2025)'
+      documentation: 'Year-Day-Month format for NUMERIC dates: yyyy/dd/mm, yyyy-dd-mm, yyyyddmm, yy/dd/mm, yy-dd-mm, yyddmm (month names work automatically in STANDARD)'
     }
   ]
 });
@@ -173,8 +168,6 @@ foam.CLASS({
           return 'ddmmyyyy';
         case 'YYYYDDMM':
           return 'yyyyddmm';
-        case 'DDMMMYYYY':
-          return 'ddmmmyyyy';
         case 'STANDARD':
         default:
           return 'START';
