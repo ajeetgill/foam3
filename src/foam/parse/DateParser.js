@@ -37,11 +37,24 @@ foam.CLASS({
         return {
           START: sym('dateOrDatetime'),
 
-          // Main entry point - try all three main formats
+          // Main entry point - try all formats including unambiguous month names
+          // NOTE: Month name formats go FIRST because they contain letters (unambiguous!)
+          // Once the parser sees letters, it knows it's not a numeric format
           dateOrDatetime: alt(
+            sym('date-monthname'),  // All month name formats (with or without separators)
             sym('yyyymmdd'),
             sym('mmddyyyy'),
             sym('yymmdd')
+          ),
+
+          // Date with month names - ALL completely unambiguous (contain letters!)
+          // DD-MMM-YYYY, DD/MMM/YYYY, DDMMMYYYY, YYYY-DD-MMM, YYYY/DD/MMM, YYYYDDMMM
+          // NOTE: yyyyddmmm-compact must come BEFORE ddmmmyyyy-compact to match correctly
+          'date-monthname': alt(
+            sym('ddmmmyyyy-sep'),
+            sym('yyyyddmmm-sep'),
+            sym('yyyyddmmm-compact'),  // Try this before ddmmmyyyy-compact
+            sym('ddmmmyyyy-compact')
           ),
 
           // YYYYMMDD - tries all variants (compact with time, compact, separated)
@@ -58,19 +71,19 @@ foam.CLASS({
             // +HH:MM format
             seq(
               chars('+-'),
-              repeat(range('0', '9'), null, 2),
+              repeat(range('0', '9'), null, 2, 2),
               ':',
-              repeat(range('0', '9'), null, 2)
+              repeat(range('0', '9'), null, 2, 2)
             ),
             // +HHMM format (no colon)
             seq(
               chars('+-'),
-              repeat(range('0', '9'), null, 4)
+              repeat(range('0', '9'), null, 4, 4)
             ),
             // +HH format (hours only)
             seq(
               chars('+-'),
-              repeat(range('0', '9'), null, 2)
+              repeat(range('0', '9'), null, 2, 2)
             )
           ),
 
@@ -139,7 +152,7 @@ foam.CLASS({
           ),
 
           // MMDDYYYY compact: 8 digits (that don't match YYYY 1900-2999 pattern)
-          'mmddyyyy-compact': str(repeat(range('0', '9'), null, 8)),
+          'mmddyyyy-compact': str(repeat(range('0', '9'), null, 8, 8)),
 
           // YYMMDD - tries all variants (compact, separated)
           // Covers: YYMMDD, YY-MM-DD, YY/MM/DD with optional time
@@ -170,10 +183,11 @@ foam.CLASS({
           ),
 
           // YYMMDD compact: 6 digits
-          'yymmdd-compact': str(repeat(range('0', '9'), null, 6)),
+          'yymmdd-compact': str(repeat(range('0', '9'), null, 6, 6)),
 
           // DDMMYYYY - NOT in main dateOrDatetime, accessible via opt_name only
           // Covers: DD-MM-YYYY, DD/MM/YYYY, DDMMYYYY, DD-MM-YY, DD/MM/YY, DDMMYY with optional time
+          // NUMERIC dates only (month names are handled in STANDARD format via date-monthname)
           ddmmyyyy: alt(
             sym('ddmmyyyy-sep'),
             sym('ddmmyy-sep'),
@@ -203,7 +217,7 @@ foam.CLASS({
           ),
 
           // DDMMYYYY compact: 8 digits (that don't match YYYY 1900-2999 pattern)
-          'ddmmyyyy-compact': str(repeat(range('0', '9'), null, 8)),
+          'ddmmyyyy-compact': str(repeat(range('0', '9'), null, 8, 8)),
 
           // DDMMYY with separators and optional time (2-digit year)
           // DD-MM-YY, DD/MM/YY, DD-MM-YY HH:MM, DD-MM-YY HH:MM:SS
@@ -227,10 +241,11 @@ foam.CLASS({
           ),
 
           // DDMMYY compact: 6 digits
-          'ddmmyy-compact': str(repeat(range('0', '9'), null, 6)),
+          'ddmmyy-compact': str(repeat(range('0', '9'), null, 6, 6)),
 
           // YYYYDDMM - NOT in main dateOrDatetime, accessible via opt_name only
           // Covers: YYYY-DD-MM, YYYY/DD/MM, YYYYDDMM, YY-DD-MM, YY/DD/MM, YYDDMM with optional time
+          // NUMERIC dates only (month names are handled in STANDARD format via date-monthname)
           yyyyddmm: alt(
             sym('yyyyddmm-compact'),
             sym('yyyyddmm-sep'),
@@ -259,7 +274,7 @@ foam.CLASS({
           ),
 
           // YYYYDDMM compact: 8 digits
-          'yyyyddmm-compact': str(repeat(range('0', '9'), null, 8)),
+          'yyyyddmm-compact': str(repeat(range('0', '9'), null, 8, 8)),
 
           // YYDDMM - 2-digit year, day, month (6 digits)
           yyddmm: alt(
@@ -289,13 +304,16 @@ foam.CLASS({
           ),
 
           // YYDDMM compact: 6 digits
-          'yyddmm-compact': str(repeat(range('0', '9'), null, 6)),
+          'yyddmm-compact': str(repeat(range('0', '9'), null, 6, 6)),
 
-          // DDMMMYYYY - NOT in main dateOrDatetime, accessible via opt_name only
-          // Covers: DD-MMM-YYYY, DD/MMM/YYYY, DDMMMYYYY (31-JAN-2025, 03-FEB-2025, 31JAN2025)
-          ddmmmyyyy: alt(
-            sym('ddmmmyyyy-sep'),
-            sym('ddmmmyyyy-compact')
+          // YYYYDDMMM with separators: YYYY-DD-MMM, YYYY/DD/MMM
+          'yyyyddmmm-sep': seq(
+            sym('year4'), chars('-/'), sym('day2'), chars('-/'), sym('month3alpha')
+          ),
+
+          // YYYYDDMMM compact: YYYYDDMMM (no separators, like 202531JAN)
+          'yyyyddmmm-compact': seq(
+            sym('year4'), sym('day2'), sym('month3alpha')
           ),
 
           // DDMMMYYYY with separators: DD-MMM-YYYY, DD/MMM/YYYY
@@ -309,7 +327,7 @@ foam.CLASS({
           ),
 
           // Component parsers
-          year4: str(repeat(range('0', '9'), null, 4)),
+          year4: str(repeat(range('0', '9'), null, 4, 4)),  // Exactly 4 digits
           year4_1900_2999: str(alt(
             seq('1', '9', range('0', '9'), range('0', '9')),
             seq('2', range('0', '9'), range('0', '9'), range('0', '9'))
@@ -334,7 +352,7 @@ foam.CLASS({
           hour2: str(seq(range('0', '2'), range('0', '9'))),
           minute2: str(seq(range('0', '5'), range('0', '9'))),
           second2: str(seq(range('0', '5'), range('0', '9'))),
-          millisecond3: str(repeat(range('0', '9'), null, 3))
+          millisecond3: str(repeat(range('0', '9'), null, 3, 3))
         };
       }
     },
@@ -636,6 +654,26 @@ foam.CLASS({
               year: parseInt(v[2]),
               month: self.parseMonthName(v[1]),
               day: parseInt(v[0])
+            };
+          },
+
+          // YYYYDDMMM with separators: YYYY-DD-MMM, YYYY/DD/MMM
+          // v = [YYYY, sep, DD, sep, MMM]
+          'yyyyddmmm-sep': function(v) {
+            return {
+              year: parseInt(v[0]),
+              month: self.parseMonthName(v[4]),
+              day: parseInt(v[2])
+            };
+          },
+
+          // YYYYDDMMM compact: YYYYDDMMM "202531JAN"
+          // v = [YYYY, DD, MMM]
+          'yyyyddmmm-compact': function(v) {
+            return {
+              year: parseInt(v[0]),
+              month: self.parseMonthName(v[2]),
+              day: parseInt(v[1])
             };
           }
         };
