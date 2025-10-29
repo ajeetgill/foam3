@@ -261,21 +261,18 @@ foam.CLASS({
         let operator            = this.operator;
         let operatorIn          = this.operatorIn;
         let property            = (prop) => seq1(1, sym('ws'),  sug(literal(prop.name, prop), {text: prop.name, label: prop.label}));
-        let innerProperty       = (prop, innerProp) => { 
-              let name = prop.name + '.' + innerProp.name;
-              let expr = foam.mlang.predicate.DotF.create({arg1: prop, arg2: innerProp});
-              return seq1(1, sym('ws'), sug(literal(name, expr), {text: name}));
+
+
+        let innerProperty = (prop, innerProp) => {
+          // require the user to type the dot before offering innerProp suggestions
+          let expr = foam.mlang.predicate.DotF.create({arg1: prop, arg2: innerProp});
+          return seq1(2,
+            sym('ws'),
+            sug(seq1(0, literal(prop.name), '.'), {text: prop.name + '.', label: prop.label}),
+            sug(literal(innerProp.name, expr), {text: innerProp.name, label: innerProp.label})
+          );
         };
-        
-        /* TODO fix suggestions for inner properties to suggest inner property names only after the dot
-        let innerProperty       = (prop, innerProp) => {
-          console.log('innerProperty', prop.name, innerProp.name); 
-              let expr = foam.mlang.predicate.DotF.create({arg1: prop, arg2: innerProp});
-              return seq1(1, 
-                sug(seq(sym('ws'), literal(prop.name + '.')), {text: prop.name + '.', label: prop.label}),
-                sug(literal(innerProp.name, expr), {text: innerProp.name, label: innerProp.label}));
-        };
-        */
+
         // process a property and add its predicates to the grammar   
         function processProp(prop, propertyParser) {
           if ( ! prop.searchable ) return;
