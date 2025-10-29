@@ -69,14 +69,14 @@ foam.CLASS({
         // helper to create an operator parser that ignores operators case and surrounding whitespace and provides a suggestion
         let operator = (str) => {
           return alt(
-            seq1(2, ' ', sym('ws'), sug(literalIC(str), {text: str})),
+            seq1(2, ' ', sym('ws'), sug(literalIC(str), {text: str, category: 'operator'})),
             literalIC(str) // allow the option without leading spaces, it is still valid, even though it won't suggest
           );
         }
         this.operator = operator;
         let operatorIn = (str) => {
           return (
-            seq1(2, ' ', sym('ws'), sug(seq1(0, literalIC(str), sym('ws'), '('), {text: str + ' (', label: str }))
+            seq1(2, ' ', sym('ws'), sug(seq1(0, literalIC(str), sym('ws'), '('), {text: str + ' (', label: str, category: 'operator' }))
           );
         }
         this.operatorIn = operatorIn;
@@ -87,13 +87,13 @@ foam.CLASS({
           query: sym('or'),
 
           or: repeat(
-              sym('and'),
-              seq(' ', seq1(1, sym('ws'), sug(alt(literalIC('OR'), literal('|')), {text: 'OR'}))),
+            sym('and'),
+            seq(' ', seq1(1, sym('ws'), sug(alt(literalIC('OR'), literal('|')), {text: 'OR', category: 'operator'}))),
             1),
 
           and: repeat(
             sym('expr'),
-            seq(' ', seq1(1, sym('ws'), sug(alt(literalIC('AND'), literal('&')), {text: 'AND'}))),
+            seq(' ', seq1(1, sym('ws'), sug(alt(literalIC('AND'), literal('&')), {text: 'AND', category: 'operator'}))),
             1),
 
           expr: alt(
@@ -107,7 +107,7 @@ foam.CLASS({
           paren: seq1(3, sym('ws'), '(', sym('ws'), sym('query'), sym('ws'), ')'),
 
           //negate: seq1(1, sym('ws'), sug(seq1(0, 'NOT', sym('ws'), '('), {text: 'NOT (', label: 'NOT'}), sym('query'), sym('ws'), ')'),
-          negate: seq1(3, sym('ws'), sug(literalIC('NOT'), {text: 'NOT'}), sym('ws'), sym('expr')),
+          negate: seq1(3, sym('ws'), sug(literalIC('NOT'), {text: 'NOT', category: 'operator'}), sym('ws'), sym('expr')),
 
           ws: repeat0(' '),
 
@@ -146,8 +146,8 @@ foam.CLASS({
 
           number: seq1(1, sym('ws'), seq(optional('-'), sym('digits'))),
 
-          compareBoolean: alt(seq(' ', seq1(1, sym('ws'), sug(literalIC('IS TRUE'), {text: 'IS TRUE'}))),
-                              seq(' ', seq1(1, sym('ws'), sug(literalIC('IS FALSE'), {text: 'IS FALSE'})))),
+          compareBoolean: alt(seq(' ', seq1(1, sym('ws'), sug(literalIC('IS TRUE'),  {text: 'IS TRUE', category: 'operator'}))),
+                              seq(' ', seq1(1, sym('ws'), sug(literalIC('IS FALSE'), {text: 'IS FALSE', category: 'operator'})))),
 
           date: seq1(1, sym('ws'),
             alt(
@@ -159,36 +159,37 @@ foam.CLASS({
           // IMPORTANT: order matters, put more complex first
           'literal date': alt(
             // YYYY-MM-DDTHH:MM:SS.mmmZ (or YY)
+            sug(alt(), {view: 'foam.parse.auto.DateSuggester'}),
             sug(seq(sym('digits'), chars('-/'), sym('digits'), chars('-/'), sym('digits'), 'T',
                 sym('digits'), ':', sym('digits'),  ':', sym('digits'),  '.', sym('digits'), 'Z'),
-                {tooltip: 'YYYY/MM/DDTHH:MM:SS.mmmZ'}),
+                {tooltip: 'YYYY/MM/DDTHH:MM:SS.mmmZ', category: 'value'}),
             // YYYY-MM-DDTHH:MM:SS.mmm (or YY)
                 sug(seq(sym('digits'), chars('-/'), sym('digits'), chars('-/'), sym('digits'), 'T',
                 sym('digits'), ':', sym('digits'),  ':', sym('digits'),  '.', sym('digits')),
-                {tooltip: 'YYYY/MM/DDTHH:MM:SS.mmm'}),
+                {tooltip: 'YYYY/MM/DDTHH:MM:SS.mmm', category: 'value'}),
             // YYYY-MM-DDTHH:MM:SS (or YY)
             sug(seq(sym('digits'), chars('-/'), sym('digits'), chars('-/'), sym('digits'), 'T',
                 sym('digits'), ':', sym('digits'),  ':', sym('digits')),
-                {tooltip: 'YYYY/MM/DDTHH:MM:SS'}),
+                {tooltip: 'YYYY/MM/DDTHH:MM:SS', category: 'value'}),
             // YYYY-MM-DDTHH:MM (or YY)
             sug(seq(sym('digits'), chars('-/'), sym('digits'), chars('-/'), sym('digits'), 'T', sym('digits'), ':', sym('digits')),
-                {tooltip: 'YYYY/MM/DDTHH:MM'}),
+                {tooltip: 'YYYY/MM/DDTHH:MM', category: 'value'}),
             // YYYY-MM-DDTHH (or YY)
             sug(seq(sym('digits'), chars('-/'), sym('digits'), chars('-/'), sym('digits'), 'T', sym('digits')),
-                {tooltip: 'YYYY/MM/DDTHH'}),
+                {tooltip: 'YYYY/MM/DDTHH', category: 'value'}),
             // YYYY-MM-DD (or YY)
             sug(seq(sym('digits'), chars('-/'), sym('digits'), chars('-/'), sym('digits')),
-                {tooltip: 'YYYY/MM/DD'}),
+                {tooltip: 'YYYY/MM/DD', category: 'value'}),
             // YYYY-MM (or YY)
             sug(seq(sym('digits'), chars('-/'), sym('digits')),
-                {tooltip: 'YYYY/MM'}),
+                {tooltip: 'YYYY/MM', category: 'value'}),
             // YYYY (or YY)
-            sug(seq(sym('digits')), {tooltip: 'YYYY'}),
+            sug(seq(sym('digits')), {tooltip: 'YYYY', category: 'value'}),
           ),
 
           // TODAY[±n]
           'relative date': seq(
-            sug(literalIC('TODAY'), {text: 'TODAY', label: 'TODAY[+/-n]'}),
+            sug(literalIC('TODAY'), {text: 'TODAY', label: 'TODAY[+/-n]', category: 'value'}),
             optional(seq(chars("+-"), sym('digits')))
           ),
 
@@ -236,8 +237,8 @@ foam.CLASS({
             seq(operatorIn('IN'), sym('stringArray')),
             seq(operatorIn('NOT IN'), sym('stringArray')),
             seq(operator('IS EMPTY')),
-            seq(operator('IS NOT EMPTY'))),  
-                    
+            seq(operator('IS NOT EMPTY'))),
+
           compareStringArray: alt(
             seq(operator('='), sym('string')),
             seq(operator('HAS'), sym('string')),
@@ -260,7 +261,7 @@ foam.CLASS({
         let props               = cls.getAxiomsByClass(foam.lang.Property);
         let operator            = this.operator;
         let operatorIn          = this.operatorIn;
-        let property            = (prop) => seq1(1, sym('ws'),  sug(literal(prop.name, prop), {text: prop.name, label: prop.label}));
+        let property            = (prop) => seq1(1, sym('ws'),  sug(literal(prop.name, prop), {text: prop.name, label: prop.label, category: 'property'}));
 
 
         let innerProperty = (prop, innerProp) => {
@@ -268,12 +269,12 @@ foam.CLASS({
           let expr = foam.mlang.predicate.DotF.create({arg1: prop, arg2: innerProp});
           return seq1(2,
             sym('ws'),
-            sug(seq1(0, literal(prop.name), '.'), {text: prop.name + '.', label: prop.label}),
-            sug(literal(innerProp.name, expr), {text: innerProp.name, label: innerProp.label})
+            sug(seq1(0, literal(prop.name), '.'), {text: prop.name + '.', label: prop.label, category: 'property'}),
+            sug(literal(innerProp.name, expr), {text: innerProp.name, label: innerProp.label, category: 'property'})
           );
         };
 
-        // process a property and add its predicates to the grammar   
+        // process a property and add its predicates to the grammar
         function processProp(prop, propertyParser) {
           if ( ! prop.searchable ) return;
 
@@ -299,9 +300,11 @@ foam.CLASS({
             propPredicates.push(seq(propertyParser, sym('compareBoolean')));
           }
           else if ( foam.lang.Enum.isInstance(type) ) {
-            let value = (v) => seq1(1, sym('ws'),  sug(literal(v), {text: v}));
+            let value = (v) => seq1(1, sym('ws'),  sug(literal(v), {text: v, category: 'value'}));
             let enumValue  = alt.apply(null, prop.of.VALUES.map(v => value(v.name)));
             let enumArray  = seq1(0, repeat(seq1(0, enumValue, sym('ws')), ',', 1), sym('ws'),')');
+
+            // TODO: Enums can have assigned colours. If they do, they should be provided to the suggestion.
 
             let compareEnum = action(
               alt(seq(operator('='), enumValue),
@@ -477,7 +480,7 @@ foam.CLASS({
 
             switch (operator) {
               case '=':
-              case 'HAS':  
+              case 'HAS':
               if (foam.lang.StringArray.isInstance(prop)) {
                   return self.In.create({arg1: prop, arg2: value});
                 }
