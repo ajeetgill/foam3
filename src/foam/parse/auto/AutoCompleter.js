@@ -6,92 +6,6 @@
 
 foam.CLASS({
   package: 'foam.parse.auto',
-  name: 'DateSuggester',
-  extends: 'foam.u2.View',
-
-  imports: [ 'suggestText' ],
-
-  properties: [
-    {
-      class: 'Date',
-      name: 'date',
-      onKey: true
-    }
-  ],
-
-  methods: [
-    function render() {
-      this.startContext({data: this}).add(this.DATE);
-      this.date$.sub(() => {
-        this.suggestText(this.date.toISOString().substring(0,10) + ' ');
-      });
-    }
-  ]
-});
-
-
-foam.CLASS({
-  package: 'foam.parse.auto',
-  name: 'SuggestionView',
-  extends: 'foam.u2.View',
-
-  imports: [ 'suggestText' ],
-
-  css: `
-    ^ {
-      color: $textDefault;
-    }
-    ^label {
-      font-style: normal;
-      font-weight: $font-medium;
-      line-height: 1.71;
-      margin: 0;
-    }
-
-    ^property { color: $green400; }
-    ^operator { color: $red400; }
-    ^value    { color: $blue400; }
-  `,
-
-  methods: [
-    function render() {
-      let self = this;
-      let data = this.data;
-
-      this.
-        addClass().
-        start().
-          addClass(this.myClass('label')).
-          callIfElse(data.tooltip,
-            function() {
-              this.start('span').style({fontStyle: 'italic', color: 'gray'}).add(data.tooltip).end();
-            },
-            function() {
-              this.
-                style({cursor: 'pointer'}).
-                on('click', () => self.suggestText(data.text)).
-                add(data.label || data.text);
-            }
-          ).
-          callIf(data.category,
-            function() {
-              this.start('i').addClass(self.myClass(data.category)).style({float: 'right', fontSize: 'smaller'}).add(data.category).end();
-            }
-          ).
-        end();
-
-      if ( data.label !== data.text ) {
-        this.start().
-          add(data.text).
-        end();
-      }
-    }
-  ]
-});
-
-
-foam.CLASS({
-  package: 'foam.parse.auto',
   name: 'AutoCompleter',
 
   requires: [ 'foam.parse.auto.SuggestionView' ],
@@ -131,11 +45,9 @@ foam.CLASS({
       class: 'Int',
       name: 'maxPos'
     },
-    'prevSuggestions',
     {
       name: 'suggestions',
-      factory: function() { return {}; },
-      postSet: function(o, n) { this.prevSuggestions = o;}
+      factory: function() { return {}; }
     },
     {
       name: 'apply',
@@ -213,12 +125,13 @@ foam.CLASS({
 
     function addToE(e) {
       function containsIC(str, sub) {
-        return str.toLowerCase().indexOf(sub.toLowerCase()) != -1;
+        return str.length != sub.length && str.toLowerCase().indexOf(sub.toLowerCase()) != -1;
       }
       var self = this;
-      e.add(this.dynamic(function(autoQuery) {; // re-render when query changes
+      e.add(this.dynamic(function(suggestions) { // re-render when query changes
+        let autoQuery = self.autoQuery;
+        console.log('*************AUTCOMPLETE', autoQuery, Object.keys(suggestions).join(','));
         let keys  = Object.keys(self.suggestions);
-        // if ( keys.length == 0 ) { keys = Object.keys(self.prevSuggestions); self.suggestions = self.prevSuggestions; }
         let delta = autoQuery.substring(self.maxPos);
         let ss    = keys.sort(function(k1, k2) {
           var o1 = self.suggestions[k1];

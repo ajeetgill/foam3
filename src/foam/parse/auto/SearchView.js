@@ -6,8 +6,100 @@
 
 foam.CLASS({
   package: 'foam.parse.auto',
+  name: 'DateSuggester',
+  extends: 'foam.u2.View',
+
+//  imports: [ 'suggestText' ],
+
+  properties: [
+    'suggestText',
+    {
+      class: 'Date',
+      name: 'date',
+      onKey: true
+    }
+  ],
+
+  methods: [
+    function render() {
+      this.startContext({data: this}).add(this.DATE);
+      this.date$.sub(() => {
+        this.suggestText(this.date.toISOString().substring(0,10) + ' ');
+      });
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.parse.auto',
+  name: 'SuggestionView',
+  extends: 'foam.u2.View',
+
+//  imports: [ 'suggestText' ],
+
+  css: `
+    ^ {
+      color: $textDefault;
+    }
+    ^label {
+      font-style: normal;
+      font-weight: $font-medium;
+      line-height: 1.71;
+      margin: 0;
+    }
+
+    ^property { color: $green400; }
+    ^operator { color: $red400; }
+    ^value    { color: $blue400; }
+  `,
+
+  properties: [
+    'suggestText'
+  ],
+
+  methods: [
+    function render() {
+      let self = this;
+      let data = this.data;
+
+      this.
+        addClass().
+        start().
+          addClass(this.myClass('label')).
+          callIfElse(data.tooltip,
+            function() {
+              this.start('span').style({fontStyle: 'italic', color: 'gray'}).add(data.tooltip).end();
+            },
+            function() {
+              this.
+                style({cursor: 'pointer'}).
+                add(data.label || data.text);
+              self.on('click', () => self.suggestText(data.text));
+
+            }
+          ).
+          callIf(data.category,
+            function() {
+              this.start('i').addClass(self.myClass(data.category)).style({float: 'right', fontSize: 'smaller'}).add(data.category).end();
+            }
+          ).
+        end();
+
+      if ( data.label !== data.text ) {
+        this.start().
+          add(data.text).
+        end();
+      }
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.parse.auto',
   name: 'SearchView',
-  extends: 'foam.u2.TextField',
+  extends: 'foam.u2.View',
 
   documentation: `
     A Search TextField which provides AutoComplete support.
@@ -17,48 +109,221 @@ foam.CLASS({
 
   requires: [
     'foam.parse.SimpleQueryParser',
-    'foam.parse.auto.AutoCompleter'
+    'foam.parse.auto.SuggestionView',
+    'foam.u2.TextField'
   ],
 
   properties: [
     [ 'type', 'search' ],
-    { class: 'String', name: 'preview' },
     {
-      name: 'autoCompleter',
-      factory: function() { return this.AutoCompleter.create({autoQuery$: this.preview$}); }
+      class: 'String',
+      name: 'preview',
+      documentation: 'The input text bound onKey so that autoSuggest works even when onKey is false.'
     },
     {
       name: 'parser'
+    },
+
+    {
+      class: 'Boolean',
+      name: 'normalize',
+      documentation: 'If true the input will be normalized to preferred syntax where options exist.'
+    },
+    {
+      class: 'Int',
+      name: 'maxPos',
+      documentation: 'The maximum position that parsing reached for the current set of suggestions'
+    },
+    {
+      name: 'suggestions',
+      factory: function() { return {}; },
+      documentation: 'Current suggestions as a map of string keys to Suggestion objects.'
+    },
+    {
+      name: 'apply',
+      factory: function() {
+        let self = this;
+
+        // Maybe add a suggestion
+        function maybeAdd(/* parser */ p) {
+          try {
+            if ( p.suggest ) {
+              let s = p.suggest();
+              if ( s ) {
+                let label = s.tooltip || s.text;
+                if ( ! self.suggestions[label] ) {
+                  self.suggestions[label] = s;
+                }
+              }
+            }
+          } catch(x) {}
+        }
+
+        // return the function that will be passed to parseString
+        // p is the parser
+        // grammar with all the symbols
+        return function(p, grammar) {
+          // 'this' is the JSPStream
+
+          if ( this.pos > self.maxPos ) {
+            self.suggestions = {};
+            self.maxPos      = this.pos;
+          }
+
+          if ( this.pos == self.maxPos ) maybeAdd(p);
+
+          let result = p.parse(this, grammar);
+
+          if ( self.normalize && result && p.suggest ) {
+            let s = p.suggest();
+            if ( ! s.text ) return result;
+            let prevQuery = self.preview.substring(0, this.pos);
+            self.normalizedQuery = prevQuery + s.text + self.preview.substring(this.substring(result).length+this.pos) ;
+            if ( self.preview !== self.normalizedQuery ) self.preview = self.normalizedQuery;
+          }
+
+          return result;
+        }
+      }
     }
   ],
 
   methods: [
     function render() {
-      this.SUPER();
-      this.autoCompleter.addToE(this.parentNode);
+      let self = this;
+
+      // Recalculate suggestions when the preview text changes
       this.preview$.sub(this.onPreviewChange);
 
-      // We want to value to update onKey for purposes on the auto-completer
-      // But not for the actual 'data' update which could cause searches
-      // on each keystroke.
-      // So we bind the input field's value twice, onKey to 'preview' and on leave to 'data'
-      this.attrSlot(null, 'input').linkFrom(this.preview$);
+      this.SUPER();
+      this
+        .addClass()
+        .start(this.TextField, {
+          data$: this.data$,
+          // onKey: true,
+          autocomplete: false
+        }).
+          call(function() {
+            // The 'preview' Property is always bound like its onKey mode
+            this.attrSlot(null, 'input').linkFrom(self.preview$);
+          }).
+          on('keydown', this.onKeyPress).
+          on('blur', this.onBlur).
+        end().
+        add(function (suggestions) {
+          self.populateSuggestions(this, suggestions);
+        });
+    },
+
+    function containsIC(str, sub) {
+      return str.length != sub.length && str.toLowerCase().indexOf(sub.toLowerCase()) != -1;
+    },
+
+    function populateSuggestions(e, suggestions) {
+      let self = this;
+
+      function compare(k1, k2) {
+        var o1 = self.suggestions[k1];
+        var o2 = self.suggestions[k2];
+
+        let c = foam.util.compare(o1.category, o2.category);
+        if ( c ) return c;
+        return foam.util.compare(o1.label || o1.text, o2.label || o2.text);
+      }
+
+      let preview = self.preview;
+      let keys    = Object.keys(suggestions);
+      let delta   = preview.substring(self.maxPos);
+      let ss      = keys.sort(compare); // Sort by section then (label or text)
+
+      if ( delta ) ss = ss.filter(k => this.containsIC(k, delta));
+      if ( ! ss.length ) return;
+
+      e.start().
+        style({width: '240px', maxHeight: '500px', border: '1px solid gray', overflowY: 'auto'}).
+        forEach(ss, function(s, i, a) {
+          let sug = self.suggestions[s];
+
+          this.start('div').
+            style({margin: '6px', fontSize: '0.7em'}).
+            tag(sug.view || self.SuggestionView, {
+              data: sug,
+              suggestText: self.suggestText.bind(self)
+            });
+
+          if ( i != a.length-1 )
+            this.start('hr').style({marginBottom: '-6px'});
+        });
+    },
+
+    function reset() {
+      this.maxPos          = 0;
+      this.suggestions     = {};
+      this.normalizedQuery = '';
+    },
+
+    function suggestText(txt) {
+      let str = this.preview.substring(0, this.maxPos).trim();
+      if ( ! str.endsWith('.') ) str += ' ';
+      this.preview = ( str + txt ).trimStart();
     }
   ],
 
   listeners: [
     {
+      name: 'onKeyPress',
+      code: function(e) {
+        if ( e.key !== 'Tab' ) return;
+
+        let keys  = Object.keys(this.suggestions);
+        let delta = this.preview.substring(this.maxPos);
+
+        if ( delta ) keys = keys.filter(k => this.containsIC(k, delta));
+
+        if ( keys.length == 1 ) {
+          this.preview = this.preview.substring(0, this.maxPos) + keys[0];
+          e.stopPropagation();
+          e.preventDefault();
+        } else {
+          this.reset();
+        }
+      }
+    },
+    {
+      name: 'onBlur',
+      isMerged: true,
+      delay: 250,
+      code: function() {
+        // Close the selections list when the user leaves the field (and descendents)
+        if ( ! this.element_.contains(document.activeElement) ) {
+          this.reset();
+        }
+      }
+    },
+    {
       name: 'onPreviewChange',
       isFramed: true,
       code: function() {
-        this.autoCompleter.reset();
+        // Parse the preview text with our 'apply' callback so we can rebuilud
+        // the suggestions map.
+        this.reset();
 
         var ps = this.parser.parseString(
           this.preview + String.fromCharCode(26) /* EOF */,
           undefined,
-          this.autoCompleter.apply);
+          this.apply);
 
         return ps || null;
+      }
+    }
+  ],
+
+  actions: [
+    {
+      name: 'closeSuggestions',
+      keyboardShortcuts: [ 'escape' ],
+      code: function() {
+        this.reset();
       }
     }
   ]
