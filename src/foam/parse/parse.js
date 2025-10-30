@@ -75,8 +75,17 @@ foam.CLASS({
   name: 'Suggestion',
 
   properties: [
-    { name: 'text' ,
-      class: 'String'
+    {
+      class: 'String',
+      name: 'text'
+    },
+    {
+      class: 'String',
+      name: 'hint'
+    },
+    {
+      class: 'String',
+      name: 'category'
     },
     { name: 'label',
       class: 'String',
