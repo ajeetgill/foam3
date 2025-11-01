@@ -102,11 +102,11 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.parse.auto',
-  name: 'SearchView', // TODO: rename GrammarView or SyntaxView
+  name: 'SmartView', // TODO: rename GrammarView or SyntaxView
   extends: 'foam.u2.View',
 
   documentation: `
-    A Search TextField which provides AutoComplete support.
+    A TextField which provides AutoComplete support.
     Works with any FOAM parser which makes suggestions.
     parser: must be supplied
   `,
