@@ -29,19 +29,9 @@ foam.CLASS({
         RemoteException wrapper = new RemoteException();
         wrapper.setId(t.getClass().getName());
         wrapper.setMessage(t.getMessage());
-        // Determine retryability if the throwable exposes it
-        boolean retryable = true;
-        if ( t instanceof foam.util.retry.Retryable ) {
-          try {
-            retryable = ((foam.util.retry.Retryable) t).isRetryable();
-          } catch ( Throwable ignore ) {
-            // default to true on any unexpected error
-            retryable = true;
-          }
-        }
-        wrapper.setIsRetryable(retryable);
         if ( t instanceof foam.lang.FOAMException ) {
           wrapper.setException((foam.lang.Exception) t);
+          wrapper.setRetryable(((foam.lang.FOAMException) t).getRetryable());
         }
         RPCErrorMessage reply = new RPCErrorMessage();
         reply.setData(wrapper);
