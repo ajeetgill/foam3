@@ -116,7 +116,7 @@ foam.CLASS({
 
           //
           // Property-specific predicates grammar
-          // 
+          //
           compareFloat: alt(
             seq(operator('>='), sym('float')),
             seq(operator('>'), sym('float')),
@@ -159,7 +159,7 @@ foam.CLASS({
             seq(operatorIn('IN RANGE'), sym('range datetime')),
             seq(operatorIn('NOT IN RANGE'), sym('range datetime')),
             seq(operator('IS EMPTY')),
-            seq(operator('IS NOT EMPTY'))),  
+            seq(operator('IS NOT EMPTY'))),
 
           compareString: alt(seq(operator('>='), sym('string')),
             seq(operator('>'), sym('string')),
@@ -215,7 +215,7 @@ foam.CLASS({
           datetime: seq1(1, sym('ws'),
             alt(
               // to do: replace with DateTimeSuggester when implemented
-              sug(nop(), {view: 'foam.parse.auto.DateSuggester'}), // delegate to DateSuggester for suggestions
+              sug(nop(), {view: 'foam.parse.auto.DateTimeSuggester'}), // delegate to DateSuggester for suggestions
               sym('literal datetime'),
               sym('literal date'),
               sym('relative date')
@@ -419,13 +419,13 @@ foam.CLASS({
           return {
               operator: v[0],
               value: v[1]
-            }; 
+            };
         }
         function dateOpValue(v) {
           return {
               operator: v[0],
               value: v[1]? {start: v[1][0], end: v[1][1]} : null // date range, except for EMPTY operators
-            };       
+            };
         }
         function rangeValue(v) {
           return [ v[0][0], v[1][1] ]; // [start of first, end of second]
@@ -494,7 +494,7 @@ foam.CLASS({
 
           date: function(v) {
              // default values for missing date parts since we want the dates to default to noon UTC
-            return literalDatetime([0, 1, 1, 12], v); 
+            return literalDatetime([0, 1, 1, 12], v);
           },
 
           datetime: function(v) {
@@ -514,7 +514,7 @@ foam.CLASS({
               let s = v[1][0] === '+' ? 1 : -1;
               date += (v[1][1]) * s;
             }
-            return [ year, '-', month + 1, '-', date ]; 
+            return [ year, '-', month + 1, '-', date ];
           },
 
           'range date': function(v) {

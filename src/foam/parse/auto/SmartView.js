@@ -9,8 +9,6 @@ foam.CLASS({
   name: 'DateSuggester',
   extends: 'foam.u2.View',
 
-//  imports: [ 'suggestText' ],
-
   properties: [
     'suggestText',
     {
@@ -25,6 +23,31 @@ foam.CLASS({
       this.startContext({data: this}).add(this.DATE);
       this.date$.sub(() => {
         this.suggestText(this.date.toISOString().substring(0,10) + ' ');
+      });
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.parse.auto',
+  name: 'DateTimeSuggester',
+  extends: 'foam.u2.View',
+
+  properties: [
+    'suggestText',
+    {
+      class: 'DateTime',
+      name: 'date',
+      onKey: true
+    }
+  ],
+
+  methods: [
+    function render() {
+      this.startContext({data: this}).add(this.DATE);
+      this.date$.sub(() => {
+        this.suggestText(this.date.toISOString() + ' ');
       });
     }
   ]
