@@ -83,10 +83,6 @@ foam.CLASS({
 
   sections: [
     {
-      name: 'general',
-      title: 'General'
-    },
-    {
       name: 'output',
       title: 'Output',
       collapsable: false
@@ -436,7 +432,7 @@ foam.CLASS({
         return foam.lang.Latch.create();
       }
     },
-    { class: 'Boolean',    section: 'general',   name: 'autoRun', view: { class: 'foam.u2.Switch' } }
+    { class: 'Boolean',    section: 'actions',   name: 'autoRun', view: { class: 'foam.u2.Switch' } }
   ],
 
   methods: [
