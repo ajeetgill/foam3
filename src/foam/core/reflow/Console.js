@@ -947,7 +947,7 @@ foam.CLASS({
     ^loading-text {
       color: $textDefault;
       font-size: 16px;
-      font-weight: 500;
+      font-weight: $font-medium;
       text-align: center;
     }
     ^loading-progress {
