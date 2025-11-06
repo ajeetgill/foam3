@@ -542,7 +542,7 @@ foam.CLASS({
       this.title.add(this.flowName$);
       this.rightSection.tag(this.DEL, { label: ''});
       this.SUPER();
-          },
+    },
 
     function addValue(o, skipOutput) {
       if ( ! skipOutput ) this.out.add(o);
