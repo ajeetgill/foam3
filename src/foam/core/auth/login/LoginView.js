@@ -225,7 +225,7 @@ foam.CLASS({
             }
 
             var E = self.ExpressionsSingleton.create();
-            var dao = oAuthProviderDAO.where(
+            var dao = self.oAuthProviderDAO.where(
               E.OR(
                 E.CONTAINS(self.OAuthProvider.DOMAINS, self.currentDomain),
                 E.CONTAINS(self.OAuthProvider.DOMAINS, self.currentHostname)
@@ -233,7 +233,7 @@ foam.CLASS({
             );
             return this.E()
                 .style({ display: 'contents' })
-                .select(oAuthProviderDAO, function (provider) {
+                .select(dao, function (provider) {
                   if ( !provider ) return;
                   let action = foam.lang.Action.create({
                     name: 'signIn',
