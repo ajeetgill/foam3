@@ -313,23 +313,19 @@ for (Object key : getGroups().keySet()) {
       var remainingProps = ps.slice(1);
       var groupKeys = this.groupKeys || Object.keys(this.groups);
 
-      // Check for multi-row context flag from parent
-      var inMultiRowContext = o.__multiRowContext__ === true;
-      var isDAOContext = ! inMultiRowContext && (o.id !== undefined || o.row !== undefined);
-      console.log('[GroupBy.setPropertyValues] multiRowContext:', inMultiRowContext, ', isDAOContext:', isDAOContext, ', groupKeys.length:', groupKeys.length);
+      // Try to get the key from the object - if we can get it, we're setting a single row
+      var key = keyProp.f(o);
+      if ( ! key ) key = o[keyProp.name];
 
-      if ( isDAOContext ) {
-        // DAO context - set single row
-        var key = keyProp.f(o);
-        if ( ! key ) key = o[keyProp.name];
+      if ( key ) {
+        // Single row - key is already set on object
         var group = this.groups[key];
         if ( group && this.arg2.setPropertyValues && remainingProps.length > 0 ) {
           this.arg2.setPropertyValues(o, group, remainingProps);
         }
         return null;
       } else {
-        // Sequence context - create multiple rows
-        console.log('[GroupBy] Creating', groupKeys.length, 'rows for Sequence context');
+        // Multiple rows - no key set, generate row for each group
         var rows = [];
         groupKeys.forEach(key => {
           var rowObj = o.clone();
@@ -342,7 +338,6 @@ for (Object key : getGroups().keySet()) {
           }
           rows.push(rowObj);
         });
-        console.log('[GroupBy] Returning', rows.length, 'rows');
         return rows;
       }
     },
@@ -354,13 +349,22 @@ for (Object key : getGroups().keySet()) {
 
       // Helper to unwrap wrapper sinks (FilteredSink, LabeledSink, etc.)
       var unwrapSink = function(s) {
-        var maxDepth = 10;
-        var depth = 0;
-        while ( s && s.delegate && depth < maxDepth ) {
-          s = s.delegate;
-          depth++;
-        }
+        while ( s && s.delegate ) s = s.delegate;
         return s;
+      };
+
+      // Helper to check if sink contains nested GroupBy
+      var hasNestedGroupBy = function(sink) {
+        var unwrapped = unwrapSink(sink);
+        if ( foam.mlang.sink.GroupBy && foam.mlang.sink.GroupBy.isInstance(unwrapped) ) {
+          return true;
+        }
+        if ( foam.mlang.sink.Sequence && foam.mlang.sink.Sequence.isInstance(unwrapped) ) {
+          for ( var i = 0; i < unwrapped.args.length; i++ ) {
+            if ( hasNestedGroupBy(unwrapped.args[i]) ) return true;
+          }
+        }
+        return false;
       };
 
       this.groupKeys.forEach(k => {
@@ -372,45 +376,22 @@ for (Object key : getGroups().keySet()) {
           ID.set(o, k);
           group.processGroupValue(dao, o, props);
         } else if ( this.arg2.setPropertyValues ) {
-          // Check if we should generate multiple rows
-          var sink = groups[k];
-          var unwrappedSink = unwrapSink(sink);
-          var isNestedGroupBy = foam.mlang.sink.GroupBy && foam.mlang.sink.GroupBy.isInstance(unwrappedSink);
-          var isSequenceWithGroupBy = false;
-
-          if ( foam.mlang.sink.Sequence && foam.mlang.sink.Sequence.isInstance(unwrappedSink) ) {
-            for ( var i = 0; i < unwrappedSink.args.length; i++ ) {
-              var unwrappedArg = unwrapSink(unwrappedSink.args[i]);
-              if ( foam.mlang.sink.GroupBy.isInstance(unwrappedArg) ) {
-                isSequenceWithGroupBy = true;
-                break;
-              }
-            }
-          }
-
-          var shouldGenerateMultipleRows = isNestedGroupBy || isSequenceWithGroupBy;
-
-          if ( shouldGenerateMultipleRows ) {
-            // Mark object to indicate it should generate multiple rows
-            console.log('[GroupBy] Multi-row detected for key:', k);
-            // Set a flag that Sequence can check to know it should generate multiple rows
-            o.__multiRowContext__ = true;
-            var additionalRows = this.arg2.setPropertyValues(o, groups[k], props);
-            console.log('[GroupBy] setPropertyValues returned:', additionalRows ? (Array.isArray(additionalRows) ? additionalRows.length + ' rows' : 'non-array: ' + additionalRows) : 'null/undefined');
-
-            if ( additionalRows && Array.isArray(additionalRows) ) {
-              console.log('[GroupBy] Putting', additionalRows.length, 'rows for key:', k);
-              additionalRows.forEach(row => {
+          if ( hasNestedGroupBy(groups[k]) ) {
+            // Don't set ID yet - let nested sink generate multiple rows
+            var rows = this.arg2.setPropertyValues(o, groups[k], props);
+            if ( rows && Array.isArray(rows) ) {
+              // Got multiple rows back - set outer key on each and put them
+              rows.forEach(row => {
                 ID.set(row, k);
                 dao.put(row);
               });
             } else {
-              console.log('[GroupBy] No rows returned, putting single row for key:', k);
+              // No rows returned - put single row
               ID.set(o, k);
               dao.put(o);
             }
           } else {
-            // Regular sink - set ID first
+            // Regular sink - set ID first then set values
             ID.set(o, k);
             this.arg2.setPropertyValues(o, groups[k], props);
             dao.put(o);

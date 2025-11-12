@@ -112,133 +112,55 @@ foam.CLASS({
     },
 
     function setPropertyValues(o, sink, ps) {
-      // Check if we're in multi-row context (flag set by parent GroupBy)
-      var inMultiRowContext = o.__multiRowContext__ === true;
-      // Also check if id/row are set (DAO context)
-      var isDAOContext = ! inMultiRowContext && (o.id !== undefined || o.row !== undefined);
-      console.log('[Sequence] setPropertyValues called, multiRowContext:', inMultiRowContext, ', o.id:', o.id, ', o.row:', o.row, ', isDAOContext:', isDAOContext);
-
       // Helper to unwrap wrapper sinks
       var unwrapSink = function(s) {
-        var maxDepth = 10;
-        var depth = 0;
-        while ( s && s.delegate && depth < maxDepth ) {
-          s = s.delegate;
-          depth++;
-        }
+        while ( s && s.delegate ) s = s.delegate;
         return s;
       };
 
-      // Helper to recursively check for GroupBy
-      var hasNestedGroupBy = function(s) {
-        var unwrapped = unwrapSink(s);
-        if ( foam.mlang.sink.GroupBy && foam.mlang.sink.GroupBy.isInstance(unwrapped) ) {
-          return true;
-        }
-        if ( foam.mlang.sink.Sequence && foam.mlang.sink.Sequence.isInstance(unwrapped) && unwrapped.args ) {
-          for ( var i = 0; i < unwrapped.args.length; i++ ) {
-            if ( hasNestedGroupBy(unwrapped.args[i]) ) {
-              return true;
+      // Process args and collect properties
+      var allRows = null;
+      var propIndex = 0;
+
+      for ( var i = 0; i < this.args.length; i++ ) {
+        var arg = sink.args[i];
+        var argProps = arg.toProperties ? arg.toProperties() : [{ name: 'value' }];
+        var propsForArg = [];
+
+        // Collect properties for this arg
+        if ( argProps && Array.isArray(argProps) ) {
+          for ( var j = 0; j < argProps.length; j++ ) {
+            if ( propIndex < ps.length ) {
+              propsForArg.push(ps[propIndex++]);
             }
           }
+        } else if ( propIndex < ps.length ) {
+          propsForArg.push(ps[propIndex++]);
         }
-        return false;
-      };
 
-      // Check if any child is a GroupBy
-      var hasGroupBy = false;
-      if ( sink.args ) {
-        for ( var i = 0; i < sink.args.length; i++ ) {
-          if ( hasNestedGroupBy(sink.args[i]) ) {
-            hasGroupBy = true;
-            break;
+        // Delegate to child
+        if ( arg.setPropertyValues ) {
+          var result = arg.setPropertyValues(o, sink.args[i], propsForArg);
+          // If child returned multiple rows (from GroupBy), save them
+          if ( result && Array.isArray(result) ) {
+            allRows = result;
+          }
+        } else if ( allRows ) {
+          // Apply value to all rows
+          allRows.forEach(row => {
+            for ( var k = 0; k < propsForArg.length; k++ ) {
+              propsForArg[k].set(row, arg.value);
+            }
+          });
+        } else {
+          // Apply value to single object
+          for ( var k = 0; k < propsForArg.length; k++ ) {
+            propsForArg[k].set(o, arg.value);
           }
         }
       }
 
-      // If not in DAO context and has GroupBy, collect rows from GroupBy
-      if ( ! isDAOContext && hasGroupBy ) {
-        console.log('[Sequence] Sequence context with GroupBy - generating multiple rows');
-        var allRows = null;
-        var propIndex = 0;
-
-        for ( var i = 0 ; i < this.args.length ; i++ ) {
-          var arg = sink.args[i];
-          var argProps = arg.toProperties ? arg.toProperties() : [{ name: 'value' }];
-          var propsForArg = [];
-
-          if ( argProps && Array.isArray(argProps) ) {
-            for ( var j = 0 ; j < argProps.length ; j++ ) {
-              if ( propIndex < ps.length ) {
-                propsForArg.push(ps[propIndex]);
-                propIndex++;
-              }
-            }
-          } else {
-            if ( propIndex < ps.length ) {
-              propsForArg.push(ps[propIndex]);
-              propIndex++;
-            }
-          }
-
-          if ( arg.setPropertyValues ) {
-            var result = arg.setPropertyValues(o, sink.args[i], propsForArg);
-            // Check if the unwrapped sink.args[i] (the actual instance) is a GroupBy
-            var unwrappedSinkArg = unwrapSink(sink.args[i]);
-            console.log('[Sequence] arg.setPropertyValues returned:', result, ', unwrapped sink type:', unwrappedSinkArg.cls_ ? unwrappedSinkArg.cls_.id : 'unknown');
-            if ( result && Array.isArray(result) && foam.mlang.sink.GroupBy.isInstance(unwrappedSinkArg) ) {
-              console.log('[Sequence] GroupBy returned', result.length, 'rows');
-              allRows = result;
-            }
-          } else {
-            if ( allRows ) {
-              allRows.forEach(row => {
-                for ( var k = 0 ; k < propsForArg.length ; k++ ) {
-                  propsForArg[k].set(row, arg.value);
-                }
-              });
-            } else {
-              for ( var k = 0 ; k < propsForArg.length ; k++ ) {
-                propsForArg[k].set(o, arg.value);
-              }
-            }
-          }
-        }
-
-        console.log('[Sequence] Returning', allRows ? allRows.length : 0, 'rows');
-        return allRows;
-      } else {
-        // DAO context or no GroupBy - normal behavior
-        var propIndex = 0;
-        for ( var i = 0 ; i < this.args.length ; i++ ) {
-          var arg = sink.args[i];
-          var argProps = arg.toProperties ? arg.toProperties() : [{ name: 'value' }];
-          var propsForArg = [];
-
-          if ( argProps && Array.isArray(argProps) ) {
-            for ( var j = 0 ; j < argProps.length ; j++ ) {
-              if ( propIndex < ps.length ) {
-                propsForArg.push(ps[propIndex]);
-                propIndex++;
-              }
-            }
-          } else {
-            if ( propIndex < ps.length ) {
-              propsForArg.push(ps[propIndex]);
-              propIndex++;
-            }
-          }
-
-          if ( arg.setPropertyValues ) {
-            arg.setPropertyValues(o, sink.args[i], propsForArg);
-          } else {
-            for ( var k = 0 ; k < propsForArg.length ; k++ ) {
-              propsForArg[k].set(o, arg.value);
-            }
-          }
-        }
-        return null;
-      }
+      return allRows;
     }
   ]
 });
