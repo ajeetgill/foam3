@@ -20,6 +20,12 @@ foam.CLASS({
       name: 'description'
     },
     {
+      class: 'String',
+      name: 'type',
+      value: 'foam.u2.CSSToken'
+    },
+    {
+      class: 'Object',
       name: 'value',
       preSet: function(o, d) {
         var f = ! d || foam.util.isPrimitive(d) || foam.Function.isInstance(d);
@@ -31,6 +37,7 @@ foam.CLASS({
       }
     },
     {
+      class: 'String',
       name: 'fallback',
       preSet: function(o, d) {
         var f = ! d || foam.util.isPrimitive(d);
@@ -72,59 +79,21 @@ foam.CLASS({
     'sourceCls_'
   ],
 
+  javaCode: `
+  public CSSToken(String name, String value, java.util.Map variants, String variantKey) {
+    setName(name);
+    setValue(value);
+    setVariants(variants);
+    setVariantKey(variantKey);
+  }
+  `,
+  
   methods: [
     function toSummary() {
       return `name: ${this.name}, value: ${this.value}, fallback: ${this.fallback}`;
-    },
-    function installInClass(cls) {
-      var axiom = this;
-      axiom.sourceCls_ = cls;
-      Object.defineProperty(
-        cls,
-        foam.String.constantize(this.name),
-        {
-          get: function() { return axiom; },
-          configurable: true
-        }
-      );
-    },
-    function installInProto(proto) {
-      this.installInClass(proto);
     }
   ]
 });
 
-
-foam.CLASS({
-  package: 'foam.u2',
-  name: 'CSSTokenRefinement',
-  refines: 'foam.lang.Model',
-
-  properties: [
-    {
-      name: 'cssTokens',
-      class: 'AxiomArray',
-      of: 'foam.u2.CSSToken',
-      adapt: function(_, a, prop) {
-        if ( ! a ) return [];
-        if ( ! Array.isArray(a) ) {
-          var cs = [];
-          for ( var key in a ) {
-            cs.push(foam.u2.CSSToken.create({name: key, value: a[key]}));
-          }
-          return cs;
-        }
-        return foam.lang.AxiomArray.ADAPT.value.call(this, _, a, prop);
-      },
-      adaptArrayElement: function(o, prop) {
-        if ( Array.isArray(o) ) {
-          return foam.u2.CSSToken.create({ name: o[0], value: o[1] });
-        }
-
-        return foam.lang.AxiomArray.ADAPT_ARRAY_ELEMENT.value.call(this, o, prop);
-      }
-    }
-  ]
-});
 
 

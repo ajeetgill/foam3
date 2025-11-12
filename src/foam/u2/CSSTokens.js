@@ -219,6 +219,20 @@ foam.CLASS({
 
     // FONT
     { name: 'font1', value: `'Source Sans Pro', sans-serif` }
-  ].map(v => { v.variantKey = 'color'; return v; })
+  ].map(v => { v.variantKey = 'color'; return v; }),
 
+  javaCode: `
+  public static CSSToken get(foam.lang.X x, String name) {
+    String cnst = foam.util.StringUtil.constantize(name);
+    try {
+      java.lang.reflect.Field field = CSSTokens.getOwnClassInfo().getObjClass().getDeclaredField(cnst);
+      return (CSSToken) field.get(null);
+    } catch ( NoSuchFieldException e ) {
+      foam.core.logger.StdoutLogger.instance().error("CSSTokens, Token not found", name, cnst);
+    } catch ( IllegalAccessException e ) {
+      foam.core.logger.StdoutLogger.instance().error("CSSTokens", e);
+    }
+    return null;
+  }
+  `
 });

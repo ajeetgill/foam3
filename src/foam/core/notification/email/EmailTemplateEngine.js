@@ -38,7 +38,7 @@ foam.CLASS({
 
         // markup symbol defines the pattern for the whole string
         grammar.addSymbol("markup", new Repeat0(new Alt(grammar.sym("IF_ELSE"),
-          grammar.sym("IF"), grammar.sym("VALUE"),grammar.sym("ANY_CHAR"))));
+          grammar.sym("IF"), grammar.sym("VALUE"), grammar.sym("CSS_TOKEN"), grammar.sym("ANY_CHAR"))));
         Action markup = new Action() {
           @Override
           public Object execute(Object value, ParserContext x) {
@@ -62,18 +62,20 @@ foam.CLASS({
           new Seq(Literal.create("."), new Repeat(new Not(Literal.create("}}"), grammar.sym("WORD")), Literal.create(".")))),
           Whitespace.instance(), Literal.create("}}")));
         grammar.addAction("VALUE", (val, x) -> {
-        Object[] vals = ((Object[])val);
-        String v = compactToString(vals[0]);
-        if ( vals.length > 1 && vals[1] == null ) {
-          String value = (String) ((Map) x.get("values")).get(v);
-          if ( value == null ) {
-            value = "";
-            foam.core.logger.StdoutLogger.instance().warning("No value provided for variable",v);
-          }
-          ((StringBuilder) x.get("sb")).append(value);
-          return value;
-        }
-         if ( ((Map) x.get("values")).get(v) == null ) throw new RuntimeException("Object is not provided " + v);
+          Object[] vals = ((Object[])val);
+          String v = compactToString(vals[0]);
+          if ( vals.length > 1 && vals[1] == null ) {
+            String value = (String) ((Map) x.get("values")).get(v);
+            if ( value == null ) {
+              value = "";
+              foam.core.logger.StdoutLogger.instance().warning("No value provided for variable",v);
+            }
+            ((StringBuilder) x.get("sb")).append(value);
+            return value;
+           }
+           if ( ((Map) x.get("values")).get(v) == null )
+             throw new RuntimeException("Object is not provided " + v);
+
            FObject obj =  (FObject) ((Map) x.get("values")).get(v);
 
            Object[] values2 = (Object[]) vals[1];
@@ -86,8 +88,8 @@ foam.CLASS({
            return val;
         });
         grammar.addSymbol("WORD", new Repeat(
-              grammar.sym("CHAR"), 1
-            ));
+          grammar.sym("CHAR"), 1
+        ));
         grammar.addSymbol("CHAR", new Alt(
           Range.create('a', 'z'),
           Range.create('A', 'Z'),
@@ -96,6 +98,20 @@ foam.CLASS({
           Literal.create("^"),
           Literal.create("_")
         ));
+
+        grammar.addSymbol("CSS_TOKEN", new Seq1(2, Literal.create("{$"), Whitespace.instance(), grammar.sym("WORD"), Whitespace.instance(), Literal.create("$}")));
+        grammar.addAction("CSS_TOKEN", (val, x) -> {
+          String v = compactToString(val);
+          foam.u2.CSSToken token = foam.u2.CSSTokens.get(getUserX(x), v);
+          String value = "";
+          if ( token != null )
+            value = String.valueOf(token.getValue());
+          else
+            foam.core.logger.StdoutLogger.instance().warning("EmailTemplateEngine, CSS_TOKEN not found",v);
+          ((StringBuilder) x.get("sb")).append(value);
+          return val;
+        });
+
 
         /* IF_ELSE syntax: "qwerty {% if var_name_provided_in_map %} qwer {{ possible_simple_value }} erty
         {% else %} qwerty {% endif %}" */
@@ -289,16 +305,7 @@ foam.CLASS({
               templateName.append(val0[i]);
             }
 
-            // At runtime, getX() is valid, during test case run
-            // notice passed context is set on ParserContext
-            X y = (X) x.get("x");
-            if ( y == null || y.get("emailTemplateDAO") == null ) {
-              y = getX();
-            }
-            // XLocator is valid.  Need to determine which X to use.
-            if ( y == null || y.get("emailTemplateDAO") == null ) {
-              y = foam.lang.XLocator.get();
-            }
+            X y = getUserX(x);
             EmailTemplate extendedEmailTemplate = EmailTemplateSupport.findTemplate(y, templateName.toString());
             if ( extendedEmailTemplate == null ) {
               foam.core.logger.StdoutLogger.instance().warning("Extended template not found", templateName);
@@ -322,6 +329,24 @@ foam.CLASS({
   ],
 
   methods: [
+    {
+      name: 'getUserX',
+      args: 'ParserContext x',
+      type: 'X',
+      javaCode: `
+        // At runtime, getX() is valid, during test case run
+        // passed context is set on ParserContext
+        X y = (X) x.get("x");
+        if ( y == null || y.get("emailTemplateDAO") == null ) {
+          y = getX();
+        }
+        // XLocator is valid.  Need to determine which X to use.
+        if ( y == null || y.get("emailTemplateDAO") == null ) {
+          y = foam.lang.XLocator.get();
+        }
+        return y;
+      `
+    },
     {
       name: 'renderTemplateById',
       args: [
