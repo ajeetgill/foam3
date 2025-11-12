@@ -628,7 +628,7 @@ foam.CLASS({
   css: `
     ^ {
       display: grid;
-      grid-template-rows: max-content;
+      grid-template-rows: max-content minmax(0, 1fr);
       height: 100%;
       min-height: 100vh;
     }
@@ -636,6 +636,9 @@ foam.CLASS({
       display: flex;
       flex-direction: row;
       overflow: auto;
+      grid-row: 2;
+      height: 100%;
+      min-height: 0;
     }
     ^header {
       padding: 5px 24px;
@@ -921,7 +924,6 @@ foam.CLASS({
       text-align: left;
       width: 100%;
       position: relative;
-      min-height: 400px;
     }
     ^ .foam-u2-view-ValueView {
       min-width: 220px;
@@ -947,6 +949,13 @@ foam.CLASS({
       width: 400px;
       max-width: 90%;
       justify-content: center;
+    }
+    ^loading-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
     ^loading-indicator .foam-u2-ProgressView {
       width: 100%;
@@ -1075,6 +1084,13 @@ foam.CLASS({
       name: 'isLoading_',
       hidden: true,
       transient: true
+    },
+    {
+      class: 'Boolean',
+      name: 'isLoadingMinimized_',
+      hidden: true,
+      transient: true,
+      value: false
     },
     {
       class: 'Int',
@@ -1307,24 +1323,28 @@ foam.CLASS({
           .addClass(self.myClass('output')).
         end().
         // Add loading indicator overlay
-        start()
-          .addClass(self.myClass('loading-indicator'))
-          .show(self.isLoading_$)
-          .start().addClass(self.myClass('loading-text'))
-            .add('Loading Flow...')
-          .end()
-          .start().addClass(self.myClass('loading-progress'))
-            .add(self.loadingProgress_$.map(function(progress) {
-              if ( self.totalBlocks_ > 0 ) {
-                return `Loading block ${progress} of ${self.totalBlocks_}`;
-              }
-              return 'Preparing flow...';
-            }))
-          .end()
-          .tag(foam.u2.ProgressView, {
-            data$: self.loadingPercentage_$
-          })
-        .end().
+        add(self.dynamic(function(isLoading_, isLoadingMinimized_) {
+          if ( isLoading_ && ! isLoadingMinimized_ ) {
+            this.start()
+              .addClass(self.myClass('loading-indicator'))
+              .start().addClass(self.myClass('loading-header'))
+                .start().addClass(self.myClass('loading-text'))
+                  .add('Loading Flow...')
+                .end()
+                .tag(self.MINIMIZE_LOADING)
+              .end()
+              .start().addClass(self.myClass('loading-progress'))
+                .add(self.loadingProgress_$.map(function(progress) {
+                  if ( self.totalBlocks_ > 0 ) {
+                    return `Loading block ${progress} of ${self.totalBlocks_}`;
+                  }
+                  return 'Preparing flow...';
+                }))
+              .end()
+              .tag(foam.u2.ProgressView, { data$: self.loadingPercentage_$ })
+            .end();
+          }
+        }, self.isLoading_$, self.isLoadingMinimized_$)).
         tag(self.ReflowToolBar);
 
         // These observers might cause scroll issues later when queries in the console can be edited
@@ -1705,6 +1725,16 @@ foam.CLASS({
         }, 16);
       },
       keyboardShortcuts: [ 'escape' ]
+    },
+    {
+      name: 'minimizeLoading',
+      buttonStyle: foam.u2.ButtonStyle.SECONDARY,
+      size: 'SMALL',
+      themeIcon: 'minus',
+      label: '',
+      code: function() {
+        this.isLoadingMinimized_ = true;
+      }
     },
     {
       name: 'stepUpHistory',
