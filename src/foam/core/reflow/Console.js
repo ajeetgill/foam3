@@ -382,10 +382,9 @@ foam.CLASS({
   package: 'foam.core.reflow',
   name: 'Block',
   extends: 'foam.u2.Accordion',
+  implements: [ 'foam.core.reflow.Flowable' ],
 
   requires: ['foam.u2.WrapperNode'],
-
-  implements: [ 'foam.core.reflow.Flowable' ],
 
   imports: [ 'data', 'showPrompts', 'addToScope', 'selected' ],
 
@@ -468,6 +467,11 @@ foam.CLASS({
       name: 'out',
       hidden: true
     },
+    {
+      class: 'Boolean',
+      name: 'shown',
+      hidden: false
+    },
     // TODO: allow adding multiple nested borders,
     // Needs something that resembles array view
     // But when converted to viewSpec it nests all array elements
@@ -498,7 +502,7 @@ foam.CLASS({
       label: 'Border Properties',
       factory: function() { return {}; },
       preSet: function(_, n) {
-        // Dont save the class so that the ViewSpec doesnt convert to a view
+        // Dont save the class so that the ViewSpec doesn't convert to a view
         // The fromJSON should handle this but the scripts dont store the class
         // so parsing ignores all the fromJSON
         if ( n.class ) delete n.class;
@@ -566,7 +570,7 @@ foam.CLASS({
     },
 
     function outputJSON(json) {
-      json.outputFObject_(this, this.cls_, [ this.FLOW_NAME, this.CMD, this.VALUE, this.FLOW_CHILDREN, this.REACTIONS_, this.BORDER_CLASS, this.BORDER ]);
+      json.outputFObject_(this, this.cls_, [ this.FLOW_NAME, this.CMD, this.VALUE, this.FLOW_CHILDREN, this.REACTIONS_, this.BORDER_CLASS, this.BORDER, this.SHOWN ]);
     }
   ],
 
