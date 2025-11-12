@@ -25,12 +25,22 @@ foam.CLASS({
       javaFactory: 'return new java.util.ArrayList();'
     },
     {
-      class: 'Map',
+      class: 'Object',
       name: 'seen',
       hidden: true,
       documentation: 'Track seen values for uniqueness',
       factory: function() { return {}; },
-      javaFactory: 'return new java.util.HashSet();'
+      javaType: 'java.util.Set',
+      javaFactory: 'return new java.util.HashSet();',
+      javaGetter: `
+        if ( seen_ == null ) {
+          seen_ = new java.util.HashSet();
+        }
+        return seen_;
+      `,
+      javaSetter: `
+        seen_ = val;
+      `
     }
   ],
 
@@ -97,8 +107,8 @@ for ( Object value : otherSet.getValues() ) {
         this.seen = {};
       },
       javaCode: `
-setValues(new java.util.ArrayList());
-setSeen(new java.util.HashSet());
+getValues().clear();
+getSeen().clear();
       `
     },
 

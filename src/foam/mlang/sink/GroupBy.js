@@ -306,57 +306,121 @@ for (Object key : getGroups().keySet()) {
       return this.genModel().properties.slice(1);
     },
 
-    function generateRows(proto, props) {
-      // Generate multiple row objects from grouped data
-      // Each group becomes a separate row
-      var rows = [];
-      var keyProp = props[0];
-      var remainingProps = props.slice(1);
-      var groupKeys = this.groupKeys || Object.keys(this.groups);
-
-      groupKeys.forEach(key => {
-        var rowObj = proto.clone();
-
-        // Set the grouping key value
-        keyProp.set(rowObj, key);
-
-        // Set the aggregated values for this group
-        var group = this.groups[key];
-        if ( this.arg2.setPropertyValues ) {
-          this.arg2.setPropertyValues(rowObj, group, remainingProps);
-        } else {
-          // Fallback for simple value sinks
-          if ( remainingProps.length > 0 ) {
-            remainingProps[0].set(rowObj, group.value);
-          }
-        }
-
-        rows.push(rowObj);
-      });
-
-      return rows;
-    },
-
-    function setPropertyValues(o, sink, ps, outputRows) {
-      // When a GroupBy is used in a Sequence, generate multiple rows
+    function setPropertyValues(o, sink, ps) {
       if ( ps.length === 0 ) return;
 
-      // Generate one row per group
-      var rows = this.generateRows(o, ps);
+      var keyProp = ps[0];
+      var remainingProps = ps.slice(1);
+      var groupKeys = this.groupKeys || Object.keys(this.groups);
 
-      // Add all rows to the output array
-      if ( outputRows ) {
-        outputRows.push(...rows);
+      // Check for multi-row context flag from parent
+      var inMultiRowContext = o.__multiRowContext__ === true;
+      var isDAOContext = ! inMultiRowContext && (o.id !== undefined || o.row !== undefined);
+      console.log('[GroupBy.setPropertyValues] multiRowContext:', inMultiRowContext, ', isDAOContext:', isDAOContext, ', groupKeys.length:', groupKeys.length);
+
+      if ( isDAOContext ) {
+        // DAO context - set single row
+        var key = keyProp.f(o);
+        if ( ! key ) key = o[keyProp.name];
+        var group = this.groups[key];
+        if ( group && this.arg2.setPropertyValues && remainingProps.length > 0 ) {
+          this.arg2.setPropertyValues(o, group, remainingProps);
+        }
+        return null;
+      } else {
+        // Sequence context - create multiple rows
+        console.log('[GroupBy] Creating', groupKeys.length, 'rows for Sequence context');
+        var rows = [];
+        groupKeys.forEach(key => {
+          var rowObj = o.clone();
+          keyProp.set(rowObj, key);
+          var group = this.groups[key];
+          if ( this.arg2.setPropertyValues ) {
+            this.arg2.setPropertyValues(rowObj, group, remainingProps);
+          } else if ( remainingProps.length > 0 ) {
+            remainingProps[0].set(rowObj, group.value);
+          }
+          rows.push(rowObj);
+        });
+        console.log('[GroupBy] Returning', rows.length, 'rows');
+        return rows;
       }
     },
 
     function processGroupValue(dao, proto, props) {
-      // Use the new generateRows approach
-      var outputRows = [];
-      this.setPropertyValues(proto, this, props, outputRows);
+      var groups = this.groups;
+      var ID = props[0];
+      props = props.slice(1);
 
-      // Put all generated rows into the DAO
-      outputRows.forEach(row => dao.put(row));
+      // Helper to unwrap wrapper sinks (FilteredSink, LabeledSink, etc.)
+      var unwrapSink = function(s) {
+        var maxDepth = 10;
+        var depth = 0;
+        while ( s && s.delegate && depth < maxDepth ) {
+          s = s.delegate;
+          depth++;
+        }
+        return s;
+      };
+
+      this.groupKeys.forEach(k => {
+        var group = groups[k];
+        var o = proto.clone();
+
+        if ( group.processGroupValue ) {
+          // Nested GroupBy with its own processGroupValue
+          ID.set(o, k);
+          group.processGroupValue(dao, o, props);
+        } else if ( this.arg2.setPropertyValues ) {
+          // Check if we should generate multiple rows
+          var sink = groups[k];
+          var unwrappedSink = unwrapSink(sink);
+          var isNestedGroupBy = foam.mlang.sink.GroupBy && foam.mlang.sink.GroupBy.isInstance(unwrappedSink);
+          var isSequenceWithGroupBy = false;
+
+          if ( foam.mlang.sink.Sequence && foam.mlang.sink.Sequence.isInstance(unwrappedSink) ) {
+            for ( var i = 0; i < unwrappedSink.args.length; i++ ) {
+              var unwrappedArg = unwrapSink(unwrappedSink.args[i]);
+              if ( foam.mlang.sink.GroupBy.isInstance(unwrappedArg) ) {
+                isSequenceWithGroupBy = true;
+                break;
+              }
+            }
+          }
+
+          var shouldGenerateMultipleRows = isNestedGroupBy || isSequenceWithGroupBy;
+
+          if ( shouldGenerateMultipleRows ) {
+            // Mark object to indicate it should generate multiple rows
+            console.log('[GroupBy] Multi-row detected for key:', k);
+            // Set a flag that Sequence can check to know it should generate multiple rows
+            o.__multiRowContext__ = true;
+            var additionalRows = this.arg2.setPropertyValues(o, groups[k], props);
+            console.log('[GroupBy] setPropertyValues returned:', additionalRows ? (Array.isArray(additionalRows) ? additionalRows.length + ' rows' : 'non-array: ' + additionalRows) : 'null/undefined');
+
+            if ( additionalRows && Array.isArray(additionalRows) ) {
+              console.log('[GroupBy] Putting', additionalRows.length, 'rows for key:', k);
+              additionalRows.forEach(row => {
+                ID.set(row, k);
+                dao.put(row);
+              });
+            } else {
+              console.log('[GroupBy] No rows returned, putting single row for key:', k);
+              ID.set(o, k);
+              dao.put(o);
+            }
+          } else {
+            // Regular sink - set ID first
+            ID.set(o, k);
+            this.arg2.setPropertyValues(o, groups[k], props);
+            dao.put(o);
+          }
+        } else {
+          ID.set(o, k);
+          o.value = groups[k].value;
+          dao.put(o);
+        }
+      });
     }
   ]
 });
