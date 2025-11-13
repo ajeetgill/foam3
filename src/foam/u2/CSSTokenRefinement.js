@@ -22,26 +22,35 @@ foam.CLASS({
     } // JavaType defines 'name' and other properties
   ],
 
-  methods: [
-    function installInClass(cls) {
-      Object.defineProperty(
-        cls,
-        foam.String.constantize(this.name),
-        {
-          value: {
-            name: this.name,
-            value: this.value,
-            variants: this.variants,
-            variantKey: this.variantKey
-          },
-          configurable: false
-        }
-      );
-    },
+  javaCode: `
+  public CSSToken(String name, String value, java.util.Map variants, String variantKey) {
+    setName(name);
+    setValue(value);
+    setVariants(variants);
+    setVariantKey(variantKey);
+  }
+  `,
 
-    function installInProto(proto) {
-      this.installInClass(proto);
-    },
+  methods: [
+    // function installInClass(cls) {
+    //   Object.defineProperty(
+    //     cls,
+    //     foam.String.constantize(this.name),
+    //     {
+    //       value: {
+    //         name: this.name,
+    //         value: this.value,
+    //         variants: this.variants,
+    //         variantKey: this.variantKey
+    //       },
+    //       configurable: false
+    //     }
+    //   );
+    // },
+
+    // function installInProto(proto) {
+    //   this.installInClass(proto);
+    // },
 
     function buildJavaClass(cls) {
       cls.constant({

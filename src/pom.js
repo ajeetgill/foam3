@@ -253,6 +253,7 @@ foam.POM({
     { name: "foam/u2/CSSTokenModelRefinement",                        flags: "js" },
     { name: "foam/u2/CSSTokenRefinement",                             flags: "genjava" },
     { name: "foam/u2/CSSTokens",                                      flags: "js|java" },
+    { name: "foam/u2/test/CSSTokensJSTest",                           flags: "js&test|java&test" },
     { name: "foam/u2/ColorToken",                                     flags: "js|java" },
     { name: "foam/u2/ColorTokenRefinement",                           flags: "genjava" },
     { name: "foam/u2/view/SearchViewWrapper",                         flags: "web" },
