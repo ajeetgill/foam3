@@ -32,26 +32,6 @@ foam.CLASS({
   `,
 
   methods: [
-    // function installInClass(cls) {
-    //   Object.defineProperty(
-    //     cls,
-    //     foam.String.constantize(this.name),
-    //     {
-    //       value: {
-    //         name: this.name,
-    //         value: this.value,
-    //         variants: this.variants,
-    //         variantKey: this.variantKey
-    //       },
-    //       configurable: false
-    //     }
-    //   );
-    // },
-
-    // function installInProto(proto) {
-    //   this.installInClass(proto);
-    // },
-
     function buildJavaClass(cls) {
       cls.constant({
         name: foam.String.constantize(this.name),
