@@ -53,6 +53,57 @@ foam.CLASS({
   ]
 });
 
+foam.CLASS({
+  package: 'foam.parse.auto',
+  name: 'ColorSuggester',
+  extends: 'foam.u2.View',
+
+  properties: [
+    'suggestText',
+    {
+      class: 'Color',
+      name: 'color',
+      view: 'foam.u2.view.ColorPicker'
+    }
+  ],
+
+  methods: [
+    function render() {
+      this.startContext({data: this})
+      .start().addClass('p-semiBold').add(this.data.label).end()
+      .tag(this.COLOR);
+      this.color$.sub(() => {
+        this.suggestText(this.color);
+      });
+    }
+  ]
+});
+
+foam.CLASS({
+  package: 'foam.parse.auto',
+  name: 'CSSTokenSuggester',
+  extends: 'foam.u2.View',
+
+  properties: [
+    'suggestText',
+    {
+      class: 'FObjectProperty',
+      of: 'foam.u2.CSSToken',
+      name: 'token'
+    }
+  ],
+
+  methods: [
+    function render() {
+      this
+        .startContext({ controllerMode: 'VIEW' })
+        .on('click', () => {
+          this.suggestText(this.token.name);
+        })
+        .tag(foam.u2.CitationView, { data: this.token });
+    }
+  ]
+});
 
 foam.CLASS({
   package: 'foam.parse.auto',
@@ -335,7 +386,9 @@ foam.CLASS({
           let sug = self.suggestions[s];
           this.tag(sug.view || self.SuggestionView, {
             data: sug,
-            suggestText: self.suggestText.bind(self)
+            suggestText: (text) => {
+              self.suggestText.call(self, text, sug);
+            }
           });
         });
    },
@@ -346,10 +399,10 @@ foam.CLASS({
       this.normalizedQuery = '';
     },
 
-    function suggestText(txt) {
-      let str = this.preview.substring(0, this.maxPos).trim();
+    function suggestText(txt, sug) {
+      let str = this.preview.substring(0, this.maxPos);
       // This causes issues when suggesting units like 'px' after numbers
-      if ( ! str.endsWith('.') ) str += ' ';
+      if ( sug.prependSpaceOnSelect ) str += ' ';
       this.preview = ( str + txt ).trimStart();
       this.field.focus();
     },
