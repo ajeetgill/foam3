@@ -988,12 +988,19 @@ foam.CLASS({
   name: 'Symbol',
   implements: ['foam.parse.JSParser'],
 
+  constants: { DEPTH: [0] },
+
   documentation: 'Parses based on the parser property named.',
 
   properties: [
     {
       name: 'name',
       final: true
+    },
+    {
+      class: 'Boolean',
+      name: 'debug',
+      value: true
     }
   ],
 
@@ -1004,8 +1011,21 @@ foam.CLASS({
         console.error('No symbol found for', this.name);
         return undefined;
       }
+      if ( this.debug ) {
+        try {
+          console.log(' '.repeat(this.DEPTH[0]) + 'Call: ' + this.toString());
+        } catch(x) {
+        }
+        this.DEPTH[0]++;
+      }
       const ret = ps.apply(p, grammar);
-      // console.log(this.toString(), ret?.result);
+      if ( this.debug ) {
+        this.DEPTH[0]--;
+        try {
+          console.log(' '.repeat(this.DEPTH[0]) + 'Return: ' + this.toString() + ' =', ret ? ret.value : 'NO PARSE', ps.str[0].substring(ps.pos, ps.pos+20));
+        } catch(x) {
+        }
+      }
       return ret;
     },
 
