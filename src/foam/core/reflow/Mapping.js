@@ -36,12 +36,12 @@ foam.ENUM({
     {
       name: 'STANDARD',
       label: 'Standard',
-      documentation: 'yyyy-mm-dd, mm/dd/yyyy, yyyymmdd + month names: 31-JAN-2025, 202531JAN'
+      documentation: 'Standard formats: yyyy-mm-dd, yyyy/mm/dd, yyyymmdd, mm/dd/yyyy, mm-dd-yyyy, mmddyyyy, plus ALL month name formats (unambiguous!): 31-JAN-2025, 31JAN2025, 2025-31-JAN, 202531JAN, Jan 02 2025'
     },
     {
       name: 'DDMMYYYY',
       label: 'dd/mm/yyyy',
-      documentation: 'Numeric only: dd-mm-yyyy, ddmmyyyy, dd-mm-yy, ddmmyy'
+      documentation: 'Day-Month-Year format for NUMERIC dates: dd/mm/yyyy, dd-mm-yyyy, ddmmyyyy, dd/mm/yy, dd-mm-yy, ddmmyy (month names work automatically in STANDARD)'
     },
     {
       name: 'YYYYDDMM',
@@ -155,6 +155,7 @@ foam.CLASS({
       name: 'dateFormat',
       label: '',
       value: 'STANDARD',
+      help: 'Standard format supports most common date formats (yyyy-mm-dd, mm/dd/yyyy, etc.). If your dates don\'t parse correctly, select a different format option.',
       documentation: 'Date format for this field (only applies to Date/DateTime properties)',
       view: {
         class: 'foam.core.reflow.DateFormatRichChoiceView'
