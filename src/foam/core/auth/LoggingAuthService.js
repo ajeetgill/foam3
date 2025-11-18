@@ -23,7 +23,7 @@ foam.CLASS({
          preventing the user's access.
       5. Add the desired to the user's Group or appropriate Role until access is granted
 
-    To disable the loggin either log the user out or delete their session (which will also log them out).
+    To disable the logging either log the user out or delete their session (which will also log them out).
 
     The above script is already stored in the scriptDAO as "LogUserFailedPermissionChecks".
   `,
