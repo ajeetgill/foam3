@@ -126,4 +126,39 @@ p({
   """
 })
 
-c({class:"foam.core.script.Script",id:"LogUserFailedPermissionChecks",description:"Add failed permission check logging to an individual user/session.",code:"/*\n    Tool to be used to help detect which permissions are preventing a user from accessing a system feature.\n    To use:\n      1. use the Sessions menu to find the user's sessionId and copy it into this script:\n*/\n        // To install for a particular session, set the sessionID and then run the following beanshell script:\n        sessionID = \"0d886833-cdad-4892-bf68-a5e85d791ea3localhost:8080\"; // replace this line\n        s = x.get(\"sessionDAO\").find(sessionID);\n        s.setApplyContext(s.getApplyContext().put(\"auth\", new foam.core.auth.LoggingAuthService(x.get(\"auth\"))));\n/*\n      2. Run the above script as a Beanshell\n      3. use the user's account to attempt the desired operation\n      4. view logs and look for \"FAILED PERMISSION\" entries to see the failed permission checks that are\n         preventing the user's access.\n      5. Add the desired to the user's Group or appropriate Role until access is granted\n*/\n",lastModifiedBy:49393173,lastModified:1763492005950})
+c({
+  class:"foam.core.script.Script",
+  id:"LogUserFailedPermissionChecks",
+  description: "Help detect which permissions are preventing a user from accessing a system feature",
+  code:"""
+  /*
+    Tool to be used to help detect which permissions are preventing a user from accessing a system feature.
+    To use:
+      1. Use the Sessions menu to find the user's sessionId.
+      2. Edit ScriptParameter with name \"LogUserFailedPermissionChecks\", and set parameter 'sessionId'.
+      3. Run this script.
+      4. Use the user's account to attempt the desired operation
+      4. View logs and look for \"FAILED PERMISSION\" entries to see the failed permission checks that are
+         preventing the user's access.
+      5. Add the desired to the user's Group or appropriate Role until access is granted
+  */
+    if ( scriptParameter != null ) {
+        p = scriptParameter.getParameters();
+        sessionID = p.get("sessionID");
+        if ( sessionID != null ) {
+            s = x.get("sessionDAO").find(sessionID);
+            if ( s != null ) {
+                s.setApplyContext(s.getApplyContext().put("auth", new foam.core.auth.LoggingAuthService(x.get("auth"))));
+                print("LoggingAuthService installed.");
+            } else {
+                print("SessionID not found.");
+            }
+        } else {
+            print("ScriptParameter sessionID not found.");
+        }
+    } else {
+        print("ScriptParameter not found, or not enabled.");
+    }
+  """,
+  lastModified:1763499145132
+})
