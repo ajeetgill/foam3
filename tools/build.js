@@ -123,7 +123,7 @@ function task() {
   // Special treatment of ALL
   // - only allow one
   // - last encountered is used.
-  if ( name === ALL ) {
+  if ( name == ALL ) {
     toolingTasks = [toolingTask];
   } else {
     toolingTasks.push(toolingTask);
@@ -192,11 +192,11 @@ function task() {
       });
 
       // execute tasks
-      if ( ! DRY_RUN || name === 'pomEvns' || name === ALL ) {
+      if ( ! DRY_RUN || name === 'pomEvns' || name == ALL ) {
         task.f && task.f.apply(Object.assign({ SUPER }, EXPORTS), args);
       }
       // only run first ALL
-      return name !== ALL;
+      return name != ALL;
     });
 
     running[name] -= 1;
@@ -509,7 +509,7 @@ OPTIONS = addOptions({
              if ( ! arg.includes(':') ) {
                t = arg.replaceAll(',', TASK_SEPERATOR);
              }
-             if ( TASKS === ALL )
+             if ( TASKS == ALL )
                TASKS = '';
              TASKS = TASKS ? TASKS + TASK_SEPERATOR + t : t;
            } ],
