@@ -124,8 +124,11 @@ foam.CLASS({
                 add(mapping.DYNAMIC_EXPRESSION.__).
               end().
               start('td').addClass('col-sample').
-                attr('title', mapping.sampleValue || '').
-                add(mapping.sampleValue || '').
+                add(mapping.dynamic(function(sampleValue) {
+                  this.start('span', { tooltip: sampleValue || '' })
+                    .add(sampleValue || '')
+                  .end();
+                })).
               end().
               start('td').addClass('col-dateformat').
                 callIf(isDateProp, function() {
@@ -857,7 +860,7 @@ foam.CLASS({
 
         this.rows = a.length;
 
-        // Extract sample values from first row if available
+        // Extract sample data from first row if available
         if ( a.length > 0 && this.mappings && this.mappings.length > 0 ) {
           var firstRow = a[0];
           var sampleRowData = {};
@@ -867,11 +870,9 @@ foam.CLASS({
             }
           });
 
-          // Set sample values on mappings
+          // Set sample data on all mappings (expression will compute sampleValue)
           this.mappings.forEach(mapping => {
-            if ( mapping.fieldName && sampleRowData[mapping.fieldName] !== undefined ) {
-              mapping.sampleValue = sampleRowData[mapping.fieldName];
-            }
+            mapping.sampleData = sampleRowData;
           });
         }
 

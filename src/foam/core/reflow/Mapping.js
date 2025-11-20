@@ -102,6 +102,7 @@ foam.CLASS({
       name: 'constantValue',
       label: '',
       documentation: 'Static value applied to all rows',
+      onKey: true,
       visibility: function(type) {
         return foam.u2.DisplayMode[type === foam.core.reflow.MappingType.CONSTANT ? 'RW' : 'HIDDEN'];
       }
@@ -128,6 +129,7 @@ foam.CLASS({
       label: '',
       documentation: 'JavaScript expression for dynamic computation',
       help: 'JavaScript expression that can access row data fields directly. Examples: firstName + " " + lastName, age > 18 ? "Adult" : "Minor", email.toLowerCase()',
+      onKey: true,
       view: { class: 'foam.u2.tag.TextArea', rows: 2, cols: 40 },
       visibility: function(type) {
         return foam.u2.DisplayMode[type === foam.core.reflow.MappingType.DYNAMIC ? 'RW' : 'HIDDEN'];
@@ -169,11 +171,47 @@ foam.CLASS({
       }
     },
     {
+      name: 'sampleData',
+      hidden: true,
+      transient: true,
+      factory: function() { return {}; },
+      documentation: 'First row of data for computing sample values'
+    },
+    {
       class: 'String',
       name: 'sampleValue',
       label: 'Sample',
-      documentation: 'Sample value from the first data row for this column',
-      visibility: 'RO'
+      documentation: 'Sample value computed based on mapping type and configuration',
+      visibility: 'RO',
+      expression: function(type, constantValue, fieldName, dynamicExpression, sampleData) {
+        // Return sample based on mapping type
+        switch ( type ) {
+          case foam.core.reflow.MappingType.CONSTANT:
+            // For CONSTANT: show the constant value
+            return constantValue || '';
+
+          case foam.core.reflow.MappingType.FIELD:
+            // For FIELD: show value from sampleData
+            if ( fieldName && sampleData && sampleData[fieldName] !== undefined ) {
+              return sampleData[fieldName];
+            }
+            return '';
+
+          case foam.core.reflow.MappingType.DYNAMIC:
+            // For DYNAMIC: evaluate expression with sampleData
+            if ( dynamicExpression && sampleData && Object.keys(sampleData).length > 0 ) {
+              try {
+                return this.evaluateExpression(dynamicExpression, sampleData);
+              } catch (x) {
+                return '⚠ Error: ' + x.message;
+              }
+            }
+            return '';
+
+          default:
+            return '';
+        }
+      }
     }
   ],
 
