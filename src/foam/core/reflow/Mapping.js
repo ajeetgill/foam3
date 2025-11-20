@@ -73,7 +73,9 @@ foam.CLASS({
 
   requires: [
     'foam.core.reflow.MappingType',
-    'foam.core.reflow.DateFormat'
+    'foam.core.reflow.DateFormat',
+    'foam.parse.SimpleJavaScriptParser',
+    'foam.parse.auto.SmartView'
   ],
 
   imports: [ 'scope?' ],
@@ -127,10 +129,21 @@ foam.CLASS({
       class: 'String',
       name: 'dynamicExpression',
       label: '',
-      documentation: 'JavaScript expression for dynamic computation',
-      help: 'JavaScript expression that can access row data fields directly. Examples: firstName + " " + lastName, age > 18 ? "Adult" : "Minor", email.toLowerCase()',
+      documentation: 'FScript expression for dynamic computation - supports field access, operators, and functions',
+      help: 'FScript expression examples: firstName + " " + lastName, age > 18, email.toLowerCase(), YEARS(birthDate) > 21',
       onKey: true,
-      view: { class: 'foam.u2.tag.TextArea', rows: 2, cols: 40 },
+      view: function(_, X) {
+        // Use the parser from the instance property
+        if ( ! X.data.expressionParser_ ) {
+          // Fallback to regular TextField if no parser available (no headers)
+          return { class: 'foam.u2.TextField' };
+        }
+
+        return {
+          class: 'foam.parse.auto.SmartView',
+          parser: X.data.expressionParser_
+        };
+      },
       visibility: function(type) {
         return foam.u2.DisplayMode[type === foam.core.reflow.MappingType.DYNAMIC ? 'RW' : 'HIDDEN'];
       }
@@ -138,6 +151,36 @@ foam.CLASS({
     {
       name: 'of',
       hidden: true
+    },
+    {
+      name: 'expressionParser_',
+      hidden: true,
+      transient: true,
+      expression: function(fileHeaders) {
+        // Create a temporary model with the current file headers as properties
+        if ( ! fileHeaders || fileHeaders.length === 0 ) {
+          return null;
+        }
+
+        var props = fileHeaders.map(h => ({ class: 'String', name: h }));
+
+        // Check if model already exists, if so, reuse it
+        var modelName = 'DynamicExpressionModel';
+        var fullName = 'foam.core.reflow.temp.' + modelName;
+
+        var TempModel = foam.maybeLookup(fullName);
+
+        if ( ! TempModel ) {
+          foam.CLASS({
+            package: 'foam.core.reflow.temp',
+            name: modelName,
+            properties: props
+          });
+          TempModel = foam.lookup(fullName);
+        }
+
+        return this.SimpleJavaScriptParser.create({ of: TempModel });
+      }
     },
     {
       name: 'prop',
@@ -283,8 +326,8 @@ foam.CLASS({
     },
     function evaluateExpression(expression, rowData) {
       /**
-       * Safely evaluate a JavaScript expression within the context of rowData.
-       * Uses the same scoping pattern as ReactiveDetailView.js (lines 56-58).
+       * Safely evaluate a simple JavaScript expression with field access.
+       * Uses a with statement to provide field access while keeping it simple.
        *
        * @param {string} expression - The JavaScript expression to evaluate
        * @param {Object} rowData - The row data object containing field values
@@ -292,17 +335,15 @@ foam.CLASS({
        */
       if ( ! expression || ! rowData ) return '';
 
-      // Validate expression before evaluation
-      this.validateExpression(expression);
-
-      // Use the same pattern as ReactiveDetailView.js: with scope + eval
-      var result;
       try {
-        with ( foam.core.reflow.lib ) {
-          with ( rowData ) {
-            result = eval(expression);
-          }
+        // Simple evaluation with rowData in scope
+        // This allows expressions like: firstName + " " + lastName
+        var result;
+        with ( rowData ) {
+          result = eval(expression);
         }
+        return result;
+
       } catch (x) {
         console.error('Expression evaluation error:', {
           expression: expression,
@@ -311,8 +352,6 @@ foam.CLASS({
         });
         throw x;
       }
-
-      return result;
     },
 
     function validateExpression(expression) {
