@@ -685,8 +685,8 @@ foam.CLASS({
     function parse(ps) {
       if ( ! ps.head ) return undefined;
       return ( this.from <= ps.head && ps.head <= this.to ) ?
-          ps.tail.setValue(ps.head) :
-          undefined;
+        ps.tail.setValue(ps.head) :
+        undefined;
     },
 
     function toString() {
@@ -935,8 +935,7 @@ foam.CLASS({
   ]
 });
 
-/*
-  not used
+
 foam.CLASS({
   package: 'foam.parse',
   name: 'Peek',
@@ -956,7 +955,6 @@ foam.CLASS({
     }
   ]
 });
-  */
 
 
 foam.CLASS({
@@ -1053,7 +1051,7 @@ foam.CLASS({
     'foam.parse.Not',
     'foam.parse.NotChars',
     'foam.parse.Optional',
-//    'foam.parse.Peek',
+    'foam.parse.Peek',
     'foam.parse.Plus',
     'foam.parse.Range',
     'foam.parse.Repeat',
@@ -1243,13 +1241,11 @@ foam.CLASS({
       });
     },
 
-    /* not used
     function peek(p) {
       return this.Peek.create({
         p: p
       });
     },
-      */
 
     function opt(p, opt_default) {
       return this.Optional.create({
@@ -1296,6 +1292,8 @@ foam.CLASS({
 foam.CLASS({
   package: 'foam.parse',
   name: 'PSymbol',
+
+  documentation: 'Symbol definition, stored in Grammary.symbols array.',
 
   properties: ['name', 'parser']
 });
