@@ -53,6 +53,7 @@ foam.CLASS({
   ]
 });
 
+
 foam.CLASS({
   package: 'foam.parse.auto',
   name: 'ColorSuggester',
@@ -406,6 +407,7 @@ foam.CLASS({
       this.preview = ( str + txt ).trimStart();
       this.field.focus();
     },
+
     function fromProperty(prop) {
       this.SUPER(prop);
       this.prop = prop;
@@ -443,11 +445,11 @@ foam.CLASS({
       isMerged: true,
       delay: 250,
       code: function() {
-        let overlay = this.overlay_.get();
+        let overlay = this?.overlay_;
         // Close the selections list when the user leaves the field (and descendents)
-        if ( ! this.element_.parentNode.contains(document.activeElement) && ! ( overlay && overlay.contains(document.activeElement) ) ) {
+        if ( ! this.element_.parentNode.contains(document.activeElement) && ! ( overlay && overlay.el_().contains(document.activeElement) ) ) {
           this.reset();
-          // Fire a manaual change event since this will not have fired if the user
+          // Fire a manual change event since this will not have fired if the user
           // never changed the text field value and only used the completer.
           let el = this.field.el_();
           let event = new Event('change', { bubbles: true });
