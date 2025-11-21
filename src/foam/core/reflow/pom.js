@@ -18,6 +18,7 @@ foam.POM({
     { name: 'DAOFilterPrompt',         flags: 'js' },
     { name: 'DAOPrompt',               flags: 'js' },
     { name: 'Doc',                     flags: 'js' },
+    { name: 'Markdown',                flags: 'js' },
     { name: 'DocumentReadWriteView',   flags: 'js' },
     { name: 'DuplicateSink',           flags: 'js|java' },
     { name: 'EditSink',                flags: 'js|java' },
