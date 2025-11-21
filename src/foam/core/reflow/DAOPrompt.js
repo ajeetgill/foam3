@@ -535,7 +535,7 @@ foam.CLASS({
         await this.waitForRun();
 
         var name = this.block.flowName;
-        this.eval_(`test(${name}.value,'Test output of ${name}')`);
+        this.eval_(`test(${name}.value, 'Test output of ${name}')`);
       }
     }
   ],
