@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [SimpleQueryParser Syntax Guide](#simplequeryparser-syntax-guide)
+- [AutoQueryParser Syntax Guide](#simplequeryparser-syntax-guide)
   - [Basic AQL Syntax](#basic-aql-syntax)
   - [Logical Operators](#logical-operators)
     - [AND](#and)
@@ -26,7 +26,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# SimpleQueryParser Syntax Guide
+# AutoQueryParser Syntax Guide
 
 ## Basic AQL Syntax
 SimpleQueryParser supports property-based queries with various operators and logical combinations. This parser is meant to work together with the 
