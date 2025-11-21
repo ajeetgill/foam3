@@ -59,9 +59,9 @@ foam.CLASS({
 
           codeBlock: seq(
             '```',
-            optional(str(repeat(range('a', 'z')))),
-            '\n',
-            str(repeat(not('```', anyChar()))),
+              optional(str(repeat(range('a', 'z')))),
+              '\n',
+              str(repeat(not('```', anyChar()))),
             '```'
           ),
 
@@ -142,46 +142,46 @@ foam.CLASS({
 
           image: seq(
             '![',
-            str(repeat(notChars(']'))),
+              str(repeat(notChars(']'))),
             '](',
-            str(repeat(notChars(') '))),
-            optional(seq1(1,
-              ' "',
-              str(repeat(notChars('"'))),
-              '"'
-            )),
+              str(repeat(notChars(') '))),
+              optional(seq1(1,
+                ' "',
+                str(repeat(notChars('"'))),
+                '"'
+              )),
             ')'
           ),
 
           link: seq(
             '[',
-            str(repeat(notChars(']'))),
+              str(repeat(notChars(']'))),
             '](',
-            str(repeat(notChars(')'))),
+              str(repeat(notChars(')'))),
             ')'
           ),
 
           strikethrough: seq1(1,
             '~~',
-            str(repeat(not('~~', anyChar()), null, 1)),
+              str(repeat(not('~~', anyChar()), null, 1)),
             '~~'
           ),
 
           bold: seq1(1,
             alt('**', '__'),
-            str(repeat(not(alt('**', '__'), anyChar()), null, 1)),
+              str(repeat(not(alt('**', '__'), anyChar()), null, 1)),
             alt('**', '__')
           ),
 
           italic: seq1(1,
             alt('*', '_'),
-            str(repeat(not(alt('*', '_'), anyChar()), null, 1)),
+              str(repeat(not(alt('*', '_'), anyChar()), null, 1)),
             alt('*', '_')
           ),
 
           inlineCode: seq1(1,
             '`',
-            str(repeat(notChars('`'), null, 1)),
+              str(repeat(notChars('`'), null, 1)),
             '`'
           ),
 
@@ -275,7 +275,6 @@ foam.CLASS({
         },
 
         function tableRow(v) {
-          console.log('***row', v);
           return v.map(c => this.markdownGrammar.getSymParser('inlineContent').parseString(c));
         },
 
