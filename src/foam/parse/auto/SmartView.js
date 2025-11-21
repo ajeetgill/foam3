@@ -382,15 +382,15 @@ foam.CLASS({
       self.overlay_.open();
 
       e.forEach(ss, function(s, i, a) {
-          if ( i !== 0 ) this.start().addClass(self.myClass('suggestionSeparator')).end();
-          let sug = self.suggestions[s];
-          this.tag(sug.view || self.SuggestionView, {
-            data: sug,
-            suggestText: (text) => {
-              self.suggestText.call(self, text, sug);
-            }
-          });
+        if ( i !== 0 ) this.start().addClass(self.myClass('suggestionSeparator')).end();
+        let sug = self.suggestions[s];
+        this.tag(sug.view || self.SuggestionView, {
+          data: sug,
+          suggestText: (text) => {
+            self.suggestText.call(self, text, sug);
+          }
         });
+      });
    },
 
     function reset() {
@@ -443,8 +443,9 @@ foam.CLASS({
       isMerged: true,
       delay: 250,
       code: function() {
+        let overlay = this.overlay_.get();
         // Close the selections list when the user leaves the field (and descendents)
-        if ( ! this.element_.parentNode.contains(document.activeElement) ) {
+        if ( ! this.element_.parentNode.contains(document.activeElement) && ! ( overlay && overlay.contains(document.activeElement) ) ) {
           this.reset();
           // Fire a manaual change event since this will not have fired if the user
           // never changed the text field value and only used the completer.
