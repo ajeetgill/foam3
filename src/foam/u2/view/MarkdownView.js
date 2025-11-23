@@ -5,7 +5,6 @@
  */
 
 // TODO:
-//   HTML support
 //   TOC?
 
 foam.CLASS({
@@ -13,7 +12,7 @@ foam.CLASS({
   name: 'MarkdownView',
   extends: 'foam.u2.View',
 
-  documentation: 'Markdown parser and View with full CommonMark support',
+  documentation: 'Markdown parser and View with full CommonMark support including HTML',
 
   css: `
     ^codeBlock {
@@ -39,6 +38,8 @@ foam.CLASS({
           START: repeat(sym('element'), '\n'),
 
           element: alt(
+            sym('htmlComment'),
+            sym('htmlBlock'),
             sym('codeBlock'),
             sym('heading'),
             sym('horizontalRule'),
@@ -49,6 +50,35 @@ foam.CLASS({
             sym('blankLine'),
             sym('paragraph')
           ),
+
+          // HTML support
+          htmlComment: seq0(
+            '<!--',
+              str(repeat(not('-->', anyChar()))),
+            '-->'
+          ),
+
+          htmlBlock: seq(
+            '<',
+            str(repeat(range('a', 'z'), null, 1)),
+            sym('htmlAttributes'),
+            alt(
+              seq('>', sym('htmlContent'), '</', str(repeat(range('a', 'z'), null, 1)), '>'),
+              '/>'
+            )
+          ),
+
+          htmlAttributes: str(repeat(not(alt('>', '/>'), anyChar()))),
+
+          // htmlContent: str(repeat(not(seq('</', str(repeat(range('a', 'z'), null, 1)), '>'), anyChar()))),
+          htmlContent: repeat(
+            alt(
+              sym('htmlBlock'),
+              sym('htmlText')
+            )
+          ),
+
+          htmlText: str(repeat(notChars('<'), null, 1)),
 
           // Block-level elements
           heading: seq(
@@ -131,6 +161,7 @@ foam.CLASS({
           inlineContent: repeat(sym('inline'), null, 1),
 
           inline: alt(
+            sym('htmlInline'),
             sym('image'),
             sym('link'),
             sym('strikethrough'),
@@ -139,6 +170,18 @@ foam.CLASS({
             sym('inlineCode'),
             sym('text')
           ),
+
+          htmlInline: seq(
+            '<',
+            str(repeat(range('a', 'z'), null, 1)),
+            sym('htmlAttributes'),
+            alt(
+              seq('>', sym('htmlInlineContent'), '</', str(repeat(range('a', 'z'), null, 1)), '>'),
+              '/>'
+            )
+          ),
+
+          htmlInlineContent: str(repeat(not(seq('</', str(repeat(range('a', 'z'), null, 1)), '>'), anyChar()))),
 
           image: seq(
             '![',
@@ -185,17 +228,61 @@ foam.CLASS({
             '`'
           ),
 
-          // TODO: maybe be more selective when matching 'link': []()
-          text: str(repeat(not(alt(chars('*_`~[\n'), '!['), anyChar()), null, 1))
+          text: str(repeat(not(alt(chars('*_`~[\n<'), '!['), anyChar()), null, 1))
         };
       },
 
       actions: [
+        function htmlComment(v) {
+          return function() {};
+        },
+
+        function htmlBlock(v) {
+          let tagName    = v[1];
+          let attributes = v[2];
+          let closing    = v[3];
+
+          return function() {
+            if ( closing === '/>' ) {
+              // Self-closing tag
+              this.tag(tagName);
+            } else {
+              // Tag with content
+              let content = closing[1];
+              debugger;
+              this.start(tagName).call(content);
+            }
+          };
+        },
+
+        function htmlInline(v) {
+          let tagName    = v[1];
+          let attributes = v[2];
+          let closing    = v[3];
+
+          return function() {
+            if ( closing === '/>' ) {
+              // Self-closing tag
+              this.add('<' + tagName + attributes + '/>');
+            } else {
+              // Tag with content
+              let content = this.markdownGrammar.parseString(closing[1]);
+              this.add('<' + tagName + attributes + '>' + content + '</' + tagName + '>');
+            }
+          };
+        },
+
         function nestedContent(v) {
           v = v.join('\n') + '\n';
           let fs = this.markdownGrammar.parseString(v);
           return function() {
             fs.forEach(f => this.call(f));
+          };
+        },
+
+        function htmlContent(v) {
+          return function() {
+            v.forEach(f => this.call(f));
           };
         },
 
@@ -221,7 +308,6 @@ foam.CLASS({
         },
 
         function blockquote(v) {
-          // TODO: why doesn't adding the newline help?
           return function() { this.start('blockquote').add(v.join('\n')); }
         },
 
@@ -268,7 +354,7 @@ foam.CLASS({
               .start('tbody')
                 .forEach(rows, function(row) {
                   this.start('tr').forEach(row, function (cell, i) {
-                    this.start('td').style(alignments[i]).call(cell)/*add(cell.trim())*/.end();
+                    this.start('td').style(alignments[i]).call(cell).end();
                   });
                 });
           };
@@ -289,7 +375,6 @@ foam.CLASS({
         function image(v) {
           let alt = v[1], url = v[3], title = v[4] || '';
           return function() {
-            // TODO: why isn't title set?
             this.start('img').attrs({
               src: url,
               alt: alt,
@@ -317,6 +402,10 @@ foam.CLASS({
 
         function inlineCode(v) {
           return function() { this.start('code').add(v); };
+        },
+
+        function htmlText(v) {
+          return function() { this.add(v); };
         },
 
         function text(v) {
