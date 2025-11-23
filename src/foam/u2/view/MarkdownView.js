@@ -6,6 +6,7 @@
 
 // TODO:
 //   TOC?
+//   Example
 
 foam.CLASS({
   package: 'foam.u2.view',
@@ -68,9 +69,23 @@ foam.CLASS({
             )
           ),
 
-          htmlAttributes: str(repeat(not(alt('>', '/>'), anyChar()))),
+          htmlAttributes: repeat(seq(
+            repeat(chars(' \t')),
+            sym('htmlAttribute')
+          )),
 
-          // htmlContent: str(repeat(not(seq('</', str(repeat(range('a', 'z'), null, 1)), '>'), anyChar()))),
+          htmlAttribute: seq(
+            str(repeat(alt(range('a', 'z'), range('A', 'Z'), range('0', '9'), '-'), null, 1)),
+            optional(seq(
+              '=',
+              alt(
+                seq1(1, '"', str(repeat(notChars('"'))), '"'),
+                seq1(1, "'", str(repeat(notChars("'"))), "'"),
+                str(repeat(notChars(' \t>'), null, 1))
+              )
+            ))
+          ),
+
           htmlContent: repeat(
             alt(
               sym('htmlBlock'),
@@ -237,6 +252,23 @@ foam.CLASS({
           return function() {};
         },
 
+        function htmlAttributes(v) {
+          let attrs = {};
+          v.forEach(attr => {
+            let name  = attr[1][0];
+            let value = attr[1][1];
+            if ( name ) {
+              if ( value ) {
+                attrs[name] = value[1];
+              } else {
+                // Boolean attribute (e.g., disabled, checked)
+                attrs[name] = true;
+              }
+            }
+          });
+          return attrs;
+      },
+
         function htmlBlock(v) {
           let tagName    = v[1];
           let attributes = v[2];
@@ -249,8 +281,11 @@ foam.CLASS({
             } else {
               // Tag with content
               let content = closing[1];
-              debugger;
-              this.start(tagName).call(content);
+              /*
+              if ( tagName === 'foam' ) {
+                console.log('****attributes', v, attributes);
+              }*/
+              this.start(tagName, attributes).call(content);
             }
           };
         },
