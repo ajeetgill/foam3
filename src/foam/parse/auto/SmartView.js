@@ -80,6 +80,7 @@ foam.CLASS({
   ]
 });
 
+
 foam.CLASS({
   package: 'foam.parse.auto',
   name: 'CSSTokenSuggester',
@@ -105,6 +106,7 @@ foam.CLASS({
     }
   ]
 });
+
 
 foam.CLASS({
   package: 'foam.parse.auto',
