@@ -79,6 +79,17 @@ public class ShutdownHook
       }
     }
 
+    logger.debug("Shutdownhook,shutdown,interrupt","start");
+    for (Thread thread : Thread.getAllStackTraces().keySet()) {
+      if (thread != Thread.currentThread() &&
+          ! thread.isDaemon() &&
+          ! thread.isInterrupted() ) {
+        logger.debug("Shutdownhook,shutdown,interrupt,thread",thread.getName());
+        thread.interrupt();
+      }
+    }
+    logger.debug("Shutdownhook,shutdown,interrupt","end");
+
     logger.info("ShutdownHook,shutdown complete");
   }
 }
