@@ -360,10 +360,6 @@ foam.CLASS({
         .end();
     },
 
-    function containsIC(str, sub) {
-      return str.length != sub.length && str.toLowerCase().indexOf(sub.toLowerCase()) != -1;
-    },
-
     function populateSuggestions(e, suggestions) {
       let self = this;
 
@@ -377,11 +373,11 @@ foam.CLASS({
       }
 
       let preview = self.preview;
-      let keys    = Object.keys(suggestions);
       let delta   = preview.substring(self.maxPos);
+      let keys    = Object.keys(suggestions);
       let ss      = keys.sort(compare); // Sort by section then (label or text)
 
-      if ( delta ) ss = ss.filter(k => this.containsIC(k, delta));
+      if ( delta ) ss = ss.filter(k => suggestions[k].matches(delta));
 
       let parent = e.parentNode;
 

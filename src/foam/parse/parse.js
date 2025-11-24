@@ -105,6 +105,18 @@ foam.CLASS({
       documentation: 'Adds a whitespace before appending suggestion.',
       value: true
     }
+  ],
+
+  methods: [
+    function matches(str) {
+      /** Return true iff this suggestions matches the partially typed str input. **/
+
+      function containsIC(str, sub) {
+        return str.length != sub.length && str.toLowerCase().indexOf(sub.toLowerCase()) != -1;
+      }
+
+      return containsIC(this.text, str) || containsIC(this.label, str);
+    }
   ]
 });
 
