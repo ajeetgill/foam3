@@ -9,12 +9,12 @@ foam.CLASS({
   name: 'DAOPromptView',
   extends: 'foam.u2.View',
 
+  imports: ['block'],
+
   requires: [
     'foam.u2.LoadingSpinner',
+    'foam.core.reflow.ErrorView'
   ],
-
-  css: `
-  `,
 
   properties: [
     { class: 'Long',    name: 'version' },
@@ -24,6 +24,15 @@ foam.CLASS({
   methods: [
     function render() {
       var self = this;
+
+      if ( this.block?.borderEl_?.title$ ) {
+        this.block.borderEl_.title$.relateTo(this.data.label$, function(title) {
+          return title;
+        }, function(label) {
+          self.block?.setTitle(label);
+          return label;
+        })
+      }
 
       this.data.where$.sub(this.rerun);
       this.data.skip$.sub(this.onUpdate);
@@ -38,10 +47,18 @@ foam.CLASS({
             var select    = self.data.select;
             self.data.select = select;
             self.loading = true;
-            await self.data.select.execute(this);
-            self.loading = false;
-            self.data.readyLatch_.resolve();
-            self.data.executionTime = foam.lang.Duration.duration(Date.now() - startTime);
+            try {
+              await self.data.select.execute(this);
+              self.data.readyLatch_.resolve();
+              self.data.executionTime = foam.lang.Duration.duration(Date.now() - startTime);
+            } catch (error) {
+              console.error('DAOPrompt execution error:', error);
+              self.data.readyLatch_.reject(error);
+              self.data.hasError = true;
+              this.tag(self.ErrorView, { error: error });
+            } finally {
+              self.loading = false;
+            }
           }));
     }
   ],
@@ -81,6 +98,8 @@ foam.CLASS({
 
   mixins: [ 'foam.core.reflow.DAOResolverMixin' ],
 
+  /*
+    UI is cleaner without the sections
   sections: [
     {
       name: 'output',
@@ -102,6 +121,7 @@ foam.CLASS({
       title: ''
     }
   ],
+  */
 
   implements: [
     'foam.mlang.Expressions'
@@ -126,12 +146,33 @@ foam.CLASS({
 
   properties: [
     {
+      name: 'select',
+      view: function(_, X) {
+        return foam.core.reflow.SinkView.create({
+          sinksOnly: false,
+          choice: 'foam.core.reflow.TableDAOAgent',
+          dao: X.data.dao}, X.data);
+      },
+      preSet: function(o, n) {
+        // Temporary fix to recontextualize the object after load.
+        // TODO: remove once JSON parsing/loading is fixed
+        if ( n && n.__context__ != this.__subContext__ ) {
+          return n.clone(this.__subContext__);
+        }
+        return n;
+      },
+      reactive: false,
+      section: 'output',
+      label: '',
+      factory: function() { return this.TableDAOAgent.create(); }
+    },
+    {
       class: 'String',
       name: 'label',
       label: 'Name',
       section: 'general',
-      onKey: true,
       hidden: true,
+      onKey: true,
       expression: function(dao) {
         return dao.of.model_.plural;
       },
@@ -156,17 +197,6 @@ foam.CLASS({
       expression: function(daoKey) {
         return this.resolveDAOFromKey(daoKey);
       }
-    },
-    {
-      class: 'String',
-      name: 'label',
-      section: 'general',
-      label: 'Name',
-      onKey: true,
-      expression: function(dao) {
-        return dao.of.model_.plural;
-      },
-      displayWidth: 60
     },
     {
       class: 'foam.dao.DAOProperty',
@@ -268,6 +298,21 @@ foam.CLASS({
       factory: function() { return this.ProxyDAO.create({delegate$: this.filteredDAO_$}); }
     },
     {
+      class: 'String',
+      name: 'aql',
+      label: 'Where',
+      section: 'filter',
+      displayWidth: 60,
+      visibility: function(enableAQL_) { return enableAQL_ ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN; },
+      view: function(_, X) {
+        var data = X.data;
+        return {
+          class: 'foam.parse.auto.SmartView',
+          parser: data.SimpleQueryParser.create({of: data.dao.of})
+        };
+      }
+    },
+    {
       class: 'Int',
       name: 'skip',
       label: 'Skip',
@@ -317,21 +362,6 @@ foam.CLASS({
       transient: true,
       hidden: true,
       documentation: 'Temporary flag to determine if AQL is available.'
-    },
-    {
-      class: 'String',
-      name: 'aql',
-      label: 'Where (Auto-Complete)',
-      section: 'filter',
-      displayWidth: 60,
-      visibility: function(enableAQL_) { return enableAQL_ ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN; },
-      view: function(_, X) {
-        var data = X.data;
-        return {
-          class: 'foam.parse.auto.SmartView',
-          parser: data.SimpleQueryParser.create({of: data.dao.of})
-        };
-      }
     },
     {
       class: 'String',
@@ -399,30 +429,10 @@ foam.CLASS({
         });
       }
     },
-    {
-      name: 'select',
-      view: function(_, X) {
-        return foam.core.reflow.SinkView.create({
-          sinksOnly: false,
-          choice: 'foam.core.reflow.TableDAOAgent',
-          dao: X.data.dao}, X.data);
-      },
-      preSet: function(o, n) {
-        // Temporary fix to recontextualize the object after load.
-        // TODO: remove once JSON parsing/loading is fixed
-        if ( n && n.__context__ != this.__subContext__ ) {
-          return n.clone(this.__subContext__);
-        }
-        return n;
-      },
-      reactive: false,
-      section: 'output',
-      label: '',
-      factory: function() { return this.TableDAOAgent.create(); }
-    },
     { class: 'Long',       hidden: true,  name: 'rowCount', visibility: 'RO', transient: true },
     { class: 'String',     hidden: true,  name: 'executionTime', value: '-', visibility: 'RO', transient: true, readPermissionRequired: true },
     { class: 'Int',        hidden: true,  name: 'version', transient: true },
+    { class: 'Boolean',    hidden: true,  name: 'hasError', value: false, transient: true },
     { class: 'FObjectProperty',  name: 'value', transient: true, hidden: true, visibility: 'RO' },
     {
       name: 'readyLatch_',
@@ -432,7 +442,7 @@ foam.CLASS({
         return foam.lang.Latch.create();
       }
     },
-    { class: 'Boolean',    section: 'actions',   name: 'autoRun', view: { class: 'foam.u2.Switch' } }
+    { class: 'Boolean',    section: 'general',   name: 'autoRun', view: { class: 'foam.u2.Switch' } }
   ],
 
   methods: [
@@ -462,11 +472,6 @@ foam.CLASS({
     function init() {
       this.SUPER();
 
-      if ( ! this.block.borderClass ) {
-        this.block.borderClass = foam.u2.borders.TitleBorder;
-        this.block.border['title'] = this.label;
-      }
-
       x.auth.check(x, 'reflow.aql').then(enabled => {
         this.enableAQL_ = enabled;
       });
@@ -484,7 +489,9 @@ foam.CLASS({
       this.onDetach(this.dao.listen(this.updateRowCount));
       this.updateRowCount_();
 
-      e.tag(this.DAOPromptView, {data: this });
+      // TODO: name current block
+      e.tag(this.DAOPromptView, {data: this, label: this.label});
+//      e.tag(this.DAOPromptView.create({data: this, label: this.label}, this));
     },
 
     function onLoad() {
@@ -541,7 +548,7 @@ foam.CLASS({
         await this.waitForRun();
 
         var name = this.block.flowName;
-        this.eval_(`test(${name}.value,'Test output of ${name}')`);
+        this.eval_(`test(${name}.value, 'Test output of ${name}')`);
       }
     }
   ],
