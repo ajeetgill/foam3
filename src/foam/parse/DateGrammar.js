@@ -500,10 +500,10 @@ foam.CLASS({
           literalIC('NOV'),
           literalIC('DEC')
         ),
-        day2: str(seq(range('0', '3'), range('0', '9'))),
-        hour2: str(seq(range('0', '2'), range('0', '9'))),
-        minute2: str(seq(range('0', '5'), range('0', '9'))),
-        second2: str(seq(range('0', '5'), range('0', '9'))),
+        day2: str(seq(range('0', '9'), range('0', '9'))),
+        hour2: str(seq(range('0', '9'), range('0', '9'))),
+        minute2: str(seq(range('0', '9'), range('0', '9'))),
+        second2: str(seq(range('0', '9'), range('0', '9'))),
         fractionalSeconds: str(repeat(range('0', '9'), null, 1, 6))  // 1-6 digits for milliseconds or microseconds
       };
     }
