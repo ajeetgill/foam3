@@ -573,7 +573,7 @@ foam.CLASS({
     },
 
     function outputJSON(json) {
-      json.outputFObject_(this, this.cls_, [ 
+      json.outputFObject_(this, this.cls_, [
         this.FLOW_NAME, this.CMD, this.VALUE, this.FLOW_CHILDREN, this.REACTIONS_, this.BORDER,
         this.SHOWN, ...foam.u2.StyleConfigurator.getAxiomsByClass(foam.lang.Property).filter(p => ! p.hidden && ! p.transient)
       ]);
@@ -596,7 +596,7 @@ foam.CLASS({
 
   listeners: [
     function maybeMigrate() {
-      // Legacy support 
+      // Legacy support
       if ( this.borderClass && this.borderClass !== foam.u2.borders.TitleBorder ) {
         switch ( this.borderClass ) {
           case foam.u2.borders.CardBorder:
@@ -638,6 +638,7 @@ foam.CLASS({
       name: 'onClick',
       code: function(e) {
         this.selected = this;
+        e.preventDefault();
         e.stopPropagation();
       }
     }
@@ -1506,8 +1507,10 @@ foam.CLASS({
           if ( ! block.flowName ) {
             // For commands like 'cells(2,3)' pickout 'cells' as the block name
             var m = cmd.match(/^\s*([a-zA-Z][a-zA-Z0-9_\$]*)\(/);
-            if ( m ) block.flowName = this.createFlowChildName(m[1]);
+            if ( m ) m[1];
           }
+          // Make sure we aren't duplicating an existing name;
+          block.flowName = this.createFlowChildName(block.flowName);
         } catch (x) {
           var i = cmd.indexOf(' ');
           if ( i != -1 ) {
