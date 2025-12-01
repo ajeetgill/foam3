@@ -267,8 +267,8 @@ foam.CLASS({
           if ( f.body.data != '' || f.type == '' || f.abstract ) o.out(f, '\n');
         }
       });
-      this.extras.forEach(function(c)  { o.out(c, '\n'); });
       this.classes.forEach(function(c) { o.out(c, '\n'); });
+      this.extras.forEach(function(c)  { o.out(c, '\n'); });
       o.decreaseIndent();
       o.indent();
       o.out('}\n');
