@@ -148,6 +148,7 @@ foam.CLASS({
     {
       name: 'select',
       view: function(_, X) {
+//        return foam.core.reflow.SinkView2.create({
         return foam.core.reflow.SinkView.create({
           sinksOnly: false,
           choice: 'foam.core.reflow.TableDAOAgent',
@@ -300,7 +301,7 @@ foam.CLASS({
     {
       class: 'String',
       name: 'aql',
-      label: 'Where',
+      label: 'Where (autocomplete)',
       section: 'filter',
       displayWidth: 60,
       visibility: function(enableAQL_) { return enableAQL_ ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN; },
@@ -308,7 +309,7 @@ foam.CLASS({
         var data = X.data;
         return {
           class: 'foam.parse.auto.SmartView',
-          parser: data.SimpleQueryParser.create({of: data.dao.of})
+          parser: data.SimpleQueryParser.create({of: data.dao.of}, X)
         };
       }
     },
@@ -442,7 +443,7 @@ foam.CLASS({
         return foam.lang.Latch.create();
       }
     },
-    { class: 'Boolean',    section: 'general',   name: 'autoRun', view: { class: 'foam.u2.Switch' } }
+    { class: 'Boolean', section: 'general', name: 'autoRun', view: { class: 'foam.u2.Switch' } }
   ],
 
   methods: [
@@ -472,6 +473,7 @@ foam.CLASS({
     function init() {
       this.SUPER();
 
+      // TODO: remove when passed early access period
       x.auth.check(x, 'reflow.aql').then(enabled => {
         this.enableAQL_ = enabled;
       });
@@ -481,6 +483,7 @@ foam.CLASS({
       if ( ! this.columns ) {
         this.columns = this.getColumnNamesFromStorage(localStorage.getItem(this.dao.of.id));
       }
+      this.aql$.sub(this.maybeAutoRun);
       this.where$.sub(this.maybeAutoRun);
       this.order$.sub(this.maybeAutoRun);
     },
