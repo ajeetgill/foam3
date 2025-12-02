@@ -35,7 +35,7 @@ foam.CLASS({
 
   properties: [
     [ 'loginSuccess', true ],
-    [ 'location', { origin: 'http://localhost:8080', search: '' } ]
+    [ 'location', { origin: 'http://localhost:8080', href: 'http://localhost:8080/', search: '' } ]
   ],
 
   methods: [
