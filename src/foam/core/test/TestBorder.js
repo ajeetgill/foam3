@@ -94,6 +94,7 @@ foam.CLASS({
       var self = this;
       this.onDetach(this.stack.setTrailingContainer(
         this.E()
+          .style({display: 'inline-flex', marginBottom: '10px'})
           .startContext({ data: this })
           .start().tag(this.RUN_CLIENT).tag(this.RUN_FAILED_CLIENT).end()
           .start().tag(this.RUN_ALL).tag(this.RUN_FAILED).end()
@@ -145,7 +146,15 @@ foam.CLASS({
             // with t.run, Neither sink operation is garanteed to get
             // correct results.
 
-            t.runScript();
+            // When running a lot of unit tests at once, we don't want to get flooded
+            // with notifications, so turn them off in this context
+            t = t.clone(t.__context__.createSubContext({
+              notificationDAO: foam.dao.NullDAO.create(),
+              myNotificationDAO: foam.dao.NullDAO.create()
+            }));
+
+            t.run();
+            //            t.runScript();
             t.copyFrom(await dao.put(t));
 
             self.passed += t.passed;
@@ -156,20 +165,19 @@ foam.CLASS({
           }
         },
         eof: async function() {
-          var duration = (Date.now() - startTime) / 1000;
+           var duration = (Date.now() - startTime) / 1000;
           self.status = `${self.passed + self.failed} tests run in ${duration.toFixed(2)} seconds`;
           console.log('Testing complete.', self.status);
           if ( self.testRunId ) {
             var testRun = await self.testRunDAO.find(self.testRunId);
-            if ( ! testRun ||
-                 testRun.completed ) {
+            if ( ! testRun || testRun.completed ) {
               testRun = self.TestRun.create();
             }
-            testRun.server = false;
-            testRun.cases = self.total;
-            testRun.passed = self.passed;
-            testRun.failed = self.failed;
-            testRun.tests = self.passed + self.failed;
+            testRun.server    = false;
+            testRun.cases     = self.total;
+            testRun.passed    = self.passed;
+            testRun.failed    = self.failed;
+            testRun.tests     = self.passed + self.failed;
             testRun.completed = true;
             self.testRunDAO.put(testRun);
           }
