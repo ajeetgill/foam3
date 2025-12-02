@@ -1348,6 +1348,19 @@ foam.CLASS({
       });
 
       info.method({
+        name: 'forLabel',
+        visibility: 'public',
+        type: this.of.id,
+        args: [
+          {
+            name: 'label',
+            type: 'String'
+          }
+        ],
+        body: `return ${this.of.id}.forLabel(label);`
+      });
+
+      info.method({
         name: 'toJSON',
         visibility: 'public',
         type: 'void',
@@ -1489,8 +1502,7 @@ foam.CLASS({
   properties: [
     ['javaInfoType',    'foam.lang.AbstractDatePropertyInfo'],
     ['javaJSONParser',  'foam.lib.json.DateParser.instance()'],
-    ['sqlType',         'TIMESTAMP WITHOUT TIME ZONE'],
-    ['javaAdapt',       '']
+    ['sqlType',         'TIMESTAMP WITHOUT TIME ZONE']
   ],
 
   methods: [
@@ -1511,11 +1523,9 @@ foam.CLASS({
         }`;
 
       return info;
-    }
+  }
   ]
 });
-
-
 
 
 foam.CLASS({
@@ -1528,22 +1538,15 @@ foam.CLASS({
   properties: [
     ['javaInfoType',    'foam.lang.AbstractDatePropertyInfo'],
     ['javaJSONParser',  'foam.lib.json.DateParser.instance()'],
-    ['sqlType',         'DATE'],
-    ['javaAdapt',
-     `
-      // convert the Date to be noon in GMT
-      val = val != null ? new java.util.Date(val.getTime() / 86400000l * 86400000l + 43200000l) : null;
-     `
-    ]
+    ['sqlType',         'DATE']
   ],
 
    methods: [
      function createJavaPropertyInfo_(cls) {
        var info = this.SUPER(cls);
-       // TODO: cast isn't called on setter
        var m = info.getMethod('cast');
        m.body = `
-         return foam.util.DateUtil.adapt(o);
+        return foam.util.DateUtil.adapt(o);
        `;
 
        return info;
@@ -2709,32 +2712,6 @@ foam.CLASS({
           code: code
         }));
       }
-    }
-  ]
-});
-
-
-foam.CLASS({
-  package: 'foam.java',
-  name: 'CurrencyCodeJavaRefinement',
-  refines: 'foam.lang.CurrencyCode',
-  extends: 'foam.lang.Reference',
-  flags: [ 'java' ],
-
-  properties: [
-    {
-      name: 'javaAdapt',
-      value: `
-        try {
-          var numericCode = Long.parseLong(val);
-          var curr = (foam.lang.Currency) ((foam.dao.DAO) getX().get("currencyDAO"))
-            .find(foam.mlang.MLang.EQ(foam.lang.Currency.NUMERIC_CODE, val));
-          if ( curr != null )
-            val = curr.getId();
-          else
-            foam.core.logger.Loggers.logger(getX(), this).error("Cannot adapt CurrencyCode numeric value", val);
-        } catch (NumberFormatException e) { /* assume string id */ }
-      `
     }
   ]
 });
