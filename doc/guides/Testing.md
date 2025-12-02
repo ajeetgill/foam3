@@ -1,8 +1,10 @@
 # Testing
 
 FOAM provides a testing harness for implementing Unit Test Cases, and in conjunction with the Build, provides for test case execution and reporting. 
-
-Tests are either client (Javascript) or server (Java, Beanshell, JShell). 
+Test cases can be modeled FOAM classes, or _scripts_. 
+Both _modeled_ and _script_ tests can target Java and Javascript.
+Java tests are executed server side in the JVM, while Javascript, 'client',  tests are executed from a browser (headless).  
+Java _script_ tests can run in Beanshell or JShell. 
 
 ## Running Test Cases from the Build
  
@@ -28,6 +30,10 @@ Execute specific test cases by listing their `id`s as an argument to the `run-te
 
 Exclude tests cases by prefixing their `id` with a `-` (dash). 
 - `./build.sh run-tests:-SecurityAuditTest,-CSSAuditTest`: Run all but the listed test cases.
+
+### Test Suite
+Tests can be grouped with the `testSuite` property.  The `TestRunnerScript`, which is responsible for invoking the tests, will filter by `testSuite` identifiers. 
+- `./build.sh run-tests test-suite:Authentication,Security`: run all tests where `testSuite` matches the listed identifiers.
 
 ### Test Output
 
@@ -69,6 +75,12 @@ FooBarServiceTest
 DIGFooBarRequestTest
 	 ✘ FAILURE:
 	 ✘ FAILURE: DIG (put) request CANCELLED RECEIVED
+
+...
+
+TEST REPORT CLIENT - TEST CASES: 12, TESTS: 1374 (PT1M6.038S)
+ PASSED: 1373
+ FAILED: 1
 ```
 
 ## Running Client Test Cases from a FOAM Application
@@ -87,16 +99,34 @@ It is **not** recommended to run all server tests from the UI as the UI may beco
 Test cases are either **Scripts** or Modeled FOAM classes.
 Both modeled and script tests can target Java and Javascript.
 
-
 ### Modeled Test Case
-High level steps for adding a modeled test case:
+Steps for adding a modeled test case:
 1. Create a FOAM model in a `test` directory in the same package as model you testing
 1. The model will extend:
 	- foam.core.test.Test  - for a Java, server side, test case.
-	- JSTest (Javascript) - for a Javascript, client side, test case.
+	- foam.core.test.JSTest - for a Javascript, client side, test case.
 1. Implement `runTest(x)`
+	- Java
+	   ```
+	   methods: [
+	    {
+	      name: 'runTest',
+	      javaCode: `
+		```
+	- Javascript
+		```
+		methods: [
+		  function runTest(x) {
+		```
 1. Create tests: `test(boolean, message)`
-	- See below for examples.
+	- Java
+		```
+		test ( foobar.getStatus().equals("CLOSED"), "FooBar closed");
+		```
+	- Javascript
+		```
+		x.test(month == 2, 'Month is March');
+		```
 1. Add model to pom. 
    - If there is a pom in the `test` directory, use flags `js|java`. 
    - If the tests are managed from a parent pom then use flags `js&test|java&test`.  
@@ -115,27 +145,27 @@ High level steps for adding a modeled test case:
 	```
 
 ### Script Test Case
-High level steps for adding a Script Test Case
-
+Steps for adding a Script Test Case
 1. Launch your FOAM application with build option: `--flags:test`.
-1. Navigate to menu `#admin.tests`
+1. Navigate to menu #admin.tests
 1. Create a New Test
-* Id - Unique human readable test name.  A general rule of thumb is use the name of the model or feature being tested with suffix 'Test'.  Also, it is recommended to not use spaces in the Id to make it easier to select individual test cases from the Build. 
-* Test Suite - **TODO**
-* Language - one of
-	* Beanshell (default) - for a Java, server side, test case
-	* JShell - for a Java, server side, test case
-	* Javascript - for a Javascript, client side test case
-* Code
-	* See below for examples.
-1. Save
-1. To persist the Test, copy the most recent `p({})` block from the `journals/tests` to `tests/tests.jrl`
+	* Id - Unique human readable test name.  A general rule of thumb is use the name of the model or feature being tested with suffix 'Test'.  Also, it is recommended to not use spaces in the Id to make it easier to select individual test cases from the Build. 
+	* Language - one of
+		* Beanshell (default) - for a Java, server side, test case
+		* JShell - for a Java, server side, test case
+		* Javascript - for a Javascript, client side test case
+	* Code
+		```
+		test(Password.verify(FIRST_PASSWORD, result.getPassword()), "Password returned from put should be hash of original password.")
+		```
+1.  Save
+1.  To persist the Test, copy the most recent  `p({})`  block from the  `journals/tests`  to  `tests/tests.jrl`
+
+# Automation
+The FOAM repository runs all Java/Server tests on each PR update.  Equivalent to:
+`./build.sh server-tests`
 
 # TODO
-- Test Suite: group tests by an identifier.  The Build supports filtering tests by suite for running. 
-
-- Examples
-	- Modeled - Java (Test, JSTest)
-	- Script - Beanshell, JShell, Javascript
-- github commit hook
 - Flow Tests
+- github commit hook
+
