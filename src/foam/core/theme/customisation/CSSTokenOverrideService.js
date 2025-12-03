@@ -99,7 +99,6 @@ foam.CLASS({
       name: 'reload',
       isMerged: true,
       code: function() {
-        console.log('CSSTokenOverrideService.reload');
         this.initLatch = this.Latch.create();
         this.clearProperty('tokenCache');
         this.clearProperty('cached_');
