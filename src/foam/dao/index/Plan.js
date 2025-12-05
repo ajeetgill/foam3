@@ -120,8 +120,9 @@ foam.CLASS({
   ],
 
   methods: [
-    function execute(promise, sink /*, skip, limit, order, predicate*/) {
-      sink.value += this.count;
+    function execute(promise, sink, skip /*, limit, order, predicate*/) {
+      var count = this.count - ( skip || 0 );
+      sink.value = count > 0 ? count : 0;
     },
 
     function toString() {
