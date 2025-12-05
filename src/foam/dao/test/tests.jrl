@@ -19,3 +19,7 @@ p({
   class:"foam.dao.test.JournalDefaultClassNameTest",
   id:"JournalDefaultClassNameTest"
 })
+p({
+  class:"foam.dao.test.MDAOCountTest",
+  id:"MDAOCountTest"
+})
