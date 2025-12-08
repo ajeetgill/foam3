@@ -9,7 +9,7 @@ foam.CLASS({
   name: 'DAOPromptView',
   extends: 'foam.u2.View',
 
-  imports: ['block'],
+  imports: [ 'block' ],
 
   requires: [
     'foam.u2.LoadingSpinner',
@@ -261,7 +261,6 @@ foam.CLASS({
           if ( p ) {
             dao = dao.where(p);
           }
-          // TODO: display syntax error if didn't parse
         }
 
         if ( order ) {
@@ -353,7 +352,8 @@ foam.CLASS({
       name: 'where',
       section: 'filter',
       displayWidth: 60,
-      visibility: function(where, enableAQL_) { return ( where || ! enableAQL_ ) ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN; },
+      postSet: function(o, n) { if ( n ) this.enableAQL_ = false; },
+      visibility: function(enableAQL_) { return enableAQL_ ? foam.u2.DisplayMode.HIDDEN : foam.u2.DisplayMode.RW; },
       view: { class: 'foam.core.reflow.PredicateSuggestedField' }
 //      view: { class: 'foam.u2.TextField', type: 'search' } // adds 'x' to clear field
     },
@@ -362,6 +362,7 @@ foam.CLASS({
       name: 'enableAQL_',
       transient: true,
       hidden: true,
+      value: true,
       documentation: 'Temporary flag to determine if AQL is available.'
     },
     {
@@ -472,11 +473,6 @@ foam.CLASS({
 
     function init() {
       this.SUPER();
-
-      // TODO: remove when passed early access period
-      x.auth.check(x, 'reflow.aql').then(enabled => {
-        this.enableAQL_ = enabled;
-      });
 
       if ( ! this.dao || ! this.dao.of ) return;
 
