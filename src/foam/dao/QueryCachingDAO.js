@@ -63,6 +63,12 @@ foam.CLASS({
 
         // Ensure we have cache for request
         self.fillCache_(key, requestStartIdx, requestEndIdx, x, sink, order, predicate).then(() => {
+          // Guard against cache being purged while fillCache_ was pending
+          if ( ! self.cache[key] ) {
+            sink.eof();
+            resolve(sink);
+            return;
+          }
 
           let endIdx = requestEndIdx <= self.cache[key].length ? requestEndIdx : self.cache[key].length;
 
@@ -146,6 +152,9 @@ foam.CLASS({
         // console.log('******** QUERYCACHE*** HAS MISSING DATA ***: predicte: ' + predicate + ' startIdx: ' + startIdx + ' endIdx: ' + endIdx);
         let self = this;
         return this.delegate.select_(x, sink, startIdx, endIdx - startIdx, order, predicate).then(function(result) {
+          // Guard against cache being purged while select was pending
+          if ( ! self.cache[key] ) return;
+
           if ( foam.dao.ArraySink.isInstance(sink) ) {
             // ArraySink
             // Update cache with missing data
