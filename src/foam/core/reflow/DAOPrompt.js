@@ -485,7 +485,7 @@ foam.CLASS({
     },
 
     async function addToE(e) {
-      this.onDetach(this.filteredDAO.listen(this.updateRowCount));
+      this.onDetach(this.dao.listen(this.updateRowCount));
       this.updateRowCount_();
 
       // TODO: name current block
@@ -556,7 +556,7 @@ foam.CLASS({
     {
       name: 'updateRowCount',
       isFramed: true,
-      code: function() { this.updateRowCount_(); }
+      code: function() { this.updateRowCount_(); this.run(); }
     },
     {
       name: 'maybeAutoRun',
