@@ -294,8 +294,8 @@ foam.CLASS({
       label: 'Save',
       buttonStyle: foam.u2.ButtonStyle.PRIMARY,
       size: 'SMALL',
-      isEnabled: function(data$flowErrors_) {
-        return ! data$flowErrors_;
+      isEnabled: function(data$flowErrors_, data$isLoading_) {
+        return ! data$flowErrors_ && ! data$isLoading_;
       },
       isAvailable: function(showPrompts) {
         return showPrompts;
