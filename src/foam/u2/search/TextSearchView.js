@@ -90,11 +90,7 @@ foam.CLASS({
     },
     {
       class: 'String',
-      name: 'data',
-      postSet: function(o, n) {
-        function contains(s, s2) { return s.indexOf(s2) != -1; }
-        if ( ( o && contains(o, 'CONTAINS') ) && ! contains(n, 'CONTAINS') ) debugger;
-      }
+      name: 'data'
     }
   ],
 

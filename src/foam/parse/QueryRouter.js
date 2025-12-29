@@ -54,7 +54,7 @@ foam.CLASS({
       let enableQuery = this.searchMode === this.SearchMode.FULL || this.searchMode === this.SearchMode.MQL;
 
       function key(s, p, label) {
-        return sug(p, {text: s + ' ', label: label, category: 'keyword'});
+        return sug(p, {text: s, label: label, category: 'keyword'});
       }
 
       return {

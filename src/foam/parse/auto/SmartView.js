@@ -248,6 +248,7 @@ foam.CLASS({
     {
       class: 'Boolean',
       name: 'normalize',
+      value: true,
       documentation: 'If true the input will be normalized to preferred syntax where options exist.'
     },
     {
@@ -276,6 +277,7 @@ foam.CLASS({
     },
     {
       name: 'apply',
+      documentation: 'Parser callback to be used to track parsing and make suggestions.',
       factory: function() {
         let self = this;
 
@@ -313,7 +315,7 @@ foam.CLASS({
             let s = p.suggest();
             if ( ! s.text ) return result;
             let prevQuery = self.preview.substring(0, this.pos);
-            self.normalizedQuery = prevQuery + s.text + self.preview.substring(this.substring(result).length+this.pos) ;
+            self.normalizedQuery = prevQuery + s.text + self.preview.substring(this.substring(result).length+this.pos);
             if ( self.preview !== self.normalizedQuery ) self.preview = self.normalizedQuery;
           }
 
@@ -346,10 +348,10 @@ foam.CLASS({
       this
         .addClass()
         .start(this.TextField, {
-          data$: this.data$,
+          data$:        this.data$,
           autocomplete: false,
-          autocorrect: false,
-          tooltip$: this.error$
+          autocorrect:  false,
+          tooltip$:     this.error$
         }, this.field$).
           enableClass(this.myClass('error'), this.error$).
           on('blur', this.onBlur).
