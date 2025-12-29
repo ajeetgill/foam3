@@ -274,7 +274,7 @@ foam.CLASS({
             }
           });
           return attrs;
-      },
+        },
 
         function htmlBlock(v) {
           let tagName    = v[1];
