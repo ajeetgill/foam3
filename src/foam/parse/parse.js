@@ -480,6 +480,61 @@ foam.CLASS({
 });
 
 
+/**
+ * Parser decorator that attaches a message to a parser.
+ * When the wrapped parser succeeds, the message can be collected
+ * via the apply callback (similar to foam.parse.Suggest for suggestions).
+ *
+ * The message is untyped - can be string, object, array, etc.
+ *
+ * Usage in grammar:
+ *   emptyFile: msg(eof(), 'File is empty')
+ *   warning: msg(sym('old'), { warning: 'Deprecated format' })
+ */
+foam.CLASS({
+  package: 'foam.parse',
+  name: 'Msg',
+  extends: 'foam.parse.ParserDecorator',
+
+  documentation: `
+    Parser decorator that attaches a message to a parser.
+    When the wrapped parser matches successfully, the message
+    is available via the msg() method.
+
+    The message property is untyped - it can store any value
+    (string, object, array, etc.). The consuming code is responsible
+    for interpreting the message format.
+
+    Usage in grammar:
+      emptyFile: msg(eof(), 'File is empty')
+      warning: msg(sym('old'), { warning: 'Deprecated format' })
+  `,
+
+  properties: [
+    {
+      name: 'message',
+      documentation: 'Message to attach - can be any value (string, object, etc.)'
+    }
+  ],
+
+  methods: [
+    function parse(ps, obj) {
+      // Delegate to wrapped parser
+      return ps.apply(this.p, obj);
+    },
+
+    function msg() {
+      // Return the message config (called by apply callback when parse succeeds)
+      return this.message;
+    },
+
+    function toString() {
+      return 'msg(' + this.SUPER() + ')';
+    }
+  ]
+});
+
+
 foam.CLASS({
   package: 'foam.parse',
   name: 'String',
@@ -1090,6 +1145,7 @@ foam.CLASS({
     'foam.parse.Literal',
     'foam.parse.LiteralIC',
     'foam.parse.EOF',
+    'foam.parse.Msg',
     'foam.parse.Not',
     'foam.parse.NotChars',
     'foam.parse.Optional',
@@ -1218,6 +1274,22 @@ foam.CLASS({
         p: p,
         suggestion: s
       });
+    },
+
+    /**
+     * Create a parser that attaches a message.
+     * Message is collected when the parser succeeds (via apply callback).
+     *
+     * @param {Parser} p - The parser to wrap
+     * @param {*} m - Message to attach (can be any value - string, object, etc.)
+     * @returns {Msg} Parser decorator with message
+     *
+     * Usage in grammar:
+     *   msg(eof(), 'File is empty')
+     *   msg(sym('old'), { warning: 'Deprecated format' })
+     */
+    function msg(p, m) {
+      return this.Msg.create({ p: p, message: m });
     },
 
     function until(p) {
