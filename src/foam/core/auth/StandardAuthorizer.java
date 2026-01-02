@@ -16,6 +16,8 @@ public class StandardAuthorizer
   implements Authorizer
 {
 
+  protected final static AuthorizationException ACCESS_DENIED = new AuthorizationException("Permission denied.", (Throwable) null, false, false);
+
   // Standard authorizer to be used for authorization on object not implementing the authorizable interface
   // Performs authorization by checking permission generated from permissionPrefix passed in
 
@@ -45,7 +47,7 @@ public class StandardAuthorizer
     if ( ! authService.check(x, p) ) {
       // Too slow for such a common operation, only enable when debugging.
       //      ((foam.core.logger.Logger) x.get("logger")).debug("StandardAuthorizer", "Permission denied.", p);
-      throw new AuthorizationException();
+      throw ACCESS_DENIED;
     }
   }
 
