@@ -756,9 +756,8 @@ foam.CLASS({
       str = str.trim();
 
       // Use parse() to get position information
-      this.ps.setString(str);
       var start = this.getSymbol(opt_name || 'START');
-      var parseResult = this.ps.apply(start, this);
+      var parseResult = start.parse(this.StringPStream.create({ str: str }), this);
 
       if ( ! parseResult ) {
         // Unparseable format - return MAX_DATE
