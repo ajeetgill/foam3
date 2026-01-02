@@ -1526,7 +1526,8 @@ foam.CLASS({
       // Let's Grammar object be used directly as a parser
       opt_name = opt_name || 'START';
       var start = this.getSymbol(opt_name);
-      return ps.apply(start, this);
+      foam.assert(start, 'No symbol found for', opt_name);
+      return start.parse(ps, this);
     },
 
     function getLastError(str, opt_name, opt_apply) {
