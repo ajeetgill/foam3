@@ -704,9 +704,7 @@ foam.CLASS({
       str = str.trim();
 
       // Use parse() to get position information
-      this.ps.setString(str);
-      var start = this.getSymbol(opt_name || 'START');
-      var parseResult = this.ps.apply(start, this);
+      var parseResult = this.parse(this.StringPStream.create({ str: str }), this, opt_name);
 
       if ( ! parseResult ) {
         // Unparseable format - return MAX_DATE
@@ -756,9 +754,7 @@ foam.CLASS({
       str = str.trim();
 
       // Use parse() to get position information
-      this.ps.setString(str);
-      var start = this.getSymbol(opt_name || 'START');
-      var parseResult = this.ps.apply(start, this);
+      var parseResult = this.parse(this.StringPStream.create({ str: str }), this, opt_name);
 
       if ( ! parseResult ) {
         // Unparseable format - return MAX_DATE
@@ -793,9 +789,7 @@ foam.CLASS({
       str = str.trim();
 
       // Use parse() instead of parseString() to get position information
-      this.ps.setString(str);
-      var start = this.getSymbol(opt_name || 'START');
-      var parseResult = this.ps.apply(start, this);
+      var parseResult = this.parse(this.StringPStream.create({ str: str }), this, opt_name);
 
       if ( ! parseResult ) {
         // Unparseable format - return MAX_DATE
@@ -872,9 +866,7 @@ foam.CLASS({
       str = str.trim();
 
       // Use parse() instead of parseString() to get position information
-      this.ps.setString(str);
-      var start = this.getSymbol(opt_name || 'START');
-      var parseResult = this.ps.apply(start, this);
+      var parseResult = this.parse(this.StringPStream.create({ str: str }), this, opt_name);
 
       if ( ! parseResult ) {
         // Unparseable format - return MAX_DATE
