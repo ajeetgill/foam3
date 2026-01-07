@@ -1402,6 +1402,13 @@ foam.CLASS({
   refines: 'foam.lang.AbstractEnum',
   // flags: ['java'],
 
+  properties: [
+    {
+      class: 'String',
+      name: 'javaCode'
+    }
+  ],
+
   axioms: [
     {
       installInClass: function(cls) {
@@ -1454,7 +1461,7 @@ foam.CLASS({
           });
 
           cls.declarations = this.VALUES.map(function(v) {
-            return `${v.name}(${properties.map(p => foam.java.asJavaValue(v[p.name], p)).join(', ')})`;
+            return `${v.name}(${properties.map(p => foam.java.asJavaValue(v[p.name], p)).join(', ')}) ${v.javaCode ? ' { ' + v.javaCode + ' }' : '/* NO CODE */'}`;
           }).join(',\n  ');
 
           cls.method({
