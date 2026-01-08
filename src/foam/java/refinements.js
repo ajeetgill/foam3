@@ -1411,8 +1411,8 @@ foam.CLASS({
 
   axioms: [
     {
-      installInClass: function(cls) {
-        cls.buildJavaClass = function(cls) {
+      installInClass: function(fcls) {
+        fcls.buildJavaClass = function(cls) {
           cls = cls || foam.java.Enum.create();
 
           cls.name       = this.name;
@@ -1422,7 +1422,7 @@ foam.CLASS({
           cls.implements = [ 'foam.lang.FEnum' ];
 
           // TODO: temporary work-around, to be moved to FSM specific refinement
-          if ( cls.model_.cls_.id === 'foam.lang.StateMachineModel' ) {
+          if ( this.model_.extends === 'foam.lang.StateMachineEnum' ) {
             cls.implements = [ 'foam.lang.StateMachineEnum' ];
           }
 
