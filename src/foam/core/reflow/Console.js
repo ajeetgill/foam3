@@ -198,6 +198,7 @@ foam.CLASS({
   methods: [
     function render() {
       let self = this;
+      const isLimitedEditConsole = this.data.flowMode === this.FlowMode.LIMIT_EDIT_CONSOLE;
 
       var fullVersion = this.data.value.dynamic(function(version, revision) {
         this.add(`v${version}.${revision}`);
@@ -207,7 +208,9 @@ foam.CLASS({
         .start()
           .addClass(this.myClass('header-container'))
           .start().addClass(this.myClass('navigator'))
-            .tag(this.HOME)
+            .callIf(! isLimitedEditConsole, function() {
+              this.tag(self.HOME);
+            })
             .start(foam.u2.tag.Image, {
               glyph: 'rightChevron',
               embedSVG: true
@@ -235,7 +238,7 @@ foam.CLASS({
               .tag(this.SAVE)
               .tag(this.OverlayActionListView, {
                 label: 'More',
-                data: [this.RESET, this.CANCEL, this.CLEAR],
+                data: isLimitedEditConsole ? [this.CANCEL] : [this.RESET, this.CANCEL, this.CLEAR],
                 obj: this,
                 buttonStyle: 'SECONDARY',
                 size: 'SMALL',
@@ -244,9 +247,11 @@ foam.CLASS({
                 showDropdownIcon: false,
                 horizontal: false
               })
-              .start('span').addClass(this.myClass('separator')).end()
-              .tag(this.FULL_SCREEN, { themeIcon$: self.data.flowMode$.map(c => c == self.FlowMode.CONSOLE ? 'fullScreen' : 'minimize') })
             .endContext()
+            .callIf(! isLimitedEditConsole, function() {
+              this.start('span').addClass(self.myClass('separator')).end()
+                .tag(self.FULL_SCREEN, { themeIcon$: self.data.flowMode$.map(c => c == self.FlowMode.CONSOLE ? 'fullScreen' : 'minimize') });
+            })
             // callIf(this.data.showPrompts$, function() {
             //   this.start().addClass(self.myClass('save-text'))
             //     .add('The Flow is saved automatically')
@@ -278,6 +283,9 @@ foam.CLASS({
         return ! showPrompts;
       },
       code: function() {
+        if ( this.data.flowMode == this.data.FlowMode.LIMIT_EDIT ) {
+          this.data.flowMode = this.data.FlowMode.CONSOLE;
+        }
         this.data.showPrompts = true;
       }
     },
@@ -378,15 +386,72 @@ foam.CLASS({
       label: '',
       buttonStyle: foam.u2.ButtonStyle.SECONDARY,
       isAvailable: function(data$flowMode) {
-        // Hide toggle button in PRESENTATION_ONLY mode
-        return data$flowMode != this.FlowMode.PRESENTATION_ONLY;
+        // Hide toggle button in PRESENTATION_ONLY and limited edit modes
+        return data$flowMode != this.FlowMode.PRESENTATION_ONLY &&
+               data$flowMode != this.FlowMode.LIMIT_EDIT &&
+               data$flowMode != this.FlowMode.LIMIT_EDIT_CONSOLE;
       },
       code: function() {
         if ( this.data.flowMode == this.FlowMode.CONSOLE ) {
           this.data.flowMode = this.FlowMode.PRESENTATION;
         } else if ( this.data.flowMode == this.FlowMode.PRESENTATION ) {
           this.data.flowMode = this.FlowMode.CONSOLE;
+        } else if ( this.data.flowMode == this.FlowMode.LIMIT_EDIT ) {
+          this.data.flowMode = this.FlowMode.LIMIT_EDIT_CONSOLE;
+        } else if ( this.data.flowMode == this.FlowMode.LIMIT_EDIT_CONSOLE ) {
+          this.data.flowMode = this.FlowMode.LIMIT_EDIT;
         }
+      }
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.core.reflow',
+  name: 'LimitEditHeader',
+  extends: 'foam.u2.View',
+
+  requires: [
+    'foam.core.reflow.FlowMode'
+  ],
+
+  css: `
+    ^container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+    ^title {
+      font-weight: $font-medium;
+      color: $textDefault;
+    }
+  `,
+
+  methods: [
+    function render() {
+      this.
+        addClass().
+        start().addClass(this.myClass('container'))
+          .start('span').addClass(this.myClass('title'))
+            .add(this.data.value.name$.map(n => n || 'Unnamed'))
+          .end()
+          .startContext({ data: this })
+            .tag(this.EDIT_LIMITED)
+          .endContext()
+        .end();
+    }
+  ],
+
+  actions: [
+    {
+      name: 'editLimited',
+      label: 'Edit',
+      buttonStyle: foam.u2.ButtonStyle.PRIMARY,
+      size: 'SMALL',
+      code: function() {
+        this.data.flowMode = this.FlowMode.LIMIT_EDIT_CONSOLE;
       }
     }
   ]
@@ -887,7 +952,7 @@ foam.CLASS({
 foam.ENUM({
   package: 'foam.core.reflow',
   name: 'FlowMode',
-  values: [ 'CONSOLE', 'PRESENTATION', 'PRESENTATION_ONLY' ]
+  values: [ 'CONSOLE', 'PRESENTATION', 'PRESENTATION_ONLY', 'LIMIT_EDIT', 'LIMIT_EDIT_CONSOLE' ]
 });
 
 
@@ -914,6 +979,7 @@ foam.CLASS({
     'foam.core.reflow.ToolbarControl',
     'foam.core.reflow.Block',
     'foam.core.reflow.Flow',
+    'foam.core.reflow.LimitEditHeader',
     'foam.core.reflow.FlowMode',
     'foam.core.reflow.FlowableTree',
     'foam.core.reflow.Layout',
@@ -1094,7 +1160,7 @@ foam.CLASS({
       name: 'showPrompts',
       value: true,
       expression: function(flowMode) {
-        return flowMode === this.FlowMode.CONSOLE;
+        return flowMode === this.FlowMode.CONSOLE || flowMode === this.FlowMode.LIMIT_EDIT_CONSOLE;
       },
       preSet: function(_, n) { return n === 'false' ? '' : n; },
 //      memorable: true // use flowMode
@@ -1384,9 +1450,13 @@ foam.CLASS({
         });
       }
 
-      layout.header.add(this.dynamic(function(showPrompts) {
-        this.tag(self.ReflowHeader, {data: self, showPrompts: showPrompts, resetFlow: self.clearFlow});
-      }));
+      layout.header.add(this.dynamic(function(flowMode, showPrompts) {
+        if ( flowMode == self.FlowMode.LIMIT_EDIT ) {
+          this.tag(self.LimitEditHeader, { data: self });
+        } else {
+          this.tag(self.ReflowHeader, {data: self, showPrompts: showPrompts, resetFlow: self.clearFlow});
+        }
+      }, self.flowMode$, self.showPrompts$));
 
       await this.eval_('preLoad', null, true);
 
@@ -1793,9 +1863,15 @@ foam.CLASS({
         // Don't allow toggling out of PRESENTATION_ONLY mode
         if ( this.flowMode == this.FlowMode.PRESENTATION_ONLY ) return;
 
-        this.flowMode = this.flowMode == this.FlowMode.CONSOLE ?
-          this.FlowMode.PRESENTATION :
-          this.FlowMode.CONSOLE ;
+        if ( this.flowMode == this.FlowMode.CONSOLE ) {
+          this.flowMode = this.FlowMode.PRESENTATION;
+        } else if ( this.flowMode == this.FlowMode.PRESENTATION ) {
+          this.flowMode = this.FlowMode.CONSOLE;
+        } else if ( this.flowMode == this.FlowMode.LIMIT_EDIT ) {
+          this.flowMode = this.FlowMode.LIMIT_EDIT_CONSOLE;
+        } else if ( this.flowMode == this.FlowMode.LIMIT_EDIT_CONSOLE ) {
+          this.flowMode = this.FlowMode.LIMIT_EDIT;
+        }
 
         // After toggleMode is executed the app may no longer have focus so thee
         // keyboard shortcut won't work. Set focus to something so if you user presses escape again
