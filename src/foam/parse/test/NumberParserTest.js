@@ -21,6 +21,7 @@ foam.CLASS({
       this.testNegativeNumbers(x);
       this.testDecimalOnly(x);
       this.testEdgeCases(x);
+      this.testLenientParsing(x);
       this.testInvalidInputs(x);
     },
 
@@ -162,6 +163,44 @@ foam.CLASS({
         x.test(
           result === testCase.expected,
           'Edge Case Test' + (i + 1) + ': "' + testCase.input + '" = ' + result + ' (expected ' + testCase.expected + ')'
+        );
+      });
+    },
+
+    function testLenientParsing(x) {
+      var parser = this.NumberParser.create();
+
+      // Lenient parsing: variable digit grouping and extended decimals
+      var standardCases = [
+        { input: '100,1000.1000', expected: 1001000.1 },
+        { input: '1,0000.00', expected: 10000 },
+        { input: '1,00,000', expected: 100000 },          // Indian style
+        { input: '12,3456,789', expected: 123456789 },    // Variable grouping
+        { input: '1000.123456', expected: 1000.123456 },  // Many decimal places
+        { input: '0.123456789', expected: 0.123456789 }   // Many decimal places
+      ];
+
+      standardCases.forEach(function(testCase, i) {
+        var result = parser.parseString(testCase.input);
+        x.test(
+          result === testCase.expected,
+          'Lenient Standard Test' + (i + 1) + ': ' + testCase.input + ' = ' + result + ' (expected ' + testCase.expected + ')'
+        );
+      });
+
+      // Lenient European parsing
+      var europeanCases = [
+        { input: '100.1000,1000', expected: 1001000.1 },
+        { input: '1.0000,00', expected: 10000 },
+        { input: '1.00.000', expected: 100000 },          // Variable grouping
+        { input: '1000,123456', expected: 1000.123456 }   // Many decimal places
+      ];
+
+      europeanCases.forEach(function(testCase, i) {
+        var result = parser.parseString(testCase.input, 'european');
+        x.test(
+          result === testCase.expected,
+          'Lenient European Test' + (i + 1) + ': ' + testCase.input + ' = ' + result + ' (expected ' + testCase.expected + ')'
         );
       });
     },

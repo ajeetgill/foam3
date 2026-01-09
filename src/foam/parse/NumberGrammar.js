@@ -11,11 +11,12 @@ foam.CLASS({
 
   documentation: `
     Grammar definitions for parsing number strings in various formats.
-    Supports:
+    Lenient parser that accepts:
     - Standard format (US/UK): comma for thousands, period for decimal (1,000.00)
     - European format (DE/FR): period for thousands, comma for decimal (1.000,00)
     - Plain numbers without separators (1000.00)
     - Negative numbers with leading minus sign
+    - Variable digit grouping (1,00,000 or 1,0000.00 accepted)
 
     Entry points:
     - START: Auto-detect standard or plain format (no European - ambiguous with standard)
@@ -67,29 +68,29 @@ foam.CLASS({
         ),
 
         // Standard format: comma for thousands, period for decimal
-        // Examples: 1,000.00, 1,000,000.50, 1,000
+        // Examples: 1,000.00, 1,000,000.50, 1,000, 1,0000.00 (lenient)
         standardNumber: seq(
           sym('standardInteger'),
           optional(seq('.', sym('decimalDigits')))
         ),
 
-        // Standard integer part with comma thousands separators
+        // Standard integer part with comma thousands separators (lenient - any digit count)
         standardInteger: seq(
-          sym('digits1to3'),                           // First group: 1-3 digits
-          repeat(seq(',', sym('digits3')), null, 1)    // Followed by ,XXX groups (at least one)
+          sym('plainDigits'),                                // First group: any digits
+          repeat(seq(',', sym('plainDigits')), null, 1)      // Followed by ,XXX groups (at least one)
         ),
 
         // European format: period for thousands, comma for decimal
-        // Examples: 1.000,00, 1.000.000,50, 1.000
+        // Examples: 1.000,00, 1.000.000,50, 1.000, 1.0000,00 (lenient)
         europeanNumber: seq(
           sym('europeanInteger'),
           optional(seq(',', sym('decimalDigits')))
         ),
 
-        // European integer part with period thousands separators
+        // European integer part with period thousands separators (lenient - any digit count)
         europeanInteger: seq(
-          sym('digits1to3'),                           // First group: 1-3 digits
-          repeat(seq('.', sym('digits3')), null, 1)    // Followed by .XXX groups (at least one)
+          sym('plainDigits'),                                // First group: any digits
+          repeat(seq('.', sym('plainDigits')), null, 1)      // Followed by .XXX groups (at least one)
         ),
 
         // Plain number for standard entry: period for decimal
@@ -107,17 +108,11 @@ foam.CLASS({
           sym('plainDigits')                                    // 1000
         ),
 
-        // Plain digits (no separators)
+        // Plain digits (no separators) - 1 or more digits
         plainDigits: str(repeat(range('0', '9'), null, 1)),
 
-        // Decimal digits after decimal point
-        decimalDigits: str(repeat(range('0', '9'), null, 1)),
-
-        // 1-3 digits for first group
-        digits1to3: str(repeat(range('0', '9'), null, 1, 3)),
-
-        // Exactly 3 digits for thousands groups
-        digits3: str(repeat(range('0', '9'), null, 3, 3))
+        // Decimal digits after decimal point - 1 or more digits
+        decimalDigits: str(repeat(range('0', '9'), null, 1))
       };
     }
   ]
