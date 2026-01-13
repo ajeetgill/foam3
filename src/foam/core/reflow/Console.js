@@ -1911,6 +1911,9 @@ foam.CLASS({
         // Don't allow toggling out of PRESENTATION_ONLY mode
         if ( this.flowMode == this.FlowMode.PRESENTATION_ONLY ) return;
 
+        // In LIMIT_EDIT mode, block escape-based toggling to prevent bypassing permission gates.
+        if ( this.flowMode == this.FlowMode.LIMIT_EDIT ) return;
+        
         if ( this.flowMode == this.FlowMode.CONSOLE ) {
           this.flowMode = this.FlowMode.PRESENTATION;
         } else if ( this.flowMode == this.FlowMode.PRESENTATION ) {
