@@ -137,17 +137,20 @@ foam.CLASS({
         test ( false, testId+" Error parsing: "+t.getMessage());
       }
 
-      testId = "EmptyFObjectProperty-OutputDefaultClassNames:false";
+      // Test with OutputDefaultValues=false (JRL default) - the actual use case from PR
+      // When OutputDefaultValues=false, the empty Address outputs nothing except the class
+      testId = "EmptyFObjectProperty-JRLDefaults";
       formatter = new JSONFObjectFormatter();
-      formatter.setOutputDefaultClassNames(false);
-      formatter.setOutputDefaultValues(true);
+      // OutputDefaultClassNames=true (default)
+      // OutputDefaultValues=false (default) - mimics JRL behavior
       user = new User();
       user.setId(12345L);
       user.setAddress(new Address()); // Empty/default address
       formatter.output(user);
       json = formatter.builder().toString();
-      // With OutputDefaultClassNames=false, empty FObject produces invalid JSON (original behavior)
-      test ( ! SafetyUtil.isEmpty(json) && json.contains(":,"), testId+" produces invalid json as expected: "+json);
+      // With default settings (JRL-like), empty Address should still have class output
+      test ( ! SafetyUtil.isEmpty(json) && ! json.contains(":,"), testId+" valid json generated");
+      test ( json.contains("address") && json.contains("foam.core.auth.Address"), testId+" address with class present: "+json);
       `
     }
   ]
