@@ -12,6 +12,7 @@ foam.CLASS({
     { class: 'Long', name: 'id' },
     { class: 'String', name: 'firstName' },
     { class: 'String', name: 'lastName' },
+    { class: 'String', name: 'email' },
     { class: 'foam.lang.Date', name: 'birthday' },
     { class: 'foam.lang.DateTime', name: 'lastLogin' },
     { class: 'Boolean', name: 'emailVerified' }
@@ -33,6 +34,7 @@ foam.CLASS({
   methods: [
     async function runTest(x) {
       this.testBasicQueries(x);
+      this.testEmailPlusAddressing(x);
       this.testDateParsing(x);
       this.testDateParsingFixes(x);
       this.testTimezoneHandling(x);
@@ -71,6 +73,28 @@ foam.CLASS({
       // Lists
       x.test(this.isValidQuery(parser, "firstName=Simon,John"), "Should parse value list");
       x.test(this.isValidQuery(parser, "firstName:(Simon|John)"), "Should parse OR values");
+    },
+
+    function testEmailPlusAddressing(x) {
+      var parser = this.QueryParser.create({ of: this.QueryParserTestUser });
+
+      // Test emails with + (plus addressing/tagging)
+      x.test(this.isValidQuery(parser, "email=user+tag@example.com"), "Should parse email with + tag");
+      x.test(this.isValidQuery(parser, "email=user+test@example.com,user+other@example.com"), "Should parse multiple emails with +");
+
+      // Verify the full email is captured, not truncated at +
+      var query = parser.parseString("email=user+tag@example.com");
+      if ( query && query.args && query.args[0] ) {
+        var predicate = query.args[0];
+        var value = predicate.arg2;
+        if ( value && value.value ) value = value.value;
+        x.test(value === "user+tag@example.com",
+          "Email with + should not be truncated, got: " + value);
+      }
+
+      // Test + doesn't interfere with other queries
+      x.test(this.isValidQuery(parser, "email=user+tag@example.com AND firstName=John"),
+        "Should parse email with + in AND query");
     },
 
     function testDateParsing(x) {

@@ -80,6 +80,11 @@ foam.CLASS({
       
       test( isValid("has:businessName"," (businessname <> '') is not true ") , "The businessName exist");
       test( isValid("is:emailVerified"," emailverified =  ?  ") , "The emailVerified is equal to true");
+
+      // Email with + (plus addressing)
+      test( isValid("email=user+tag@example.com"," email =  ?  ") , "Email with + should parse correctly");
+      test( isValid("email=user+tag@example.com,user+other@example.com"," ( email =  ?  )  OR  ( email =  ?  ) ") , "Multiple emails with + should parse correctly");
+
       //          {"id=me"," ( ( id =  ?  ) ) "},
       
       test( isValid("firstName=Simon,Wassim"," ( firstname =  ?  )  OR  ( firstname =  ?  ) ") , "The firstName is equal to value1 OR to value2");
