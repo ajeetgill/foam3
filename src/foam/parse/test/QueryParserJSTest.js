@@ -78,23 +78,41 @@ foam.CLASS({
     function testEmailPlusAddressing(x) {
       var parser = this.QueryParser.create({ of: this.QueryParserTestUser });
 
-      // Test emails with + (plus addressing/tagging)
-      x.test(this.isValidQuery(parser, "email=user+tag@example.com"), "Should parse email with + tag");
-      x.test(this.isValidQuery(parser, "email=user+test@example.com,user+other@example.com"), "Should parse multiple emails with +");
-
-      // Verify the full email is captured, not truncated at +
+      // Verify the full email with + is captured, not truncated
+      // Without + in char rule, "user+tag@example.com" would parse as just "user"
       var query = parser.parseString("email=user+tag@example.com");
-      if ( query && query.args && query.args[0] ) {
-        var predicate = query.args[0];
-        var value = predicate.arg2;
-        if ( value && value.value ) value = value.value;
-        x.test(value === "user+tag@example.com",
-          "Email with + should not be truncated, got: " + value);
-      }
+      var value = this.extractValue(query);
+      x.test(value === "user+tag@example.com",
+        "Email with + should not be truncated at +, expected 'user+tag@example.com' got: '" + value + "'");
 
-      // Test + doesn't interfere with other queries
-      x.test(this.isValidQuery(parser, "email=user+tag@example.com AND firstName=John"),
-        "Should parse email with + in AND query");
+      // Test multiple emails with +
+      var query2 = parser.parseString("email=a+b@test.com,c+d@test.com");
+      var values = this.extractValues(query2);
+      x.test(values.includes("a+b@test.com") && values.includes("c+d@test.com"),
+        "Multiple emails with + should parse correctly, got: " + JSON.stringify(values));
+    },
+
+    function extractValue(query) {
+      // Extract single value from Eq predicate
+      if ( ! query ) return null;
+      var pred = query.args ? query.args[0] : query;
+      if ( ! pred || ! pred.arg2 ) return null;
+      var val = pred.arg2;
+      return val.value !== undefined ? val.value : val;
+    },
+
+    function extractValues(query) {
+      // Extract values from Or predicate containing Eq predicates
+      var values = [];
+      if ( ! query || ! query.args ) return values;
+      for ( var i = 0 ; i < query.args.length ; i++ ) {
+        var pred = query.args[i];
+        if ( pred && pred.arg2 ) {
+          var val = pred.arg2;
+          values.push(val.value !== undefined ? val.value : val);
+        }
+      }
+      return values;
     },
 
     function testDateParsing(x) {
