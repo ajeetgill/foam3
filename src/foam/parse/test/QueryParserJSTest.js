@@ -102,17 +102,19 @@ foam.CLASS({
     },
 
     function extractValues(query) {
-      // Extract values from Or predicate containing Eq predicates
+      // Extract values from In predicate (used for comma-separated values with =)
       var values = [];
-      if ( ! query || ! query.args ) return values;
-      for ( var i = 0 ; i < query.args.length ; i++ ) {
-        var pred = query.args[i];
-        if ( pred && pred.arg2 ) {
-          var val = pred.arg2;
-          values.push(val.value !== undefined ? val.value : val);
-        }
+      if ( ! query ) return values;
+      // Handle And wrapper: query.args[0] is the actual predicate
+      var pred = query.args ? query.args[0] : query;
+      if ( ! pred || ! pred.arg2 ) return values;
+      var arg2 = pred.arg2;
+      // arg2 could be a Constant wrapping an array, or the array directly
+      var arr = arg2.value !== undefined ? arg2.value : arg2;
+      if ( Array.isArray(arr) ) {
+        return arr;
       }
-      return values;
+      return [arr];
     },
 
     function testDateParsing(x) {
