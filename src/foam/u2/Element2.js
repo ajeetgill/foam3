@@ -1574,7 +1574,8 @@ foam.CLASS({
   methods: [
     function toE(args, X) {
       return foam.u2.ViewSpec.createView(
-        { class: 'foam.u2.DetailView', showActions: true, data: this },
+        // Mark as inline view so it doesn't participate in navigation memento chain
+        { class: 'foam.u2.DetailView', showActions: true, data: this, isInlineView_: true },
         args, this, X);
     }
   ]
