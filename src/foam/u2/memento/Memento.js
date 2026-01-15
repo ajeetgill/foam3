@@ -389,24 +389,11 @@ foam.CLASS({
 
   properties: [
     {
-      class: 'Boolean',
-      name: 'isInlineView_',
-      documentation: 'If true, this view was created inline (via toE) and should not participate in navigation memento chain.',
-      hidden: true,
-      transient: true
-    },
-    {
       name: 'memento_',
       documentation: 'Memento bound to this object.',
       hidden: true,
       transient: true,
       factory: function() {
-        // Inline views (created via toE for property display) should not participate
-        // in the navigation memento chain - they would incorrectly overwrite the
-        // navigation tail and orphan the real navigation views.
-        if ( this.isInlineView_ ) {
-          return this.Memento.create({obj: this}, this); // No parent = isolated memento
-        }
         // If no top-level Memento found, then create a WindowHashMemento to be
         // the top-level one.
         return this.parentMemento_ ?
@@ -419,11 +406,6 @@ foam.CLASS({
   methods: [
     function initArgs(args, opt_parent) {
       this.SUPER(null, opt_parent);
-      // Set isInlineView_ from args BEFORE memento_ factory runs
-      // because memento_ factory needs to check this flag
-      if ( args && args.isInlineView_ ) {
-        this.isInlineView_ = args.isInlineView_;
-      }
       this.memento_;
       // Copy args again cause context was needed for mementos
       this.SUPER(args);
