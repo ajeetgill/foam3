@@ -34,6 +34,7 @@ foam.CLASS({
     {
       name: 'objectId',
       class: 'String',
+      projectionSafe: false
     },
     {
       name: 'deletedAtRuntime',

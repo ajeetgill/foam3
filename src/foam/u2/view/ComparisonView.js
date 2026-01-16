@@ -96,16 +96,24 @@
       var changed = [];
       if ( ! this.left || ! this.right ) return changed;
 
-      var keys = Object.keys(this.left.instance_ || {});
-      for ( var i = 0 ; i < keys.length ; i++ ) {
-        var key = keys[i];
-        if ( key.endsWith('$') ) continue; // Skip slot properties
-        var leftValue = this.left[key];
-        var rightValue = this.right[key];
-        if ( ! foam.util.equals(leftValue, rightValue) ) {
-          changed.push(key);
+      // Use the model's properties (axioms) to compare
+      var cls = this.left.cls_;
+      if ( ! cls || ! cls.getAxiomsByClass ) return changed;
+
+      try {
+        var props = cls.getAxiomsByClass(foam.lang.Property);
+        for ( var i = 0 ; i < props.length ; i++ ) {
+          var prop = props[i];
+          var leftValue = prop.get(this.left);
+          var rightValue = prop.get(this.right);
+          if ( ! foam.util.equals(leftValue, rightValue) ) {
+            changed.push(prop.label || prop.name);
+          }
         }
+      } catch ( e ) {
+        console.warn('ComparisonView: Error calculating changed fields', e);
       }
+
       return changed;
     },
 
