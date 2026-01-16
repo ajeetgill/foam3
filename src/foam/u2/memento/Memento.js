@@ -209,10 +209,12 @@ foam.CLASS({
         in the parent, even if it is the default value, otherwise it would
         cause ambiguity as to which level the binding applied.
       **/
-      var ret = ( this.tail && opt_untilObj !== this.obj ) ? this.tail.encode() : { route: '', params: '', bound: {} };
+      var tailRet = ( this.tail && opt_untilObj !== this.obj ) ? this.tail.encode() : null;
+      var ret = tailRet ? { route: tailRet.route, params: tailRet.params, bound: Object.assign({}, tailRet.bound) } : { route: '', params: '', bound: {} };
 
       this.props.forEach(p => {
         var val = this.obj[p.name] === undefined ? '' : this.obj[p.name];
+
         if ( p.name === 'route' || p.shortName === 'route' ) {
           if ( ret.route ) ret.route = '/' + ret.route;
           ret.route = encodeURIComponent(val) + ret.route;
@@ -220,21 +222,31 @@ foam.CLASS({
           var name = p.shortName || p.name;
 
           // If the name is bound in the tail, then output to avoid ambiguity
-          if ( ! this.obj.hasDefaultValue(p.name) || ret.bound[name] ) {
+          var hasDefault = this.obj.hasDefaultValue(p.name);
+
+          if ( ! hasDefault || ret.bound[name] ) {
             if ( ret.params ) ret.params = '&' + ret.params;
             // ???: What is this used for?
             if ( val && this.cls_.isInstance(val) ) debugger;
             // if ( val && this.cls_.isInstance(val) ) val = `{${val.usedStr}}`;
             // if ( val === undefined ) val = '';
-            ret.params = name + '=' + encodeURIComponent(val) + ret.params;
-            // console.log('***', name, val);
+            var encodedVal = encodeURIComponent(val);
+            ret.params = name + '=' + encodedVal + ret.params;
             ret.bound[name] = true;
           }
         }
       });
 
+      var resultStr = this.toString(ret);
+
       if ( ! opt_untilObj ) {
-        this.usedStr = this.toString(ret);
+        this.usedStr = resultStr;
+
+        // Also update tailStr to keep it in sync with usedStr.
+        // This prevents stale tailStr from being passed to newly created child mementos.
+        if ( tailRet ) {
+          this.tailStr = this.toString(tailRet);
+        }
       }
 
       return ret;
@@ -324,7 +336,6 @@ foam.CLASS({
       // Not framed or merged so can detect hashFeedback_ properly
       documentation: 'Called when the window hash is updated, causes update to memento.',
       code: function() {
-        // console.log('onHashChange', this.hashFeedback_, this.window.location.hash);
         if ( this.hashFeedback_ ) return;
         this.str = this.window.location.hash.substring(1);
       }
@@ -337,11 +348,13 @@ foam.CLASS({
         let route    = this.usedStr.split('?')[0];
         let winRoute = this.window.location.hash.substring(1).split('?')[0];
         let self = this;
+
         if ( route == winRoute ) {
           this.window.history.replaceState(null,'','#' + this.usedStr)
         } else {
           this.window.history.pushState(null, '', '#' + this.usedStr)
         }
+
         // Title needs to be set here otherwise title changes before the memento does and we get incorrect document titles
         if ( this.breadcrumbs ) {
           if ( this.detacher_ ) this.detacher_.detach();
