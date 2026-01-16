@@ -151,7 +151,6 @@ foam.CLASS({
     },
 
     function detachTail() {
-      // console.log('detaching tail', this.tailStr)
       this.tail?.detach();
       this.tail = null;
       this.tailStr = '';
@@ -272,7 +271,7 @@ foam.CLASS({
       code: function(slot) {
         if ( this.feedback_ ) return;
         if ( this.parent && this.parent.tail !== this ) {
-          // Update received from a child
+          // Orphaned memento - parent's tail was changed to something else
           if ( slot ) {
             slot.detach();
           } else {
