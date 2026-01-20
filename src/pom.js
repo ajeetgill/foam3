@@ -424,6 +424,7 @@ foam.POM({
     { name: "foam/glang/pom",                                         flags: "js|java" },
     { name: "foam/parse/QueryParser",                                 flags: "js" },
     { name: "foam/parse/SimpleQueryParser",                           flags: "js" },
+    { name: "foam/parse/SimpleJavaScriptParser",                      flags: "js" },
     { name: "foam/parse/QueryRouter",                                 flags: "js" },
     { name: "foam/parse/DateGrammar",                                 flags: "js" },
     { name: "foam/parse/DateParser",                                  flags: "js" },

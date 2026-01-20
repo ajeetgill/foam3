@@ -92,6 +92,8 @@ foam.CLASS({
   requires: [
     'foam.core.reflow.MappingType',
     'foam.core.reflow.DateFormat',
+    'foam.parse.SimpleJavaScriptParser',
+    'foam.parse.auto.SmartView',
     'foam.core.reflow.NumberFormat'
   ],
 
@@ -121,6 +123,7 @@ foam.CLASS({
       name: 'constantValue',
       label: '',
       documentation: 'Static value applied to all rows',
+      onKey: true,
       visibility: function(type) {
         return foam.u2.DisplayMode[type === foam.core.reflow.MappingType.CONSTANT ? 'RW' : 'HIDDEN'];
       }
@@ -145,9 +148,21 @@ foam.CLASS({
       class: 'String',
       name: 'dynamicExpression',
       label: '',
-      documentation: 'JavaScript expression for dynamic computation',
-      help: 'JavaScript expression that can access row data fields directly. Examples: firstName + " " + lastName, age > 18 ? "Adult" : "Minor", email.toLowerCase()',
-      view: { class: 'foam.u2.tag.TextArea', rows: 2, cols: 40 },
+      documentation: 'FScript expression for dynamic computation - supports field access, operators, and functions',
+      help: 'FScript expression examples: firstName + " " + lastName, age > 18, email.toLowerCase(), YEARS(birthDate) > 21',
+      onKey: true,
+      view: function(_, X) {
+        // Use the parser from the instance property
+        if ( ! X.data.expressionParser_ ) {
+          // Fallback to regular TextField if no parser available (no headers)
+          return { class: 'foam.u2.TextField' };
+        }
+
+        return {
+          class: 'foam.parse.auto.SmartView',
+          parser: X.data.expressionParser_
+        };
+      },
       visibility: function(type) {
         return foam.u2.DisplayMode[type === foam.core.reflow.MappingType.DYNAMIC ? 'RW' : 'HIDDEN'];
       }
@@ -155,6 +170,53 @@ foam.CLASS({
     {
       name: 'of',
       hidden: true
+    },
+    {
+      name: 'expressionParser_',
+      hidden: true,
+      transient: true,
+      expression: function(fileHeaders) {
+        // Create a temporary model with the current file headers as properties
+        if ( ! fileHeaders || fileHeaders.length === 0 ) {
+          return null;
+        }
+
+        // Create mapping of original headers to normalized names
+        var headerMap = {};
+        var props = [];
+
+        for ( var i = 0; i < fileHeaders.length; i++ ) {
+          var original = fileHeaders[i];
+          var normalized = original.replace(/[^a-zA-Z0-9_]/g, '_').replace(/^[0-9]+/, '');
+          headerMap[normalized] = original;
+
+          props.push({
+            class: 'String',
+            name: normalized,
+            label: original
+          });
+        }
+
+        // Check if model already exists, if so, reuse it
+        var modelName = 'DynamicExpressionModel';
+        var fullName = 'foam.core.reflow.temp.' + modelName;
+
+        var TempModel = foam.maybeLookup(fullName);
+
+        if ( ! TempModel ) {
+          foam.CLASS({
+            package: 'foam.core.reflow.temp',
+            name: modelName,
+            properties: props
+          });
+          TempModel = foam.lookup(fullName);
+        }
+
+        return this.SimpleJavaScriptParser.create({
+          of: TempModel,
+          headerMap: headerMap
+        });
+      }
     },
     {
       name: 'prop',
@@ -185,6 +247,49 @@ foam.CLASS({
         if ( ! prop ) return foam.u2.DisplayMode.HIDDEN;
         var isDateProp = foam.lang.Date.isInstance(prop) || foam.lang.DateTime.isInstance(prop);
         return isDateProp ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
+      }
+    },
+    {
+      name: 'sampleData',
+      hidden: true,
+      transient: true,
+      factory: function() { return {}; },
+      documentation: 'First row of data for computing sample values'
+    },
+    {
+      class: 'String',
+      name: 'sampleValue',
+      label: 'Sample',
+      documentation: 'Sample value computed based on mapping type and configuration',
+      visibility: 'RO',
+      expression: function(type, constantValue, fieldName, dynamicExpression, sampleData) {
+        // Return sample based on mapping type
+        switch ( type ) {
+          case foam.core.reflow.MappingType.CONSTANT:
+            // For CONSTANT: show the constant value
+            return constantValue || '';
+
+          case foam.core.reflow.MappingType.FIELD:
+            // For FIELD: show value from sampleData
+            if ( fieldName && sampleData && sampleData[fieldName] !== undefined ) {
+              return sampleData[fieldName];
+            }
+            return '';
+
+          case foam.core.reflow.MappingType.DYNAMIC:
+            // For DYNAMIC: evaluate expression with sampleData
+            if ( dynamicExpression && sampleData && Object.keys(sampleData).length > 0 ) {
+              try {
+                return this.evaluateExpression(dynamicExpression, sampleData);
+              } catch (x) {
+                return '⚠ Error: ' + x.message;
+              }
+            }
+            return '';
+
+          default:
+            return '';
+        }
       }
     },
     {
@@ -351,8 +456,8 @@ foam.CLASS({
 
     function evaluateExpression(expression, rowData) {
       /**
-       * Safely evaluate a JavaScript expression within the context of rowData.
-       * Uses the same scoping pattern as ReactiveDetailView.js (lines 56-58).
+       * Safely evaluate a simple JavaScript expression with field access.
+       * Uses a with statement to provide field access while keeping it simple.
        *
        * @param {string} expression - The JavaScript expression to evaluate
        * @param {Object} rowData - The row data object containing field values
@@ -360,27 +465,31 @@ foam.CLASS({
        */
       if ( ! expression || ! rowData ) return '';
 
-      // Validate expression before evaluation
-      this.validateExpression(expression);
-
-      // Use the same pattern as ReactiveDetailView.js: with scope + eval
-      var result;
       try {
-        with ( foam.core.reflow.lib ) {
-          with ( rowData ) {
-            result = eval(expression);
-          }
+        // Normalize rowData keys to valid JavaScript identifiers
+        var normalizedData = {};
+        for ( var key in rowData ) {
+          var normalizedKey = key.replace(/[^a-zA-Z0-9_]/g, '_').replace(/^[0-9]+/, '');
+          normalizedData[normalizedKey] = rowData[key];
         }
+
+        // Simple evaluation with normalized rowData in scope
+        // This allows expressions like: Account_Type + " " + Status
+        var result;
+        with ( normalizedData ) {
+          result = eval(expression);
+        }
+        return result;
+
       } catch (x) {
         console.error('Expression evaluation error:', {
           expression: expression,
           rowData: rowData,
+          normalizedData: normalizedData,
           error: x.message
         });
         throw x;
       }
-
-      return result;
     },
 
     function validateExpression(expression) {
