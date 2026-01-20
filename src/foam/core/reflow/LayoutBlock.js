@@ -7,6 +7,7 @@
 foam.CLASS({
   package: 'foam.core.reflow',
   name: 'LayoutUtils',
+  mixins: [ 'foam.u2.StyleConfigurator' ],
   sections: [
     {
       name: 'layoutSettings',
@@ -32,11 +33,14 @@ foam.CLASS({
         this.VALUE,
         this.FLOW_CHILDREN,
         this.REACTIONS_,
+        this.ALLOW_LIMITED_EDIT,
         this.BORDER_CLASS,
         this.BORDER,
         this.GRID_COLUMNS,
         this.FLEX_CONTAINER_TYPE,
-        this.FLEX_VALUE
+        this.FLEX_VALUE,
+        this.SHOWN,
+        ...foam.u2.StyleConfigurator.getAxiomsByClass(foam.lang.Property).filter(p => ! p.hidden && ! p.transient)
       ]);
     }
   ],

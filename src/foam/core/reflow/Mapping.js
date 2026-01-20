@@ -36,7 +36,7 @@ foam.ENUM({
     {
       name: 'STANDARD',
       label: 'Standard',
-      documentation: 'Standard formats: yyyy-mm-dd, yyyy/mm/dd, yyyymmdd, mm/dd/yyyy, mm-dd-yyyy, mmddyyyy, plus ALL month name formats (unambiguous!): 31-JAN-2025, 31JAN2025, 2025-31-JAN, 202531JAN, Jan 02 2025'
+      documentation: 'Standard formats: yyyy-mm-dd, yyyy/mm/dd, yyyymmdd, mm/dd/yyyy, mm-dd-yyyy, mmddyyyy, mm/dd/yy, mm-dd-yy, mmddyy, plus ALL month name formats (unambiguous!): 31-JAN-2025, 31JAN2025, 2025-31-JAN, 202531JAN, Jan 02 2025'
     },
     {
       name: 'DDMMYYYY',
@@ -46,7 +46,40 @@ foam.ENUM({
     {
       name: 'YYYYDDMM',
       label: 'yyyy/dd/mm',
-      documentation: 'Year-Day-Month format for NUMERIC dates: yyyy/dd/mm, yyyy-dd-mm, yyyyddmm, yy/dd/mm, yy-dd-mm, yyddmm (month names work automatically in STANDARD)'
+      documentation: 'Numeric only: yyyy-dd-mm, yyyyddmm, yy-dd-mm, yyddmm'
+    }
+  ],
+
+  properties: [
+    {
+      // Add an 'id' property that returns the ordinal for DAO compatibility
+      name: 'id',
+      getter: function() { return this.ordinal; }
+    }
+  ],
+
+  methods: [
+    function toSummary() {
+      return this.label;
+    }
+  ]
+});
+
+
+foam.ENUM({
+  package: 'foam.core.reflow',
+  name: 'NumberFormat',
+
+  values: [
+    {
+      name: 'STANDARD',
+      label: 'Standard (1,000.00)',
+      documentation: 'US/UK format: comma for thousands, period for decimal'
+    },
+    {
+      name: 'EUROPEAN',
+      label: 'European (1.000,00)',
+      documentation: 'European format: period for thousands, comma for decimal'
     }
   ]
 });
@@ -58,7 +91,8 @@ foam.CLASS({
 
   requires: [
     'foam.core.reflow.MappingType',
-    'foam.core.reflow.DateFormat'
+    'foam.core.reflow.DateFormat',
+    'foam.core.reflow.NumberFormat'
   ],
 
   imports: [ 'scope?' ],
@@ -142,12 +176,37 @@ foam.CLASS({
       value: 'STANDARD',
       help: 'Standard format supports most common date formats (yyyy-mm-dd, mm/dd/yyyy, etc.). If your dates don\'t parse correctly, select a different format option.',
       documentation: 'Date format for this field (only applies to Date/DateTime properties)',
+      view: {
+        class: 'foam.core.reflow.DateFormatRichChoiceView'
+      },
       visibility: function(type, prop) {
         // Only show for Date/DateTime properties that use FIELD or CONSTANT mapping
         if ( type === foam.core.reflow.MappingType.DYNAMIC ) return foam.u2.DisplayMode.HIDDEN;
         if ( ! prop ) return foam.u2.DisplayMode.HIDDEN;
         var isDateProp = foam.lang.Date.isInstance(prop) || foam.lang.DateTime.isInstance(prop);
         return isDateProp ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
+      }
+    },
+    {
+      class: 'Enum',
+      of: 'foam.core.reflow.NumberFormat',
+      name: 'numberFormat',
+      label: '',
+      value: 'STANDARD',
+      help: 'Standard format uses comma for thousands and period for decimal (1,000.00). European format uses period for thousands and comma for decimal (1.000,00).',
+      documentation: 'Number format for this field (only applies to numeric properties)',
+      view: {
+        class: 'foam.core.reflow.NumberFormatRichChoiceView'
+      },
+      visibility: function(type, prop) {
+        // Only show for numeric properties that use FIELD or CONSTANT mapping
+        if ( type === foam.core.reflow.MappingType.DYNAMIC ) return foam.u2.DisplayMode.HIDDEN;
+        if ( ! prop ) return foam.u2.DisplayMode.HIDDEN;
+        var isNumericProp = foam.lang.Int.isInstance(prop) ||
+                            foam.lang.Long.isInstance(prop) ||
+                            foam.lang.Float.isInstance(prop) ||
+                            foam.lang.Double.isInstance(prop);
+        return isNumericProp ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
       }
     }
   ],
@@ -206,18 +265,47 @@ foam.CLASS({
         value = value.trim();
       }
 
-      // Set property value using fromCSV, passing format hint for date fields
+      // Set property value using fromCSV, passing format hint for date/number fields
       if ( value !== '' && value != null && value !== undefined ) {
-        // Check DateTimeUTC BEFORE DateTime since DateTimeUTC extends DateTime
-        if ( this.prop && foam.lang.Date.isInstance(this.prop) ) {
-          // For date/datetime properties, pass format to fromCSV
-          var formatName = this.formatToParserName();
-          this.prop.set(obj, this.prop.fromCSV(value, formatName));
-        } else {
-          this.prop.set(obj, this.prop.fromCSV(value));
+        if ( this.prop ) {
+          if ( foam.lang.Date.isInstance(this.prop) || foam.lang.DateTime.isInstance(this.prop) ) {
+            // For date/datetime properties, pass format to fromCSV
+            var dateFormatName = this.formatToParserName();
+            this.prop.set(obj, this.prop.fromCSV(value, dateFormatName));
+            return;
+          } else if ( foam.lang.Int.isInstance(this.prop) ||
+                      foam.lang.Long.isInstance(this.prop) ||
+                      foam.lang.Float.isInstance(this.prop) ||
+                      foam.lang.Double.isInstance(this.prop) ) {
+            // For numeric properties, pass format to fromCSV
+            var numberFormatName = this.numberFormatToParserName();
+            this.prop.set(obj, this.prop.fromCSV(value, numberFormatName));
+            return;
+          }
         }
+        this.prop.set(obj, this.prop.fromCSV(value));
       }
     },
+
+    function numberFormatToParserName() {
+      /**
+       * Maps NumberFormat enum to NumberParser grammar symbol name.
+       * This is used when calling fromCSV with format hints.
+       *
+       * @returns {string} Parser grammar symbol name (undefined for standard, 'european' for European)
+       */
+      if ( ! this.numberFormat ) return undefined;
+
+      // Map enum values to parser symbol names
+      switch ( this.numberFormat.name ) {
+        case 'EUROPEAN':
+          return 'european';
+        case 'STANDARD':
+        default:
+          return undefined;
+      }
+    },
+
     function evaluateExpression(expression, rowData) {
       /**
        * Safely evaluate a JavaScript expression within the context of rowData.

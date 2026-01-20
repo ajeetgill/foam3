@@ -62,7 +62,7 @@ foam.CLASS({
       name: 'scriptSection',
       title: 'Script',
       collapsable: true,
-      permissionRequired: true, // requires flow.section.scriptSection to access
+      permissionRequired: true, // requires foam.core.reflow.flow.section.scriptSection to access
       properties: [ 'preLoadScript', 'script', 'postLoadScript' ]
     }
   ],
@@ -72,6 +72,12 @@ foam.CLASS({
       class: 'String',
       name: 'name',
       section: 'general',
+    },
+    {
+      class: 'String',
+      name: 'limitedEditPermission',
+      hidden: true,
+      documentation: 'Permission id required to access limited-edit controls; hidden from standard UI.'
     },
     {
       class: 'String',
