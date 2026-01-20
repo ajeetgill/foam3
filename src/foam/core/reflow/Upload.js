@@ -105,6 +105,10 @@ foam.CLASS({
           var targetModel = mapping.of;
           var prop = targetModel && targetModel.getAxiomByName(mapping.property);
           var isDateProp = prop && (foam.lang.Date.isInstance(prop) || foam.lang.DateTime.isInstance(prop));
+          var isNumericProp = prop && (foam.lang.Int.isInstance(prop) ||
+                                       foam.lang.Long.isInstance(prop) ||
+                                       foam.lang.Float.isInstance(prop) ||
+                                       foam.lang.Double.isInstance(prop));
 
           var tooltipContent = mapping.property;
 
@@ -133,6 +137,9 @@ foam.CLASS({
               start('td').addClass('col-dateformat').
                 callIf(isDateProp, function() {
                   this.add(mapping.DATE_FORMAT.__);
+                }).
+                callIf(isNumericProp, function() {
+                  this.add(mapping.NUMBER_FORMAT.__);
                 }).
               end().
               start('td').addClass('col-required').add(prop ? (prop.required || false) : false).end().
