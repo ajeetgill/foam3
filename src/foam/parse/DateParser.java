@@ -436,6 +436,37 @@ public class DateParser {
   }
 
   /**
+   * Parse fractional seconds string (1-6 digits) and convert to milliseconds (0-999).
+   * Pads short strings with trailing zeros (e.g., "1" -> 100, "12" -> 120).
+   * Truncates long strings to 3 digits (e.g., "123456" -> 123).
+   */
+  private int parseFractionalSeconds(String fracStr) {
+    if ( fracStr == null || fracStr.isEmpty() ) return -1;
+
+    // Pad to 3 digits if shorter
+    if ( fracStr.length() < 3 ) {
+      while ( fracStr.length() < 3 ) {
+        fracStr = fracStr + "0";
+      }
+    }
+
+    // Truncate to 3 digits if longer
+    if ( fracStr.length() > 3 ) {
+      fracStr = fracStr.substring(0, 3);
+    }
+
+    return Integer.parseInt(fracStr);
+  }
+
+  /**
+   * Extract fractional seconds from parsed value array if present
+   */
+  private int extractFractionalSeconds(Object[] v, int fracIdx) {
+    if ( v.length <= fracIdx || v[fracIdx] == null ) return -1;
+    return parseFractionalSeconds((String) v[fracIdx]);
+  }
+
+  /**
    * Extract timezone from parsed value array
    */
   private String extractTimezone(Object[] v) {
@@ -461,15 +492,28 @@ public class DateParser {
     grammar.addSymbol("START", grammar.sym("dateOrDatetime"));
 
     // Main entry point - tries all formats including month names
+    // NOTE: Month name formats go FIRST because they contain letters (unambiguous!)
+    // Timestamps (10-13 digits) go LAST to avoid matching date formats like YYYYMMDDHH
     grammar.addSymbol("dateOrDatetime", new Alt(
       grammar.sym("date-monthname"),  // Month name formats first (unambiguous)
       grammar.sym("yyyymmdd"),
       grammar.sym("mmddyyyy"),
-      grammar.sym("yymmdd")
+      grammar.sym("mmddyy"),          // 2-digit year US format
+      grammar.sym("timestamp")        // Unix/JS timestamps (10-13 digits, must not match date formats)
     ));
 
-    // Date with month names - ALL completely unambiguous
+    // Unix timestamp (10 digits, seconds) or JavaScript timestamp (13 digits, milliseconds)
+    grammar.addSymbol("timestamp", new Alt(
+      grammar.sym("timestamp13"),  // 13-digit JavaScript millisecond timestamp (always safe)
+      grammar.sym("timestamp10")   // 10-digit Unix second timestamp (checked after date formats fail)
+    ));
+    grammar.addSymbol("timestamp13", new Join(new Repeat(Range.create('0', '9'), null, 13, 13)));
+    grammar.addSymbol("timestamp10", new Join(new Repeat(Range.create('0', '9'), null, 10, 10)));
+
+    // Date with month names - ALL completely unambiguous (contain letters!)
     grammar.addSymbol("date-monthname", new Alt(
+      grammar.sym("mmmddyyyy-space"),    // MMM dd yyyy (e.g., Jan 02 2025)
+      grammar.sym("ddmmmyyyy-space"),    // DD MMM YYYY (e.g., 15 JAN 2025)
       grammar.sym("ddmmmyyyy-sep"),
       grammar.sym("yyyyddmmm-sep"),
       grammar.sym("yyyyddmmm-compact"),
@@ -490,11 +534,34 @@ public class DateParser {
     // year2: 2 digits
     grammar.addSymbol("year2", new Join(new Seq(Range.create('0', '9'), Range.create('0', '9'))));
 
-    // month2: 01-12 (accept any 2 digits, validation in action)
-    grammar.addSymbol("month2", new Join(new Seq(Range.create('0', '1'), Range.create('0', '9'))));
+    // month2: 01-12 (strict 2 digits for compact formats)
+    grammar.addSymbol("month2", new Join(new Alt(
+      new Seq(Literal.create("0"), Range.create('1', '9')),  // 01-09
+      new Seq(Literal.create("1"), Range.create('0', '2'))   // 10-12
+    )));
 
-    // day2: 01-31 (accept any 2 digits, validation in action)
-    grammar.addSymbol("day2", new Join(new Seq(Range.create('0', '3'), Range.create('0', '9'))));
+    // monthFlexible: 1 or 2 digits (for formats with separators)
+    // Allows slightly out-of-range values for JavaScript Date normalization
+    grammar.addSymbol("monthFlexible", new Alt(
+      new Join(new Seq(Literal.create("1"), Range.create('0', '9'))),  // 10-19
+      new Join(new Seq(Literal.create("0"), Range.create('0', '9'))),  // 00-09
+      new Join(Range.create('0', '9'))                                  // 0-9 (single digit)
+    ));
+
+    // day2: 01-31 (strict 2 digits for compact formats)
+    grammar.addSymbol("day2", new Join(new Alt(
+      new Seq(Literal.create("0"), Range.create('1', '9')),              // 01-09
+      new Seq(Range.create('1', '2'), Range.create('0', '9')),           // 10-29
+      new Seq(Literal.create("3"), Range.create('0', '1'))               // 30-31
+    )));
+
+    // dayFlexible: 1 or 2 digits (for formats with separators)
+    // Day: 0-39 range to allow normalization (e.g., Feb 30 → Mar 2)
+    grammar.addSymbol("dayFlexible", new Alt(
+      new Join(new Seq(Literal.create("3"), Range.create('0', '9'))),           // 30-39
+      new Join(new Seq(Range.create('0', '2'), Range.create('0', '9'))),        // 00-29
+      new Join(Range.create('0', '9'))                                          // 0-9 (single digit)
+    ));
 
     // hour2: 00-23 (accept any 2 digits, validation in action)
     grammar.addSymbol("hour2", new Join(new Seq(Range.create('0', '2'), Range.create('0', '9'))));
@@ -505,7 +572,10 @@ public class DateParser {
     // second2: 00-59
     grammar.addSymbol("second2", new Join(new Seq(Range.create('0', '5'), Range.create('0', '9'))));
 
-    // millisecond3: 3 digits
+    // fractionalSeconds: 1-6 digits for milliseconds or microseconds
+    grammar.addSymbol("fractionalSeconds", new Join(new Repeat(Range.create('0', '9'), null, 1, 6)));
+
+    // millisecond3: 3 digits (kept for backward compatibility)
     grammar.addSymbol("millisecond3", new Join(new Repeat(Range.create('0', '9'), null, 3, 3)));
 
     // month3alpha: JAN, FEB, MAR, etc. (case insensitive)
@@ -515,6 +585,9 @@ public class DateParser {
       new LiteralIC("JUL"), new LiteralIC("AUG"), new LiteralIC("SEP"),
       new LiteralIC("OCT"), new LiteralIC("NOV"), new LiteralIC("DEC")
     ));
+
+    // datetimesep: T or space (datetime separator)
+    grammar.addSymbol("datetimesep", new Chars("T "));
 
     // timezone: Z or +/-HH:MM or +/-HHMM or +/-HH
     grammar.addSymbol("timezone", new Alt(
@@ -547,30 +620,31 @@ public class DateParser {
     ));
 
     // YYYYMMDD with separators and optional time
+    // Supports single-digit months and days (e.g., 2025-1-5)
     grammar.addSymbol("yyyymmdd-sep", new Alt(
-      // With milliseconds and timezone
+      // With fractional seconds (milliseconds/microseconds) and timezone
       new Seq(
-        grammar.sym("year4"), new Chars("-/"), grammar.sym("month2"), new Chars("-/"), grammar.sym("day2"),
-        new Chars("T "), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
-        Literal.create(":"), grammar.sym("second2"), Literal.create("."), grammar.sym("millisecond3"),
+        grammar.sym("year4"), new Chars("-/"), grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("dayFlexible"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        Literal.create(":"), grammar.sym("second2"), Literal.create("."), grammar.sym("fractionalSeconds"),
         new Optional(grammar.sym("timezone"))
       ),
       // With seconds and timezone
       new Seq(
-        grammar.sym("year4"), new Chars("-/"), grammar.sym("month2"), new Chars("-/"), grammar.sym("day2"),
-        new Chars("T "), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        grammar.sym("year4"), new Chars("-/"), grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("dayFlexible"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
         Literal.create(":"), grammar.sym("second2"),
         new Optional(grammar.sym("timezone"))
       ),
       // With minutes and timezone
       new Seq(
-        grammar.sym("year4"), new Chars("-/"), grammar.sym("month2"), new Chars("-/"), grammar.sym("day2"),
-        new Chars("T "), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        grammar.sym("year4"), new Chars("-/"), grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("dayFlexible"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
         new Optional(grammar.sym("timezone"))
       ),
       // Date only
       new Seq(
-        grammar.sym("year4"), new Chars("-/"), grammar.sym("month2"), new Chars("-/"), grammar.sym("day2")
+        grammar.sym("year4"), new Chars("-/"), grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("dayFlexible")
       )
     ));
 
@@ -592,27 +666,91 @@ public class DateParser {
       grammar.sym("mmddyyyy-sep")
     ));
 
+    // MMDDYYYY with separators - supports single-digit month/day (e.g., 7/2/2025)
     grammar.addSymbol("mmddyyyy-sep", new Alt(
+      // With fractional seconds and timezone
+      new Seq(
+        grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("year4"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        Literal.create(":"), grammar.sym("second2"), Literal.create("."), grammar.sym("fractionalSeconds"),
+        new Optional(grammar.sym("timezone"))
+      ),
       // With seconds and timezone
       new Seq(
-        grammar.sym("month2"), new Chars("-/"), grammar.sym("day2"), new Chars("-/"), grammar.sym("year4"),
-        Literal.create(" "), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("year4"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
         Literal.create(":"), grammar.sym("second2"),
         new Optional(grammar.sym("timezone"))
       ),
       // With minutes and timezone
       new Seq(
-        grammar.sym("month2"), new Chars("-/"), grammar.sym("day2"), new Chars("-/"), grammar.sym("year4"),
-        Literal.create(" "), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("year4"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
         new Optional(grammar.sym("timezone"))
       ),
       // Date only
       new Seq(
-        grammar.sym("month2"), new Chars("-/"), grammar.sym("day2"), new Chars("-/"), grammar.sym("year4")
+        grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("year4")
       )
     ));
 
-    grammar.addSymbol("mmddyyyy-compact", new Join(new Repeat(Range.create('0', '9'), null, 8, 8)));
+    // MMDDYYYY compact: 8 digits with validated month (01-12), day (01-31), year
+    grammar.addSymbol("mmddyyyy-compact", new Alt(
+      // With space and compact time (HHMMSS - no colons)
+      new Seq(
+        new Join(new Seq(grammar.sym("month2"), grammar.sym("day2"), grammar.sym("year4"))),
+        grammar.sym("datetimesep"),
+        grammar.sym("hour2"), grammar.sym("minute2"), grammar.sym("second2")
+      ),
+      // With space and time with colons
+      new Seq(
+        new Join(new Seq(grammar.sym("month2"), grammar.sym("day2"), grammar.sym("year4"))),
+        grammar.sym("datetimesep"),
+        grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        new Optional(new Seq(Literal.create(":"), grammar.sym("second2"))),
+        new Optional(grammar.sym("timezone"))
+      ),
+      // Date only
+      new Join(new Seq(grammar.sym("month2"), grammar.sym("day2"), grammar.sym("year4")))
+    ));
+
+    // ========== MMDDYY Formats (2-digit year) ==========
+
+    grammar.addSymbol("mmddyy", new Alt(
+      grammar.sym("mmddyy-compact"),
+      grammar.sym("mmddyy-sep")
+    ));
+
+    // MMDDYY with separators - supports single-digit month/day (e.g., 7/2/25)
+    grammar.addSymbol("mmddyy-sep", new Alt(
+      // With fractional seconds and timezone
+      new Seq(
+        grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("year2"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        Literal.create(":"), grammar.sym("second2"), Literal.create("."), grammar.sym("fractionalSeconds"),
+        new Optional(grammar.sym("timezone"))
+      ),
+      // With seconds and timezone
+      new Seq(
+        grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("year2"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        Literal.create(":"), grammar.sym("second2"),
+        new Optional(grammar.sym("timezone"))
+      ),
+      // With minutes and timezone
+      new Seq(
+        grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("year2"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        new Optional(grammar.sym("timezone"))
+      ),
+      // Date only
+      new Seq(
+        grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("year2")
+      )
+    ));
+
+    // MMDDYY compact: 6 digits with validated month (01-12), day (01-31), year
+    grammar.addSymbol("mmddyy-compact", new Join(new Seq(grammar.sym("month2"), grammar.sym("day2"), grammar.sym("year2"))));
 
     // ========== YYMMDD Formats ==========
 
@@ -621,27 +759,36 @@ public class DateParser {
       grammar.sym("yymmdd-sep")
     ));
 
+    // YYMMDD with separators - supports single-digit months/days (e.g., 25-1-5)
     grammar.addSymbol("yymmdd-sep", new Alt(
+      // With fractional seconds and timezone
+      new Seq(
+        grammar.sym("year2"), new Chars("-/"), grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("dayFlexible"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        Literal.create(":"), grammar.sym("second2"), Literal.create("."), grammar.sym("fractionalSeconds"),
+        new Optional(grammar.sym("timezone"))
+      ),
       // With seconds and timezone
       new Seq(
-        grammar.sym("year2"), new Chars("-/"), grammar.sym("month2"), new Chars("-/"), grammar.sym("day2"),
-        Literal.create(" "), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        grammar.sym("year2"), new Chars("-/"), grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("dayFlexible"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
         Literal.create(":"), grammar.sym("second2"),
         new Optional(grammar.sym("timezone"))
       ),
       // With minutes and timezone
       new Seq(
-        grammar.sym("year2"), new Chars("-/"), grammar.sym("month2"), new Chars("-/"), grammar.sym("day2"),
-        Literal.create(" "), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        grammar.sym("year2"), new Chars("-/"), grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("dayFlexible"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
         new Optional(grammar.sym("timezone"))
       ),
       // Date only
       new Seq(
-        grammar.sym("year2"), new Chars("-/"), grammar.sym("month2"), new Chars("-/"), grammar.sym("day2")
+        grammar.sym("year2"), new Chars("-/"), grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("dayFlexible")
       )
     ));
 
-    grammar.addSymbol("yymmdd-compact", new Join(new Repeat(Range.create('0', '9'), null, 6, 6)));
+    // YYMMDD compact: 6 digits with validated year, month (01-12), day (01-31)
+    grammar.addSymbol("yymmdd-compact", new Join(new Seq(grammar.sym("year2"), grammar.sym("month2"), grammar.sym("day2"))));
 
     // ========== DDMMYYYY Formats (via opt_name only) ==========
 
@@ -652,43 +799,84 @@ public class DateParser {
       grammar.sym("ddmmyy-compact")
     ));
 
+    // DDMMYYYY with separators - supports single-digit days and months (e.g., 5-1-2025)
     grammar.addSymbol("ddmmyyyy-sep", new Alt(
+      // With fractional seconds and timezone
       new Seq(
-        grammar.sym("day2"), new Chars("-/"), grammar.sym("month2"), new Chars("-/"), grammar.sym("year4"),
-        Literal.create(" "), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("year4"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        Literal.create(":"), grammar.sym("second2"), Literal.create("."), grammar.sym("fractionalSeconds"),
+        new Optional(grammar.sym("timezone"))
+      ),
+      // With seconds and timezone
+      new Seq(
+        grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("year4"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
         Literal.create(":"), grammar.sym("second2"),
         new Optional(grammar.sym("timezone"))
       ),
+      // With minutes and timezone
       new Seq(
-        grammar.sym("day2"), new Chars("-/"), grammar.sym("month2"), new Chars("-/"), grammar.sym("year4"),
-        Literal.create(" "), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("year4"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
         new Optional(grammar.sym("timezone"))
       ),
+      // Date only
       new Seq(
-        grammar.sym("day2"), new Chars("-/"), grammar.sym("month2"), new Chars("-/"), grammar.sym("year4")
+        grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("year4")
       )
     ));
 
-    grammar.addSymbol("ddmmyyyy-compact", new Join(new Repeat(Range.create('0', '9'), null, 8, 8)));
+    // DDMMYYYY compact: 8 digits with validated day (01-31), month (01-12), year
+    grammar.addSymbol("ddmmyyyy-compact", new Alt(
+      // With space and compact time (HHMMSS - no colons)
+      new Seq(
+        new Join(new Seq(grammar.sym("day2"), grammar.sym("month2"), grammar.sym("year4"))),
+        grammar.sym("datetimesep"),
+        grammar.sym("hour2"), grammar.sym("minute2"), grammar.sym("second2")
+      ),
+      // With space and time with colons
+      new Seq(
+        new Join(new Seq(grammar.sym("day2"), grammar.sym("month2"), grammar.sym("year4"))),
+        grammar.sym("datetimesep"),
+        grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        new Optional(new Seq(Literal.create(":"), grammar.sym("second2"))),
+        new Optional(grammar.sym("timezone"))
+      ),
+      // Date only
+      new Join(new Seq(grammar.sym("day2"), grammar.sym("month2"), grammar.sym("year4")))
+    ));
 
+    // DDMMYY with separators - supports single-digit days and months (e.g., 5-1-25)
     grammar.addSymbol("ddmmyy-sep", new Alt(
+      // With fractional seconds and timezone
       new Seq(
-        grammar.sym("day2"), new Chars("-/"), grammar.sym("month2"), new Chars("-/"), grammar.sym("year2"),
-        Literal.create(" "), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("year2"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        Literal.create(":"), grammar.sym("second2"), Literal.create("."), grammar.sym("fractionalSeconds"),
+        new Optional(grammar.sym("timezone"))
+      ),
+      // With seconds and timezone
+      new Seq(
+        grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("year2"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
         Literal.create(":"), grammar.sym("second2"),
         new Optional(grammar.sym("timezone"))
       ),
+      // With minutes and timezone
       new Seq(
-        grammar.sym("day2"), new Chars("-/"), grammar.sym("month2"), new Chars("-/"), grammar.sym("year2"),
-        Literal.create(" "), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("year2"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
         new Optional(grammar.sym("timezone"))
       ),
+      // Date only
       new Seq(
-        grammar.sym("day2"), new Chars("-/"), grammar.sym("month2"), new Chars("-/"), grammar.sym("year2")
+        grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("monthFlexible"), new Chars("-/"), grammar.sym("year2")
       )
     ));
 
-    grammar.addSymbol("ddmmyy-compact", new Join(new Repeat(Range.create('0', '9'), null, 6, 6)));
+    // DDMMYY compact: 6 digits with validated day (01-31), month (01-12), year
+    grammar.addSymbol("ddmmyy-compact", new Join(new Seq(grammar.sym("day2"), grammar.sym("month2"), grammar.sym("year2"))));
 
     // ========== YYYYDDMM Formats (via opt_name only) ==========
 
@@ -698,65 +886,118 @@ public class DateParser {
       grammar.sym("yyddmm")
     ));
 
+    // YYYYDDMM with separators - supports single-digit days and months (e.g., 2025-5-1)
     grammar.addSymbol("yyyyddmm-sep", new Alt(
+      // With fractional seconds and timezone
       new Seq(
-        grammar.sym("year4"), new Chars("-/"), grammar.sym("day2"), new Chars("-/"), grammar.sym("month2"),
-        Literal.create(" "), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        grammar.sym("year4"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("monthFlexible"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        Literal.create(":"), grammar.sym("second2"), Literal.create("."), grammar.sym("fractionalSeconds"),
+        new Optional(grammar.sym("timezone"))
+      ),
+      // With seconds and timezone
+      new Seq(
+        grammar.sym("year4"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("monthFlexible"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
         Literal.create(":"), grammar.sym("second2"),
         new Optional(grammar.sym("timezone"))
       ),
+      // With minutes and timezone
       new Seq(
-        grammar.sym("year4"), new Chars("-/"), grammar.sym("day2"), new Chars("-/"), grammar.sym("month2"),
-        Literal.create(" "), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        grammar.sym("year4"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("monthFlexible"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
         new Optional(grammar.sym("timezone"))
       ),
+      // Date only
       new Seq(
-        grammar.sym("year4"), new Chars("-/"), grammar.sym("day2"), new Chars("-/"), grammar.sym("month2")
+        grammar.sym("year4"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("monthFlexible")
       )
     ));
 
-    grammar.addSymbol("yyyyddmm-compact", new Join(new Repeat(Range.create('0', '9'), null, 8, 8)));
+    // YYYYDDMM compact: 8 digits with validated year, day (01-31), month (01-12)
+    grammar.addSymbol("yyyyddmm-compact", new Alt(
+      // With space and compact time (HHMMSS - no colons)
+      new Seq(
+        new Join(new Seq(grammar.sym("year4"), grammar.sym("day2"), grammar.sym("month2"))),
+        grammar.sym("datetimesep"),
+        grammar.sym("hour2"), grammar.sym("minute2"), grammar.sym("second2")
+      ),
+      // With space and time with colons
+      new Seq(
+        new Join(new Seq(grammar.sym("year4"), grammar.sym("day2"), grammar.sym("month2"))),
+        grammar.sym("datetimesep"),
+        grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        new Optional(new Seq(Literal.create(":"), grammar.sym("second2"))),
+        new Optional(grammar.sym("timezone"))
+      ),
+      // Date only
+      new Join(new Seq(grammar.sym("year4"), grammar.sym("day2"), grammar.sym("month2")))
+    ));
 
     grammar.addSymbol("yyddmm", new Alt(
       grammar.sym("yyddmm-compact"),
       grammar.sym("yyddmm-sep")
     ));
 
+    // YYDDMM with separators - supports single-digit days and months (e.g., 25-5-1)
     grammar.addSymbol("yyddmm-sep", new Alt(
+      // With fractional seconds and timezone
       new Seq(
-        grammar.sym("year2"), new Chars("-/"), grammar.sym("day2"), new Chars("-/"), grammar.sym("month2"),
-        Literal.create(" "), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        grammar.sym("year2"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("monthFlexible"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        Literal.create(":"), grammar.sym("second2"), Literal.create("."), grammar.sym("fractionalSeconds"),
+        new Optional(grammar.sym("timezone"))
+      ),
+      // With seconds and timezone
+      new Seq(
+        grammar.sym("year2"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("monthFlexible"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
         Literal.create(":"), grammar.sym("second2"),
         new Optional(grammar.sym("timezone"))
       ),
+      // With minutes and timezone
       new Seq(
-        grammar.sym("year2"), new Chars("-/"), grammar.sym("day2"), new Chars("-/"), grammar.sym("month2"),
-        Literal.create(" "), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
+        grammar.sym("year2"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("monthFlexible"),
+        grammar.sym("datetimesep"), grammar.sym("hour2"), Literal.create(":"), grammar.sym("minute2"),
         new Optional(grammar.sym("timezone"))
       ),
+      // Date only
       new Seq(
-        grammar.sym("year2"), new Chars("-/"), grammar.sym("day2"), new Chars("-/"), grammar.sym("month2")
+        grammar.sym("year2"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("monthFlexible")
       )
     ));
 
-    grammar.addSymbol("yyddmm-compact", new Join(new Repeat(Range.create('0', '9'), null, 6, 6)));
+    // YYDDMM compact: 6 digits with validated year, day (01-31), month (01-12)
+    grammar.addSymbol("yyddmm-compact", new Join(new Seq(grammar.sym("year2"), grammar.sym("day2"), grammar.sym("month2"))));
 
     // ========== Month Name Formats ==========
 
+    // YYYYDDMMM with separators - supports single-digit days (e.g., 2025-5-JAN)
     grammar.addSymbol("yyyyddmmm-sep", new Seq(
-      grammar.sym("year4"), new Chars("-/"), grammar.sym("day2"), new Chars("-/"), grammar.sym("month3alpha")
+      grammar.sym("year4"), new Chars("-/"), grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("month3alpha")
     ));
 
     grammar.addSymbol("yyyyddmmm-compact", new Seq(
       grammar.sym("year4"), grammar.sym("day2"), grammar.sym("month3alpha")
     ));
 
+    // DDMMMYYYY with separators - supports single-digit days (e.g., 5-JAN-2025)
     grammar.addSymbol("ddmmmyyyy-sep", new Seq(
-      grammar.sym("day2"), new Chars("-/"), grammar.sym("month3alpha"), new Chars("-/"), grammar.sym("year4")
+      grammar.sym("dayFlexible"), new Chars("-/"), grammar.sym("month3alpha"), new Chars("-/"), grammar.sym("year4")
     ));
 
     grammar.addSymbol("ddmmmyyyy-compact", new Seq(
       grammar.sym("day2"), grammar.sym("month3alpha"), grammar.sym("year4")
+    ));
+
+    // MMM dd yyyy with spaces: "Jan 02 2025" or "Jan 2 2025" - supports single-digit days
+    grammar.addSymbol("mmmddyyyy-space", new Seq(
+      grammar.sym("month3alpha"), Literal.create(" "), grammar.sym("dayFlexible"), Literal.create(" "), grammar.sym("year4")
+    ));
+
+    // DD MMM YYYY with spaces: "15 JAN 2025" or "5 JAN 2025" - supports single-digit days
+    grammar.addSymbol("ddmmmyyyy-space", new Seq(
+      grammar.sym("dayFlexible"), Literal.create(" "), grammar.sym("month3alpha"), Literal.create(" "), grammar.sym("year4")
     ));
 
     // ========== Add Actions ==========
@@ -772,6 +1013,7 @@ public class DateParser {
     final DateParser self = this;
 
     // YYYYMMDD-Sep action: [YYYY, sep, MM, sep, DD] or with time
+    // With fractional seconds: [YYYY, sep, MM, sep, DD, T, HH, :, MM, :, SS, ., fracSec, tz]
     grammar.addAction("yyyymmdd-sep", (val, x) -> {
       Object[] v = (Object[]) val;
       DateParseMode mode = (DateParseMode) x.get("dateParseMode");
@@ -782,7 +1024,7 @@ public class DateParser {
         self.parseIntOrDefault(v, 6, -1),
         self.parseIntOrDefault(v, 8, -1),
         self.parseIntOrDefault(v, 10, -1),
-        self.parseIntOrDefault(v, 12, -1),
+        self.extractFractionalSeconds(v, 12),
         self.extractTimezone(v));
     });
 
@@ -1014,6 +1256,70 @@ public class DateParser {
         Integer.parseInt((String) v[0]),
         self.parseMonthName((String) v[2]),
         Integer.parseInt((String) v[1]),
+        -1, -1, -1, -1, null);
+    });
+
+    // Timestamp actions - convert timestamp strings directly to Date objects
+
+    // 13-digit JavaScript timestamp (milliseconds since epoch)
+    grammar.addAction("timestamp13", (val, x) -> {
+      String v = (String) val;
+      return new Date(Long.parseLong(v));
+    });
+
+    // 10-digit Unix timestamp (seconds since epoch)
+    grammar.addAction("timestamp10", (val, x) -> {
+      String v = (String) val;
+      return new Date(Long.parseLong(v) * 1000);
+    });
+
+    // MMM dd yyyy space action: [MMM, ' ', DD, ' ', YYYY]
+    grammar.addAction("mmmddyyyy-space", (val, x) -> {
+      Object[] v = (Object[]) val;
+      DateParseMode mode = (DateParseMode) x.get("dateParseMode");
+      return self.buildDate(mode,
+        Integer.parseInt((String) v[4]),
+        self.parseMonthName((String) v[0]),
+        Integer.parseInt((String) v[2]),
+        -1, -1, -1, -1, null);
+    });
+
+    // DD MMM YYYY space action: [DD, ' ', MMM, ' ', YYYY]
+    grammar.addAction("ddmmmyyyy-space", (val, x) -> {
+      Object[] v = (Object[]) val;
+      DateParseMode mode = (DateParseMode) x.get("dateParseMode");
+      return self.buildDate(mode,
+        Integer.parseInt((String) v[4]),
+        self.parseMonthName((String) v[2]),
+        Integer.parseInt((String) v[0]),
+        -1, -1, -1, -1, null);
+    });
+
+    // MMDDYY-Sep action (2-digit year)
+    grammar.addAction("mmddyy-sep", (val, x) -> {
+      Object[] v = (Object[]) val;
+      DateParseMode mode = (DateParseMode) x.get("dateParseMode");
+      int twoDigitYear = Integer.parseInt((String) v[4]);
+      return self.buildDate(mode,
+        self.convertTwoDigitYear(twoDigitYear),
+        Integer.parseInt((String) v[0]) - 1,
+        Integer.parseInt((String) v[2]),
+        self.parseIntOrDefault(v, 6, -1),
+        self.parseIntOrDefault(v, 8, -1),
+        self.parseIntOrDefault(v, 10, -1),
+        -1,
+        self.extractTimezone(v));
+    });
+
+    // MMDDYY-Compact action: "011525" (2-digit year)
+    grammar.addAction("mmddyy-compact", (val, x) -> {
+      String v = (String) val;
+      DateParseMode mode = (DateParseMode) x.get("dateParseMode");
+      int twoDigitYear = Integer.parseInt(v.substring(4, 6));
+      return self.buildDate(mode,
+        self.convertTwoDigitYear(twoDigitYear),
+        Integer.parseInt(v.substring(0, 2)) - 1,
+        Integer.parseInt(v.substring(2, 4)),
         -1, -1, -1, -1, null);
     });
   }

@@ -74,6 +74,13 @@ foam.CLASS({
         DateParserTest_StrictValidation_ValidDatesWork();
         DateParserTest_LenientValidation_ReturnsMaxDate();
         DateParserTest_LenientValidation_ValidDatesWork();
+
+        // New Format Tests (parity with JavaScript)
+        DateParserTest_Timestamps();
+        DateParserTest_SingleDigitMonthDay();
+        DateParserTest_SpaceSeparatedMonthNames();
+        DateParserTest_MMDDYY_Format();
+        DateParserTest_FractionalSeconds();
       `
     },
 
@@ -808,6 +815,232 @@ foam.CLASS({
         test(cal1.get(Calendar.YEAR) == 2025, "LenientMode: valid date parses - year 2025");
         test(cal1.get(Calendar.MONTH) == 0, "LenientMode: valid date parses - month Jan");
         test(cal1.get(Calendar.DAY_OF_MONTH) == 15, "LenientMode: valid date parses - day 15");
+      `
+    },
+
+    // ========== New Format Tests (parity with JavaScript) ==========
+
+    {
+      name: 'DateParserTest_Timestamps',
+      javaCode: `
+        DateParser parser = new DateParser();
+
+        // Test 13-digit JavaScript timestamp (milliseconds since epoch)
+        // 1737043200000 = 2025-01-16T12:00:00.000Z
+        Date date1 = parser.parseString("1737043200000");
+        Calendar cal1 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal1.setTime(date1);
+        test(cal1.get(Calendar.YEAR) == 2025, "Timestamp13: year 2025");
+        test(cal1.get(Calendar.MONTH) == 0, "Timestamp13: month 0 (Jan)");
+        test(cal1.get(Calendar.DAY_OF_MONTH) == 16, "Timestamp13: day 16");
+        test(cal1.get(Calendar.HOUR_OF_DAY) == 12, "Timestamp13: hour 12");
+
+        // Test 10-digit Unix timestamp (seconds since epoch)
+        // 1737043200 = 2025-01-16T12:00:00Z
+        Date date2 = parser.parseString("1737043200");
+        Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal2.setTime(date2);
+        test(cal2.get(Calendar.YEAR) == 2025, "Timestamp10: year 2025");
+        test(cal2.get(Calendar.MONTH) == 0, "Timestamp10: month 0 (Jan)");
+        test(cal2.get(Calendar.DAY_OF_MONTH) == 16, "Timestamp10: day 16");
+        test(cal2.get(Calendar.HOUR_OF_DAY) == 12, "Timestamp10: hour 12");
+
+        // Test another timestamp: 0 = Unix epoch (1970-01-01 00:00:00 UTC)
+        Date date3 = parser.parseString("0000000000");
+        Calendar cal3 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal3.setTime(date3);
+        test(cal3.get(Calendar.YEAR) == 1970, "Timestamp10 epoch: year 1970");
+        test(cal3.get(Calendar.MONTH) == 0, "Timestamp10 epoch: month 0 (Jan)");
+        test(cal3.get(Calendar.DAY_OF_MONTH) == 1, "Timestamp10 epoch: day 1");
+      `
+    },
+
+    {
+      name: 'DateParserTest_SingleDigitMonthDay',
+      javaCode: `
+        DateParser parser = new DateParser();
+
+        // Test YYYY-M-D (single digit month and day)
+        Date date1 = parser.parseString("2025-1-5");
+        Calendar cal1 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal1.setTime(date1);
+        test(cal1.get(Calendar.YEAR) == 2025, "YYYY-M-D: year 2025");
+        test(cal1.get(Calendar.MONTH) == 0, "YYYY-M-D: month 0 (Jan)");
+        test(cal1.get(Calendar.DAY_OF_MONTH) == 5, "YYYY-M-D: day 5");
+
+        // Test YYYY/MM/D (single digit day)
+        Date date2 = parser.parseString("2025/03/5");
+        Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal2.setTime(date2);
+        test(cal2.get(Calendar.YEAR) == 2025, "YYYY/MM/D: year 2025");
+        test(cal2.get(Calendar.MONTH) == 2, "YYYY/MM/D: month 2 (Mar)");
+        test(cal2.get(Calendar.DAY_OF_MONTH) == 5, "YYYY/MM/D: day 5");
+
+        // Test YYYY-M-DD (single digit month)
+        Date date3 = parser.parseString("2025-3-15");
+        Calendar cal3 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal3.setTime(date3);
+        test(cal3.get(Calendar.YEAR) == 2025, "YYYY-M-DD: year 2025");
+        test(cal3.get(Calendar.MONTH) == 2, "YYYY-M-DD: month 2 (Mar)");
+        test(cal3.get(Calendar.DAY_OF_MONTH) == 15, "YYYY-M-DD: day 15");
+
+        // Test M/D/YYYY (US format with single digits)
+        Date date4 = parser.parseString("1/5/2025");
+        Calendar cal4 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal4.setTime(date4);
+        test(cal4.get(Calendar.YEAR) == 2025, "M/D/YYYY: year 2025");
+        test(cal4.get(Calendar.MONTH) == 0, "M/D/YYYY: month 0 (Jan)");
+        test(cal4.get(Calendar.DAY_OF_MONTH) == 5, "M/D/YYYY: day 5");
+
+        // Test with time: YYYY-M-D HH:MM:SS
+        Date date5 = parser.parseDateTime("2025-1-5 14:30:45");
+        Calendar cal5 = Calendar.getInstance();
+        cal5.setTime(date5);
+        test(cal5.get(Calendar.YEAR) == 2025, "YYYY-M-D with time: year 2025");
+        test(cal5.get(Calendar.MONTH) == 0, "YYYY-M-D with time: month 0 (Jan)");
+        test(cal5.get(Calendar.DAY_OF_MONTH) == 5, "YYYY-M-D with time: day 5");
+        test(cal5.get(Calendar.HOUR_OF_DAY) == 14, "YYYY-M-D with time: hour 14");
+      `
+    },
+
+    {
+      name: 'DateParserTest_SpaceSeparatedMonthNames',
+      javaCode: `
+        DateParser parser = new DateParser();
+
+        // Test "Jan 02 2025" (MMM dd yyyy)
+        Date date1 = parser.parseString("Jan 02 2025");
+        Calendar cal1 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal1.setTime(date1);
+        test(cal1.get(Calendar.YEAR) == 2025, "MMM dd yyyy: year 2025");
+        test(cal1.get(Calendar.MONTH) == 0, "MMM dd yyyy: month 0 (Jan)");
+        test(cal1.get(Calendar.DAY_OF_MONTH) == 2, "MMM dd yyyy: day 2");
+
+        // Test "Jan 2 2025" (single digit day)
+        Date date2 = parser.parseString("Jan 2 2025");
+        Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal2.setTime(date2);
+        test(cal2.get(Calendar.YEAR) == 2025, "MMM d yyyy: year 2025");
+        test(cal2.get(Calendar.MONTH) == 0, "MMM d yyyy: month 0 (Jan)");
+        test(cal2.get(Calendar.DAY_OF_MONTH) == 2, "MMM d yyyy: day 2");
+
+        // Test "15 JAN 2025" (DD MMM YYYY)
+        Date date3 = parser.parseString("15 JAN 2025");
+        Calendar cal3 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal3.setTime(date3);
+        test(cal3.get(Calendar.YEAR) == 2025, "DD MMM YYYY: year 2025");
+        test(cal3.get(Calendar.MONTH) == 0, "DD MMM YYYY: month 0 (Jan)");
+        test(cal3.get(Calendar.DAY_OF_MONTH) == 15, "DD MMM YYYY: day 15");
+
+        // Test "5 JAN 2025" (single digit day)
+        Date date4 = parser.parseString("5 JAN 2025");
+        Calendar cal4 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal4.setTime(date4);
+        test(cal4.get(Calendar.YEAR) == 2025, "D MMM YYYY: year 2025");
+        test(cal4.get(Calendar.MONTH) == 0, "D MMM YYYY: month 0 (Jan)");
+        test(cal4.get(Calendar.DAY_OF_MONTH) == 5, "D MMM YYYY: day 5");
+
+        // Test case insensitivity: "dec 25 2025"
+        Date date5 = parser.parseString("dec 25 2025");
+        Calendar cal5 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal5.setTime(date5);
+        test(cal5.get(Calendar.YEAR) == 2025, "mmm dd yyyy (lowercase): year 2025");
+        test(cal5.get(Calendar.MONTH) == 11, "mmm dd yyyy (lowercase): month 11 (Dec)");
+        test(cal5.get(Calendar.DAY_OF_MONTH) == 25, "mmm dd yyyy (lowercase): day 25");
+      `
+    },
+
+    {
+      name: 'DateParserTest_MMDDYY_Format',
+      javaCode: `
+        DateParser parser = new DateParser();
+
+        // Test MM/DD/YY with 2-digit year (21st century)
+        Date date1 = parser.parseString("01/15/25");
+        Calendar cal1 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal1.setTime(date1);
+        test(cal1.get(Calendar.YEAR) == 2025, "MM/DD/YY: year 2025 (25 -> 2025)");
+        test(cal1.get(Calendar.MONTH) == 0, "MM/DD/YY: month 0 (Jan)");
+        test(cal1.get(Calendar.DAY_OF_MONTH) == 15, "MM/DD/YY: day 15");
+
+        // Test MM-DD-YY with 2-digit year (20th century - pivot at 50)
+        Date date2 = parser.parseString("06-15-99");
+        Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal2.setTime(date2);
+        test(cal2.get(Calendar.YEAR) == 1999, "MM-DD-YY: year 1999 (99 -> 1999)");
+        test(cal2.get(Calendar.MONTH) == 5, "MM-DD-YY: month 5 (Jun)");
+        test(cal2.get(Calendar.DAY_OF_MONTH) == 15, "MM-DD-YY: day 15");
+
+        // Test pivot boundary: 49 -> 2049
+        Date date3 = parser.parseString("12/31/49");
+        Calendar cal3 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal3.setTime(date3);
+        test(cal3.get(Calendar.YEAR) == 2049, "MM/DD/YY: year 2049 (49 -> 2049)");
+
+        // Test pivot boundary: 50 -> 1950
+        Date date4 = parser.parseString("01/01/50");
+        Calendar cal4 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal4.setTime(date4);
+        test(cal4.get(Calendar.YEAR) == 1950, "MM/DD/YY: year 1950 (50 -> 1950)");
+
+        // Test MMDDYY compact: 011525
+        Date date5 = parser.parseString("011525");
+        Calendar cal5 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal5.setTime(date5);
+        test(cal5.get(Calendar.YEAR) == 2025, "MMDDYY compact: year 2025");
+        test(cal5.get(Calendar.MONTH) == 0, "MMDDYY compact: month 0 (Jan)");
+        test(cal5.get(Calendar.DAY_OF_MONTH) == 15, "MMDDYY compact: day 15");
+
+        // Test single-digit month/day: M/D/YY
+        Date date6 = parser.parseString("1/5/25");
+        Calendar cal6 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal6.setTime(date6);
+        test(cal6.get(Calendar.YEAR) == 2025, "M/D/YY: year 2025");
+        test(cal6.get(Calendar.MONTH) == 0, "M/D/YY: month 0 (Jan)");
+        test(cal6.get(Calendar.DAY_OF_MONTH) == 5, "M/D/YY: day 5");
+      `
+    },
+
+    {
+      name: 'DateParserTest_FractionalSeconds',
+      javaCode: `
+        DateParser parser = new DateParser();
+
+        // Test with milliseconds (3 digits)
+        Date date1 = parser.parseDateTimeUTC("2025-01-15T14:30:45.123Z");
+        Calendar cal1 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal1.setTime(date1);
+        test(cal1.get(Calendar.YEAR) == 2025, "Fractional 3 digits: year 2025");
+        test(cal1.get(Calendar.HOUR_OF_DAY) == 14, "Fractional 3 digits: hour 14");
+        test(cal1.get(Calendar.MINUTE) == 30, "Fractional 3 digits: minute 30");
+        test(cal1.get(Calendar.SECOND) == 45, "Fractional 3 digits: second 45");
+        test(cal1.get(Calendar.MILLISECOND) == 123, "Fractional 3 digits: ms 123");
+
+        // Test with microseconds (6 digits) - truncated to milliseconds
+        Date date2 = parser.parseDateTimeUTC("2025-01-15T14:30:45.123456Z");
+        Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal2.setTime(date2);
+        test(cal2.get(Calendar.YEAR) == 2025, "Fractional 6 digits: year 2025");
+        test(cal2.get(Calendar.MILLISECOND) == 123, "Fractional 6 digits: ms 123 (truncated)");
+
+        // Test with 1 digit - padded to 3 digits (100)
+        Date date3 = parser.parseDateTimeUTC("2025-01-15T14:30:45.1Z");
+        Calendar cal3 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal3.setTime(date3);
+        test(cal3.get(Calendar.MILLISECOND) == 100, "Fractional 1 digit: ms 100 (padded)");
+
+        // Test with 2 digits - padded to 3 digits (120)
+        Date date4 = parser.parseDateTimeUTC("2025-01-15T14:30:45.12Z");
+        Calendar cal4 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal4.setTime(date4);
+        test(cal4.get(Calendar.MILLISECOND) == 120, "Fractional 2 digits: ms 120 (padded)");
+
+        // Test with timezone offset
+        Date date5 = parser.parseDateTimeUTC("2025-01-15T14:30:45.500+05:30");
+        Calendar cal5 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal5.setTime(date5);
+        test(cal5.get(Calendar.HOUR_OF_DAY) == 9, "Fractional with tz: hour 9 UTC (14:30 - 5:30)");
+        test(cal5.get(Calendar.MILLISECOND) == 500, "Fractional with tz: ms 500");
       `
     }
   ]
