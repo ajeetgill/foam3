@@ -37,16 +37,6 @@ foam.CLASS({
     { name: 'INVALID_FORMAT', message: 'Invalid format.' }
   ],
 
-  properties: [
-    {
-      name: 'parser_',
-      documentation: 'Shared DateParser instance for all date parsing operations',
-      factory: function() {
-        return this.DateParser.create();
-      }
-    }
-  ],
-
   constants: [
     {
       name: 'MAX_DATE',
@@ -73,7 +63,7 @@ foam.CLASS({
           d = String(d);
         }
 
-        var parser = foam.util.DateUtil.parser_ || foam.parse.DateParser.create();
+        var parser = foam.parse.DateParser.create();
         return parser.parseDateTime(d, opt_name);
       },
       javaCode: `
@@ -96,7 +86,7 @@ foam.CLASS({
           d = String(d);
         }
 
-        var parser = foam.util.DateUtil.parser_ || foam.parse.DateParser.create();
+        var parser = foam.parse.DateParser.create();
         return parser.parseDateTimeUTC(d, opt_name);
       },
       javaCode: `
@@ -119,7 +109,7 @@ foam.CLASS({
           d = String(d);
         }
 
-        var parser = foam.util.DateUtil.parser_ || foam.parse.DateParser.create();
+        var parser = foam.parse.DateParser.create();
         return parser.parseDateString(d, opt_name);
       },
       javaCode: `
@@ -131,6 +121,36 @@ foam.CLASS({
       `
     },
     {
+      name: 'setStrictValidation',
+      args: 'Boolean strict',
+      type: 'Void',
+      documentation: 'Sets the strict validation mode for date parsing. When true, invalid dates throw errors. When false (default), invalid dates log warnings and return MAX_DATE.',
+      code: function(strict) {
+        // DateParser is a Singleton, so create() returns the same instance
+        var parser = foam.parse.DateParser.create();
+        parser.strictValidation = strict;
+      },
+      javaCode: `
+        DateParser parser = new DateParser();
+        parser.setStrictValidation(strict);
+      `
+    },
+    {
+      name: 'getStrictValidation',
+      args: '',
+      type: 'Boolean',
+      documentation: 'Gets the current strict validation mode for date parsing.',
+      code: function() {
+        // DateParser is a Singleton, so create() returns the same instance
+        var parser = foam.parse.DateParser.create();
+        return parser.strictValidation;
+      },
+      javaCode: `
+        DateParser parser = new DateParser();
+        return parser.getStrictValidation();
+      `
+    },
+    {
       name: 'adapt',
       args: 'Object o',
       type: 'Date',
@@ -139,7 +159,7 @@ foam.CLASS({
         if ( ! o ) return null;
         if ( o instanceof Date ) return o;
         if ( foam.String.isInstance(o) ) {
-          var parser = foam.util.DateUtil.parser_ || foam.parse.DateParser.create();
+          var parser = foam.parse.DateParser.create();
           return parser.parseDateString(o);
         }
         if ( typeof o === 'number' ) return new Date(o);

@@ -633,7 +633,11 @@ foam.CLASS({
 
     function parseString(str, opt_name) {
       if ( ! str || str.trim() === '' ) {
-        throw new Error('Unsupported Date format: empty or null string');
+        if ( this.strictValidation ) {
+          throw new Error('Unsupported Date format: empty or null string');
+        }
+        console.warn('Invalid date: empty or null string; assuming MAX_DATE.');
+        return foam.Date.MAX_DATE;
       }
       str = str.trim();
       this.dateParseMode = 'STRING';
@@ -642,7 +646,11 @@ foam.CLASS({
       var parseResult = this.parse(this.StringPStream.create({ str: str }), this, opt_name);
 
       if ( ! parseResult || ! parseResult.value ) {
-        throw new Error('Unsupported Date format: ' + str);
+        if ( this.strictValidation ) {
+          throw new Error('Unsupported Date format: ' + str);
+        }
+        console.warn('Invalid date: "' + str + '"; assuming MAX_DATE.');
+        return foam.Date.MAX_DATE;
       }
 
       if ( parseResult.pos < str.length ) {
@@ -684,7 +692,11 @@ foam.CLASS({
 
     function parseDateString(str, opt_name) {
       if ( ! str || str.trim() === '' ) {
-        throw new Error('Unsupported Date format: empty or null string');
+        if ( this.strictValidation ) {
+          throw new Error('Unsupported Date format: empty or null string');
+        }
+        console.warn('Invalid date: empty or null string; assuming MAX_DATE.');
+        return foam.Date.MAX_DATE;
       }
       str = str.trim();
       this.dateParseMode = 'DATE';
@@ -719,7 +731,11 @@ foam.CLASS({
 
     function parseDateTime(str, opt_name) {
       if ( ! str || str.trim() === '' ) {
-        throw new Error('Unsupported DateTime format: empty or null string');
+        if ( this.strictValidation ) {
+          throw new Error('Unsupported DateTime format: empty or null string');
+        }
+        console.warn('Invalid datetime: empty or null string; assuming MAX_DATE.');
+        return foam.Date.MAX_DATE;
       }
       str = str.trim();
       this.dateParseMode = 'DATETIME';
@@ -728,7 +744,11 @@ foam.CLASS({
       var parseResult = this.parse(this.StringPStream.create({ str: str }), this, opt_name);
 
       if ( ! parseResult || ! parseResult.value ) {
-        throw new Error('Unsupported DateTime format: ' + str);
+        if ( this.strictValidation ) {
+          throw new Error('Unsupported DateTime format: ' + str);
+        }
+        console.warn('Invalid datetime: "' + str + '"; assuming MAX_DATE.');
+        return foam.Date.MAX_DATE;
       }
 
       if ( parseResult.pos < str.length ) {
@@ -797,7 +817,11 @@ foam.CLASS({
 
     function parseDateTimeUTC(str, opt_name) {
       if ( ! str || str.trim() === '' ) {
-        throw new Error('Unsupported DateTime format: empty or null string');
+        if ( this.strictValidation ) {
+          throw new Error('Unsupported DateTime format: empty or null string');
+        }
+        console.warn('Invalid datetime: empty or null string; assuming MAX_DATE.');
+        return foam.Date.MAX_DATE;
       }
       str = str.trim();
       this.dateParseMode = 'DATETIME_UTC';
@@ -806,7 +830,11 @@ foam.CLASS({
       var parseResult = this.parse(this.StringPStream.create({ str: str }), this, opt_name);
 
       if ( ! parseResult || ! parseResult.value ) {
-        throw new Error('Unsupported DateTime format: ' + str);
+        if ( this.strictValidation ) {
+          throw new Error('Unsupported DateTime format: ' + str);
+        }
+        console.warn('Invalid datetime: "' + str + '"; assuming MAX_DATE.');
+        return foam.Date.MAX_DATE;
       }
 
       if ( parseResult.pos < str.length ) {

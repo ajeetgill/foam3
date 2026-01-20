@@ -1237,7 +1237,7 @@ foam.CLASS({
     function testValidation(x) {
       let parser = this.DateParser.create();
 
-      // Test that parser throws exceptions for truly unparseable inputs
+      // In non-strict mode (default), unparseable inputs return MAX_DATE
       let invalidInputs = [
         'invalid-date',
         '99/99/99',
@@ -1246,12 +1246,8 @@ foam.CLASS({
       ];
 
       invalidInputs.forEach((input, i) => {
-        try {
-          let result = parser.parseString(input);
-          x.test(false, `Validation Test${i + 1}: "${input}" should throw exception (got result instead)`);
-        } catch (e) {
-          x.test(e.message.includes('Unsupported Date format'), `Validation Test${i + 1}: "${input}" throws correct exception`);
-        }
+        let result = parser.parseString(input);
+        x.test(result.getTime() === foam.Date.MAX_DATE.getTime(), `Validation Test${i + 1}: "${input}" returns MAX_DATE in lenient mode`);
       });
 
       // Test date normalization - JavaScript Date normalizes out-of-range values
@@ -2136,30 +2132,20 @@ foam.CLASS({
       // Ensure lenient mode (default)
       parser.strictValidation = false;
 
-      // Test 1: Invalid format throws for completely unparseable
+      // Test 1: Invalid format returns MAX_DATE in lenient mode
       let invalidInputs = [
         { input: 'invalid-date', desc: 'completely invalid string' },
         { input: 'notadate', desc: 'non-date text' }
       ];
 
       invalidInputs.forEach((testCase, i) => {
-        try {
-          let result = parser.parseString(testCase.input);
-          // parseString throws for completely unparseable - this is expected
-          x.test(false, `LenientMode parseString Test${i + 1}: "${testCase.input}" - should throw for unparseable (${testCase.desc})`);
-        } catch (e) {
-          // parseString still throws for completely unparseable formats
-          x.test(e.message.includes('Unsupported Date format'), `LenientMode parseString Test${i + 1}: "${testCase.input}" throws for unparseable (${testCase.desc})`);
-        }
+        let result = parser.parseString(testCase.input);
+        x.test(result.getTime() === foam.Date.MAX_DATE.getTime(), `LenientMode parseString Test${i + 1}: "${testCase.input}" returns MAX_DATE (${testCase.desc})`);
       });
 
-      // Test 2: Empty string behavior
-      try {
-        parser.parseString('');
-        x.test(false, 'LenientMode: empty string should throw');
-      } catch (e) {
-        x.test(e.message.includes('empty or null'), 'LenientMode: empty string throws correct error');
-      }
+      // Test 2: Empty string returns MAX_DATE in lenient mode
+      let emptyResult = parser.parseString('');
+      x.test(emptyResult.getTime() === foam.Date.MAX_DATE.getTime(), 'LenientMode: empty string returns MAX_DATE');
 
       // Test 3: Valid dates should work in lenient mode
       try {
@@ -2176,7 +2162,7 @@ foam.CLASS({
     function testInvalidMonthNameValidation(x) {
       // Test invalid month name handling in both modes
       // Note: "XYZ" doesn't match the grammar's month pattern, so it fails at grammar level
-      // with "Unsupported Date format" rather than reaching parseMonthName()
+      // and returns MAX_DATE (lenient) or throws (strict)
       let parser = this.DateParser.create();
 
       // Strict mode test
@@ -2190,16 +2176,10 @@ foam.CLASS({
         x.test(validError, 'StrictMode: invalid month name throws error');
       }
 
-      // Lenient mode test
+      // Lenient mode test - returns MAX_DATE for unparseable input
       parser.strictValidation = false;
-      try {
-        let result = parser.parseString('15-XYZ-2025');
-        // If it somehow parses, check the result
-        x.test(result !== null, 'LenientMode: invalid month name handled');
-      } catch (e) {
-        // For completely unparseable input, even lenient mode throws at grammar level
-        x.test(e.message.includes('Unsupported Date format'), 'LenientMode: unparseable throws at grammar level');
-      }
+      let result = parser.parseString('15-XYZ-2025');
+      x.test(result.getTime() === foam.Date.MAX_DATE.getTime(), 'LenientMode: unparseable returns MAX_DATE');
     }
   ]
 });
