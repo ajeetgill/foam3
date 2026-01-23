@@ -60,30 +60,56 @@ foam.CLASS({
       var self = this;
       var ps = this.of.getAxiomsByClass(foam.lang.Property);
 
-      // Build normalized lookup map: normalized identifier → property
-      // Normalizes both property names and input for consistent matching
-      var propertyMap = {};
+      // Build two lookup maps:
+      // 1. Exact match map (case-insensitive) - for aliases and exact property names
+      // 2. Normalized match map - for fuzzy matching
+      var exactMap      = {};
+      var normalizedMap = {};
+
       ps.forEach(function(p) {
-        // Store by normalized name (handles non-standard property names)
-        propertyMap[self.normalizeToPropertyName(p.name).toLowerCase()] = p;
-        if ( p.shortName ) {
-          propertyMap[self.normalizeToPropertyName(p.shortName).toLowerCase()] = p;
+        var normalizedKey;
+
+        // Exact match: property name as-is (case-insensitive)
+        exactMap[p.name.toLowerCase()] = p;
+
+        // Normalized match - don't overwrite existing (first match wins)
+        normalizedKey = self.normalizeToPropertyName(p.name).toLowerCase();
+        if ( ! normalizedMap[normalizedKey] ) {
+          normalizedMap[normalizedKey] = p;
         }
+
+        if ( p.shortName ) {
+          exactMap[p.shortName.toLowerCase()] = p;
+          normalizedKey = self.normalizeToPropertyName(p.shortName).toLowerCase();
+          if ( ! normalizedMap[normalizedKey] ) {
+            normalizedMap[normalizedKey] = p;
+          }
+        }
+
+        // Aliases get exact match priority
         p.aliases.forEach(function(a) {
-          propertyMap[self.normalizeToPropertyName(a).toLowerCase()] = p;
+          exactMap[a.toLowerCase()] = p;
+          normalizedKey = self.normalizeToPropertyName(a).toLowerCase();
+          if ( ! normalizedMap[normalizedKey] ) {
+            normalizedMap[normalizedKey] = p;
+          }
         });
       });
 
-      // Single parser: normalize input and lookup in map
+      // Single parser: try exact match first, then normalized match
       var fieldNameParser = action(
         seq1(0, str(plus(notChars(',\t\n\r'))), sym('end')),
         function(input) {
           input = input.trim();
           if ( ! input ) return foam.parse.ParserWithAction.NO_PARSE;
 
-          // Normalize input and lookup
+          // Try exact match first (case-insensitive)
+          var prop = exactMap[input.toLowerCase()];
+          if ( prop ) return prop;
+
+          // Fall back to normalized match
           var normalized = self.normalizeToPropertyName(input);
-          var prop = propertyMap[normalized.toLowerCase()];
+          prop = normalizedMap[normalized.toLowerCase()];
           return prop || foam.parse.ParserWithAction.NO_PARSE;
         }
       );
