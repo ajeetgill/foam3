@@ -609,6 +609,131 @@ foam.CLASS({
         list8[2]?.name === 'CONSTANT_STYLE',
         'NonStandard List: Mixed input formats for non-standard properties'
       );
+
+      // ============================================
+      // EXACT MATCH PRIORITY TESTS
+      // Tests that exact aliases take priority over normalized matches
+      // This prevents collision when headers normalize to same value
+      // ============================================
+
+      // Create model with properties that would collide after normalization
+      // e.g., StartDate and Start_date both normalize to startDate
+      foam.CLASS({
+        package: 'foam.core.reflow.test',
+        name: 'CollisionModel',
+        properties: [
+          {
+            name: 'startDate',
+            aliases: ['StartDate', 'start_date']
+          },
+          {
+            name: 'startAttrDate',
+            aliases: ['Start_date']
+          },
+          {
+            name: 'endDate',
+            aliases: ['EndDate', 'end_date']
+          },
+          {
+            name: 'endAttrDate',
+            aliases: ['End_date']
+          },
+          {
+            name: 'createdDate',
+            aliases: ['CreatedDate']
+          },
+          {
+            name: 'createdAttrDate',
+            aliases: ['Created_date']
+          }
+        ]
+      });
+
+      var parser3 = this.ColumnParser.create({
+        of: foam.core.reflow.test.CollisionModel
+      });
+
+      // 6.1 Exact alias match takes priority
+      x.test(
+        parser3.parseString('StartDate')?.name === 'startDate',
+        'ExactPriority: StartDate matches startDate via exact alias'
+      );
+      x.test(
+        parser3.parseString('Start_date')?.name === 'startAttrDate',
+        'ExactPriority: Start_date matches startAttrDate via exact alias'
+      );
+
+      // 6.2 Case insensitive exact match
+      x.test(
+        parser3.parseString('startdate')?.name === 'startDate',
+        'ExactPriority: startdate (lowercase) matches startDate'
+      );
+      x.test(
+        parser3.parseString('start_date')?.name === 'startAttrDate',
+        'ExactPriority: start_date (lowercase) matches startAttrDate'
+      );
+      x.test(
+        parser3.parseString('STARTDATE')?.name === 'startDate',
+        'ExactPriority: STARTDATE (uppercase) matches startDate'
+      );
+      x.test(
+        parser3.parseString('START_DATE')?.name === 'startAttrDate',
+        'ExactPriority: START_DATE (uppercase) matches startAttrDate'
+      );
+
+      // 6.3 Another collision pair - EndDate vs End_date
+      x.test(
+        parser3.parseString('EndDate')?.name === 'endDate',
+        'ExactPriority: EndDate matches endDate via exact alias'
+      );
+      x.test(
+        parser3.parseString('End_date')?.name === 'endAttrDate',
+        'ExactPriority: End_date matches endAttrDate via exact alias'
+      );
+      x.test(
+        parser3.parseString('enddate')?.name === 'endDate',
+        'ExactPriority: enddate (lowercase) matches endDate'
+      );
+      x.test(
+        parser3.parseString('end_date')?.name === 'endAttrDate',
+        'ExactPriority: end_date (lowercase) matches endAttrDate'
+      );
+
+      // 6.4 Third collision pair - CreatedDate vs Created_date
+      x.test(
+        parser3.parseString('CreatedDate')?.name === 'createdDate',
+        'ExactPriority: CreatedDate matches createdDate via exact alias'
+      );
+      x.test(
+        parser3.parseString('Created_date')?.name === 'createdAttrDate',
+        'ExactPriority: Created_date matches createdAttrDate via exact alias'
+      );
+
+      // 6.5 Normalized fallback still works when no exact match
+      x.test(
+        parser3.parseString('START DATE')?.name === 'startDate',
+        'ExactPriority: START DATE falls back to normalized match for startDate'
+      );
+
+      // 6.6 Column list with collision-prone headers
+      var list9 = parser3.parseString('StartDate, Start_date, EndDate, End_date', 'columnList');
+      x.test(
+        list9?.length === 4 &&
+        list9[0]?.name === 'startDate' &&
+        list9[1]?.name === 'startAttrDate' &&
+        list9[2]?.name === 'endDate' &&
+        list9[3]?.name === 'endAttrDate',
+        'ExactPriority List: All collision-prone headers match correctly'
+      );
+
+      // 6.7 Mixed case in list
+      var list10 = parser3.parseString('startdate, start_date', 'columnList');
+      x.test(
+        list10?.length === 2 &&
+        list10[0]?.name === 'startDate' &&
+        list10[1]?.name === 'startAttrDate',
+        'ExactPriority List: Lowercase collision headers match correctly'
+      );
     }
   ]
 });

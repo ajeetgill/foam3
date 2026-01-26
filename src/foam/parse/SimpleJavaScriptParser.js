@@ -165,6 +165,10 @@ foam.CLASS({
   ],
 
   methods: [
+    function parse(ps, x, opt_name) {
+      return this.grammar_.parse(ps, x, opt_name);
+    },
+
     function parseString(str, opt_name, opt_apply) {
       return this.grammar_.parseString(str, opt_name, opt_apply);
     }
