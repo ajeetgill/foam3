@@ -341,13 +341,14 @@ foam.CLASS({
     {
       name: 'reflow',
       code: function(X) {
-        console.log('reflow action called');
-        console.log('X.flowMode:', X.flowMode);
-        console.log('X.config:', X.config);
-        console.log('X.config?.flowMode:', X.config?.flowMode);
+        // console.log('reflow action called');
+        // console.log('X.flowMode:', X.flowMode);
+        // console.log('X.config:', X.config);
+        // console.log('X.config?.flowMode:', X.config?.flowMode);
         var mode = X.flowMode || X.config?.flowMode || 'PRESENTATION';
-        console.log('Using mode:', mode);
+        // console.log('Using mode:', mode);
         X.routeTo('flow/' + this.name + '?flowMode=' + mode);
+       // X.routeTo('flow/' + encodeURIComponent(this.name) + '?flowMode=PRESENTATION');
       },
       isAvailable: function() {
         // Disable in Reflow, but enable in DAOController (because already in reflow)
