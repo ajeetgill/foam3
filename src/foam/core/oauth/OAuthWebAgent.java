@@ -118,7 +118,7 @@ public class OAuthWebAgent implements WebAgent {
 
             sendResponse(x, state, resp);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("OAuthWebAgent", e);
             try {
                 resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 resp.getWriter().write("Server error: " + e.getMessage());
