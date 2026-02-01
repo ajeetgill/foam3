@@ -4,27 +4,75 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
+/**
+ * Glossary System for FOAM Markdown Documents
+ * ============================================
+ *
+ * Provides inline term definitions with popup lookups and auto-generated glossaries.
+ * Terms are stored in a shared markdownContext, enabling composable documents where
+ * definitions can be scattered across included segments and collected at render time.
+ *
+ * Registered HTML elements:
+ *   <def>      - Define a term (TermDefinition)
+ *   <term>     - Reference a term with popup (TermReference)
+ *   <glossary> - Render collected definitions (Glossary)
+ *
+ * Basic usage:
+ *   <glossary>
+ *     <def term="DAO" definition="Data Access Object."></def>
+ *     <def term="FOAM" definition="Feature-Oriented Active Modeller." source="foam-framework.github.io"></def>
+ *   </glossary>
+ *
+ *   <p>The <term term="FOAM"></term> framework uses <term term="DAO"></term>s.</p>
+ *
+ * Composable usage (definitions from multiple included documents):
+ *   <!-- chapter1.md -->
+ *   <def term="DAO" definition="Data Access Object."></def>
+ *   <p>A <term term="DAO"></term> provides CRUD operations...</p>
+ *
+ *   <!-- chapter2.md -->
+ *   <def term="MDAO" definition="In-memory DAO."></def>
+ *   <p>For testing, use <term term="MDAO"></term>...</p>
+ *
+ *   <!-- book.md -->
+ *   <include src="chapter1.md"></include>
+ *   <include src="chapter2.md"></include>
+ *   <glossary></glossary>  <!-- Collects DAO and MDAO -->
+ */
+
 foam.CLASS({
   package: 'foam.u2.markdown',
-  name: 'GlossaryTerm',
+  name: 'GlossaryMixin',
 
-  documentation: 'A term with its definition for glossary lookup.',
+  documentation: `
+    Shared mixin providing access to the glossary term registry.
+    Terms are stored in markdownContext.glossaryTerms, allowing definitions
+    and references across document boundaries to share the same term map.
+  `,
+
+  imports: [ 'markdownContext' ],
 
   properties: [
     {
-      class: 'String',
-      name: 'term',
-      required: true
+      name: 'terms',
+      documentation: 'Map of lowercase term names to TermDefinition objects. Lazily created in markdownContext.',
+      factory: function() {
+        if ( ! this.markdownContext ) return {};
+        return this.markdownContext.glossaryTerms || (this.markdownContext.glossaryTerms = {});
+      }
+    }
+  ],
+
+  methods: [
+    function addTerm(term) {
+      /** Register a TermDefinition in the shared glossary. */
+      this.terms[term.term.toLowerCase()] = term;
+      return this;
     },
-    {
-      class: 'String',
-      name: 'definition',
-      required: true
-    },
-    {
-      class: 'String',
-      name: 'source',
-      documentation: 'Optional source or reference for the definition.'
+
+    function lookupTerm(term) {
+      /** Retrieve a TermDefinition by name (case-insensitive). */
+      return this.terms[term.toLowerCase()];
     }
   ]
 });
@@ -32,18 +80,74 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.u2.markdown',
-  name: 'GlossaryTermView',
+  name: 'TermDefinition',
+  extends: 'foam.u2.Element',
+
+  documentation: `
+    Defines a glossary term. Renders nothing visible but registers itself
+    in the shared term registry on init.
+
+    Usage: <def term="API" definition="Application Programming Interface." source="Optional citation"></def>
+
+    Attributes:
+      term       - The term being defined (required)
+      definition - The definition text (required)
+      source     - Optional source or citation
+  `,
+
+  mixins: [ 'foam.u2.markdown.GlossaryMixin' ],
+
+  properties: [
+    {
+      class: 'String',
+      name: 'term',
+      attribute: true,
+      required: true
+    },
+    {
+      class: 'String',
+      name: 'definition',
+      attribute: true,
+      required: true
+    },
+    {
+      class: 'String',
+      name: 'source',
+      attribute: true,
+      documentation: 'Optional source or reference for the definition.'
+    }
+  ],
+
+  methods: [
+    function init() {
+      this.addTerm(this);
+    }
+  ]
+});
+
+
+foam.CLASS({
+  package: 'foam.u2.markdown',
+  name: 'TermReference',
   extends: 'foam.u2.View',
 
   documentation: `
     Displays a hyperlinked term that shows a popup definition on click.
-    Usage: tag('foam.doc.GlossaryTermView', { data: glossaryTermInstance })
-    Or with inline props: tag('foam.doc.GlossaryTermView', { term: 'API', definition: '...' })
+    Looks up the term from the shared glossary registry.
+
+    Usage: <term term="API"></term>
+
+    The term text is displayed with a dotted underline. Clicking shows a
+    popup with the term name, definition, and optional source. The popup
+    closes when clicking outside or on the X button.
+
+    If the term has not been defined via <def>, a warning is logged and
+    the term displays without popup functionality.
   `,
 
-  imports: [
-    'document'
-  ],
+  mixins: [ 'foam.u2.markdown.GlossaryMixin' ],
+
+  imports: [ 'document' ],
 
   css: `
     ^ {
@@ -112,17 +216,22 @@ foam.CLASS({
 
   properties: [
     {
+      name: 'data',
+      documentation: 'The TermDefinition object, looked up from the glossary by term name.',
+      expression: function(term) {
+        return this.lookupTerm(term);
+      }
+    },
+    {
       class: 'String',
       name: 'term',
-      attribute: true,
-      expression: function(data) {
-        return data?.term || '';
-      }
+      attribute: true
     },
     {
       class: 'String',
       name: 'definition',
       attribute: true,
+      documentation: 'Derived from data; can be overridden inline for ad-hoc definitions.',
       expression: function(data) {
         return data?.definition || '';
       }
@@ -142,7 +251,7 @@ foam.CLASS({
     },
     {
       name: 'popupE_',
-      documentation: 'Reference to the popup element for positioning.'
+      documentation: 'Reference to the popup element for positioning adjustments.'
     }
   ],
 
@@ -185,6 +294,7 @@ foam.CLASS({
     },
 
     function positionPopup() {
+      /** Adjust popup position if it would overflow the viewport. */
       if ( ! this.popupE_?.el_() ) return;
 
       var popup = this.popupE_.el_();
@@ -192,13 +302,11 @@ foam.CLASS({
       var viewportWidth = window.innerWidth;
       var viewportHeight = window.innerHeight;
 
-      // Adjust horizontal position if overflowing
       if ( rect.right > viewportWidth ) {
         popup.style.left = 'auto';
         popup.style.right = '0';
       }
 
-      // Adjust vertical position if overflowing
       if ( rect.bottom > viewportHeight ) {
         popup.style.top = 'auto';
         popup.style.bottom = '100%';
@@ -213,7 +321,6 @@ foam.CLASS({
       this.showPopup = ! this.showPopup;
 
       if ( this.showPopup ) {
-        // Position after render
         this.onDetach(this.document.addEventListener('click', this.onDocumentClick));
         setTimeout(() => this.positionPopup(), 0);
       }
@@ -224,7 +331,6 @@ foam.CLASS({
     },
 
     function onDocumentClick(e) {
-      // Close if clicking outside
       if ( this.showPopup && this.popupE_?.el_() && ! this.popupE_.el_().contains(e.target) ) {
         this.closePopup();
       }
@@ -238,24 +344,43 @@ foam.CLASS({
   name: 'Glossary',
   extends: 'foam.u2.Controller',
 
-  documentation: 'A collection of glossary terms with lookup and rendering utilities.',
+  documentation: `
+    Renders a formatted glossary of all registered terms.
 
-  properties: [
-    {
-//      class: 'Map',
-      name: 'terms',
-      documentation: 'Map of term name to GlossaryTerm object.',
-      factory: function() { return {}; }
-    }
-  ],
+    Can be used as a container for <def> tags or standalone to collect
+    terms defined elsewhere in the document.
+
+    Usage:
+      <!-- Container style -->
+      <glossary>
+        <def term="DAO" definition="Data Access Object."></def>
+        <def term="View" definition="A reactive UI component."></def>
+      </glossary>
+
+      <!-- Collector style (terms defined elsewhere) -->
+      <glossary></glossary>
+
+    Terms are rendered alphabetically with their definitions and optional sources.
+  `,
+
+  mixins: [ 'foam.u2.markdown.GlossaryMixin' ],
+
+  css: `
+    ^entry { margin-bottom: 16px; }
+    ^entry dt { font-weight: 600; color: #333; }
+    ^entry dd { margin-left: 0; margin-top: 4px; color: #555; }
+    ^source { font-size: 0.9em; color: #888; font-style: italic; }
+  `,
 
   methods: [
-    function render() {
+    async function render() {
       this.SUPER();
       this.start('h1').add('Glossary').end();
 
-      this.addTerm('DAO', 'A Data Access Object.');
-      this.addTerm('FOAM', 'The Feature Oriented Active Modeller framework.');
+      // Brief delay to allow any sibling/child <def> tags to register.
+      // Necessary because element initialization order isn't guaranteed
+      // when composing documents from multiple sources.
+      await foam.async.sleep(10);
 
       var self = this;
       var keys = Object.keys(this.terms).sort();
@@ -273,40 +398,33 @@ foam.CLASS({
                 add(' — ', term.source).
               end();
             }).
-            end().
-          end();
+          end().
+        end();
       });
-    },
-
-    function addTerm(term, definition, source) {
-      this.terms[term.toLowerCase()] = foam.u2.markdown.GlossaryTerm.create({
-        term: term,
-        definition: definition,
-        source: source
-      });
-      return this;
-    },
-
-    function lookup(term) {
-      return this.terms[term.toLowerCase()];
     },
 
     function termView(term) {
-      /** Returns a GlossaryTermView for embedding in documents. */
-      var t = this.lookup(term);
+      /** Programmatic API: returns a TermReference view for the given term. */
+      var t = this.lookupTerm(term);
       if ( ! t ) {
         console.warn('Glossary term not found:', term);
         return foam.u2.Element.create().add(term);
       }
-      return foam.doc.GlossaryTermView.create({ data: t });
+      return foam.u2.markdown.TermReference.create({ data: t });
     }
   ]
 });
 
+
 foam.SCRIPT({
   package: 'foam.u2.markdown',
   name: 'GlossaryTagScript',
+
+  documentation: 'Registers glossary-related custom elements for use in markdown/HTML documents.',
+
   code: function() {
-    foam.__context__.registerElement(foam.u2.markdown.Glossary);
+    foam.__context__.registerElement(foam.u2.markdown.Glossary);        // <glossary>
+    foam.__context__.registerElement(foam.u2.markdown.TermReference, 'term');  // <term>
+    foam.__context__.registerElement(foam.u2.markdown.TermDefinition, 'def');  // <def>
   }
 });
