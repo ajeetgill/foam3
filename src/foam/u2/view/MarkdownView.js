@@ -4,15 +4,14 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-// TODO:
-//   TOC?
-
 foam.CLASS({
   package: 'foam.u2.view',
   name: 'MarkdownView',
   extends: 'foam.u2.View',
 
   documentation: 'Markdown parser and View with full CommonMark support including HTML',
+
+  exports: [ 'markdownContext' ],
 
   css: `
     ^codeBlock {
@@ -489,6 +488,12 @@ foam.CLASS({
 
   properties: [
     {
+      name: 'markdownContext',
+      factory: function() {
+        return {};
+      }
+    },
+    {
       class: 'String',
       name: 'data'
     }
@@ -503,6 +508,7 @@ foam.CLASS({
       this.addClass();
 
       this.add(this.dynamic(function(data) {
+        this.markdownContext = undefined;
         var tokens = self.markdownGrammar.parseString(data + '\n');
         if ( tokens ) {
           tokens.forEach(t => t.call(this));
