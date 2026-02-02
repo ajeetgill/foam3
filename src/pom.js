@@ -622,6 +622,7 @@ foam.POM({
     { name: "foam/u2/view/MarkdownView",                              flags: "web" },
     { name: "foam/u2/markdown/Glossary",                              flags: "web" },
     { name: "foam/u2/markdown/TOC",                                   flags: "web" },
+    { name: "foam/u2/markdown/Search",                                flags: "web" },
     { name: "foam/u2/FragmentedTextField",                            flags: "web" },
     { name: "foam/u2/FragmentedTextFieldFragment",                    flags: "web" },
     { name: "foam/u2/TextFormatter",                                  flags: "web" },
