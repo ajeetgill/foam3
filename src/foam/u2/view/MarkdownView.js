@@ -98,7 +98,7 @@ foam.CLASS({
             )
           ),
 
-          htmlText: str(repeat(notChars('<'), null, 1)),
+          htmlText: str(repeat(not(alt('</', sym('htmlBlock')), any()), null, 1)),
 
           // Block-level elements
           heading: seq(
