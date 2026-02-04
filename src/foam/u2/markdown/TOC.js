@@ -114,6 +114,11 @@ foam.CLASS({
         counters[i] = 0;
       }
 
+      return this.getCurrentIndex(level);
+    },
+
+    function getCurrentIndex(level) {
+      var counters = this.tocConfig.counters;
       // Build the index string (e.g., "2.3.1")
       return counters.slice(0, level).join('.');
     }
@@ -243,16 +248,13 @@ foam.CLASS({
   ],
 
   methods: [
-    function init() {
-      this.addHeading(this);
-    },
-
     function addChild_(c, p) {
       if ( foam.String.isInstance(c) ) { this.title += c; }
       return this.SUPER(c, p);
     },
 
     function render() {
+      this.addHeading(this);
       var self = this;
 
       // Compute section index if TOCConfig has enabled indexing
