@@ -59,10 +59,8 @@ foam.CLASS({
 
   methods: [
     async function aInit() {
-      let p = this.Parsers.create();
-
-      var dao = this.cSpecDAO.where(this.CSpec.SERVED_DAOS);
-
+      const p          = this.Parsers.create();
+      const dao        = this.cSpecDAO.where(this.CSpec.SERVED_DAOS);
       const comparator = (a, b) => b.length - a.length || foam.util.compare(a, b);
 
       this.daosParser.args = (await dao.select()).array.sort(comparator).map(c => {
@@ -98,10 +96,9 @@ foam.CLASS({
       });
 
       this.historyParser.args = [...new Set(this.history_)].sort(comparator).map(h => {
+        if ( h.length < 2 ) return;
         return p.sug(p.literalIC(h), {
           text:  h,
-//          label: f.description,
-//          hint:  f.description,
           prependSpaceOnSelect: false,
           category: 'history'});
       });
@@ -119,7 +116,7 @@ foam.CLASS({
           parser = p.seq(parser, p.optional(p.seq(' ', p.sym('dao'))));
         } else if ( c.id === 'load' ) {
           parser = p.seq(parser, p.optional(p.seq(' ', p.sym('flowName'))));
-        } else if ( c.id === 'history' || c.id === '!' ) {
+        } else if ( c.id === 'history' ) {
           parser = p.seq(parser, p.optional(p.seq(' ', p.sym('historyCommand'))));
         }
 
@@ -128,9 +125,7 @@ foam.CLASS({
 
       this.flowsParser.args = (await this.flowDAO.select()).array.sort(comparator).map(f => {
         return p.sug(p.literalIC(f.name), {
-          text:  f.label,
-          label: f.description,
-          hint:  f.description,
+          text:  f.name,
           prependSpaceOnSelect: false,
           category: 'flow'});
       });
@@ -138,8 +133,6 @@ foam.CLASS({
       this.agentsParser.args = (await this.agentDAO.select()).array.sort(comparator).map(a => {
         return p.sug(p.literalIC(a.label), {
           text:  a.label,
-//          label: f.description,
- //         hint:  f.description,
           prependSpaceOnSelect: false,
           category: 'target'});
       });
@@ -147,12 +140,13 @@ foam.CLASS({
 
     function grammar(alt, eof, seq0, seq, seq1, str, sug, sym, repeat, repeat0, anyChar, optional, notChars, literal, range, not, until0, literalIC) {
       return {
-        START: alt(sym('autoCmd'), sym('jsCmd')),
+        START: alt(sym('historyCmd'), sym('autoCmd'), sym('jsCmd')),
 
         autoCmd: seq('/', sym('cmd')),
-//         autoCmd: seq('/', sym('cmd'), optional(seq(' ', sym('dao')))),
 
-        jsCmd: str(seq(not('/'), str(repeat(not(eof()), anyChar())))),
+        historyCmd: seq('!', this.historyParser /*sym('historyCommand')*/),
+
+        jsCmd: str(seq(notChars('!/'), str(repeat(not(eof()), anyChar())))),
 
         cmd: this.cmdsParser,
 

@@ -18,6 +18,14 @@ foam.CLASS({
   imports: [ 'eval_' ],
 
   css: `
+    .foam-parse-auto-SuggestionView-command  { color: $green300; }
+    .foam-parse-auto-SuggestionView-custom   { color: $red400; }
+    .foam-parse-auto-SuggestionView-flow     { color: $orange400; }
+    .foam-parse-auto-SuggestionView-history  { color: $brown400; }
+    .foam-parse-auto-SuggestionView-standard { color: $blue400; }
+
+    ^promptHolder button.foam-u2-ActionView { margin-right: 8px; }
+
     :has(> ^promptHolder) {
       width: 100%;
     }
@@ -34,6 +42,7 @@ foam.CLASS({
     }
     ^input {
       border: none;
+      margin-right: 8px;
       padding-left: 0;
       padding-right: 0;
       width: 100%;
@@ -65,19 +74,49 @@ foam.CLASS({
     async function render() {
       await this.grammar.aInit();
 
-      this.start().
-        addClass(this.myClass('promptHolder'))
+      this.start()
+        .addClass(this.myClass('promptHolder'))
+        .add(this.COLLECTIONS, this.FLOWS, this.COMMANDS)
+      /*
         .start(this.Link).addClass(this.myClass('promptLink')).add('/').on('click', () => this.eval_('help')).end()
         .start(foam.u2.tag.Image, {
           glyph: 'rightChevron',
           embedSVG: true
         }).addClass(this.myClass('chevron')).end()
+          */
         .start(this.SmartView, {data$: this.input$, parser: this.grammar}, this.smartView_$)
           .on('keydown', this.onKeyDown)
           .addClass(this.myClass('input'))
           .focus()
         .end()
       .end();
+    }
+  ],
+
+  actions: [
+    {
+      name: 'collections',
+      themeIcon: 'file',
+      code: function() {
+        this.smartView_.preview= '/dao ';
+        this.smartView_.focus();
+      }
+    },
+    {
+      name: 'flows',
+      themeIcon: 'flow',
+      code: function() {
+        this.smartView_.preview= '/load ';
+        this.smartView_.focus();
+      }
+    },
+    {
+      name: 'commands',
+      themeIcon: 'plus',
+      code: function() {
+        this.smartView_.preview = '/';
+        this.smartView_.focus();
+      }
     }
   ],
 
@@ -88,7 +127,7 @@ foam.CLASS({
         this.smartView_.preview = '';
 
         if ( n ) {
-          if ( n.startsWith('/') ) n = n.substring(1);
+          if ( n.startsWith('/') || n.startsWith('!') ) n = n.substring(1);
           if ( n ) this.eval_(n);
         }
 
