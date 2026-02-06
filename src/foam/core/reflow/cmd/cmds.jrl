@@ -1,6 +1,7 @@
 p({"class":"foam.core.reflow.cmd.Cells", "id": "cells", permissionRequired: true })
 p({"class":"foam.core.reflow.cmd.Clear", "id": "clear"})
 p({"class":"foam.core.reflow.cmd.DAO", "id": "dao"})
+p({"class":"foam.core.reflow.cmd.DAO", "id": "FROM"})
 p({"class":"foam.core.reflow.cmd.DAOCreate", "id": "add", linkable: false})
 p({"class":"foam.core.reflow.cmd.DAOS", "id": "daos"})
 p({"class":"foam.core.reflow.cmd.Describe", "id": "describe", linkable: false})
@@ -77,6 +78,12 @@ p({
   "id": "markdown",
   "description": "Insert Markdown Document",
   "script": "addValue(foam.core.reflow.Markdown.create({markdown: args.join(' ')}, this));"
+})
+p({
+  "class":"foam.core.reflow.cmd.Command",
+  "id": "image",
+  "description": "Insert Image",
+  "script": "addValue(foam.core.reflow.Image.create({}, this));"
 })
 p({
   "class":"foam.core.reflow.cmd.Command",
