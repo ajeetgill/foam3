@@ -85,7 +85,6 @@ foam.CLASS({
   extends: 'foam.u2.Element',
 
   imports: [ 'scope?' ],
-  exports: [ 'elementForName' ],
 
   properties: [
     {
