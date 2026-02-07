@@ -23,6 +23,7 @@ foam.POM({
     { name: 'Doc',                     flags: 'js' },
     { name: 'Markdown',                flags: 'js' },
     { name: 'Image',                   flags: 'js' },
+    { name: 'Link',                    flags: 'js' },
     { name: 'DocumentReadWriteView',   flags: 'js' },
     { name: 'DuplicateSink',           flags: 'js|java' },
     { name: 'EditSink',                flags: 'js|java' },
