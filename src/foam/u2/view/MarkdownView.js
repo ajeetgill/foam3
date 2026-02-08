@@ -9,11 +9,20 @@ foam.CLASS({
   name: 'MarkdownView',
   extends: 'foam.u2.View',
 
-  documentation: 'Markdown parser and View with full CommonMark support including HTML',
+  documentation: 'Markdown parser and renderer with full CommonMark support including HTML',
 
   exports: [ 'markdownContext' ],
 
+  imports: [
+    'document',
+    'window'
+  ],
+
   css: `
+    ^ {
+      display: flex;
+      flex-direction: column;
+    }
     ^codeBlock {
       background: $backgroundTertiary;
       border-radius: 6px;
@@ -32,7 +41,7 @@ foam.CLASS({
       font-size: 1.15em;
       font-weight: normal;
     }
-    `,
+  `,
 
   grammars: [
     {
@@ -193,7 +202,6 @@ foam.CLASS({
           inline: alt(
             sym('htmlComment'),
             sym('htmlBlock'),
-//            sym('htmlInline'), // allow inner markdown
             sym('image'),
             sym('link'),
             sym('strikethrough'),
@@ -278,7 +286,6 @@ foam.CLASS({
               if ( value ) {
                 attrs[name] = value[1];
               } else {
-                // Boolean attribute (e.g., disabled, checked)
                 attrs[name] = true;
               }
             }
@@ -293,13 +300,10 @@ foam.CLASS({
 
           return function() {
             if ( closing === '/>' ) {
-              // Self-closing tag
               this.tag(tagName);
             } else {
-              // Tag with content
               let content = closing[1];
               let e = this.start(tagName, attributes).call(content);
-              // TODO: Use foam.u2.parse.CSSParser to allow for CSS tokens
               if ( attributes.style ) {
                 let style = {};
                 attributes.style.split(';').forEach(s => {
@@ -320,10 +324,8 @@ foam.CLASS({
 
           return function() {
             if ( closing === '/>' ) {
-              // Self-closing tag
               this.add('<' + tagName + attributes + '/>');
             } else {
-              // Tag with content
               let content = self.markdownGrammar.parseString(closing[1]);
               this.add('<' + tagName + attributes + '>' + content + '</' + tagName + '>');
             }
@@ -384,7 +386,6 @@ foam.CLASS({
           var items = v.map(function(item) { return item[2]; });
           var start = parseInt(v[0][0]) || 1;
 
-          debugger;
           return function() {
             this.start('ol').attrs({start: start}).forEach(v, function(item) {
               let title = item[2], nestedContent = item[3];
@@ -395,23 +396,9 @@ foam.CLASS({
           };
         },
 
-        /*
-        function orderedList(v) {
-          var items = v.map(function(item) { return item[2]; });
-          var start = parseInt(v[0][0]) || 1;
-          return function() {
-            this.start('ol').attrs({start: start}).forEach(items, function(item) {
-              this.start('li').call(item);
-            });
-          };
-          },
-          */
-
-
         function table(v) {
           let headers = v[0], rows = v[2];
 
-          // Parse alignments from separator
           let alignments = v[1].map(s => {
             s = s.trim();
             if ( s.startsWith(':') && s.endsWith(':') ) return {'text-align': 'center'};
@@ -445,7 +432,7 @@ foam.CLASS({
         },
 
         function blankLine(v) {
-          return function() { /* this.tag('br'); */ };
+          return function() {};
         },
 
         function image(v) {
@@ -511,20 +498,389 @@ foam.CLASS({
   methods: [
     function render() {
       this.SUPER();
-
       var self = this;
 
-      this.addClass();
+      this
+        .addClass()
+        .add(this.dynamic(function(data) {
+          self.markdownContext = undefined;
+          var tokens = self.markdownGrammar.parseString(data + '\n');
+          if ( tokens ) {
+            tokens.forEach(t => t.call(this));
+          } else {
+            this.start().add('PARSE ERROR');
+          }
+        }));
+    }
+  ]
+});
 
-      this.add(this.dynamic(function(data) {
-        self.markdownContext = undefined;
-        var tokens = self.markdownGrammar.parseString(data + '\n');
-        if ( tokens ) {
-          tokens.forEach(t => t.call(this));
+
+foam.CLASS({
+  package: 'foam.u2.view',
+  name: 'MarkdownEditorView',
+  extends: 'foam.u2.View',
+
+  documentation: 'Markdown editor with formatting toolbar',
+
+  imports: [
+    'document',
+    'window'
+  ],
+
+  css: `
+    ^ {
+      display: flex;
+      flex-direction: column;
+    }
+    ^ButtonToolbar {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    ^ButtonToolbar > button + button {
+      margin-left: 0 !important;
+    }
+    ^separator {
+      background: $backgroundSecondary0;
+      width: 1px;
+      height: 2em;
+      align-self: center;
+    }
+    ^tool.foam-u2-ActionView {
+      padding: 6px 10px;
+      max-height: unset;
+    }
+  `,
+
+  properties: [
+    {
+      class: 'String',
+      name: 'data'
+    },
+    'editorElement_'
+  ],
+
+  methods: [
+    function render() {
+      this.SUPER();
+      var self = this;
+
+      this
+        .addClass()
+        .startContext({ data: this })
+        .start()
+          .addClass(this.myClass('ButtonToolbar'))
+          .start(this.BOLD, { themeIcon: 'bold', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.ITALIC, { themeIcon: 'italic', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.UNDERLINE, { themeIcon: 'underline', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.STRIKETHROUGH, { themeIcon: 'strikethrough', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start().addClass(this.myClass('separator')).end()
+          .start(this.HEADING1, { label: 'H1', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.HEADING2, { label: 'H2', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.HEADING3, { label: 'H3', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.HEADING4, { label: 'H4', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start().addClass(this.myClass('separator')).end()
+          .start(this.LEFT_JUSTIFY, { themeIcon: 'leftAlign', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.CENTER_JUSTIFY, { themeIcon: 'centerAlign', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.RIGHT_JUSTIFY, { themeIcon: 'rightAlign', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start().addClass(this.myClass('separator')).end()
+          .start(this.NUMBERED_LIST, { themeIcon: 'numberedList', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.BULLET_LIST, { themeIcon: 'bulletedList', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start().addClass(this.myClass('separator')).end()
+          .start(this.LINK, { themeIcon: 'link', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.IMAGE, { themeIcon: 'image', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.HORIZONTAL_RULE, { label: 'HR', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start().addClass(this.myClass('separator')).end()
+          .start(this.BLOCK_QUOTE, { themeIcon: 'blockQuote', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.CODE_BLOCK, { label: 'Code', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.INLINE_CODE, { label: '`code`', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+        .end()
+        .endContext()
+        .start(foam.u2.tag.TextArea, {
+          rows: 20,
+          cols: 80,
+          data$: this.data$,
+          placeholder: 'Enter markdown text...'
+        }, this.editorElement_$)
+        .end();
+    },
+
+    function wrapSelection(prefix, suffix) {
+      var textarea = this.editorElement_.el_();
+      var start = textarea.selectionStart;
+      var end = textarea.selectionEnd;
+      var selectedText = this.data.substring(start, end);
+
+      if ( !selectedText ) return;
+
+      var newText = this.data.substring(0, start) +
+                    prefix + selectedText + suffix +
+                    this.data.substring(end);
+
+      this.data = newText;
+
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+      }, 0);
+    },
+
+    function wrapLines(prefix, suffix) {
+      suffix = suffix || '';
+      var textarea  = this.editorElement_.el_();
+      var start     = textarea.selectionStart;
+      var end       = textarea.selectionEnd;
+      var lineStart = this.data.lastIndexOf('\n', start - 1) + 1;
+      var lineEnd   = this.data.indexOf('\n', end);
+
+      if ( lineEnd === -1 ) lineEnd = this.data.length;
+
+      var lines        = this.data.substring(lineStart, lineEnd).split('\n');
+      var wrappedLines = lines.map(line => prefix + line + suffix);
+
+      this.data = this.data.substring(0, lineStart) +
+                  wrappedLines.join('\n') +
+                  this.data.substring(lineEnd);
+
+      setTimeout(() => textarea.focus(), 0);
+    },
+
+    function wrapLinesNumbered() {
+      var textarea  = this.editorElement_.el_();
+      var start     = textarea.selectionStart;
+      var end       = textarea.selectionEnd;
+      var lineStart = this.data.lastIndexOf('\n', start - 1) + 1;
+      var lineEnd   = this.data.indexOf('\n', end);
+
+      if ( lineEnd === -1 ) lineEnd = this.data.length;
+
+      var lines         = this.data.substring(lineStart, lineEnd).split('\n');
+      var numberedLines = lines.map((line, i) => (i + 1) + '. ' + line);
+
+      this.data = this.data.substring(0, lineStart) +
+                  numberedLines.join('\n') +
+                  this.data.substring(lineEnd);
+
+      setTimeout(() => textarea.focus(), 0);
+    },
+
+    function insertAtCursor(text, selectionOffset, selectionLength) {
+      var textarea = this.editorElement_.el_();
+      var start    = textarea.selectionStart;
+      var end      = textarea.selectionEnd;
+      var newText  = this.data.substring(0, start) +
+                    text +
+                    this.data.substring(end);
+
+      this.data = newText;
+
+      setTimeout(() => {
+        textarea.focus();
+        if ( selectionOffset !== undefined ) {
+          var selStart = start + selectionOffset;
+          var selEnd = selStart + (selectionLength || 0);
+          textarea.setSelectionRange(selStart, selEnd);
         } else {
-          this.start().add('PARSE ERROR');
+          textarea.setSelectionRange(start + text.length, start + text.length);
         }
-      }));
+      }, 0);
+    },
+
+    function insertTemplate(template, defaultText, selectPlaceholder) {
+      var textarea     = this.editorElement_.el_();
+      var start        = textarea.selectionStart;
+      var end          = textarea.selectionEnd;
+      var selectedText = this.data.substring(start, end);
+      var text         = template.replace('$TEXT', selectedText || defaultText);
+
+      this.data = this.data.substring(0, start) + text + this.data.substring(end);
+
+      if ( selectPlaceholder ) {
+        setTimeout(() => {
+          textarea.focus();
+          var placeholderStart = start + text.indexOf(selectPlaceholder);
+          textarea.setSelectionRange(placeholderStart, placeholderStart + selectPlaceholder.length);
+        }, 0);
+      } else {
+        setTimeout(() => textarea.focus(), 0);
+      }
+    }
+  ],
+
+  actions: [
+    {
+      name: 'bold',
+      label: 'B',
+      toolTip: 'Bold',
+      buttonStyle: 'TERTIARY',
+      code: function() {
+        this.wrapSelection('**', '**');
+      }
+    },
+    {
+      name: 'italic',
+      label: 'I',
+      toolTip: 'Italic',
+      buttonStyle: 'TERTIARY',
+      code: function() {
+        this.wrapSelection('*', '*');
+      }
+    },
+    {
+      name: 'underline',
+      label: 'U',
+      toolTip: 'Underline',
+      buttonStyle: 'TERTIARY',
+      code: function() {
+        this.wrapSelection('<u>', '</u>');
+      }
+    },
+    {
+      name: 'strikethrough',
+      label: 'S',
+      toolTip: 'Strikethrough',
+      buttonStyle: 'TERTIARY',
+      code: function() {
+        this.wrapSelection('~~', '~~');
+      }
+    },
+    {
+      name: 'heading1',
+      label: 'H1',
+      toolTip: 'Heading 1',
+      buttonStyle: 'TERTIARY',
+      code: function() {
+        this.wrapLines('# ');
+      }
+    },
+    {
+      name: 'heading2',
+      label: 'H2',
+      toolTip: 'Heading 2',
+      buttonStyle: 'TERTIARY',
+      code: function() {
+        this.wrapLines('## ');
+      }
+    },
+    {
+      name: 'heading3',
+      label: 'H3',
+      toolTip: 'Heading 3',
+      buttonStyle: 'TERTIARY',
+      code: function() {
+        this.wrapLines('### ');
+      }
+    },
+    {
+      name: 'heading4',
+      label: 'H4',
+      toolTip: 'Heading 4',
+      buttonStyle: 'TERTIARY',
+      code: function() {
+        this.wrapLines('#### ');
+      }
+    },
+    {
+      name: 'leftJustify',
+      label: '',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Align Left',
+      code: function() {
+        this.wrapLines('<div style="text-align: left;">', '</div>');
+      }
+    },
+    {
+      name: 'centerJustify',
+      label: '',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Align Center',
+      code: function() {
+        this.wrapLines('<div style="text-align: center;">', '</div>');
+      }
+    },
+    {
+      name: 'rightJustify',
+      label: '',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Align Right',
+      code: function() {
+        this.wrapLines('<div style="text-align: right;">', '</div>');
+      }
+    },
+    {
+      name: 'numberedList',
+      label: '',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Numbered List',
+      code: function() {
+        this.wrapLinesNumbered();
+      }
+    },
+    {
+      name: 'bulletList',
+      label: '',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Bulleted List',
+      code: function() {
+        this.wrapLines('- ');
+      }
+    },
+    {
+      name: 'link',
+      label: 'Link',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Insert Link',
+      code: function() {
+        this.insertTemplate('[$TEXT](url)', 'link text', 'url');
+      }
+    },
+    {
+      name: 'image',
+      label: 'Image',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Insert Image',
+      code: function() {
+        this.insertTemplate('![$TEXT](image-url)', 'alt text', 'image-url');
+      }
+    },
+    {
+      name: 'horizontalRule',
+      label: 'HR',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Horizontal Rule',
+      code: function() {
+        this.insertAtCursor('\n---\n');
+      }
+    },
+    {
+      name: 'blockQuote',
+      label: '',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Quote',
+      code: function() {
+        this.wrapLines('> ');
+      }
+    },
+    {
+      name: 'codeBlock',
+      label: 'Code',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Code Block',
+      code: function() {
+        this.insertTemplate('```\n$TEXT\n```\n', 'code here', 'code here');
+      }
+    },
+    {
+      name: 'inlineCode',
+      label: '`code`',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Inline Code',
+      code: function() {
+        this.wrapSelection('`', '`');
+      }
     }
   ]
 });
