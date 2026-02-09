@@ -555,12 +555,26 @@ foam.CLASS({
     }
   `,
 
+  requires: [
+    'foam.u2.dialog.StyledModal'
+  ],
+
   properties: [
     {
       class: 'String',
       name: 'data'
     },
-    'editorElement_'
+    'editorElement_',
+    {
+      class: 'String',
+      name: 'lastTextColor',
+      value: '#000000'
+    },
+    {
+      class: 'String',
+      name: 'lastBgColor',
+      value: '#ffff00'
+    }
   ],
 
   methods: [
@@ -578,6 +592,9 @@ foam.CLASS({
           .start(this.UNDERLINE, { themeIcon: 'underline', size: 'SMALL' }).addClass(this.myClass('tool')).end()
           .start(this.STRIKETHROUGH, { themeIcon: 'strikethrough', size: 'SMALL' }).addClass(this.myClass('tool')).end()
           .start().addClass(this.myClass('separator')).end()
+          .start(this.TEXT_COLOR, { label: 'Color', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.BG_COLOR, { label: 'BG', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start().addClass(this.myClass('separator')).end()
           .start(this.HEADING1, { label: 'H1', size: 'SMALL' }).addClass(this.myClass('tool')).end()
           .start(this.HEADING2, { label: 'H2', size: 'SMALL' }).addClass(this.myClass('tool')).end()
           .start(this.HEADING3, { label: 'H3', size: 'SMALL' }).addClass(this.myClass('tool')).end()
@@ -590,6 +607,8 @@ foam.CLASS({
           .start(this.NUMBERED_LIST, { themeIcon: 'numberedList', size: 'SMALL' }).addClass(this.myClass('tool')).end()
           .start(this.BULLET_LIST, { themeIcon: 'bulletedList', size: 'SMALL' }).addClass(this.myClass('tool')).end()
           .start().addClass(this.myClass('separator')).end()
+          .start(this.TABLE, { label: 'Table', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start().addClass(this.myClass('separator')).end()
           .start(this.LINK, { themeIcon: 'link', size: 'SMALL' }).addClass(this.myClass('tool')).end()
           .start(this.IMAGE, { themeIcon: 'image', size: 'SMALL' }).addClass(this.myClass('tool')).end()
           .start(this.HORIZONTAL_RULE, { label: 'HR', size: 'SMALL' }).addClass(this.myClass('tool')).end()
@@ -597,6 +616,18 @@ foam.CLASS({
           .start(this.BLOCK_QUOTE, { themeIcon: 'blockQuote', size: 'SMALL' }).addClass(this.myClass('tool')).end()
           .start(this.CODE_BLOCK, { label: 'Code', size: 'SMALL' }).addClass(this.myClass('tool')).end()
           .start(this.INLINE_CODE, { label: '`code`', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start().addClass(this.myClass('separator')).end()
+          .start(this.INSERT_TOC, { label: 'TOC', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.INSERT_SEARCH, { label: 'Search', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.INSERT_SECTION, { label: 'Section', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start().addClass(this.myClass('separator')).end()
+          .start(this.INSERT_GLOSSARY, { label: 'Glossary', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.INSERT_DEF, { label: 'Def', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.INSERT_TERM, { label: 'Term', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start().addClass(this.myClass('separator')).end()
+          .start(this.INSERT_EXAMPLE, { label: 'Example', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.INSERT_PERMISSIONED, { label: 'Perm', size: 'SMALL' }).addClass(this.myClass('tool')).end()
+          .start(this.INSERT_INCLUDE, { label: 'Include', size: 'SMALL' }).addClass(this.myClass('tool')).end()
         .end()
         .endContext()
         .start(foam.u2.tag.TextArea, {
@@ -707,6 +738,84 @@ foam.CLASS({
       } else {
         setTimeout(() => textarea.focus(), 0);
       }
+    },
+
+    function openTableDialog() {
+      var self = this;
+      var rows = 3;
+      var cols = 3;
+
+      var modal = this.StyledModal.create({
+        title: 'Insert Table',
+        maxWidth: '400px'
+      });
+
+      modal
+        .start()
+          .start('p').add('Enter table dimensions:').end()
+          .start()
+            .style({ display: 'flex', gap: '16px', 'margin-bottom': '16px' })
+            .start()
+              .add('Rows: ')
+              .start('input')
+                .attrs({ type: 'number', min: 1, max: 20, value: rows })
+                .on('input', function(e) { rows = parseInt(e.target.value) || 3; })
+              .end()
+            .end()
+            .start()
+              .add('Columns: ')
+              .start('input')
+                .attrs({ type: 'number', min: 1, max: 10, value: cols })
+                .on('input', function(e) { cols = parseInt(e.target.value) || 3; })
+              .end()
+            .end()
+          .end()
+          .start()
+            .style({ display: 'flex', 'justify-content': 'flex-end', gap: '8px' })
+            .start('button')
+              .add('Cancel')
+              .on('click', function() { modal.closeModal(); })
+            .end()
+            .start('button')
+              .add('Insert')
+              .on('click', function() {
+                self.insertTable(rows, cols);
+                modal.closeModal();
+              })
+            .end()
+          .end()
+        .end();
+
+      modal.open();
+    },
+
+    function insertTable(rows, cols) {
+      var table = '';
+
+      // Header row
+      table += '|';
+      for ( var c = 0; c < cols; c++ ) {
+        table += ' Col' + (c + 1) + ' |';
+      }
+      table += '\n';
+
+      // Separator row
+      table += '|';
+      for ( var c = 0; c < cols; c++ ) {
+        table += '------|';
+      }
+      table += '\n';
+
+      // Data rows
+      for ( var r = 0; r < rows; r++ ) {
+        table += '|';
+        for ( var c = 0; c < cols; c++ ) {
+          table += '      |';
+        }
+        table += '\n';
+      }
+
+      this.insertAtCursor('\n' + table + '\n');
     }
   ],
 
@@ -716,6 +825,7 @@ foam.CLASS({
       label: 'B',
       toolTip: 'Bold',
       buttonStyle: 'TERTIARY',
+      keyboardShortcuts: [ 'ctrl-b' ],
       code: function() {
         this.wrapSelection('**', '**');
       }
@@ -725,6 +835,7 @@ foam.CLASS({
       label: 'I',
       toolTip: 'Italic',
       buttonStyle: 'TERTIARY',
+      keyboardShortcuts: [ 'ctrl-i' ],
       code: function() {
         this.wrapSelection('*', '*');
       }
@@ -734,6 +845,7 @@ foam.CLASS({
       label: 'U',
       toolTip: 'Underline',
       buttonStyle: 'TERTIARY',
+      keyboardShortcuts: [ 'ctrl-u' ],
       code: function() {
         this.wrapSelection('<u>', '</u>');
       }
@@ -743,8 +855,35 @@ foam.CLASS({
       label: 'S',
       toolTip: 'Strikethrough',
       buttonStyle: 'TERTIARY',
+      keyboardShortcuts: [ 'ctrl-shift-x' ],
       code: function() {
         this.wrapSelection('~~', '~~');
+      }
+    },
+    {
+      name: 'textColor',
+      label: 'Color',
+      toolTip: 'Text Color',
+      buttonStyle: 'TERTIARY',
+      code: function() {
+        var color = prompt('Enter text color (hex or name):', this.lastTextColor);
+        if ( color ) {
+          this.lastTextColor = color;
+          this.wrapSelection('<span style="color: ' + color + ';">', '</span>');
+        }
+      }
+    },
+    {
+      name: 'bgColor',
+      label: 'BG',
+      toolTip: 'Background Color',
+      buttonStyle: 'TERTIARY',
+      code: function() {
+        var color = prompt('Enter background color (hex or name):', this.lastBgColor);
+        if ( color ) {
+          this.lastBgColor = color;
+          this.wrapSelection('<span style="background-color: ' + color + ';">', '</span>');
+        }
       }
     },
     {
@@ -833,6 +972,7 @@ foam.CLASS({
       label: 'Link',
       buttonStyle: 'TERTIARY',
       toolTip: 'Insert Link',
+      keyboardShortcuts: [ 'ctrl-k' ],
       code: function() {
         this.insertTemplate('[$TEXT](url)', 'link text', 'url');
       }
@@ -842,6 +982,7 @@ foam.CLASS({
       label: 'Image',
       buttonStyle: 'TERTIARY',
       toolTip: 'Insert Image',
+      keyboardShortcuts: [ 'ctrl-shift-i' ],
       code: function() {
         this.insertTemplate('![$TEXT](image-url)', 'alt text', 'image-url');
       }
@@ -869,6 +1010,7 @@ foam.CLASS({
       label: 'Code',
       buttonStyle: 'TERTIARY',
       toolTip: 'Code Block',
+      keyboardShortcuts: [ 'ctrl-shift-c' ],
       code: function() {
         this.insertTemplate('```\n$TEXT\n```\n', 'code here', 'code here');
       }
@@ -878,8 +1020,100 @@ foam.CLASS({
       label: '`code`',
       buttonStyle: 'TERTIARY',
       toolTip: 'Inline Code',
+      keyboardShortcuts: [ 'ctrl-e' ],
       code: function() {
         this.wrapSelection('`', '`');
+      }
+    },
+    {
+      name: 'table',
+      label: 'Table',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Insert Table',
+      keyboardShortcuts: [ 'ctrl-shift-t' ],
+      code: function() {
+        this.openTableDialog();
+      }
+    },
+    {
+      name: 'insertTOC',
+      label: 'TOC',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Insert Table of Contents',
+      code: function() {
+        this.insertAtCursor('<toc></toc>\n');
+      }
+    },
+    {
+      name: 'insertSearch',
+      label: 'Search',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Insert Search Box',
+      code: function() {
+        this.insertAtCursor('<search></search>\n<searchcount></searchcount>\n');
+      }
+    },
+    {
+      name: 'insertSection',
+      label: 'Section',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Insert Searchable Section',
+      code: function() {
+        this.insertTemplate('<section1 title="$TEXT">\nContent here...\n</section1>\n', 'Section Title', 'Section Title');
+      }
+    },
+    {
+      name: 'insertGlossary',
+      label: 'Glossary',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Insert Glossary',
+      code: function() {
+        this.insertAtCursor('<glossary></glossary>\n');
+      }
+    },
+    {
+      name: 'insertDef',
+      label: 'Def',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Define Glossary Term',
+      code: function() {
+        this.insertTemplate('<def term="$TEXT" definition="Definition here"></def>\n', 'term', 'term');
+      }
+    },
+    {
+      name: 'insertTerm',
+      label: 'Term',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Reference Glossary Term',
+      code: function() {
+        this.insertTemplate('<term term="$TEXT"></term>', 'term', 'term');
+      }
+    },
+    {
+      name: 'insertExample',
+      label: 'Example',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Insert Live Code Example',
+      code: function() {
+        this.insertTemplate('<example>\n$TEXT\n</example>\n', 'log("Hello, World!");', 'log("Hello, World!");');
+      }
+    },
+    {
+      name: 'insertPermissioned',
+      label: 'Perm',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Insert Permissioned Content',
+      code: function() {
+        this.insertTemplate('<permissioned permission="$TEXT">\nContent here...\n</permissioned>\n', 'permission.name', 'permission.name');
+      }
+    },
+    {
+      name: 'insertInclude',
+      label: 'Include',
+      buttonStyle: 'TERTIARY',
+      toolTip: 'Include Another Document',
+      code: function() {
+        this.insertTemplate('<include src="$TEXT"></include>\n', 'filename.md', 'filename.md');
       }
     }
   ]
