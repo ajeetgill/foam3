@@ -108,13 +108,18 @@ select from mdao and write full records to new empty journal
       er.clearId();
       setEventRecord(er);
       Compaction compaction = (Compaction) ((DAO) x.get("compactionDAO")).find(getServiceName());
+      if ( compaction == null ) {
+        compaction = new Compaction();
+        compaction.setCSpec(getServiceName());
+        logger.info("no compaction config found, using defaults");
+      }
 
       try {
         roll(x);
         if ( compaction.getCompactible() ) {
           compaction(x);
         } else {
-          logger.warning(getServiceName(), "not compactibe");
+          logger.warning(getServiceName(), "not compactible");
         }
 
         logger.info("end");
@@ -172,6 +177,10 @@ select from mdao and write full records to new empty journal
       javaCode: `
       final Logger logger = Loggers.logger(x, this, "compaction", getServiceName());
       Compaction compaction = (Compaction) ((DAO) x.get("compactionDAO")).find(getServiceName());
+      if ( compaction == null ) {
+        compaction = new Compaction();
+        compaction.setCSpec(getServiceName());
+      }
 
       DAO dao = (DAO) x.get(getServiceName());
       MDAO mdao = null;
@@ -261,12 +270,12 @@ select from mdao and write full records to new empty journal
       double reduced = ((((Long) processed.getValue()) - compacted) / ((Long) processed.getValue()).doubleValue()) * 100.0;
       long compactionTime = System.currentTimeMillis() - startTime;
       double seconds = compactionTime / 1000.0;
-      double minutes = compactionTime / 60;
+      double minutes = compactionTime / 60000.0;
       double min100K = minutes / ( (Long) processed.getValue() / 100000.0 );
       StringBuilder report = new StringBuilder();
       report.append("instance,processed,compacted,duration s,reduced,date");
       report.append("\\n");
-      report.append(System.getProperty("hostname", "loalhost"));
+      report.append(System.getProperty("hostname", "localhost"));
       report.append(",");
       report.append(processed.getValue());
       report.append(",");
