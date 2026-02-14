@@ -368,7 +368,7 @@ select from mdao and write full records to new empty journal
       long removedFromZero = 0;
       if ( finalZeroMDAO != null ) {
         java.util.List zeroObjects = ((ArraySink) finalZeroMDAO.select(new ArraySink())).getArray();
-        DAO nullDAO = new foam.dao.NullDAO(x, mdao.getOf().getOwnClassInfo());
+        DAO nullDAO = new foam.dao.NullDAO(x, mdao.getOf());
         for ( Object zeroObj : zeroObjects ) {
           FObject fobj = (FObject) zeroObj;
           Object id = fobj.getProperty("id");
