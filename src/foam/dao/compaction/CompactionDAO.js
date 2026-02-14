@@ -29,12 +29,14 @@ select from mdao and write full records to new empty journal
     'foam.lang.ContextAgent',
     'foam.lang.FObject',
     'foam.lang.X',
+    'foam.dao.ArraySink',
     'foam.dao.DAO',
     'foam.dao.FileRollCmd',
     'foam.dao.Journal',
     'foam.dao.MDAO',
     'foam.dao.ProxyDAO',
     'foam.dao.ProxySink',
+    'foam.dao.ReadOnlyF3FileJournal',
     'foam.dao.Sink',
     'foam.dao.java.JDAO',
     'foam.log.LogLevel',
@@ -44,6 +46,7 @@ select from mdao and write full records to new empty journal
     'java.io.BufferedReader',
     'java.io.File',
     'java.io.FileReader',
+    'java.io.InputStream',
     'java.time.Duration'
   ],
 
@@ -116,7 +119,11 @@ select from mdao and write full records to new empty journal
       EventRecord er = (EventRecord) ((DAO) x.get("eventRecordDAO")).put(new EventRecord(x, getServiceName(), "compaction", "start")).fclone();
       er.clearId();
       setEventRecord(er);
-      Compaction compaction = (Compaction) ((DAO) x.get("compactionDAO")).find(getServiceName());
+      Compaction compaction = null;
+      DAO compactionDAO = (DAO) x.get("compactionDAO");
+      if ( compactionDAO != null ) {
+        compaction = (Compaction) compactionDAO.find(getServiceName());
+      }
       if ( compaction == null ) {
         compaction = new Compaction();
         compaction.setCSpec(getServiceName());
@@ -185,7 +192,11 @@ select from mdao and write full records to new empty journal
       args: 'X x',
       javaCode: `
       final Logger logger = Loggers.logger(x, this, "compaction", getServiceName());
-      Compaction compaction = (Compaction) ((DAO) x.get("compactionDAO")).find(getServiceName());
+      Compaction compaction = null;
+      DAO compactionDAO = (DAO) x.get("compactionDAO");
+      if ( compactionDAO != null ) {
+        compaction = (Compaction) compactionDAO.find(getServiceName());
+      }
       if ( compaction == null ) {
         compaction = new Compaction();
         compaction.setCSpec(getServiceName());
@@ -217,20 +228,66 @@ select from mdao and write full records to new empty journal
         throw new CompactionException("jdao not found");
       }
 
+      // Replay .0 (deployment journal) into a temp MDAO for diffing
+      MDAO zeroMDAO = null;
+      try {
+        ReadOnlyF3FileJournal journal0 = new ReadOnlyF3FileJournal.Builder(x)
+          .setFilename(jdao.getFilename() + ".0")
+          .build();
+        zeroMDAO = new MDAO(mdao.getOf());
+        journal0.replay(x, zeroMDAO);
+        long zeroCount = ((Long) ((Count) zeroMDAO.select(new Count())).getValue());
+        logger.info(".0 replay", "objects", zeroCount);
+      } catch ( Throwable t ) {
+        zeroMDAO = null;
+        logger.info(".0 file not found or unreadable, compaction proceeds normally");
+      }
+      final MDAO finalZeroMDAO = zeroMDAO;
+
       final DAO sourceDAO = (MDAO) mdao;
 
-      // Capture backup file stats before compaction
+      // Capture original journal stats before compaction
+      // Include .0 (deployment data) + rolled backup (runtime journal)
       Storage storage = (Storage) x.get(Storage.class);
       String filename = jdao.getFilename();
       long originalEntries = 0;
       long originalSize = 0;
-      // Find the most recent backup (.1, .2, etc.)
+
+      // Include .0 file (deployment/initial data, may be on filesystem or in JAR)
+      File f0 = null;
+      try { f0 = storage.get(filename + ".0"); } catch (Exception e) { /* ResourceStorage throws */ }
+      if ( f0 != null && f0.exists() ) {
+        originalSize += f0.length();
+        try ( BufferedReader br = new BufferedReader(new FileReader(f0)) ) {
+          while ( br.readLine() != null ) originalEntries++;
+        } catch (Exception e) {
+          logger.warning("could not read .0 file", e.getMessage());
+        }
+      } else {
+        // .0 may be in JAR — read via InputStream
+        try ( InputStream is = storage.getInputStream(filename + ".0") ) {
+          if ( is != null ) {
+            byte[] buf = new byte[8192];
+            int n;
+            while ( (n = is.read(buf)) != -1 ) {
+              originalSize += n;
+              for ( int j = 0 ; j < n ; j++ ) {
+                if ( buf[j] == '\n' ) originalEntries++;
+              }
+            }
+          }
+        } catch (Exception e) {
+          // .0 not found, skip
+        }
+      }
+
+      // Find the most recent backup (.1, .2, etc.) created by roll
       for ( int i = 1 ; ; i++ ) {
         File f = storage.get(filename + "." + (i + 1));
         if ( f == null || ! f.exists() ) {
           File backup = storage.get(filename + "." + i);
           if ( backup != null && backup.exists() ) {
-            originalSize = backup.length();
+            originalSize += backup.length();
             try ( BufferedReader br = new BufferedReader(new FileReader(backup)) ) {
               while ( br.readLine() != null ) originalEntries++;
             } catch (Exception e) {
@@ -269,7 +326,14 @@ select from mdao and write full records to new empty journal
       }
 
       JournalSink journalSink = new JournalSink(x, jdao.getJournal());
-      sink.setDelegate(journalSink);
+      ZeroAwareSink zeroAwareSink = null;
+      if ( finalZeroMDAO != null ) {
+        zeroAwareSink = new ZeroAwareSink(x, finalZeroMDAO, journalSink);
+        sink.setDelegate(zeroAwareSink);
+      } else {
+        sink.setDelegate(journalSink);
+      }
+      final ZeroAwareSink finalZeroAwareSink = zeroAwareSink;
 
       final Sink fsink = new Sequence.Builder(x)
                      .setArgs(new Sink[] {
@@ -300,6 +364,25 @@ select from mdao and write full records to new empty journal
           break;
         }
       }
+      // Write remove entries for objects that exist in .0 but were deleted at runtime
+      long removedFromZero = 0;
+      if ( finalZeroMDAO != null ) {
+        java.util.List zeroObjects = ((ArraySink) finalZeroMDAO.select(new ArraySink())).getArray();
+        DAO nullDAO = new foam.dao.NullDAO(x, mdao.getOf().getOwnClassInfo());
+        for ( Object zeroObj : zeroObjects ) {
+          FObject fobj = (FObject) zeroObj;
+          Object id = fobj.getProperty("id");
+          if ( mdao.find_(x, id) == null ) {
+            jdao.getJournal().remove(x, "", nullDAO, fobj);
+            removedFromZero++;
+          }
+        }
+        if ( removedFromZero > 0 ) {
+          logger.info(".0 removes", "count", removedFromZero);
+        }
+      }
+      final long finalRemovedCount = removedFromZero;
+
       long compacted = journalSink.getCount();
       double reduced = ((((Long) processed.getValue()) - compacted) / ((Long) processed.getValue()).doubleValue()) * 100.0;
       long compactionTime = System.currentTimeMillis() - startTime;
@@ -320,11 +403,16 @@ select from mdao and write full records to new empty journal
         }
       }
 
-      double entryReduction = backupEntries > 0 ? ((backupEntries - newEntries) / (double) backupEntries) * 100.0 : 0;
-      double sizeReduction = backupSize > 0 ? ((backupSize - newSize) / (double) backupSize) * 100.0 : 0;
+      double entryReduction = backupEntries > newEntries ? ((backupEntries - newEntries) / (double) backupEntries) * 100.0 : 0;
+      double sizeReduction = backupSize > newSize ? ((backupSize - newSize) / (double) backupSize) * 100.0 : 0;
+
+      String entryReductionStr = backupEntries > newEntries ? String.format("%.2f%%", entryReduction) : "N/A";
+      String sizeReductionStr = backupSize > newSize ? String.format("%.2f%%", sizeReduction) : "N/A";
+
+      long skippedFromZero = finalZeroAwareSink != null ? finalZeroAwareSink.getSkipped() : 0;
 
       StringBuilder report = new StringBuilder();
-      report.append("instance,processed,compacted,duration s,objects filtered,date,original entries,new entries,entry reduction,original size,new size,size reduction");
+      report.append("instance,processed,compacted,duration s,objects filtered,date,original entries,new entries,entry reduction,original size,new size,size reduction,skipped from .0,removed from .0");
       report.append("\\n");
       report.append(System.getProperty("hostname", "localhost"));
       report.append(",");
@@ -342,13 +430,17 @@ select from mdao and write full records to new empty journal
       report.append(",");
       report.append(newEntries);
       report.append(",");
-      report.append(String.format("%.2f%%", entryReduction));
+      report.append(entryReductionStr);
       report.append(",");
       report.append(formatSize(backupSize));
       report.append(",");
       report.append(formatSize(newSize));
       report.append(",");
-      report.append(String.format("%.2f%%", sizeReduction));
+      report.append(sizeReductionStr);
+      report.append(",");
+      report.append(skippedFromZero);
+      report.append(",");
+      report.append(finalRemovedCount);
 
       logger.info("compactionComplete", "report", "\\n"+report.toString());
 
@@ -360,8 +452,14 @@ select from mdao and write full records to new empty journal
       readable.append("\\n  Objects processed:  " + processed.getValue());
       readable.append("\\n  Objects compacted:  " + compacted);
       readable.append("\\n  Objects filtered:   " + String.format("%.2f%%", reduced));
-      readable.append("\\n  Journal entries:    " + backupEntries + " -> " + newEntries + " (" + String.format("%.2f%%", entryReduction) + " reduction)");
-      readable.append("\\n  Journal size:       " + formatSize(backupSize) + " -> " + formatSize(newSize) + " (" + String.format("%.2f%%", sizeReduction) + " reduction)");
+      readable.append("\\n  Journal entries:    " + backupEntries + " -> " + newEntries + " (" + entryReductionStr + " reduction)");
+      readable.append("\\n  Journal size:       " + formatSize(backupSize) + " -> " + formatSize(newSize) + " (" + sizeReductionStr + " reduction)");
+      if ( skippedFromZero > 0 ) {
+        readable.append("\\n  Skipped (.0):       " + skippedFromZero + " (unchanged from .0)");
+      }
+      if ( finalRemovedCount > 0 ) {
+        readable.append("\\n  Removed (.0):       " + finalRemovedCount + " (deleted at runtime)");
+      }
       setReport(readable.toString());
 
       EventRecord er = getEventRecord();
@@ -426,6 +524,48 @@ select from mdao and write full records to new empty journal
         {
           name: 'eof',
           javaCode: 'setIsEof(true);'
+        }
+      ]
+    },
+    {
+      name: 'ZeroAwareSink',
+      extends: 'foam.dao.ProxySink',
+
+      documentation: 'Skips objects that are identical to their .0 (deployment) version.',
+
+      javaCode: `
+        public ZeroAwareSink(X x, MDAO zeroMDAO, Sink delegate) {
+          setX(x);
+          setZeroMDAO(zeroMDAO);
+          setDelegate(delegate);
+        }
+      `,
+
+      properties: [
+        {
+          class: 'Object',
+          name: 'zeroMDAO'
+        },
+        {
+          class: 'Long',
+          name: 'skipped'
+        }
+      ],
+
+      methods: [
+        {
+          name: 'put',
+          javaCode: `
+          MDAO zero = (MDAO) getZeroMDAO();
+          FObject fobj = (FObject) obj;
+          Object id = fobj.getProperty("id");
+          FObject zeroObj = zero.find_(getX(), id);
+          if ( zeroObj != null && zeroObj.equals(fobj) ) {
+            setSkipped(getSkipped() + 1);
+            return;
+          }
+          getDelegate().put(obj, sub);
+          `
         }
       ]
     }
