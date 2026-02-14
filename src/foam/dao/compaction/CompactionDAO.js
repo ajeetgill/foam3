@@ -272,7 +272,7 @@ select from mdao and write full records to new empty journal
             while ( (n = is.read(buf)) != -1 ) {
               originalSize += n;
               for ( int j = 0 ; j < n ; j++ ) {
-                if ( buf[j] == '\n' ) originalEntries++;
+                if ( buf[j] == (byte) 10 ) originalEntries++;
               }
             }
           }
