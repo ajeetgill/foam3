@@ -240,7 +240,7 @@ select from mdao and write full records to new empty journal
         logger.info(".0 replay", "objects", zeroCount);
       } catch ( Throwable t ) {
         zeroMDAO = null;
-        logger.info(".0 file not found or unreadable, compaction proceeds normally");
+        logger.info(".0 file not found or unreadable, compaction proceeds normally", t.getMessage());
       }
       final MDAO finalZeroMDAO = zeroMDAO;
 
@@ -303,37 +303,49 @@ select from mdao and write full records to new empty journal
 
       final Count total = (Count) dao.select(new Count());
       final Count processed = new Count();
-      CompactionSink compactionSink = new CompactionSink(x, getServiceName(), null);
-      ProxySink sink = compactionSink;
-      ProxySink delegate = null;
-      if ( compaction.getDiscardLifecycleDeleted() ) {
-        delegate = new LifecycleDeletedCompactionSink(x, compaction.getDiscardLifecycleDeleted(), null);
-        sink.setDelegate(delegate);
-        sink = delegate;
+
+      // Build the sink chain bottom-up: JournalSink <- filters <- CompactionSink
+      // Must be built before CompactionSink because CompactionSink.setDelegate()
+      // triggers getFacetedSink() which captures the chain at that point.
+      JournalSink journalSink = new JournalSink(x, jdao.getJournal());
+      if ( finalZeroMDAO != null ) {
+        // Read-only wrapper: find() returns .0 version for delta detection,
+        // put() is no-op so zeroMDAO stays clean for the remove check later.
+        // journal.put() uses baseDAO.find_(id) to get the old version, then
+        // maybeOutputDelta() writes only changed properties. Identical objects
+        // produce an empty delta and nothing is written to the journal.
+        journalSink.setBaseDAO(new foam.dao.NullDAO(x, mdao.getOf()) {
+          public foam.lang.FObject find_(foam.lang.X x, Object id) {
+            return finalZeroMDAO.find_(x, id);
+          }
+        });
+      }
+      Sink tail = journalSink;
+
+      // Build filter chain on top of tail
+      if ( compaction.getLastModifiedSince() != null ) {
+        ProxySink filter = new LastModifiedCompactionSink(x, compaction.getLastModifiedSince(), null);
+        filter.setDelegate(tail);
+        tail = filter;
+      }
+      if ( compaction.getCreatedSince() != null ) {
+        ProxySink filter = new CreatedCompactionSink(x, compaction.getCreatedSince(), null);
+        filter.setDelegate(tail);
+        tail = filter;
       }
       if ( compaction.getPredicate() != null ) {
-        delegate = new PredicateCompactionSink(x, compaction.getPredicate(), null);
-        sink.setDelegate(delegate);
-        sink = delegate;
-      } else if ( compaction.getCreatedSince() != null ) {
-        delegate = new CreatedCompactionSink(x, compaction.getCreatedSince(), null);
-        sink.setDelegate(delegate);
-        sink = delegate;
-      } else if ( compaction.getLastModifiedSince() != null ) {
-        delegate = new LastModifiedCompactionSink(x, compaction.getLastModifiedSince(), null);
-        sink.setDelegate(delegate);
-        sink = delegate;
+        ProxySink filter = new PredicateCompactionSink(x, compaction.getPredicate(), null);
+        filter.setDelegate(tail);
+        tail = filter;
+      }
+      if ( compaction.getDiscardLifecycleDeleted() ) {
+        ProxySink filter = new LifecycleDeletedCompactionSink(x, compaction.getDiscardLifecycleDeleted(), null);
+        filter.setDelegate(tail);
+        tail = filter;
       }
 
-      JournalSink journalSink = new JournalSink(x, jdao.getJournal());
-      ZeroAwareSink zeroAwareSink = null;
-      if ( finalZeroMDAO != null ) {
-        zeroAwareSink = new ZeroAwareSink(x, finalZeroMDAO, journalSink);
-        sink.setDelegate(zeroAwareSink);
-      } else {
-        sink.setDelegate(journalSink);
-      }
-      final ZeroAwareSink finalZeroAwareSink = zeroAwareSink;
+      // Set the complete chain as CompactionSink's delegate (triggers getFacetedSink once)
+      CompactionSink compactionSink = new CompactionSink(x, getServiceName(), tail);
 
       final Sink fsink = new Sequence.Builder(x)
                      .setArgs(new Sink[] {
@@ -409,10 +421,8 @@ select from mdao and write full records to new empty journal
       String entryReductionStr = backupEntries > newEntries ? String.format("%.2f%%", entryReduction) : "N/A";
       String sizeReductionStr = backupSize > newSize ? String.format("%.2f%%", sizeReduction) : "N/A";
 
-      long skippedFromZero = finalZeroAwareSink != null ? finalZeroAwareSink.getSkipped() : 0;
-
       StringBuilder report = new StringBuilder();
-      report.append("instance,processed,compacted,duration s,objects filtered,date,original entries,new entries,entry reduction,original size,new size,size reduction,skipped from .0,removed from .0");
+      report.append("instance,processed,compacted,duration s,objects filtered,date,original entries,new entries,entry reduction,original size,new size,size reduction,removed from .0");
       report.append("\\n");
       report.append(System.getProperty("hostname", "localhost"));
       report.append(",");
@@ -438,8 +448,6 @@ select from mdao and write full records to new empty journal
       report.append(",");
       report.append(sizeReductionStr);
       report.append(",");
-      report.append(skippedFromZero);
-      report.append(",");
       report.append(finalRemovedCount);
 
       logger.info("compactionComplete", "report", "\\n"+report.toString());
@@ -454,9 +462,6 @@ select from mdao and write full records to new empty journal
       readable.append("\\n  Objects filtered:   " + String.format("%.2f%%", reduced));
       readable.append("\\n  Journal entries:    " + backupEntries + " -> " + newEntries + " (" + entryReductionStr + " reduction)");
       readable.append("\\n  Journal size:       " + formatSize(backupSize) + " -> " + formatSize(newSize) + " (" + sizeReductionStr + " reduction)");
-      if ( skippedFromZero > 0 ) {
-        readable.append("\\n  Skipped (.0):       " + skippedFromZero + " (unchanged from .0)");
-      }
       if ( finalRemovedCount > 0 ) {
         readable.append("\\n  Removed (.0):       " + finalRemovedCount + " (deleted at runtime)");
       }
@@ -499,8 +504,8 @@ select from mdao and write full records to new empty journal
         },
         {
           class: 'foam.dao.DAOProperty',
-          of: 'foam.dao.NullDAO',
-          name: 'nullDAO',
+          name: 'baseDAO',
+          documentation: 'DAO used by journal for delta detection. Defaults to NullDAO (full writes). Set to a .0 wrapper for delta writes.',
           javaFactory: 'return new foam.dao.NullDAO(getX(), this.getOwnClassInfo());'
         },
         {
@@ -517,55 +522,13 @@ select from mdao and write full records to new empty journal
         {
           name: 'put',
           javaCode: `
-          ((Journal) getJournal()).put(getX(), "", getNullDAO(), (FObject) obj);
+          ((Journal) getJournal()).put(getX(), "", getBaseDAO(), (FObject) obj);
           setCount(getCount() +1);
           `
         },
         {
           name: 'eof',
           javaCode: 'setIsEof(true);'
-        }
-      ]
-    },
-    {
-      name: 'ZeroAwareSink',
-      extends: 'foam.dao.ProxySink',
-
-      documentation: 'Skips objects that are identical to their .0 (deployment) version.',
-
-      javaCode: `
-        public ZeroAwareSink(X x, MDAO zeroMDAO, Sink delegate) {
-          setX(x);
-          setZeroMDAO(zeroMDAO);
-          setDelegate(delegate);
-        }
-      `,
-
-      properties: [
-        {
-          class: 'Object',
-          name: 'zeroMDAO'
-        },
-        {
-          class: 'Long',
-          name: 'skipped'
-        }
-      ],
-
-      methods: [
-        {
-          name: 'put',
-          javaCode: `
-          MDAO zero = (MDAO) getZeroMDAO();
-          FObject fobj = (FObject) obj;
-          Object id = fobj.getProperty("id");
-          FObject zeroObj = zero.find_(getX(), id);
-          if ( zeroObj != null && zeroObj.equals(fobj) ) {
-            setSkipped(getSkipped() + 1);
-            return;
-          }
-          getDelegate().put(obj, sub);
-          `
         }
       ]
     }
