@@ -11,6 +11,8 @@ foam.CLASS({
   name: 'DIGApiDoc',
   extends: 'foam.u2.View',
 
+  requires: [ 'foam.doc.ModelDiagramView' ],
+
   css: `
     ^ { font-family: system-ui, sans-serif; max-width: 900px; }
     ^section { margin: 24px 0; }
@@ -81,6 +83,9 @@ foam.CLASS({
             .start('code').add(this.baseUrl, '?dao=', this.data, '&format=JSON&cmd=remove&id={id}').end()
           .end()
         .end()
+
+        .start('h2').add('Model Diagram').end()
+        .tag(this.ModelDiagramView, {data: cls, width: 1000, height: -1})
 
         // Properties Table
         .start('div').addClass(this.myClass('section'))
