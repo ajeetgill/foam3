@@ -345,14 +345,36 @@ foam.CLASS({
     {
       name: 'view',
       code: function(a, X) {
-        // TODO: Add logging for who has downloaded files etc.
-        var blob = this.data;
-        if ( foam.blob.BlobBlob.isInstance(blob) ) {
-          window.open(URL.createObjectURL(blob.blob));
-        } else {
-          var url = this.address;
-          window.open(url);
+        var isImage = this.mimeType && this.mimeType.startsWith('image/');
+        var isPdf   = this.mimeType === 'application/pdf';
+
+        // Unsupported preview types — fall back to new tab
+        if ( ! isImage && ! isPdf ) {
+          var blob = this.data;
+          if ( foam.blob.BlobBlob.isInstance(blob) ) {
+            window.open(URL.createObjectURL(blob.blob));
+          } else {
+            window.open(this.address);
+          }
+          return;
         }
+
+        var popup = foam.u2.dialog.Popup.create({
+          closeable: true,
+          backgroundColor: '#ffffff'
+        }, X);
+
+        popup
+          .start()
+            .style({ 'width': '85vw', 'height': '85vh' })
+            .tag({
+              class: 'foam.core.fs.fileDropZone.FilePreview',
+              data: this,
+              fullScreen: true
+            })
+          .end();
+
+        popup.open();
       }
     },
     {
