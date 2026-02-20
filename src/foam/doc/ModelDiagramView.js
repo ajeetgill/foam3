@@ -43,7 +43,7 @@ foam.CLASS({
       implements:  { fill: '#f5f3ff', text: '#5b21b6', stroke: '#7c3aed' },
       mixin:       { fill: '#fef3c7', text: '#92400e', stroke: '#f59e0b' },
       subclass:    { fill: '#f8fafc', text: '#334155', stroke: '#94a3b8' },
-      reference:   { fill: '#eff6ff', text: '#1e40af', stroke: '#3b82f6' },
+      contains:    { fill: '#eff6ff', text: '#1e40af', stroke: '#3b82f6' },
       relationship:{ fill: '#fdf2f8', text: '#9d174d', stroke: '#ec4899' },
       container:   { fill: '#ffffff', text: '#334155', stroke: '#e2e8f0', header: '#f8fafc' }
     },
@@ -64,7 +64,7 @@ foam.CLASS({
   axioms: [
     { class: 'foam.lang.Constant', name: 'CLASSES', factory: function() {
       // Force-load all registered but uninstantiated models so that
-      // subclass and referencedBy discovery can find them in foam.USED
+      // subclass and containedBy discovery can find them in foam.USED
       for ( var key in foam.UNUSED ) try { foam.lookup(key); } catch(x) {}
       return Object.keys(foam.USED).map(c => { try { return foam.maybeLookup(c); } catch(x){}}).filter(c => c);
     }}
@@ -113,11 +113,11 @@ foam.CLASS({
       factory: function() { return []; }
     },
     {
-      name: 'references_',
+      name: 'contains_',
       factory: function() { return []; }
     },
     {
-      name: 'referencedBy_',
+      name: 'containedBy_',
       factory: function() { return []; }
     },
     {
@@ -213,9 +213,9 @@ foam.CLASS({
       });
       this.subclasses_.sort((a, b) => a.name.localeCompare(b.name));
 
-      // References
-      this.references_ = [];
-      var seenRefs = new Set();
+      // Contains (FObjectProperty / FObjectArray references from this class)
+      this.contains_ = [];
+      var seenContains = new Set();
       cls.getAxiomsByClass(foam.lang.Property).forEach(prop => {
         var targetCls = null;
         var cardinality = '1';
@@ -229,21 +229,21 @@ foam.CLASS({
           return;
         }
 
-        if ( targetCls && ! seenRefs.has(targetCls.id) ) {
-          seenRefs.add(targetCls.id);
-          this.references_.push({ cls: targetCls, cardinality: cardinality, prop: prop.name });
+        if ( targetCls && ! seenContains.has(targetCls.id) ) {
+          seenContains.add(targetCls.id);
+          this.contains_.push({ cls: targetCls, cardinality: cardinality, prop: prop.name });
         }
       });
 
-      // Referenced By
-      this.referencedBy_ = [];
-      var seenRefBy = new Set();
+      // Contained By (other classes with FObjectProperty / FObjectArray pointing to this class)
+      this.containedBy_ = [];
+      var seenContainedBy = new Set();
       this.CLASSES.forEach(c => {
         c.getAxiomsByClass(foam.lang.Property).forEach(prop => {
           function maybeAdd(of, cardinality) {
-            if ( cls === of && ! seenRefBy.has(c.id) ) {
-              seenRefBy.add(c.id);
-              self.referencedBy_.push({ cls: c.model_, cardinality: cardinality, prop: prop.name });
+            if ( cls === of && ! seenContainedBy.has(c.id) ) {
+              seenContainedBy.add(c.id);
+              self.containedBy_.push({ cls: c.model_, cardinality: cardinality, prop: prop.name });
             }
           }
 
@@ -254,7 +254,7 @@ foam.CLASS({
           }
         });
       });
-      this.referencedBy_.sort((a, b) => a.cls.name.localeCompare(b.cls.name));
+      this.containedBy_.sort((a, b) => a.cls.name.localeCompare(b.cls.name));
 
       // Relationships
       this.relationships_ = [];
@@ -320,7 +320,7 @@ foam.CLASS({
       totalHeight += M; // bottom margin
 
       // Side container height check — ensure bottom content starts below side containers
-      var maxSideItems = Math.max(this.references_.length, this.referencedBy_.length);
+      var maxSideItems = Math.max(this.contains_.length, this.containedBy_.length);
       var sideHeight = maxSideItems * sideItemHeight + 50;
       var sideTop = Math.max(M, focusY - sideHeight + this.PILL_HEIGHT + 30);
       var sideBottom = sideTop + sideHeight;
@@ -356,13 +356,13 @@ foam.CLASS({
       var sideItemHeight = this.PILL_HEIGHT + this.PILL_GAP;
       var containerTop = focusY + this.PILL_HEIGHT + 40;
 
-      // Referenced By (left)
-      if ( this.referencedBy_.length > 0 ) {
-        var refByHeight = this.referencedBy_.length * sideItemHeight + 50;
-        var refByTop = Math.max(M, focusY - refByHeight + this.PILL_HEIGHT + 30);
-        containerTop = Math.max(containerTop, refByTop + refByHeight + 20);
-        this.renderContainer_(svg, M, refByTop, this.SIDE_CONTAINER_WIDTH, refByHeight,
-          'Referenced By', this.referencedBy_, 'reference');
+      // Contained By (left)
+      if ( this.containedBy_.length > 0 ) {
+        var cbHeight = this.containedBy_.length * sideItemHeight + 50;
+        var cbTop = Math.max(M, focusY - cbHeight + this.PILL_HEIGHT + 30);
+        containerTop = Math.max(containerTop, cbTop + cbHeight + 20);
+        this.renderContainer_(svg, M, cbTop, this.SIDE_CONTAINER_WIDTH, cbHeight,
+          'Contained By', this.containedBy_, 'contains');
 
         svg.start('path')
           .attrs({
@@ -374,18 +374,18 @@ foam.CLASS({
         .end();
       }
 
-      // References (right) - always position from right edge
-      if ( this.references_.length > 0 ) {
-        var refHeight = this.references_.length * sideItemHeight + 50;
-        var refTop = Math.max(M, focusY - refHeight + this.PILL_HEIGHT + 30);
-        var refX = this.calculatedWidth_ - this.SIDE_CONTAINER_WIDTH - M;
-        containerTop = Math.max(containerTop, refTop + refHeight + 20);
-        this.renderContainer_(svg, refX, refTop,
-          this.SIDE_CONTAINER_WIDTH, refHeight, 'References', this.references_, 'reference');
+      // Contains (right) - always position from right edge
+      if ( this.contains_.length > 0 ) {
+        var cHeight = this.contains_.length * sideItemHeight + 50;
+        var cTop = Math.max(M, focusY - cHeight + this.PILL_HEIGHT + 30);
+        var cX = this.calculatedWidth_ - this.SIDE_CONTAINER_WIDTH - M;
+        containerTop = Math.max(containerTop, cTop + cHeight + 20);
+        this.renderContainer_(svg, cX, cTop,
+          this.SIDE_CONTAINER_WIDTH, cHeight, 'Contains', this.contains_, 'contains');
 
         svg.start('path')
           .attrs({
-            d: `M ${centerX + this.FOCUS_PILL_WIDTH/2} ${focusY + this.PILL_HEIGHT/2} L ${refX} ${focusY + this.PILL_HEIGHT/2}`,
+            d: `M ${centerX + this.FOCUS_PILL_WIDTH/2} ${focusY + this.PILL_HEIGHT/2} L ${cX} ${focusY + this.PILL_HEIGHT/2}`,
             fill: 'none',
             stroke: '#cbd5e1',
             'stroke-width': 1.5
@@ -588,7 +588,7 @@ foam.CLASS({
     function renderContainer_(svg, x, y, width, height, title, items, type) {
       var self = this;
       var colors = this.COLORS.container;
-      var itemColors = this.COLORS[type] || this.COLORS.reference;
+      var itemColors = this.COLORS[type] || this.COLORS.contains;
 
       svg
         .start('g')
