@@ -1318,7 +1318,7 @@ foam.CLASS({
       for reactive/dynamic supporting labels. Default is null (no supporting label).
       `,
       adapt: function(_, nu) {
-        if ( typeof nu === 'string' ) {
+        if ( foam.String.isInstance(nu) ) {
           return function() { this.add(nu); };
         }
         return nu;
