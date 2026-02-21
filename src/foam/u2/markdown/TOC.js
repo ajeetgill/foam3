@@ -66,7 +66,7 @@ foam.CLASS({
     Index counters track current numbering at each level.
   `,
 
-  imports: [ 'markdownContext' ],
+  imports: [ 'markdownContext?' ],
 
   properties: [
     {
