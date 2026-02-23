@@ -1480,3 +1480,97 @@ foam.CLASS({
     }
   ]
 })
+
+
+foam.CLASS({
+  package: 'foam.lang',
+  name: 'CountryCode',
+  extends: 'Reference',
+  implements: [ 'foam.mlang.Expressions' ],
+
+  properties: [
+    {
+      class: 'Class',
+      name: 'of',
+      value: 'foam.core.auth.Country'
+    },
+    [ 'type', 'String' ],
+    {
+      class: 'String',
+      name: 'targetDAOKey',
+      value: 'countryDAO'
+    },
+    {
+      name: 'adapt',
+      value: function(_, n) {
+        if ( foam.core.auth.Country.isInstance(n) ) return n.code || n.id;
+        if ( ! foam.String.isInstance(n) ) return n;
+
+        let v = n.trim();
+        if ( ! v ) return v;
+
+        // Normalize numeric variants for ISO 3166-1 numeric lookup (e.g. "36" => "036").
+        if ( /^\d+$/.test(v) ) return v.padStart(3, '0');
+
+        return v.toUpperCase();
+      }
+    },
+    {
+      name: 'javaAdapt',
+      value: `
+        if ( val == null ) return;
+        String s = foam.util.SafetyUtil.trim(val);
+        if ( foam.util.SafetyUtil.isEmpty(s) ) {
+          val = "";
+          return;
+        }
+        if ( s.matches("\\\\d+") ) {
+          while ( s.length() < 3 ) s = "0" + s;
+          val = s;
+          return;
+        }
+        val = s.toUpperCase();
+      `
+    },
+    {
+      name: 'initObject',
+      value: async function(obj) {
+        let c = await this.normalize(this.f(obj), this, obj);
+        this.set(obj, c);
+      }
+    },
+    {
+      name: 'normalize',
+      value: async function(value, prop, obj) {
+        if ( ! foam.String.isInstance(value) ) return value;
+
+        var v = value.trim();
+        if ( ! v ) return v;
+        v = /^\d+$/.test(v) ? v.padStart(3, '0') : v.toUpperCase();
+
+        var dao = obj && obj.__context__ && obj.__context__[prop.targetDAOKey];
+        if ( ! dao ) return v;
+        var Country = foam.core.auth.Country;
+        var iso3Prop = Country.ISO31661CODE || Country.ISO31661_CODE;
+        var isoNumProp = Country.ISONUMERIC || Country.ISO_NUMERIC;
+
+        // alpha-2 id (Country.code)
+        if ( /^[A-Z]{2}$/.test(v) ) return v;
+
+        // alpha-3 ISO 3166-1 -> normalize to alpha-2 Country.code
+        if ( /^[A-Z]{3}$/.test(v) ) {
+          var c3 = iso3Prop ? await dao.find(prop.EQ(iso3Prop, v)) : null;
+          return c3 ? c3.code : v;
+        }
+
+        // numeric ISO 3166-1 -> normalize to alpha-2 Country.code
+        if ( /^\\d{3}$/.test(v) ) {
+          var cn = isoNumProp ? await dao.find(prop.EQ(isoNumProp, v)) : null;
+          return cn ? cn.code : v;
+        }
+
+        return v;
+      }
+    }
+  ]
+})
