@@ -46,6 +46,10 @@ foam.CLASS({
       class: 'Boolean'
     },
     {
+      name: 'disableTableRowActions',
+      class: 'Boolean'
+    },
+    {
       class: 'String',
       name: 'daoKey'
     },
