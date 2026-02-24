@@ -27,7 +27,8 @@ foam.CLASS({
     'allowRemoval',
     'removeFile',
     'highlight',
-    'theme'
+    'theme',
+    'controllerMode as importedControllerMode'
   ],
 
   exports: [
@@ -119,7 +120,7 @@ foam.CLASS({
     {
       class: 'Boolean',
       name: 'canBeRemoved',
-      expression: function(controllerMode) { return controllerMode != foam.u2.ControllerMode.VIEW; }
+      expression: function(importedControllerMode) { return importedControllerMode != foam.u2.ControllerMode.VIEW; }
     },
     {
       class: 'Class',
