@@ -1434,7 +1434,7 @@ foam.CLASS({
     {
       name: 'viewTitle',
       expression: function(value$label) {
-        return value$label;
+        return value$label || 'Flow';
       }
     },
     'flowErrors_'
