@@ -298,6 +298,7 @@ foam.CLASS({
         // Remove duplicates in case supportedFormats has multiple extensions for the same type (ex: text/x-vcard and text/vcard both have vCard as an extension)
         supportedTypes = [...new Set(Object.values(this.supportedFormats))];
         supportedTypes.forEach((type, index) => {
+          if ( ! type ) return;
           constructedString += type;
           if ( index < supportedTypes.length - 1 ) {
             constructedString += ', ';
