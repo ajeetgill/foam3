@@ -166,7 +166,7 @@ foam.CLASS({
         .callIfElse(this.theme, function() {  
           this.start(self.Image, { glyph: 'file' }).attrs({ role: 'presentation' }).end();
         }, function() {
-          this.tag(self);
+          this.start(self.Image, { data: 'images/attach-icon.svg' }).attrs({ role: 'presentation' }).end();
         })
         .start()
           .addClass(this.myClass('nameHolder'))
