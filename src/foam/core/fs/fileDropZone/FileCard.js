@@ -27,7 +27,8 @@ foam.CLASS({
     'allowRemoval',
     'removeFile',
     'highlight',
-    'theme'
+    'theme',
+    'controllerMode as importedControllerMode'
   ],
 
   exports: [
@@ -92,6 +93,10 @@ foam.CLASS({
       justify-content: flex-start;
     }
 
+    ^fileButton.disableButton {
+      pointer-events: none;
+    }
+
     ^fileCard-content.foam-u2-layout-Cols {
       gap: 8px;
       align-items: center;
@@ -108,6 +113,7 @@ foam.CLASS({
 
     ^ .foam-u2-tag-Image svg {
       fill: currentColor;
+      height: 1.2em;
     }
   `,
 
@@ -119,7 +125,7 @@ foam.CLASS({
     {
       class: 'Boolean',
       name: 'canBeRemoved',
-      expression: function(controllerMode) { return controllerMode != foam.u2.ControllerMode.VIEW; }
+      expression: function(importedControllerMode) { return importedControllerMode != foam.u2.ControllerMode.VIEW; }
     },
     {
       class: 'Class',
@@ -131,6 +137,11 @@ foam.CLASS({
     },
     {
       name: 'selected'
+    },
+    {
+      class: 'Boolean',
+      name: 'allowViewAndDownload',
+      value: true
     }
   ],
 
@@ -148,8 +159,12 @@ foam.CLASS({
       this.addClass()
       .start(this.Cols)
           .addClass(this.myClass('fileCard-content'))
-          .start(self.File.VIEW, { label: label, buttonStyle: 'UNSTYLED' }).addClass(this.myClass('fileButton')).end()
-          .start(self.File.DOWNLOAD, { buttonStyle: 'TERTIARY', label: '', themeIcon: 'download' }).addClass(this.myClass('file-action')).end()
+          .callIfElse(this.allowViewAndDownload, function() {
+            this.start(self.File.VIEW, { label: label, buttonStyle: 'UNSTYLED' }).addClass(self.myClass('fileButton')).end()
+            .start(self.File.DOWNLOAD, { buttonStyle: 'TERTIARY', label: '', themeIcon: 'download' }).addClass(self.myClass('file-action')).end();
+          }, function() {
+            this.start().add(label).addClass(self.myClass('fileButton')).enableClass('disableButton', self.allowViewAndDownload$).end();
+          })
           .start(this.REMOVE_FILE_X, {
             label: '',
             buttonStyle: foam.u2.ButtonStyle.TERTIARY,
