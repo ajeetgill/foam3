@@ -32,8 +32,6 @@ foam.CLASS({
 
 If you don't want to manage IDs yourself, use `foam.dao.EasyDAO` with `seqNo: true` and IDs will be assigned automatically.
 
----
-
 ## The DAO Interface
 
 The full DAO interface is small by design.
@@ -292,9 +290,8 @@ dao.listen(foam.dao.ProxySink.create({
 }));
 ```
 
-Call `sub.detach()` inside any callback, or retain and call it later, to stop listening.
+Call `sub.detach()` inside any callback to stop listening.
 
----
 
 ## removeAll()
 
