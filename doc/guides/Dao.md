@@ -36,26 +36,62 @@ If you don't want to manage IDs yourself, use `foam.dao.EasyDAO` with `seqNo: tr
 
 ## The DAO Interface
 
-The full DAO interface is small by design:
+The full DAO interface is small by design.
 
-```java
+### JavaScript
+
+```javascript
 interface DAO {
-  Future<FObject>  put(FObject obj)               // insert or update; returns stored object
-  Future<FObject>  find(Object id)                // retrieve by id; returns null if not found
-  Future<FObject>  remove(FObject obj)            // delete; not an error if not found
-  Future<Sink>     select(Sink sink)              // retrieve matching objects into sink
-  Future           removeAll()                    // delete all matching objects
-  Detachable       listen(Sink sink)              // receive ongoing changes; detach to stop
-  void             pipe(Sink sink)                // select() then listen()
-  Future           cmd(Object obj)                // send a command to the DAO (advanced)
+  Promise<FObject>  put(FObject obj)               // insert or update; returns stored object
+  Promise<FObject>  find(Object id)                // retrieve by id; returns null if not found
+  Promise<FObject>  remove(FObject obj)            // delete; not an error if not found
+  Promise<Sink>     select(Sink sink)              // retrieve matching objects into sink
+  Promise           removeAll()                    // delete all matching objects
+  Detachable        listen(Sink sink)              // receive ongoing changes; detach to stop
+  void              pipe(Sink sink)                // select() then listen()
+  Object            cmd(Object obj)                // send a command to the DAO (advanced)
 
-  DAO              where(Predicate predicate)     // filter results
-  DAO              orderBy(Comparator comparator) // sort results
-  DAO              limit(Long count)              // cap result count
-  DAO              skip(Long count)               // skip first N results
-  DAO              inX(Context x)                 // return DAO running in a different context
+  DAO               where(Predicate predicate)     // filter results
+  DAO               orderBy(Comparator comparator) // sort results
+  DAO               limit(Long count)              // cap result count
+  DAO               skip(Long count)               // skip first N results
+  DAO               inX(Context x)                 // return DAO running in a different context
 }
 ```
+
+### Java
+
+```java
+public interface DAO {
+  // Single-object operations
+  FObject put(FObject obj);
+  FObject find(Object id);
+  FObject remove(FObject obj);
+
+  // Collection operations
+  Sink select(Sink sink);
+  void removeAll();
+  void listen(Sink sink, Predicate predicate);
+  void pipe(Sink sink);
+
+  // Filtering (returns a new DAO)
+  DAO where(Predicate predicate);
+  DAO orderBy(Comparator comparator);
+  DAO skip(long count);
+  DAO limit(long count);
+  DAO inX(X x);
+
+  // Escape hatch
+  Object cmd(Object obj);
+
+  // Introspection
+  ClassInfo getOf();
+}
+```
+
+Note that `getOf()` returns the `ClassInfo` of the type of objects stored in the DAO — useful for introspection and generic DAO handling code.
+
+---
 
 The filtering methods (`where`, `orderBy`, `limit`, `skip`) return a new DAO that wraps the original. They don't execute anything — they just narrow the scope of the next `select` or `removeAll`. They can be chained freely:
 
@@ -305,16 +341,7 @@ dao.cmd(foam.dao.DAO.PURGE_CMD);
 
 Every decorator in the chain sees it. The `CachingDAO` handles it; everything else passes it along. The caller doesn't need to know what decorators are present, in what order, or where they are.
 
-The standard commands defined on the DAO interface are:
-
-| Command | Effect |
-|---|---|
-| `DAO.PURGE_CMD` | Clear a DAO's cache (handled by `CachingDAO`, `FixedSizeDAO`) |
-| `DAO.RESET_CMD` | Signal listeners to reset |
-| `DAO.LAST_CMD` | Return the last DAO in the delegate chain (e.g. the underlying `MDAO`) |
-| `DAO.COUNT_LISTENERS_CMD` | Return the number of active listeners |
-
-Individual DAOs also define their own domain-specific commands — `MDAO.NOW_CMD`, `AddIndexCommand`, `FileRollCmd`, `RulerProbe`, and others. These follow the same pattern: send the command, the right decorator handles it, the rest ignore it.
+Individual DAOs define their own domain-specific commands. These follow the same pattern: send the command, the right decorator handles it, the rest ignore it.
 
 A `null` return means the command was not handled by any DAO in the chain. Most application code never needs `cmd()` directly.
 
