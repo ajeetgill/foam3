@@ -15,7 +15,6 @@ foam.CLASS({
     'min',
     'max',
     ['formatValue', true],
-    [ 'type', 'Integer' ],
     [ 'adapt', function adaptInt(_, v) {
       return typeof v === 'number' ? Math.trunc(v) :
         v ? parseInt(v) :
@@ -62,7 +61,6 @@ foam.CLASS({
       }
     },
     [ 'normalize', function(value, p) { return p.trim ? value.trim() : value; } ],
-    [ 'type', 'String' ],
     [ 'value', '' ]
   ]
 });
@@ -225,7 +223,6 @@ foam.CLASS({
         return d;
       }
     },
-    [ 'type', 'Date' ],
     {
       name: 'comparePropertyValues',
       value: function(o1, o2) {
@@ -254,7 +251,6 @@ foam.CLASS({
   label: 'Date and time',
 
   properties: [
-    [ 'type', 'DateTime' ],
     {
       name: 'adapt',
       value: function (_, d) {
@@ -347,7 +343,6 @@ foam.CLASS({
   label: 'Time',
 
   properties: [
-//    [ 'type', 'time' ]
   ]
 });
 
@@ -361,7 +356,6 @@ foam.CLASS({
   label: 'Round byte numbers',
 
   properties: [
-    [ 'type', 'Byte' ],
     [ 'min', -128 ],
     [ 'max', 127 ]
   ]
@@ -377,7 +371,6 @@ foam.CLASS({
   label: 'Round short numbers',
 
   properties: [
-    [ 'type', 'Short' ],
     [ 'min', -32768 ],
     [ 'max', 32767 ]
   ]
@@ -393,7 +386,6 @@ foam.CLASS({
   label: 'Round long numbers',
 
   properties: [
-    [ 'type', 'Long' ]
   ]
 });
 
@@ -414,7 +406,6 @@ foam.CLASS({
         return typeof v === 'number' ? v : v ? parseFloat(v) : 0.0 ;
       }
     ],
-    [ 'type', 'Float' ],
     [ 'fromString', function floatFromString(str) {
       return parseFloat(str);
     }]
@@ -430,7 +421,6 @@ foam.CLASS({
   name: 'Double',
   extends: 'Float',
   properties: [
-    [ 'type', 'Double' ]
   ]
 });
 
@@ -474,7 +464,6 @@ foam.CLASS({
   extends: 'Property',
   documentation: '',
   properties: [
-    [ 'type', 'Any' ]
   ]
 });
 
@@ -492,8 +481,7 @@ foam.CLASS({
     [
       'isDefaultValue',
       function(v) { return ! v || ! v.length; }
-    ],
-    [ 'type', 'Any[]' ]
+    ]
   ],
 
   methods: [
@@ -566,7 +554,6 @@ foam.CLASS({
   name: 'List',
   extends: 'foam.lang.Object',
   properties: [
-    [ 'type', 'List' ],
     [
       'factory',
       function() { return []; }
@@ -593,7 +580,6 @@ foam.CLASS({
       'isDefaultValue',
       function(v) { return ! v || ! v.length; }
     ],
-    [ 'type', 'String[]' ],
     [
       'factory',
       function() { return []; }
@@ -653,7 +639,6 @@ foam.CLASS({
       name: 'of',
       value: 'Int'
     },
-    [ 'type', 'int[]' ],
     [
       'factory',
       function() { return []; }
@@ -721,7 +706,6 @@ foam.CLASS({
         return v;
       }
     ],
-    [ 'type', 'Class' ],
     [ 'displayWidth', 80 ],
     [ 'cloneProperty', function(value, cloneMap, _, obj) {
         cloneMap[this.name] = obj.instance_[this.name];
@@ -1017,8 +1001,7 @@ foam.CLASS({
       function(o1, o2) {
         // TODO
       }
-    ],
-    [ 'type', 'Map' ]
+    ]
   ],
 
   methods: [
@@ -1064,12 +1047,6 @@ foam.CLASS({
       value: 'foam.lang.FObject'
     },
     {
-      name: 'type',
-      factory: function() {
-        return this.of.id;
-      }
-    },
-    {
       name: 'fromJSON',
       value: function(json, ctx, prop) {
         return foam.json.parse(json, foam.lookup(prop.type), ctx);
@@ -1081,7 +1058,7 @@ foam.CLASS({
         // All FObjects may be null.
         if ( v === null ) return v;
 
-        var type = foam.lookup(prop.type);
+        var type = prop.of;
 
         // Example: type = Predicate and v=foam.mlang.predicate.True
         if ( type.isSubClass(v) ) {
@@ -1165,7 +1142,6 @@ foam.CLASS({
       class: 'Class',
       name: 'of'
     },
-    [ 'type', 'Any' ],
     {
       class: 'String',
       name: 'targetDAOKey',
@@ -1419,7 +1395,6 @@ foam.CLASS({
         return a ? a.toString().trim() : '';
       }
     },
-    [ 'type', 'String' ],
     [ 'value', '' ]
   ]
 });
@@ -1437,7 +1412,6 @@ foam.CLASS({
       name: 'of',
       value: 'foam.lang.Currency'
     },
-    [ 'type', 'String' ],
     {
       class: 'String',
       name: 'targetDAOKey',
