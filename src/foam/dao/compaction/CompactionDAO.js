@@ -46,7 +46,6 @@ select from mdao and write full records to new empty journal
     'java.io.BufferedReader',
     'java.io.File',
     'java.io.FileReader',
-    'java.io.InputStream',
     'java.time.Duration'
   ],
 
@@ -230,13 +229,14 @@ select from mdao and write full records to new empty journal
 
       // Replay .0 (deployment journal) into a temp MDAO for diffing
       MDAO zeroMDAO = null;
+      long zeroCount = 0;
       try {
         ReadOnlyF3FileJournal journal0 = new ReadOnlyF3FileJournal.Builder(x)
           .setFilename(jdao.getFilename() + ".0")
           .build();
         zeroMDAO = new MDAO(mdao.getOf());
         journal0.replay(x, zeroMDAO);
-        long zeroCount = ((Long) ((Count) zeroMDAO.select(new Count())).getValue());
+        zeroCount = ((Long) ((Count) zeroMDAO.select(new Count())).getValue());
         logger.info(".0 replay", "objects", zeroCount);
       } catch ( Throwable t ) {
         zeroMDAO = null;
@@ -246,40 +246,11 @@ select from mdao and write full records to new empty journal
 
       final DAO sourceDAO = (MDAO) mdao;
 
-      // Capture original journal stats before compaction
-      // Include .0 (deployment data) + rolled backup (runtime journal)
+      // Capture original runtime journal stats before compaction
       Storage storage = (Storage) x.get(Storage.class);
       String filename = jdao.getFilename();
-      long originalEntries = 0;
+      long originalEntries = zeroMDAO != null ? zeroCount : 0;
       long originalSize = 0;
-
-      // Include .0 file (deployment/initial data, may be on filesystem or in JAR)
-      File f0 = null;
-      try { f0 = storage.get(filename + ".0"); } catch (Exception e) { /* ResourceStorage throws */ }
-      if ( f0 != null && f0.exists() ) {
-        originalSize += f0.length();
-        try ( BufferedReader br = new BufferedReader(new FileReader(f0)) ) {
-          while ( br.readLine() != null ) originalEntries++;
-        } catch (Exception e) {
-          logger.warning("could not read .0 file", e.getMessage());
-        }
-      } else {
-        // .0 may be in JAR — read via InputStream
-        try ( InputStream is = storage.getInputStream(filename + ".0") ) {
-          if ( is != null ) {
-            byte[] buf = new byte[8192];
-            int n;
-            while ( (n = is.read(buf)) != -1 ) {
-              originalSize += n;
-              for ( int j = 0 ; j < n ; j++ ) {
-                if ( buf[j] == (byte) 10 ) originalEntries++;
-              }
-            }
-          }
-        } catch (Exception e) {
-          // .0 not found, skip
-        }
-      }
 
       // Find the most recent backup (.1, .2, etc.) created by roll
       for ( int i = 1 ; ; i++ ) {
