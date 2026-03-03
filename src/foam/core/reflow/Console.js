@@ -209,9 +209,7 @@ foam.CLASS({
         .start()
           .addClass(this.myClass('header-container'))
           .start().addClass(this.myClass('navigator'))
-            .callIf(! isLimitedEditConsole, function() {
-              this.tag(self.HOME);
-            })
+            .tag(self.HOME)
             .start(foam.u2.tag.Image, {
               glyph: 'rightChevron',
               embedSVG: true
