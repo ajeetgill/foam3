@@ -122,7 +122,7 @@ foam.CLASS({
             .add('Use the ')
             .start('code').add('q').end()
             .add(' parameter to filter results. See ')
-            .start('a').attrs({href: '/#flow/manual:Query Syntax', target: '_blank'}).add('AQL Query Language').end()
+            .start('a').attrs({href: 'manual:Query Syntax'}).add('AQL Query Language').end()
             .add(' for full syntax.')
           .end()
           .start('div').addClass(this.myClass('endpoint'))
@@ -145,7 +145,7 @@ foam.CLASS({
           .start('h2').add('Authentication').end()
           .start('p')
           .add('All requests require authentication via HTTP Basic Auth or session cookie. See ')
-          .start('a').attrs({href: '/#flow/manual:DIG'}).add('DIG documentation').end().add(' for details.')
+          .start('a').attrs({href: 'manual:DIG'}).add('DIG documentation').end().add(' for details.')
         .end();
     },
 
