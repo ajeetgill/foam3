@@ -61,7 +61,7 @@ public class SimpleQueryParser
    * Parse a query string starting from a specific grammar symbol.
    * If symbolName is null, defaults to "START".
    */
-  public Object parseString(String query, String symbolName) {
+  protected Object parseString(String query, String symbolName) {
     if ( SafetyUtil.isEmpty(query) ) return null;
 
     StringPStream ps = new StringPStream();
@@ -241,7 +241,7 @@ public class SimpleQueryParser
    * Uses LiteralIC for case-insensitive matching.
    */
   private Parser operator(foam.lib.parse.Grammar g, String op) {
-    return new Seq1(1, Literal.create(" "), g.sym("ws"), new LiteralIC(op));
+    return new Seq1(2, Literal.create(" "), g.sym("ws"), new LiteralIC(op));
   }
 
   /**
@@ -473,8 +473,10 @@ public class SimpleQueryParser
 
     PropertyInfo type = prop;
 
-    // For FObjectProperty, recurse into inner properties
+    // For FObjectProperty, recurse into inner properties (skip self-referencing props)
     if ( prop instanceof AbstractFObjectPropertyInfo ) {
+      String propName = prop.getName();
+      if ( "language".equals(propName) || "next".equals(propName) ) return;
       AbstractFObjectPropertyInfo foProp = (AbstractFObjectPropertyInfo) prop;
       ClassInfo innerClassInfo = foProp.of();
       if ( innerClassInfo != null && innerClassInfo.getObjClass() != null ) {
@@ -590,13 +592,19 @@ public class SimpleQueryParser
     // ── Primitive actions ──
 
     g.addAction("digits", (val, x) -> {
-      String s = (String) val;
-      return Integer.parseInt(s.trim());
+      String s = compactToString(val);
+      try { return Integer.parseInt(s.trim()); }
+      catch ( NumberFormatException e ) { return Long.parseLong(s.trim()); }
     });
 
     g.addAction("number", (val, x) -> {
       Object[] values = (Object[]) val;
-      // values[0] = optional "-" (null if positive), values[1] = digits string
+      // values[0] = optional "-" (null if positive), values[1] = digits (Integer or Long)
+      if ( values[1] instanceof Long ) {
+        long num = (Long) values[1];
+        if ( values[0] != null ) num = -num;
+        return num;
+      }
       int num;
       if ( values[1] instanceof Integer ) {
         num = (Integer) values[1];
@@ -635,19 +643,20 @@ public class SimpleQueryParser
 
     g.addAction("relative date", (val, x) -> {
       Object[] values = (Object[]) val;
-      Calendar now = Calendar.getInstance();
-      int year  = now.get(Calendar.YEAR);
-      int month = now.get(Calendar.MONTH) + 1; // 1-based
-      int date  = now.get(Calendar.DAY_OF_MONTH);
+      Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
-      // Apply offset if present
+      // Apply offset if present, using Calendar.add() for proper month/year rollover
       if ( values[1] != null ) {
         Object[] offset = (Object[]) values[1];
         char sign = (Character) offset[0];
         int amount = (Integer) offset[1];
-        if ( sign == '-' ) amount = -amount;
-        date += amount;
+        now.add(Calendar.DAY_OF_MONTH, sign == '-' ? -amount : amount);
       }
+
+      // Extract year/month/day AFTER normalization
+      int year  = now.get(Calendar.YEAR);
+      int month = now.get(Calendar.MONTH) + 1; // 1-based
+      int date  = now.get(Calendar.DAY_OF_MONTH);
 
       // Return as array matching literal date format: [year, '-', month, '-', date]
       return new Object[] { year, "-", month, "-", date };
@@ -1087,6 +1096,24 @@ public class SimpleQueryParser
     Or or = new Or();
     or.setArgs(new Predicate[] { gte, lt });
     return or;
+  }
+
+  /**
+   * Join an array of values into a compact string, handling nested arrays recursively.
+   */
+  protected String compactToString(Object val) {
+    if ( val instanceof String ) return (String) val;
+    if ( ! ( val instanceof Object[] ) ) return val == null ? "" : val.toString();
+    Object[] values = (Object[]) val;
+    StringBuilder sb = new StringBuilder();
+    for ( Object v : values ) {
+      if ( v instanceof Object[] ) {
+        sb.append(compactToString(v));
+      } else if ( v != null ) {
+        sb.append(v);
+      }
+    }
+    return sb.toString();
   }
 
   /**
