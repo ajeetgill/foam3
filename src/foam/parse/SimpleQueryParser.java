@@ -394,7 +394,6 @@ public class SimpleQueryParser
 
     // Process each property
     for ( PropertyInfo prop : properties ) {
-      if ( ! prop.getSearchable() ) continue;
       processProperty(g, prop, propertyParser(g, prop), propPredicates, rangePropPredicates);
     }
 
@@ -482,7 +481,8 @@ public class SimpleQueryParser
       if ( innerClassInfo != null && innerClassInfo.getObjClass() != null ) {
         List<PropertyInfo> innerProps = innerClassInfo.getAxiomsByClass(PropertyInfo.class);
         for ( PropertyInfo innerProp : innerProps ) {
-          if ( ! innerProp.getSearchable() ) continue;
+          // Skip language and next to prevent infinite recursion
+          if ( "language".equals(innerProp.getName()) || "next".equals(innerProp.getName()) ) continue;
           processProperty(g, innerProp, innerPropertyParser(g, prop, innerProp),
             propPredicates, rangePropPredicates);
         }
@@ -1129,6 +1129,8 @@ public class SimpleQueryParser
     for ( Object part : parts ) {
       if ( part instanceof Integer ) {
         values.add((Integer) part);
+      } else if ( part instanceof Long ) {
+        values.add(((Long) part).intValue());
       }
     }
 
