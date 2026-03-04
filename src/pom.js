@@ -1219,6 +1219,7 @@ foam.POM({
     { name: "foam/parse/FScriptParser" },
     { name: "foam/parse/TestUser",                                    flags: "test" },
     { name: "foam/parse/QueryParser" },
+    { name: "foam/parse/SimpleQueryParser" },
     { name: "foam/parse/DateParser" },
     { name: "foam/dao/OrderedDAO" },
     { name: "foam/dao/HTTPSink" },
