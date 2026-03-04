@@ -36,6 +36,7 @@ foam.CLASS({
     },
     {
       name: 'of',
+      hidden: true,
       expression: function (data) {
         return this.__context__[data].of;
       }
@@ -47,6 +48,7 @@ foam.CLASS({
     },
     {
       name: 'properties',
+      hidden: true,
       expression: function(of) {
         if ( ! of ) return [];
         return of.getAxiomsByClass(foam.lang.Property)
