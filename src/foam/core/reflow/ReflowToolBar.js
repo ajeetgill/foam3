@@ -15,7 +15,7 @@ foam.CLASS({
     'foam.mlang.sink.Count'
   ],
 
-  imports: ['showPrompts','toolbarControlDAO', 'data as importedData'],
+  imports: [ 'showPrompts','toolbarControlDAO', 'data as importedData' ],
 
   css: `
     ^ {
