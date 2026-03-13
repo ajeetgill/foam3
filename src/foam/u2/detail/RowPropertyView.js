@@ -60,7 +60,7 @@ foam.CLASS({
       let label = self.prop.columnLabel;
       this.config = { label: label };
       this.dynamic(function(isRow_, mode) {
-        // this.removeAllChildren();
+        this.removeAllChildren();
         switch ( mode ) {
           case self.ControllerMode.CREATE:
           case self.ControllerMode.EDIT:
