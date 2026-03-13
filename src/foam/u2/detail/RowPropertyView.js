@@ -57,9 +57,10 @@ foam.CLASS({
       // dynamic is implemented manually and not through add() here as the sup.call() will always add to "this" element and
       // not to the dynamic node. Hence removal has to be performed on this element.
       // Hijack prop label and view and replace them with the table-esque variant
-      this.config = { label: self.prop.columnLabel };
+      let label = self.prop.columnLabel;
+      this.config = { label: label };
       this.dynamic(function(isRow_, mode) {
-        this.removeAllChildren();
+        // this.removeAllChildren();
         switch ( mode ) {
           case self.ControllerMode.CREATE:
           case self.ControllerMode.EDIT:
