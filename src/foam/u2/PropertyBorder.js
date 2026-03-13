@@ -163,13 +163,13 @@ foam.CLASS({
       var visibilitySlot = modeSlot.map(m => m != foam.u2.DisplayMode.HIDDEN);
       var colorSlot      = this.data$.dot(prop.name).map(v => ! prop.isDefaultValue(v));
       var labelSlot      = this.slot(function(prop$reserveLabelSpace, prop$label) {
-        let el = this.E().addClass(this.myClass('label'), this.myClass('label' + '-' + prop.name), 'p-light');
+        let el = this.E().addClass(this.myClass('label' + '-' + prop.name));
         return prop$label ?
           el.call(prop.labelFormatter, [data, prop]) :
           ( prop$reserveLabelSpace ? el : this.E().style({ display: 'contents' }) )
       });
       var supportingLabelSlot = this.slot(function(prop$supportingLabel) {
-        let el = this.E().addClass(this.myClass('supportingLabel'), this.myClass('supportingLabel' + '-' + prop.name), 'p-legal');
+        let el = this.E().addClass(this.myClass('supportingLabel' + '-' + prop.name));
         return prop$supportingLabel ?
           el.call(prop.supportingLabel, [data, prop]) :
           this.E().style({ display: 'contents' })
@@ -288,8 +288,8 @@ foam.CLASS({
           addClass(this.myClass('labelHolder')).
           start().
           addClass(this.myClass('labels')).
-          add(labelSlot).
-          add(supportingLabelSlot).
+          add(labelSlot.map(v => v.addClass(this.myClass('label'), 'p-light'))).
+          add(supportingLabelSlot.map(v => v.addClass(this.myClass('supportingLabel'), 'p-legal'))).
           end().
         end().
         start().
