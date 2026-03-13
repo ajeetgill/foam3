@@ -33,7 +33,6 @@ foam.CLASS({
 
   css: `
     ^ {
-      cursor: pointer;
       inset: none;
       white-space: nowrap;
     }
@@ -44,6 +43,7 @@ foam.CLASS({
     }
 
     ^heading {
+      cursor: pointer;
       min-height: 40px;
       display: flex;
       align-items: center;
@@ -308,7 +308,7 @@ foam.CLASS({
         }).
         start().
           addClass(self.myClass('heading')).
-          enableClass(self.myClass('disabled'), self.data.enabled === false).
+          enableClass(self.myClass('disabled'), self.data.enabled$.not()).
           style({
             'padding-left': (((self.level - 0.5) * 16 ) + 'px')
           }).
