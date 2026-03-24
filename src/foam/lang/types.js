@@ -907,7 +907,7 @@ foam.CLASS({
         if ( unitPropName ) {
           const unitProp = await x.currencyDAO.find(unitPropName);
           if ( unitProp )
-            return unitProp.format(val, excludeUnit, false);
+            return unitProp.format(unitProp.floatAmount(val), excludeUnit, false);
         }
         return val;
       }
