@@ -486,7 +486,7 @@ foam.CLASS({
     { class: 'Int', name: 'cutoutPercentage', value: 0 },
     { class: 'Boolean', name: 'clockwise', value: true },
     { class: 'Int', name: 'rotation', value: -90 },
-    { class: 'Boolean', name: 'disableLegendClick', value: false, help: 'Disable legend click to toggle slice visibility' },
+    { class: 'Boolean', name: 'disableLegendClick', help: 'Disable legend click to toggle slice visibility' },
     // Display properties
     { class: 'Boolean', name: 'responsive', value: true },
     { class: 'Boolean', name: 'maintainAspectRatio', value: false },

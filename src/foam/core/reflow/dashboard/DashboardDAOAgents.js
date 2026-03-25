@@ -952,7 +952,6 @@ foam.CLASS({
       class: 'Boolean',
       name: 'disableLegendClick',
       label: 'Disable Legend Click',
-      value: false,
       help: 'Prevent clicking legend items from toggling slice visibility'
     },
   ],
