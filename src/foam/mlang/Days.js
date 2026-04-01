@@ -19,8 +19,8 @@ foam.CLASS({
 
   javaCode: `
     public static long since(Date d) {
-      LocalDate d = LocalDate.ofInstant(d.toInstant(), ZoneId.systemDefault());
-      return ChronoUnit.DAYS.between(d, LocalDate.now());
+      LocalDate ld = LocalDate.ofInstant(d.toInstant(), ZoneId.systemDefault());
+      return ChronoUnit.DAYS.between(ld, LocalDate.now());
     }
   `,
 
