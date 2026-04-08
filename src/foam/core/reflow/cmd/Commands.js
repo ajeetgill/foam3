@@ -443,8 +443,12 @@ foam.CLASS({
         }
       }
       // TODO: add ability to specify how SimpleClassView writes links so it can hyperlink back to this command
-      this.out.startContext({conventionalUML: true}).
-        tag(foam.doc.SimpleClassView, {data: cls, showUML: true});
+      if ( foam.lang.InterfaceModel.isInstance(cls.model_) ) {
+        this.out.tag(foam.doc.InterfaceView, {data: cls});
+      } else {
+        this.out.startContext({conventionalUML: true}).
+          tag(foam.doc.SimpleClassView, {data: cls, showUML: true});
+      }
       /*
       this.out.br().add('CLASS:  ', cls.name, ' extends: ');
       this.outputLink(cls.__proto__.id, () => this.eval_('describe(' + cls.__proto__.id + ')'), this.out);
