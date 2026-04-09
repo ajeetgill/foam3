@@ -21,3 +21,9 @@ p({
   "dryRun": true,
   "description": "Issue a request to an LLM agent to execute FLOW commands."
 })
+p({
+  "class":"foam.core.reflow.cmd.Command",
+  "id": "propose",
+  "description": "Propose a command for execution",
+  "script": "debugger;addValue(foam.core.reflow.ai.Propose.create({command: args.join(' ')}, this));"
+})

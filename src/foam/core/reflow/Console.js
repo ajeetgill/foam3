@@ -626,13 +626,6 @@ foam.CLASS({
   ],
 
   methods: [
-    function setTitle(title) {
-      if ( this.borderEl_ ) {
-        this.borderEl_.title = title;
-      } else {
-        this.border.title = title;
-      }
-    },
     function init() {
       let self = this;
       this.SUPER();
@@ -644,6 +637,14 @@ foam.CLASS({
         this.borderEl_.copyFrom(this.border);
         this.maybeMigrate();
       }));
+    },
+
+    function setTitle(title) {
+      if ( this.borderEl_ ) {
+        this.borderEl_.title = title;
+      } else {
+        this.border.title = title;
+      }
     },
 
     function render() {
