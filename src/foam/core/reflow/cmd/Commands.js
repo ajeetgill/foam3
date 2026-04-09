@@ -435,13 +435,20 @@ foam.CLASS({
 
   methods: [
     function execute(cls) {
+      let original = cls;
       if ( foam.String.isInstance(cls) ) {
-        cls = foam.lookup(cls);
+        cls = foam.maybeLookup(cls);
         if ( cls == null ) {
-          log('Unknown class');
-          return;
+          cls = this.__context__[original];
+          if ( cls == null ) {
+            this.log('Unknown class or service');
+            return;
+          }
+          cls = cls.cls_;
         }
       }
+
+      debugger;
       // TODO: add ability to specify how SimpleClassView writes links so it can hyperlink back to this command
       if ( foam.lang.InterfaceModel.isInstance(cls.model_) ) {
         this.out.tag(foam.doc.InterfaceView, {data: cls});
