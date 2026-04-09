@@ -5,6 +5,7 @@ foam.POM({
     { name: "pivottest/pom" },
     { name: "example/pom" },
     { name: "canvas/pom" },
+    { name: "ai/pom" },
     { name: "test/pom", flags: "test" }
   ],
   files: [
