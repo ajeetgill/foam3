@@ -10,47 +10,72 @@ foam.CLASS({
   extends: 'foam.core.ai.ProxyLLMService',
 
   documentation: `
-    Decorator that logs requests, token usage, and latency.
+    Decorator that logs LLM requests, token usage, latency, and errors.
     Stack via CSpec decorators just like DAO decorators.
   `,
 
+  javaImports: [
+    'foam.core.logger.Logger'
+  ],
+
   methods: [
-    async function complete(x, request) {
-      var start = Date.now();
-      try {
-        var response = await this.delegate.complete(x, request);
-        this.logCompletion_(x, 'complete', request.options, response, Date.now() - start);
-        return response;
-      } catch (e) {
-        this.logError_(x, 'complete', e, Date.now() - start);
-        throw e;
-      }
+    {
+      name: 'complete',
+      javaCode: `
+        Logger logger = (Logger) x.get("logger");
+        long   start  = System.currentTimeMillis();
+        try {
+          CompletionResponse response = getDelegate().complete(x, request);
+          long ms = System.currentTimeMillis() - start;
+          logger.info(
+            this.getClass().getSimpleName(),
+            "complete",
+            "model=" + response.getModel(),
+            "in=" + response.getInputTokens(),
+            "out=" + response.getOutputTokens(),
+            ms + "ms"
+          );
+          return response;
+        } catch ( Exception e ) {
+          long ms = System.currentTimeMillis() - start;
+          logger.error(
+            this.getClass().getSimpleName(),
+            "complete", "FAILED",
+            e.getMessage(),
+            ms + "ms"
+          );
+          throw e;
+        }
+      `
     },
-
-    async function chat(x, messages, options) {
-      var start = Date.now();
-      try {
-        var response = await this.delegate.chat(x, messages, options);
-        this.logCompletion_(x, 'chat', options, response, Date.now() - start);
-        return response;
-      } catch (e) {
-        this.logError_(x, 'chat', e, Date.now() - start);
-        throw e;
-      }
-    },
-
-    function logCompletion_(x, method, options, response, ms) {
-      console.log(
-        '[LLM]', method,
-        'model=' + response.model,
-        'in=' + response.inputTokens,
-        'out=' + response.outputTokens,
-        ms + 'ms'
-      );
-    },
-
-    function logError_(x, method, error, ms) {
-      console.error('[LLM]', method, 'FAILED', error.message, ms + 'ms');
+    {
+      name: 'chat',
+      javaCode: `
+        Logger logger = (Logger) x.get("logger");
+        long   start  = System.currentTimeMillis();
+        try {
+          CompletionResponse response = getDelegate().chat(x, messages, options);
+          long ms = System.currentTimeMillis() - start;
+          logger.info(
+            this.getClass().getSimpleName(),
+            "chat",
+            "model=" + response.getModel(),
+            "in=" + response.getInputTokens(),
+            "out=" + response.getOutputTokens(),
+            ms + "ms"
+          );
+          return response;
+        } catch ( Exception e ) {
+          long ms = System.currentTimeMillis() - start;
+          logger.error(
+            this.getClass().getSimpleName(),
+            "chat", "FAILED",
+            e.getMessage(),
+            ms + "ms"
+          );
+          throw e;
+        }
+      `
     }
   ]
 });
