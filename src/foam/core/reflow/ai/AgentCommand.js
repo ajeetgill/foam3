@@ -12,9 +12,8 @@
  *      - Available DAOs and their models (from context)
  *      - The user's prompt
  *   3. LLMService returns a string of REFLOW commands, e.g.:
- *        dao query invoiceDAO where status == 'OVERDUE'
- *        cells --from lastResult
- *        chart bar --x daysOverdue --y amount --title "Overdue by Age"
+ *        dao query invoiceDAO where status = 'OVERDUE' to table
+ *        chart bar --x daysOverdue --y amount --title "Overdue by Age" // TODO: fix
  *   4. PromptCommand parses each line and inserts them into the
  *      current flow document, where they execute in sequence.
  *
@@ -42,11 +41,17 @@ foam.CLASS({
   imports: [
     'block',
     'commandDAO',
+    'flowDAO',
     'llmService',
     'subject'
   ],
 
+  implements: [
+    'foam.mlang.Expressions'
+  ],
+
   requires: [
+    'foam.core.reflow.Flow',
     'foam.core.reflow.Markdown'
   ],
 
@@ -94,6 +99,8 @@ foam.CLASS({
       var result;
       try {
         result = await this.llmService.complete(x, request);
+        // Use when offline. TODO: make a mock llmService for when offline
+        // result = { content: 'h1 done' };
       } catch (e) {
         flow.insertError('LLM error: ' + e.message);
         return;
@@ -119,65 +126,21 @@ foam.CLASS({
     },
 
     async function buildSystemPrompt_(x) {
+      const prompts = (await this.flowDAO.orderBy(this.Flow.NAME).where(this.STARTS_WITH(this.Flow.NAME, 'systemPrompt')).select()).array;
       var parts = [];
 
-      parts.push(`
-You are a REFLOW command generator. Respond ONLY with valid REFLOW commands, one per line.
-Do NOT wrap commands in code fences or add explanatory text between them.
-If you need to explain something, use the markdown command.
-If you need to show data, use dao, cells, or chart commands.
-
-Examples:
-show users -> dao userDAO
-create a spreadsheet of size 5 x 10 -> cells(5,10)
-create a markdown document -> markdown("markdown test\ngoes here")
-
-You can also use the 'ask' command to run commands and have their output sent back to you.
-Examples:
-get a list of available flows -> ask flows
-get a list of available DAOs -> ask daos
-get a list of available commands -> ask help (but you have already been provided this information)
-
-## REFLOW JavaScript String Formatting Rules
-
-When using REFLOW commands that accept string parameters (especially \`markdown\`, \`doc\`, \`h1\`, \`h2\`, etc.), follow these JavaScript string formatting requirements:
-
-### Multi-line Strings
-- **NEVER use actual newline characters** in string literals
-- **ALWAYS escape newlines** using \`\\n\`
-- Strings must be valid JavaScript string literals
-
-### Pitfalls
-- Don't use the *doc* command as it doesn't support markdown. Use *markdown* instead.
-`
-      );
-
-      // ── Available commands ──
-      var commands = await this.commandDAO.select();
-      if ( commands && commands.array && commands.array.length ) {
-        parts.push('## Available Commands');
-        commands.array.forEach(cmd => {
-          var line = '- `' + cmd.id + '`';
-          if ( cmd.description ) line += ' — ' + cmd.description;
-          if ( cmd.usage )       line += '  Usage: `' + cmd.usage + '`';
-          parts.push(line);
+      prompts.forEach(p => {
+        const script = JSON.parse(p.script);
+        script.forEach(block => {
+          if ( block?.value?.class == 'foam.core.reflow.Markdown' ) {
+            parts.push(block.value.markdown);
+          } else {
+            debugger;
+          }
         });
-        parts.push('');
-      }
+      });
 
-      // ── Available DAOs ──
-      // The LLM needs to know what data it can query
-      parts.push('## Available DAOs');
-      parts.push('Use `ask daos` to list all, `ask describe <daoName>` to see model properties.');
-      parts.push('Use `dao query <daoName> [where <predicate>]` to query data.');
-      parts.push('');
-
-      // ── Conventions ──
-      parts.push('## Conventions');
-      parts.push('- For conversational responses, use: markdown("your text here")');
-      parts.push('- For errors or unknowns, use: \'throw "error ..."\' or  \'markdown("I could not ...")\', depending on the length.');
-      parts.push('- Prefer specific commands over generic markdown when possible.');
-//      parts.push('- You can call `agent` to delegate to another LLM for sub-tasks.');
+      console.log('sysPrompt: ', parts.join('\n'));
 
       return parts.join('\n');
     },
