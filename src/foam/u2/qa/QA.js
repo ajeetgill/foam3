@@ -267,7 +267,7 @@ foam.CLASS({
 
           /**
            * Select the unanswered question with the highest information gain.
-           * Returns the question object, or null if no questions remain.
+           * Returns the question axiom, or null if no questions remain.
            */
           function selectNextQuestion() {
             var candidates = this.getCandidates();
@@ -296,7 +296,7 @@ foam.CLASS({
             }
 
             // Don't ask questions with zero information gain
-            return bestGain > 0 ? bestQ : null;
+            return bestGain > 0 ? this.cls_.getAxiomByName(bestQ.name) : null;
           },
 
           /**
