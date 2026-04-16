@@ -106,10 +106,9 @@ foam.CLASS({
                     return;
                   }
                   switch ( operation ) {
-                    case OP_CREATE:
-                      dao.put(obj);
-                      break;
-
+                    case OP_CREATE: // Workaround: treat c as p so that duplicate IDs
+                                    // across journals are merged instead of silently dropped.
+                                    // Real fix: make honorCreate configurable at EasyDAO level.
                     case OP_PUT:
                       foam.lang.FObject old = dao.find(obj.getProperty("id"));
                       dao.put(old != null ? mergeFObject(old.fclone(), obj) : obj);
