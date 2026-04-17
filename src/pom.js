@@ -1210,6 +1210,8 @@ foam.POM({
     { name: "foam/util/FastTimestamper" },
     { name: "foam/util/concurrent/FutureValue" },
     { name: "foam/util/concurrent/LocalState" },
+    { name: "foam/util/concurrent/BatchingAssemblyLine" },
+    { name: "foam/util/concurrent/CompoundAssembly" },
     { name: "foam/util/concurrent/SimpleAsyncAssemblyLine" },
     { name: "foam/util/concurrent/AsyncAssemblyLine" },
     { name: "foam/util/concurrent/FoldReducer" },
