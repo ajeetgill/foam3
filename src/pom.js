@@ -280,6 +280,7 @@ foam.POM({
     { name: "foam/u2/borders/BaseUnAuthBorder",                       flags: "web" },
     { name: "foam/u2/borders/ContextSwitchBorder",                    flags: "web" },
     { name: "foam/u2/qa/QA",                                          flags: "js" },
+    { name: "foam/u2/qa/QADocView",                                   flags: "js" },
     { name: "foam/u2/qa/QuestionChoiceView",                          flags: "js" },
     { name: "foam/u2/qa/QAWizardView",                                flags: "js" },
 //    { name: "foam/version/VersionTrait",                              flags: "js" },
