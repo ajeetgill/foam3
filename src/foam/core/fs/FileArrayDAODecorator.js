@@ -52,6 +52,7 @@ foam.CLASS({
 
     async function processFiles(obj) {
       var props1 = obj.cls_.getAxiomsByClass(foam.core.fs.FileArray);
+      props1 = props1.filter(p => ! ( p.transient || p.networkTransient || p.storageTransient ));
 
       // clone the object if we need to update the file properties
       if ( props1.length > 0 ) obj = obj.clone();
