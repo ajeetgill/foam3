@@ -291,7 +291,7 @@ foam.CLASS({
     },
     {
       name: 'propertiesGrammar_',
-      value: function(action, alt, nyChar, eof, join, literal, literalIC, not, notChars, optional, range,
+      value: function(action, alt, nop, nyChar, eof, join, literal, literalIC, not, notChars, optional, range,
         repeat, repeat0, seq, seq1, str, sug, sym, until) {
 
         let cls                 = this.of;
@@ -320,9 +320,23 @@ foam.CLASS({
           // Property or Referenced Property, the effective type of the Property
           let type = prop;
 
-          // TODO: It would be better to handle references with a custom view:
-          // which auto-completes based on DAO searches.
           if ( foam.lang.Reference.isInstance(prop) ) {
+            // Delegate to ReferenceSuggester for suggestions after = or !=
+            propPredicates.push(seq(propertyParser, seq1(1,
+              alt(operator('='), operator('!=')),
+              sym('ws'),
+              sug(nop(), {
+                view: {
+                  class: 'foam.parse.auto.ReferenceSuggester',
+                  targetDAOKey: prop.targetDAOKey,
+                  of: prop.of
+                },
+                label: prop.label + ' lookup',
+                category: 'value'
+              })
+            )));
+
+            // Resolve ID type and fall through to compareNumber/compareString.
             type = prop.of.ID;
             if ( foam.lang.IDAlias.isInstance(type) ) {
               type = prop.of.getAxiomByName(type.propName);
