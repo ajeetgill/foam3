@@ -79,7 +79,12 @@ foam.CLASS({
               .forEach(questions, function(q) {
                 this.start('tr')
                   .start('td').start('code').add(q.name).end().end()
-                  .start('td').add(q.prompt || '-').end()
+                  .start('td')
+                  .add(q.prompt || '-').tag('br')
+                  .callIf(
+                    q.choices.length,
+                    function() { this.start('b').add('Choices: ').end().add(q.choices.map(c => foam.Array.isInstance(c) ? c[1] : c).join(', ')); }
+                  )
                 .end();
               })
             .end();
