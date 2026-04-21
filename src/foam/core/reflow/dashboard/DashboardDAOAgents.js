@@ -958,13 +958,13 @@ foam.CLASS({
       class: 'Int',
       name: 'legendMinWidthPercent',
       label: 'Legend Min Width (%)',
-      help: 'Reserves at least this percentage (0-100) of the container width for the legend. Short legends pad out; long legends still grow beyond. Match across stacked pies to align arc centers.'
+      help: 'Forces the legend to be at least this percentage (0-100) of container width by padding the widest label with trailing non-breaking spaces. Short legends grow; unboundedly long labels also wrap at this width.'
     },
     {
       class: 'Int',
       name: 'legendMaxWidthPercent',
       label: 'Legend Max Width (%)',
-      help: 'Caps the legend at this percentage (0-100) of the container width. Long labels wrap/truncate at the cap. Usually used alone — combining with legendMinWidthPercent double-reserves space.'
+      help: 'Caps the legend at this percentage (0-100) of container width and word-wraps long labels at the cap. Set min = max for an exact fixed-width legend.'
     },
   ],
 

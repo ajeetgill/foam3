@@ -488,8 +488,8 @@ foam.CLASS({
     { class: 'Boolean', name: 'clockwise', value: true },
     { class: 'Int', name: 'rotation', value: -90 },
     { class: 'Boolean', name: 'disableLegendClick', help: 'Disable legend click to toggle slice visibility' },
-    { class: 'Int', name: 'legendMinWidthPercent', help: 'Reserves at least this percentage of the container width (0-100) for the legend side via Chart.js layout.padding. Short legends pad out to this size; long legends still grow naturally beyond it. Set the same value across stacked pies with different label lengths to line up their arc centers. 0 = no reservation.' },
-    { class: 'Int', name: 'legendMaxWidthPercent', help: 'Caps the legend width at this percentage of the container width (0-100) via Chart.js legend.maxWidth. Long labels wrap/truncate at this boundary. 0 = no cap. Tip: use legendMinWidthPercent alone for alignment — combining the two reserves overlapping space.' },
+    { class: 'Int', name: 'legendMinWidthPercent', help: 'Forces the legend to be at least this percentage (0-100) of container width by padding the widest label with trailing non-breaking spaces. Short legends grow to match; unboundedly long labels are also wrapped at this width (so a single long label can\'t push the legend wider than intended). 0 = no floor.' },
+    { class: 'Int', name: 'legendMaxWidthPercent', help: 'Caps the legend at this percentage (0-100) of container width and word-wraps long labels at the cap. 0 = no cap. Setting min = max gives an exact fixed-width legend — arcs line up perfectly across stacked pies.' },
     // Display properties
     { class: 'Boolean', name: 'responsive', value: true },
     { class: 'Boolean', name: 'maintainAspectRatio', value: false },
@@ -550,25 +550,31 @@ foam.CLASS({
           }]
         };
 
-        // legendMinWidthPercent reserves at least N% of the container width
-        // on the legend side via Chart.js `options.layout.padding`. Short
-        // legends pad out to match long ones, giving vertical arc alignment
-        // across pies with varied labels. The side comes from the
-        // LegendPosition enum — no string branching here.
-        var layoutPadding = {};
+        // Legend width is controlled entirely on the legend side — no
+        // `layout.padding` here, because padding stacks ON TOP of the
+        // legend area and would double-reserve space on right/left
+        // positions.
+        //
+        //   legendMaxWidthPercent — caps via Chart.js `legend.maxWidth` and
+        //     word-wraps long labels at the cap.
+        //   legendMinWidthPercent — forces legend ≥ this width by padding
+        //     the widest label with trailing NBSPs inside generateLabels
+        //     (Chart.js's legend has no native minWidth).
+        //
+        // When only min is set, it also acts as the wrap cap so an
+        // unboundedly long label can't push the legend wider than intended.
+        // Position side comes from the LegendPosition enum.
         var legendPos = legendPosition || this.LegendPosition.TOP;
-        if ( legendMinWidthPercent > 0 ) {
-          layoutPadding[legendPos.cssSide] = Math.round(width * legendMinWidthPercent / 100);
-        }
+        var legendMinPx = legendMinWidthPercent > 0 ? Math.round(width * legendMinWidthPercent / 100) : 0;
+        var legendMaxPx = legendMaxWidthPercent > 0 ? Math.round(width * legendMaxWidthPercent / 100) : 0;
+        var legendCapPx = legendMaxPx > 0 ? legendMaxPx : legendMinPx;
 
         var legendOpts = {
           display: showLegend,
           position: legendPos.chartJsName,
           onClick: disableLegendClick ? function() { /* no-op: prevent slice toggle */ } : undefined,
         };
-        if ( legendMaxWidthPercent > 0 ) {
-          legendOpts.maxWidth = Math.round(width * legendMaxWidthPercent / 100);
-        }
+        if ( legendCapPx > 0 ) legendOpts.maxWidth = legendCapPx;
 
         var options = {
           responsive: responsive,
@@ -576,7 +582,7 @@ foam.CLASS({
           cutout: cutoutPercentage + '%',
           rotation: rotation,
           circumference: clockwise ? 360 : -360,
-          layout: { padding: layoutPadding },
+          layout: { padding: 0 },
           plugins: {
             legend: legendOpts,
             tooltip: {
@@ -632,25 +638,51 @@ foam.CLASS({
           } : false
         };
         
-        if ( showPercentages ) {
+        // generateLabels composes three optional label transforms:
+        //   1. percentage prefixing (showPercentages)
+        //   2. word-wrap at the cap (legendCapPx — from max, or min when max
+        //      is unset, so a runaway label can't push the legend wider)
+        //   3. trailing-NBSP pad of the widest label up to legendMinPx so
+        //      short legends grow out to the reserved width (Chart.js has
+        //      no legend.minWidth; padding one item widens the whole legend
+        //      column since its width tracks the widest item)
+        // Wrap returns either a string or an array of lines; Chart.js v4's
+        // renderText helper draws array-text as stacked lines.
+        var CanvasTextUtil = foam.core.reflow.dashboard.CanvasTextUtil;
+        if ( showPercentages || legendCapPx > 0 || legendMinPx > 0 ) {
           options.plugins.legend.labels = {
             generateLabels: function(chart) {
               var dataset = chart.data.datasets[0];
-              var total = dataset.data.reduce(function(sum, val) { return sum + val; }, 0);
-              
-              return chart.data.labels.map(function(label, i) {
-                var percentage = total > 0 ? ((dataset.data[i] / total) * 100).toFixed(1) : '0.0';
-                var style = chart.getDatasetMeta(0).controller ? 
-                           chart.getDatasetMeta(0).controller.getStyle(i) : 
-                           { backgroundColor: dataset.backgroundColor[i] };
-                
+              var total = showPercentages
+                ? dataset.data.reduce(function(sum, val) { return sum + (val || 0); }, 0)
+                : 0;
+
+              var fontStr = CanvasTextUtil.legendLabelFont(chart);
+              var chrome  = CanvasTextUtil.legendLabelChromePx(chart);
+              var textMaxPx = legendCapPx > 0 ? Math.max(30, legendCapPx - chrome) : 0;
+              var textMinPx = legendMinPx > 0 ? Math.max(30, legendMinPx - chrome) : 0;
+
+              var items = chart.data.labels.map(function(label, i) {
+                var text = label.toString();
+                if ( showPercentages ) {
+                  var pct = total > 0 ? ((dataset.data[i] / total) * 100).toFixed(1) : '0.0';
+                  text = pct + '% ' + text;
+                }
+                if ( textMaxPx > 0 ) text = CanvasTextUtil.wrap(chart.ctx, text, fontStr, textMaxPx);
+
+                var style = chart.getDatasetMeta(0).controller
+                  ? chart.getDatasetMeta(0).controller.getStyle(i)
+                  : { backgroundColor: dataset.backgroundColor[i] };
+
                 return {
-                  text: percentage + '% ' + label,
+                  text: text,
                   fillStyle: style.backgroundColor,
                   fontColor: undefined,
                   index: i
                 };
               });
+
+              return CanvasTextUtil.padWidestToMin(chart.ctx, items, fontStr, textMinPx);
             }
           };
         }
