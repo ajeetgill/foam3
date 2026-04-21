@@ -154,7 +154,9 @@ foam.CLASS({
           name: 'value',
           postSet: function(o, n) {
             if ( this.data[this.index] === n ) return;
-            if ( this.arrayView.dataViewMap[o.$UID] ) {
+
+            // Clean up old element mapping
+            if ( o && this.arrayView.dataViewMap[o.$UID] ) {
               delete this.arrayView.dataViewMap[o.$UID];
             }
             var data = [...this.data];
