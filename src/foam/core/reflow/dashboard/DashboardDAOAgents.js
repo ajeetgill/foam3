@@ -1470,7 +1470,7 @@ foam.CLASS({
       title: 'Data Configuration',
       order: 1,
       collapsable: true,
-      properties: ['prop', 'categoryProp', 'sink', 'periodCount']
+      properties: ['prop', 'categoryProp', 'sink', 'showAllData', 'periodCount']
     },
     {
       name: 'display',
@@ -1511,10 +1511,19 @@ foam.CLASS({
       }
     },
     {
+      class: 'Boolean',
+      name: 'showAllData',
+      label: 'Show All Data',
+      help: 'When enabled, the calendar includes every record regardless of date. Disable to limit to the last N days configured by Periods.'
+    },
+    {
       name: 'periodCount',
       label: 'Periods',
       value: 30,
-      help: 'How many days to show from today'
+      help: 'How many days to show from today. Ignored when Show All Data is enabled.',
+      visibility: function(showAllData) {
+        return showAllData ? foam.u2.DisplayMode.HIDDEN : foam.u2.DisplayMode.RW;
+      }
     }
   ],
 
@@ -1523,7 +1532,11 @@ foam.CLASS({
       return this.prop;
     },
     function createSink() {
-      this.applyDateRangeFilter && this.applyDateRangeFilter();
+      // Skip the date-range filter when showAllData is set so the
+      // calendar renders every record in the DAO regardless of date.
+      if ( ! this.showAllData ) {
+        this.applyDateRangeFilter && this.applyDateRangeFilter();
+      }
       var valueSink = this.sink ? this.sink.createSink() : this.COUNT();
       return this.DashboardCalendarSink.create({
         dateProp: this.prop,
