@@ -108,16 +108,22 @@ If no `Compaction` record exists for a DAO, default settings are used: the DAO i
 
 ## Setup
 
-Compaction is included in the standard FOAM3 build. All journals are in `src/foam/dao/compaction/`:
+Compaction requires the `deployment/compaction` journals to be included in your build. Add them to the `-J` flag:
+
+```
+./build.sh -J../foam3/deployment/compaction,...
+```
+
+The compaction deployment provides:
 
 | File | Purpose |
 |------|---------|
 | `services.jrl` | Registers the `compactionDAO` service for storing per-DAO configuration |
-| `compactions.jrl` | Per-DAO compaction configuration for standard FOAM3 DAOs |
+| `compactions.jrl` | Per-DAO compaction configuration entries |
 | `scripts.jrl` | The `DAOCompaction` BeanShell script |
 | `scriptparameters.jrl` | Script parameter with the `daos` list |
 
-No special build flags are needed.
+Without these journals, the compaction script and `compactionDAO` service will not be available.
 
 ---
 
@@ -396,7 +402,7 @@ During compaction, progress is logged every 5 seconds:
 | `foam/dao/compaction/LastModifiedCompactionSink.js` | Filter by modification date |
 | `foam/dao/FileRollCmd.js` | Command to trigger journal roll |
 | `foam/dao/AbstractF3FileJournal.js` | Journal roll implementation |
-| `foam/dao/compaction/services.jrl` | compactionDAO service definition |
-| `foam/dao/compaction/compactions.jrl` | Per-DAO compaction configuration |
-| `foam/dao/compaction/scripts.jrl` | DAOCompaction script |
-| `foam/dao/compaction/scriptparameters.jrl` | Script parameters |
+| `deployment/compaction/services.jrl` | compactionDAO service definition |
+| `deployment/compaction/compactions.jrl` | Per-DAO compaction configuration |
+| `deployment/compaction/scripts.jrl` | DAOCompaction script |
+| `deployment/compaction/scriptparameters.jrl` | Script parameters |
