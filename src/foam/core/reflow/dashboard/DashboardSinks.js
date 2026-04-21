@@ -590,20 +590,25 @@ foam.CLASS({
               callbacks: (function() {
                 var callbacks = {};
 
-                // Add percentage display to individual tooltip labels
+                // Add percentage display to individual tooltip labels.
+                // Total excludes slices currently hidden via legend click,
+                // so the tooltip percentage stays consistent with the
+                // recomputed legend percentage. Pie/doughnut visibility
+                // lives in `chart._hiddenIndices` (exposed via
+                // `getDataVisibility`) — NOT `meta.data[i].hidden`, which
+                // is the bar/line controller's flag.
                 if ( showPercentages ) {
                   callbacks.label = function(context) {
-                    var label = context.label || '';
-                    var value = context.parsed || 0;
-                    var dataset = context.chart.data.datasets[0];
-                    var total = dataset.data.reduce(function(sum, val) { 
-                      return sum + val; 
+                    var label   = context.label || '';
+                    var value   = context.parsed || 0;
+                    var chart   = context.chart;
+                    var dataset = chart.data.datasets[0];
+                    var total   = dataset.data.reduce(function(sum, val, idx) {
+                      return chart.getDataVisibility(idx) ? sum + (val || 0) : sum;
                     }, 0);
                     var percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
-                    
-                    if ( label ) {
-                      label += ': ';
-                    }
+
+                    if ( label ) label += ': ';
                     label += value.toLocaleString() + ' (' + percentage + '%)';
                     return label;
                   };
@@ -653,8 +658,21 @@ foam.CLASS({
           options.plugins.legend.labels = {
             generateLabels: function(chart) {
               var dataset = chart.data.datasets[0];
+              var meta    = chart.getDatasetMeta(0);
+              // Pie/doughnut slice visibility lives in `chart._hiddenIndices`
+              // (read via `getDataVisibility`), not `meta.data[i].hidden`
+              // (which only the bar/line controllers update). Using
+              // getDataVisibility is what Chart.js's own default
+              // doughnut generateLabels does.
+              var isVisible = function(i) { return chart.getDataVisibility(i); };
+
+              // Recompute the denominator against visible slices only so
+              // the remaining items sum to 100% when the user toggles a
+              // slice off via the legend click.
               var total = showPercentages
-                ? dataset.data.reduce(function(sum, val) { return sum + (val || 0); }, 0)
+                ? dataset.data.reduce(function(sum, val, idx) {
+                    return isVisible(idx) ? sum + (val || 0) : sum;
+                  }, 0)
                 : 0;
 
               var fontStr = CanvasTextUtil.legendLabelFont(chart);
@@ -665,19 +683,23 @@ foam.CLASS({
               var items = chart.data.labels.map(function(label, i) {
                 var text = label.toString();
                 if ( showPercentages ) {
-                  var pct = total > 0 ? ((dataset.data[i] / total) * 100).toFixed(1) : '0.0';
+                  var sliceVal = isVisible(i) ? dataset.data[i] : 0;
+                  var pct = total > 0 ? ((sliceVal / total) * 100).toFixed(1) : '0.0';
                   text = pct + '% ' + text;
                 }
                 if ( textMaxPx > 0 ) text = CanvasTextUtil.wrap(chart.ctx, text, fontStr, textMaxPx);
 
-                var style = chart.getDatasetMeta(0).controller
-                  ? chart.getDatasetMeta(0).controller.getStyle(i)
+                var style = meta && meta.controller
+                  ? meta.controller.getStyle(i)
                   : { backgroundColor: dataset.backgroundColor[i] };
 
+                // Forward per-slice hidden state so Chart.js's legend
+                // renderer draws strikethrough on toggled-off items.
                 return {
                   text: text,
                   fillStyle: style.backgroundColor,
                   fontColor: undefined,
+                  hidden: ! isVisible(i),
                   index: i
                 };
               });
