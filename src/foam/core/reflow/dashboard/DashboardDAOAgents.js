@@ -880,7 +880,7 @@ foam.CLASS({
       title: 'Display Options',
       order: 3,
       collapsable: true,
-      properties: [ 'alignment', 'chartAlignment', 'maintainAspectRatio', 'height',  'showLegend', 'legendPosition', 'legendMinWidthPercent', 'legendMaxWidthPercent', 'showTooltips', 'showTooltipSum', 'animate', 'animationDuration', 'emptyValueMessage']
+      properties: [ 'alignment', 'maintainAspectRatio', 'height',  'showLegend', 'legendPosition', 'legendMinWidthPercent', 'legendMaxWidthPercent', 'showTooltips', 'showTooltipSum', 'animate', 'animationDuration', 'emptyValueMessage']
     },
     {
       name: 'colors',
@@ -966,14 +966,6 @@ foam.CLASS({
       label: 'Legend Max Width (%)',
       help: 'Caps the legend at this percentage (0-100) of the container width. Long labels wrap/truncate at the cap. Usually used alone — combining with legendMinWidthPercent double-reserves space.'
     },
-    {
-      class: 'Enum',
-      of: 'foam.core.reflow.dashboard.MetricAlignment',
-      name: 'chartAlignment',
-      label: 'Chart Alignment',
-      value: 'CENTER',
-      help: 'Aligns the arc within the chart canvas (not the whole pie+legend block). Combine matching chartAlignment values across stacked pies to line up their arc centers regardless of legend-label length.'
-    },
   ],
 
   methods: [
@@ -1007,7 +999,6 @@ foam.CLASS({
         animate: this.animate,
         animationDuration: this.animationDuration,
         alignment: this.alignment,
-        chartAlignment: this.chartAlignment,
         legendMinWidthPercent: this.legendMinWidthPercent,
         legendMaxWidthPercent: this.legendMaxWidthPercent,
         emptyValueMessage: this.emptyValueMessage,
@@ -1024,7 +1015,7 @@ foam.CLASS({
       // Then update its properties reactively
       this.onDetach(this.dynamic(function(cutoutPercentage, rotation, colors, showPercentages, clockwise,
                                   maintainAspectRatio, height, showLegend, legendPosition,
-                                  showTooltips, showTooltipSum, animate, animationDuration, alignment, chartAlignment, legendMinWidthPercent, legendMaxWidthPercent, disableLegendClick) {
+                                  showTooltips, showTooltipSum, animate, animationDuration, alignment, legendMinWidthPercent, legendMaxWidthPercent, disableLegendClick) {
         s.cutoutPercentage = cutoutPercentage;
         s.rotation = rotation;
         s.colors = colors;
@@ -1039,7 +1030,6 @@ foam.CLASS({
         s.animate = animate;
         s.animationDuration = animationDuration;
         s.alignment = alignment;
-        s.chartAlignment = chartAlignment;
         s.legendMinWidthPercent = legendMinWidthPercent;
         s.legendMaxWidthPercent = legendMaxWidthPercent;
         s.disableLegendClick = disableLegendClick;
@@ -1074,7 +1064,6 @@ foam.CLASS({
       clone.animate$ = this.animate$;
       clone.animationDuration$ = this.animationDuration$;
       clone.disableLegendClick$ = this.disableLegendClick$;
-      clone.chartAlignment$ = this.chartAlignment$;
       clone.legendMinWidthPercent$ = this.legendMinWidthPercent$;
       clone.legendMaxWidthPercent$ = this.legendMaxWidthPercent$;
       return clone;

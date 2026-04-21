@@ -490,7 +490,6 @@ foam.CLASS({
     { class: 'Boolean', name: 'disableLegendClick', help: 'Disable legend click to toggle slice visibility' },
     { class: 'Int', name: 'legendMinWidthPercent', help: 'Reserves at least this percentage of the container width (0-100) for the legend side via Chart.js layout.padding. Short legends pad out to this size; long legends still grow naturally beyond it. Set the same value across stacked pies with different label lengths to line up their arc centers. 0 = no reservation.' },
     { class: 'Int', name: 'legendMaxWidthPercent', help: 'Caps the legend width at this percentage of the container width (0-100) via Chart.js legend.maxWidth. Long labels wrap/truncate at this boundary. 0 = no cap. Tip: use legendMinWidthPercent alone for alignment — combining the two reserves overlapping space.' },
-    { class: 'Enum', of: 'foam.core.reflow.dashboard.MetricAlignment', name: 'chartAlignment', value: 'CENTER', help: 'Aligns the arc within the chart canvas (not the whole pie+legend block). Combine matching chartAlignment values across stacked pies to line up their arc centers regardless of legend-label length.' },
     // Display properties
     { class: 'Boolean', name: 'responsive', value: true },
     { class: 'Boolean', name: 'maintainAspectRatio', value: false },
@@ -510,7 +509,7 @@ foam.CLASS({
       transient: true,
       expression: function(groups,groupKeys, colors, showPercentages, cutoutPercentage, clockwise, rotation,
                           responsive, maintainAspectRatio, showLegend,
-                          legendPosition, showTooltips, showTooltipSum, animate, animationDuration, width, emptyValueMessage, disableLegendClick, legendMinWidthPercent, legendMaxWidthPercent, chartAlignment) {
+                          legendPosition, showTooltips, showTooltipSum, animate, animationDuration, width, emptyValueMessage, disableLegendClick, legendMinWidthPercent, legendMaxWidthPercent) {
         // Don't create chart until we have a valid width
         if ( ! width || width <= 0 ) {
           return null;
@@ -551,25 +550,15 @@ foam.CLASS({
           }]
         };
 
-        // layoutPadding composes two effects on Chart.js `options.layout.padding`:
-        //   (1) legendMinWidthPercent: reserve at least N% of the container
-        //       width on the legend side — short legends pad out to match
-        //       long ones, giving vertical arc alignment across pies with
-        //       varied labels.
-        //   (2) chartAlignment: shift the arc within the remaining area by
-        //       padding the side OPPOSITE to its direction.
-        // Both sides come from enum properties (LegendPosition.cssSide,
-        // MetricAlignment.paddingSide) — no string branching here.
+        // legendMinWidthPercent reserves at least N% of the container width
+        // on the legend side via Chart.js `options.layout.padding`. Short
+        // legends pad out to match long ones, giving vertical arc alignment
+        // across pies with varied labels. The side comes from the
+        // LegendPosition enum — no string branching here.
         var layoutPadding = {};
         var legendPos = legendPosition || this.LegendPosition.TOP;
         if ( legendMinWidthPercent > 0 ) {
           layoutPadding[legendPos.cssSide] = Math.round(width * legendMinWidthPercent / 100);
-        }
-
-        var alignSide = chartAlignment && chartAlignment.paddingSide;
-        if ( alignSide ) {
-          var alignPad = Math.round(width * 0.25);
-          layoutPadding[alignSide] = Math.max(layoutPadding[alignSide] || 0, alignPad);
         }
 
         var legendOpts = {
