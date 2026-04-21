@@ -599,8 +599,8 @@ foam.CLASS({
                   width: 0, height: 0
                 };
                 self.legendTooltip_.text = foam.u2.Element.create({}, self)
-                  .start().add(label, ':').end()
-                  .start()
+                  .start().addClass('p-bold').add(label, ':').end()
+                  .start().addClass('p')
                   .add(value.toLocaleString() + ' (' + fullPct + '%)')
                   .end();
                 self.legendTooltip_.setTooltip(native);
