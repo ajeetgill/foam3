@@ -573,7 +573,7 @@ foam.CLASS({
 
         var legendOpts = {
           display: showLegend,
-          position: legendPos.chartJsName,
+          position: legendPos.name.toLowerCase(),
           onClick: disableLegendClick ? function() { /* no-op: prevent slice toggle */ } : undefined,
           onHover: function(event, legendItem, legend) {
             var chart = legend.chart;
