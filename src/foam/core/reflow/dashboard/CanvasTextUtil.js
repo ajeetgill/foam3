@@ -70,17 +70,23 @@ foam.LIB({
 
     {
       name: 'legendLabelChromePx',
-      documentation: `Horizontal overhead Chart.js reserves per legend
-        item for the swatch + inner/outer padding, before any text is
-        drawn. Used to derive the per-line text area from the overall
-        legend.maxWidth.`,
+      documentation: `Horizontal overhead Chart.js v4 reserves around the
+        widest legend item in a right/left (single-column) legend,
+        before any text is drawn. Derived directly from chart.js 4.x
+        _fitCols + calculateItemWidth:
+          legendWidth = padding + (boxWidth + fontSize/2 + textWidth) + 10
+        so chrome (non-text) = padding + boxWidth + fontSize/2 + 10.
+        Defaults match Chart.js v4: boxWidth falls back to fontSize
+        (v4 changed this from v2/v3's 40 — see chart.js getBoxSize),
+        padding to 10. With labelFont.size=12 and no overrides chrome
+        ≈ 10 + 12 + 6 + 10 = 38.`,
       code: function(chart) {
         var labelOpts = chart.options.plugins.legend.labels || {};
-        var boxWidth  = labelOpts.boxWidth !== undefined ? labelOpts.boxWidth : 40;
+        var f         = labelOpts.font || chart.options.font || {};
+        var fontSize  = f.size || 12;
+        var boxWidth  = labelOpts.boxWidth !== undefined ? labelOpts.boxWidth : fontSize;
         var padding   = labelOpts.padding  !== undefined ? labelOpts.padding  : 10;
-        // Chart.js v4 item layout (right/left position):
-        //   boxWidth + (boxWidth / 2) + textWidth + outer padding × 2.
-        return boxWidth + (boxWidth / 2) + (padding * 2);
+        return padding + boxWidth + (fontSize / 2) + 10;
       }
     },
 
@@ -121,12 +127,33 @@ foam.LIB({
         var target = items[bestItemIdx];
         var line = Array.isArray(target.text) ? target.text[bestLineIdx] : target.text;
         var padded = line;
-        // Binary-growth then fine tune: start with a single NBSP run,
-        // double until it overshoots, then trim back one at a time.
+        // HAIR space (U+200A) closes the last NBSP-width gap down to ~1px. Like
+        // NBSP, it's non-collapsing so Chart.js preserves it at draw time.
+        var HAIR = '\u200A';
+        // Four phases, each closing a narrower gap than the last:
+        //   1. geometric NBSP doubling — coarse approach (cheap for large gaps)
+        //   2. linear NBSP fill — closes the up-to-one-run undershoot that the
+        //      geometric loop leaves behind (without this, shorter-label charts
+        //      undershoot by different amounts than longer-label ones and
+        //      stacked pies still drift)
+        //   3. linear HAIR fill — closes the final NBSP-width gap (~3.5px) to
+        //      hair-space granularity (~1px). Guarded against fonts that render
+        //      HAIR as zero-width; in that case phase 2's accuracy stands.
+        //   4. defensive trim — shouldn't run after phase 3, cheap insurance.
         var run = NBSP;
         while ( ctx.measureText(padded + run).width < minPx ) {
           padded += run;
           if ( run.length < 64 ) run += run; // geometric growth caps overshoot
+        }
+        while ( ctx.measureText(padded + NBSP).width <= minPx ) {
+          padded += NBSP;
+        }
+        // Guard against fonts that render HAIR as 0-width (infinite loop) —
+        // we still get NBSP-level accuracy from the phase above.
+        if ( ctx.measureText(HAIR).width > 0 ) {
+          while ( ctx.measureText(padded + HAIR).width <= minPx ) {
+            padded += HAIR;
+          }
         }
         while ( padded.length > line.length && ctx.measureText(padded).width > minPx ) {
           padded = padded.slice(0, -1);
