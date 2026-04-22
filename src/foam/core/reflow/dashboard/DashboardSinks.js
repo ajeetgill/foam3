@@ -449,6 +449,7 @@ foam.CLASS({
   requires: [
     'org.chartjs.Pie2',
     'foam.u2.layout.ContainerWidth',
+    'foam.core.reflow.dashboard.LegendPosition',
     'foam.u2.Tooltip'
   ],
 
@@ -488,13 +489,15 @@ foam.CLASS({
     { class: 'Boolean', name: 'clockwise', value: true },
     { class: 'Int', name: 'rotation', value: -90 },
     { class: 'Boolean', name: 'disableLegendClick', help: 'Disable legend click to toggle slice visibility' },
+    { class: 'Int', name: 'legendMinWidthPercent', help: 'Forces the legend to be at least this percentage (0-100) of container width by padding the widest label with trailing non-breaking spaces. Short legends grow to match; unboundedly long labels are also wrapped at this width (so a single long label can\'t push the legend wider than intended). 0 = no floor.' },
+    { class: 'Int', name: 'legendMaxWidthPercent', help: 'Caps the legend at this percentage (0-100) of container width and word-wraps long labels at the cap. 0 = no cap. Setting min = max gives an exact fixed-width legend — arcs line up perfectly across stacked pies.' },
     // Display properties
     { class: 'Boolean', name: 'responsive', value: true },
     { class: 'Boolean', name: 'maintainAspectRatio', value: false },
     { class: 'Int', name: 'height', value: 300 },
     { class: 'Int', name: 'width', value: 400 },
     { class: 'Boolean', name: 'showLegend', value: true },
-    { class: 'String', name: 'legendPosition', value: 'TOP' },
+    { class: 'Enum', of: 'foam.core.reflow.dashboard.LegendPosition', name: 'legendPosition', value: 'TOP' },
     { class: 'Boolean', name: 'showTooltips', value: true },
     { class: 'Boolean', name: 'showTooltipSum', value: false, help: 'Show sum total in tooltip footer' },
     { class: 'Boolean', name: 'animate', value: true },
@@ -507,7 +510,7 @@ foam.CLASS({
       transient: true,
       expression: function(groups,groupKeys, colors, showPercentages, cutoutPercentage, clockwise, rotation,
                           responsive, maintainAspectRatio, showLegend,
-                          legendPosition, showTooltips, showTooltipSum, animate, animationDuration, width, emptyValueMessage, disableLegendClick) {
+                          legendPosition, showTooltips, showTooltipSum, animate, animationDuration, width, emptyValueMessage, disableLegendClick, legendMinWidthPercent, legendMaxWidthPercent) {
         // Don't create chart until we have a valid width
         if ( ! width || width <= 0 ) {
           return null;
@@ -523,21 +526,20 @@ foam.CLASS({
         var sortedKeys = this.topN > 0 ? (this.groupKeys || Object.keys(groups)) :
                         (this.sortedKeys ? this.sortedKeys() : Object.keys(groups));
 
-        var index = 0;
+        // Index into `colors` by the key's original position so slice colors
+        // stay stable when Chart.js's built-in legend hides a slice.
         for ( var i = 0; i < sortedKeys.length; i++ ) {
           var key = sortedKeys[i];
           labels.push(key.toString());
           data.push(groups[key].value);
 
-          // Only handle colors if they are defined
           if ( colors && colors.length > 0 ) {
-            var color = colors[index % colors.length];
+            var color = colors[i % colors.length];
             if ( color !== undefined && color !== null ) {
               color = foam.CSS.returnTokenValue(color, this.cls_, this.__context__);
               backgroundColors.push(color);
             }
           }
-          index++;
         }
 
         this.hasData = data.length > 0;
@@ -550,81 +552,122 @@ foam.CLASS({
           }]
         };
 
+        // Legend width is controlled entirely on the legend side — no
+        // `layout.padding` here, because padding stacks ON TOP of the
+        // legend area and would double-reserve space on right/left
+        // positions.
+        //
+        //   legendMaxWidthPercent — caps via Chart.js `legend.maxWidth` and
+        //     word-wraps long labels at the cap.
+        //   legendMinWidthPercent — forces legend ≥ this width by padding
+        //     the widest label with trailing NBSPs inside generateLabels
+        //     (Chart.js's legend has no native minWidth).
+        //
+        // When only min is set, it also acts as the wrap cap so an
+        // unboundedly long label can't push the legend wider than intended.
+        // Position side comes from the LegendPosition enum.
+        var legendPos = legendPosition || this.LegendPosition.TOP;
+        var legendMinPx = legendMinWidthPercent > 0 ? Math.round(width * legendMinWidthPercent / 100) : 0;
+        var legendMaxPx = legendMaxWidthPercent > 0 ? Math.round(width * legendMaxWidthPercent / 100) : 0;
+        var legendCapPx = legendMaxPx > 0 ? legendMaxPx : legendMinPx;
+
+        var legendOpts = {
+          display: showLegend,
+          position: legendPos.name.toLowerCase(),
+          onClick: disableLegendClick ? function() { /* no-op: prevent slice toggle */ } : undefined,
+          onHover: function(event, legendItem, legend) {
+            var chart = legend.chart;
+            var dataset = chart.data.datasets[0];
+            // Denominator and slice value both exclude hidden slices so
+            // hover stays consistent with the legend label (which shows
+            // `0.0%` on hidden items). If we divided the raw value by a
+            // hidden-exclusive denominator, the pct would blow up past
+            // 100% for the hidden item itself.
+            var isVisible = chart.getDataVisibility(legendItem.index);
+            var total = dataset.data.reduce(function(sum, val, idx) {
+              return chart.getDataVisibility(idx) ? sum + (val || 0) : sum;
+            }, 0);
+            var value = isVisible ? (dataset.data[legendItem.index] || 0) : 0;
+            var fullPct = total > 0 ? (value / total) * 100 : 0;
+            var label = chart.data.labels[legendItem.index] || '';
+            var native = event.native || event;
+
+            // The proxy target's el() returns a fake element whose
+            // getBoundingClientRect() tracks the cursor position, so
+            // Tooltip.setTooltip()'s flip logic works off the label
+            // location rather than the much-larger canvas bounding box.
+            if ( ! self.legendTooltip_ ) {
+              self.legendTooltip_ = self.Tooltip.create({
+                text: '',
+                target: {
+                  removeAttribute: function() {},
+                  on:              function() {},
+                  onDetach:        function() {},
+                  el: function() {
+                    return Promise.resolve({
+                      getBoundingClientRect: function() { return self.legendCursorRect_; }
+                    });
+                  }
+                }
+              });
+            } else {
+              self.legendTooltip_.close();
+            }
+
+            // Update cursor rect before setTooltip reads it via el()
+            self.legendCursorRect_ = {
+              top: native.clientY, left: native.clientX,
+              bottom: native.clientY, right: native.clientX,
+              width: 0, height: 0
+            };
+            self.legendTooltip_.text = foam.u2.Element.create({}, self)
+              .start().addClass('p-label').add(label, ':').end()
+              .start().addClass('p-legal')
+              .add(value.toLocaleString() + ' (' + fullPct + '%)')
+              .end();
+            self.legendTooltip_.setTooltip(native);
+          },
+          onLeave: function(event, legendItem, legend) {
+            if ( self.legendTooltip_ ) self.legendTooltip_.close();
+          }
+        };
+        if ( legendCapPx > 0 ) legendOpts.maxWidth = legendCapPx;
+
         var options = {
           responsive: responsive,
           maintainAspectRatio: maintainAspectRatio,
           cutout: cutoutPercentage + '%',
           rotation: rotation,
           circumference: clockwise ? 360 : -360,
+          layout: { padding: 0 },
           plugins: {
-            legend: {
-              display: showLegend,
-              position: legendPosition ? legendPosition.toString().toLowerCase() : 'top',
-              onClick: disableLegendClick ? function() { /* no-op: prevent slice toggle */ } : undefined,
-              onHover: function(event, legendItem, legend) {
-                var chart = legend.chart;
-                var dataset = chart.data.datasets[0];
-                var total = dataset.data.reduce(function(sum, val) { return sum + val; }, 0);
-                var value = dataset.data[legendItem.index] || 0;
-                var fullPct = total > 0 ? (value / total) * 100 : 0;
-                var label = chart.data.labels[legendItem.index] || '';
-                var native = event.native || event;
-
-                // The proxy target's el() returns a fake
-                // element whose getBoundingClientRect() tracks the cursor position,
-                // so Tooltip.setTooltip()'s flip logic works off the label location
-                // rather than the much-larger canvas bounding box.
-                if ( ! self.legendTooltip_ ) {
-                  self.legendTooltip_ = self.Tooltip.create({
-                    text: '',
-                    target: {
-                      removeAttribute: function() {},
-                      on:              function() {},
-                      onDetach:        function() {},
-                      el: function() {
-                        return Promise.resolve({
-                          getBoundingClientRect: function() { return self.legendCursorRect_; }
-                        });
-                      }
-                    }
-                  });
-                } else {
-                  self.legendTooltip_.close();
-                }
-
-                // Update cursor rect before setTooltip reads it via el()
-                self.legendCursorRect_ = {
-                  top: native.clientY, left: native.clientX,
-                  bottom: native.clientY, right: native.clientX,
-                  width: 0, height: 0
-                };
-                self.legendTooltip_.text = foam.u2.Element.create({}, self)
-                  .start().addClass('p-label').add(label, ':').end()
-                  .start().addClass('p-legal')
-                  .add(value.toLocaleString() + ' (' + fullPct + '%)')
-                  .end();
-                self.legendTooltip_.setTooltip(native);
-              },
-              onLeave: function(event, legendItem, legend) {
-                if ( self.legendTooltip_ ) self.legendTooltip_.close();
-              }
-            },
+            legend: legendOpts,
             tooltip: {
               enabled: showTooltips,
               callbacks: (function() {
                 var callbacks = {};
 
-                // Add percentage display to individual tooltip labels
+                // Add percentage display to individual tooltip labels.
+                // Total excludes slices currently hidden via legend click,
+                // so the tooltip percentage stays consistent with the
+                // recomputed legend percentage. Pie/doughnut visibility
+                // lives in `chart._hiddenIndices` (exposed via
+                // `getDataVisibility`) — NOT `meta.data[i].hidden`, which
+                // is the bar/line controller's flag.
                 if ( showPercentages ) {
                   callbacks.label = function(context) {
-                    var label = '';
-                    var value = context.parsed || 0;
-                    var dataset = context.chart.data.datasets[0];
-                    var total = dataset.data.reduce(function(sum, val) {
-                      return sum + val;
+                    var label   = context.label || '';
+                    var value   = context.parsed || 0;
+                    var chart   = context.chart;
+                    var dataset = chart.data.datasets[0];
+                    var total   = dataset.data.reduce(function(sum, val, idx) {
+                      return chart.getDataVisibility(idx) ? sum + (val || 0) : sum;
                     }, 0);
-                    var percentage = total > 0 ? ((value / total) * 100) : '0.0';
-
+                    var percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                    
+                    if ( label ) {
+                      label += ': ';
+                    }
                     label += value.toLocaleString() + ' (' + percentage + '%)';
                     return label;
                   };
@@ -658,28 +701,73 @@ foam.CLASS({
             animateScale: true
           } : false
         };
-
-        if ( showPercentages ) {
+        
+        // generateLabels composes three optional label transforms:
+        //   1. percentage prefixing (showPercentages) — with '~' prefix
+        //      when the displayed value is rounded (e.g. 0.04 → ~0.0%),
+        //      so users know small slices survived rounding
+        //   2. word-wrap at the cap (legendCapPx — from max, or min when max
+        //      is unset, so a runaway label can't push the legend wider)
+        //   3. trailing-NBSP pad of the widest label up to legendMinPx so
+        //      short legends grow out to the reserved width (Chart.js has
+        //      no legend.minWidth; padding one item widens the whole legend
+        //      column since its width tracks the widest item)
+        // Wrap returns either a string or an array of lines; Chart.js v4's
+        // renderText helper draws array-text as stacked lines.
+        var CanvasTextUtil = foam.core.reflow.dashboard.CanvasTextUtil;
+        if ( showPercentages || legendCapPx > 0 || legendMinPx > 0 ) {
           options.plugins.legend.labels = {
             generateLabels: function(chart) {
               var dataset = chart.data.datasets[0];
-              var total = dataset.data.reduce(function(sum, val) { return sum + val; }, 0);
+              var meta    = chart.getDatasetMeta(0);
+              // Pie/doughnut slice visibility lives in `chart._hiddenIndices`
+              // (read via `getDataVisibility`), not `meta.data[i].hidden`
+              // (which only the bar/line controllers update). Using
+              // getDataVisibility is what Chart.js's own default
+              // doughnut generateLabels does.
+              var isVisible = function(i) { return chart.getDataVisibility(i); };
 
-              return chart.data.labels.map(function(label, i) {
-                var fullPct = total > 0 ? (dataset.data[i] / total) * 100 : 0;
-                var percentage = fullPct.toFixed(1);
-                var isApprox = parseFloat(percentage) !== fullPct;
-                var style = chart.getDatasetMeta(0).controller ?
-                           chart.getDatasetMeta(0).controller.getStyle(i) :
-                           { backgroundColor: dataset.backgroundColor[i] };
+              // Recompute the denominator against visible slices only so
+              // the remaining items sum to 100% when the user toggles a
+              // slice off via the legend click.
+              var total = showPercentages
+                ? dataset.data.reduce(function(sum, val, idx) {
+                    return isVisible(idx) ? sum + (val || 0) : sum;
+                  }, 0)
+                : 0;
 
+              var fontStr = CanvasTextUtil.legendLabelFont(chart);
+              var chrome  = CanvasTextUtil.legendLabelChromePx(chart);
+              var textMaxPx = legendCapPx > 0 ? Math.max(30, legendCapPx - chrome) : 0;
+              var textMinPx = legendMinPx > 0 ? Math.max(30, legendMinPx - chrome) : 0;
+
+              var items = chart.data.labels.map(function(label, i) {
+                var text = label.toString();
+                if ( showPercentages ) {
+                  var sliceVal = isVisible(i) ? dataset.data[i] : 0;
+                  var rawPct   = total > 0 ? (sliceVal / total) * 100 : 0;
+                  var pct      = rawPct.toFixed(1);
+                  var isApprox = parseFloat(pct) !== rawPct;
+                  text = (isApprox ? '~' : '') + pct + '% ' + text;
+                }
+                if ( textMaxPx > 0 ) text = CanvasTextUtil.wrap(chart.ctx, text, fontStr, textMaxPx);
+
+                var style = meta && meta.controller
+                  ? meta.controller.getStyle(i)
+                  : { backgroundColor: dataset.backgroundColor[i] };
+
+                // Forward per-slice hidden state so Chart.js's legend
+                // renderer draws strikethrough on toggled-off items.
                 return {
-                  text: (isApprox ? '~' : '') + percentage + '% ' + label,
+                  text: text,
                   fillStyle: style.backgroundColor,
                   fontColor: undefined,
+                  hidden: ! isVisible(i),
                   index: i
                 };
               });
+
+              return CanvasTextUtil.padWidestToMin(chart.ctx, items, fontStr, textMinPx);
             }
           };
         }
@@ -803,7 +891,7 @@ foam.CLASS({
     { class: 'Int', name: 'height', value: 300 },
     { class: 'Int', name: 'width', value: 400 },
     { class: 'Boolean', name: 'showLegend', value: true },
-    { class: 'String', name: 'legendPosition', value: 'TOP' },
+    { class: 'Enum', of: 'foam.core.reflow.dashboard.LegendPosition', name: 'legendPosition', value: 'TOP' },
     { class: 'Boolean', name: 'showTooltips', value: true },
     { class: 'Boolean', name: 'showTooltipSum', value: false, help: 'Show sum total in tooltip footer' },
     { class: 'Boolean', name: 'animate', value: true },
@@ -1144,7 +1232,7 @@ foam.CLASS({
     { class: 'Int', name: 'height', value: 300 },
     { class: 'Int', name: 'width', value: 400 },
     { class: 'Boolean', name: 'showLegend', value: true },
-    { class: 'String', name: 'legendPosition', value: 'TOP' },
+    { class: 'Enum', of: 'foam.core.reflow.dashboard.LegendPosition', name: 'legendPosition', value: 'TOP' },
     { class: 'Boolean', name: 'showTooltips', value: true },
     { class: 'Boolean', name: 'showTooltipSum', value: false, help: 'Show sum total in tooltip footer (for multiple lines)' },
     { class: 'Boolean', name: 'animate', value: true },
