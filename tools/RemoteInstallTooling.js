@@ -32,13 +32,14 @@ foam.POM({
     remoteOutput: ['', 'remote-output', 'REMOTE_OUTPUT', 'Working directory on remote host to upload to and install from.', '/tmp', arg => REMOTE_OUTPUT = arg],
     remoteUser: ['', 'remote-user', 'REMOTE_USER', 'User with which to connect via ssh/scp to perform the upload and installation.', '', arg => REMOTE_USER = arg],
     sshId: ['', 'ssh-id', 'SSH_ID', 'ssh id from .ssh/ to use for connection. Will default to that specified in .ssh/config when a matching host is found, otherwise to .ssh/id_rsa', '', arg => SSH_ID = arg],
-    sshOpt: ['', 'ssh-opt', 'SSH_OPT', '', () => SSH_ID ? '-i ' + HOME_DIR + '/.ssh/' + SSH_ID : '', arg => SSH_OPT = arg]
+    sshOpt: ['', 'ssh-opt', 'SSH_OPT', '', () => SSH_ID ? '-i ' + HOME_DIR + '/.ssh/' + SSH_ID : '', arg => SSH_OPT = arg],
+    nfs: ['', 'nfs', 'NFS', 'Create a unique /mnt point for journals so they can be located on NFS.', true, function(arg) { NFS = arg ? this.bool(arg) : true; }]
   },
 
   tasks: {
     all: ['all', 'Execute all tasks for a remote deployment.', ['pomEnvs', 'validate', 'upload', 'install'], null],
     buildInstallOpts: ['build-install-opts', 'Build up options passed to the install script', ['pomEnvs'], function() {
-      INSTALL_OPTS += ` -A${APP_HOME} -B${BACKUP} -N${APP_NAME} -V${VERSION} -U${USER} -Y${USER_ID}`;
+      INSTALL_OPTS += ` -A${APP_HOME} -B${BACKUP} -N${APP_NAME} -Q${NFS} -V${VERSION} -U${USER} -Y${USER_ID}`;
       if ( WEB_PORT )
         INSTALL_OPTS += ` -W${WEB_PORT}`;
     }],
