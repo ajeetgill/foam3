@@ -54,6 +54,44 @@ foam.LIB({
     },
 
     {
+      name: 'truncate',
+      documentation: `Single-line truncation that ends with a Unicode
+        ellipsis (U+2026) when the input would exceed maxPx. Uses the
+        caller's font via ctx for accurate measurement. Returns the
+        original string when it already fits or when maxPx is non-positive.
+        For legend labels paired with a hover tooltip that shows the full
+        text — the ellipsis signals truncation without the extra legend
+        row that wrap() would add.`,
+      code: function(ctx, text, fontStr, maxPx) {
+        if ( ! text || maxPx <= 0 ) return text;
+        var s = String(text);
+        ctx.save();
+        if ( fontStr ) ctx.font = fontStr;
+        if ( ctx.measureText(s).width <= maxPx ) {
+          ctx.restore();
+          return s;
+        }
+        var ELLIPSIS  = '…';
+        var ellipsisW = ctx.measureText(ELLIPSIS).width;
+        // Binary-search the longest prefix whose measured width + the
+        // ellipsis still fits within maxPx.
+        var lo = 0, hi = s.length;
+        while ( lo < hi ) {
+          var mid = (lo + hi + 1) >> 1;
+          if ( ctx.measureText(s.slice(0, mid)).width + ellipsisW <= maxPx ) {
+            lo = mid;
+          } else {
+            hi = mid - 1;
+          }
+        }
+        // Strip trailing whitespace so the ellipsis sits tight against text.
+        var prefix = s.slice(0, lo).replace(/\s+$/, '');
+        ctx.restore();
+        return prefix + ELLIPSIS;
+      }
+    },
+
+    {
       name: 'legendLabelFont',
       documentation: `Builds the CSS font string Chart.js would use for a
         legend item, falling back to chart.options.font then Chart.js

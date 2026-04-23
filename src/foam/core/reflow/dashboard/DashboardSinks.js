@@ -489,8 +489,8 @@ foam.CLASS({
     { class: 'Boolean', name: 'clockwise', value: true },
     { class: 'Int', name: 'rotation', value: -90 },
     { class: 'Boolean', name: 'disableLegendClick', help: 'Disable legend click to toggle slice visibility' },
-    { class: 'Int', name: 'legendMinWidthPercent', help: 'Forces the legend to be at least this percentage (0-100) of container width by padding the widest label with trailing non-breaking spaces. Short legends grow to match; unboundedly long labels are also wrapped at this width (so a single long label can\'t push the legend wider than intended). 0 = no floor.' },
-    { class: 'Int', name: 'legendMaxWidthPercent', help: 'Caps the legend at this percentage (0-100) of container width and word-wraps long labels at the cap. 0 = no cap. Setting min = max gives an exact fixed-width legend — arcs line up perfectly across stacked pies.' },
+    { class: 'Int', name: 'legendMinWidthPercent', help: 'Forces the legend to be at least this percentage (0-100) of container width by padding the widest label with trailing non-breaking spaces. Short legends grow to match; longer labels are truncated with an ellipsis at this width (full text available in the hover tooltip) so a single long label can\'t push the legend wider than intended. 0 = no floor.' },
+    { class: 'Int', name: 'legendMaxWidthPercent', help: 'Caps the legend at this percentage (0-100) of container width; labels wider than the cap are truncated with an ellipsis (full text available in the hover tooltip). 0 = no cap. Setting min = max gives an exact fixed-width legend — arcs line up perfectly across stacked pies.' },
     // Display properties
     { class: 'Boolean', name: 'responsive', value: true },
     { class: 'Boolean', name: 'maintainAspectRatio', value: false },
@@ -706,14 +706,14 @@ foam.CLASS({
         //   1. percentage prefixing (showPercentages) — with '~' prefix
         //      when the displayed value is rounded (e.g. 0.04 → ~0.0%),
         //      so users know small slices survived rounding
-        //   2. word-wrap at the cap (legendCapPx — from max, or min when max
-        //      is unset, so a runaway label can't push the legend wider)
+        //   2. single-line ellipsis truncation at the cap (legendCapPx —
+        //      from max, or min when max is unset, so a runaway label
+        //      can't push the legend wider). The hover tooltip still
+        //      surfaces the full label.
         //   3. trailing-NBSP pad of the widest label up to legendMinPx so
         //      short legends grow out to the reserved width (Chart.js has
         //      no legend.minWidth; padding one item widens the whole legend
         //      column since its width tracks the widest item)
-        // Wrap returns either a string or an array of lines; Chart.js v4's
-        // renderText helper draws array-text as stacked lines.
         var CanvasTextUtil = foam.core.reflow.dashboard.CanvasTextUtil;
         if ( showPercentages || legendCapPx > 0 || legendMinPx > 0 ) {
           options.plugins.legend.labels = {
@@ -750,7 +750,7 @@ foam.CLASS({
                   var isApprox = parseFloat(pct) !== rawPct;
                   text = (isApprox ? '~' : '') + pct + '% ' + text;
                 }
-                if ( textMaxPx > 0 ) text = CanvasTextUtil.wrap(chart.ctx, text, fontStr, textMaxPx);
+                if ( textMaxPx > 0 ) text = CanvasTextUtil.truncate(chart.ctx, text, fontStr, textMaxPx);
 
                 var style = meta && meta.controller
                   ? meta.controller.getStyle(i)
