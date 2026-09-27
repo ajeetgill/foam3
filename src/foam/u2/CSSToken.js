@@ -60,6 +60,9 @@ foam.CLASS({
 
         The limitation for one variantKey exists to make it easy to configure CSSTokens. If more complex responsive behaviour is required using
         multiple activeVariants, it's always possible to slot on the property in U2 and write custom logic to handle that case.
+
+        Required whenever variants is set: a variants map with no variantKey is never read, so installInClass throws. ColorToken sets 'color';
+        any other CSSToken that should follow a mode names its key explicitly.
       `
     },
     {
@@ -86,6 +89,13 @@ foam.CLASS({
     function installInClass(cls) {
       var axiom = this;
       axiom.sourceCls_ = cls;
+      // A variants map is only read when the token names its axis. Without a
+      // variantKey the map is dead: the token looks themed in the source and
+      // renders its base value in every mode, with no warning. Fail at class
+      // load so the author sees it once, here, instead of never.
+      if ( ! this.variantKey && Object.keys(this.variants).length ) {
+        throw new Error(`CSSToken ${cls.id}.${this.name} declares variants (${Object.keys(this.variants).join(', ')}) but no variantKey; set variantKey (for example 'color') or use foam.u2.ColorToken.`);
+      }
       Object.defineProperty(
         cls,
         foam.String.constantize(this.name),
