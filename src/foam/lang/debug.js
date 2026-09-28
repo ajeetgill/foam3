@@ -209,7 +209,7 @@ foam.SCRIPT({
               aCls;
           } else if ( foam.lang.Method.isSubClass(prevA.cls_) && foam.lang.Method.isSubClass(a.cls_) ) {
             // NOP
-          } else if ( prevA.cls_ ) {
+          } else if ( prevA.cls_ && ! prevA.cls_.isSubClass(a.cls_) /* Allow changes to subclasses */ ) {
             // FUTURE: make error when supression supported
             console.warn(
                 'Change of Axiom ' +
