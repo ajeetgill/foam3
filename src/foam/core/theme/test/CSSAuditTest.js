@@ -188,6 +188,16 @@ a = foam.u2.view.ColorEditView.create(); ctrl.stack.set(a);
             logger.info("ignoring console formatter", line);
             continue;
           }
+          // Workaround. This audit is a line regex over every .js file, not
+          // a CSS parser, so it cannot tell a CSS declaration from a JS
+          // object entry whose key is a CSS property name. theme.activeVariants
+          // maps a variant key to a variant name, and its colour key is such
+          // an entry. The proper fix is the CSSParser TODO above, tracked in
+          // https://github.com/foam-foundation/foam3/issues/5556.
+          if ( line.contains("activeVariants") ) {
+            logger.info("ignoring variant key", line);
+            continue;
+          }
           String property  = matcher.group(1);
           String openQuote = matcher.group(2);
           String value     = matcher.group(3);
@@ -278,6 +288,13 @@ a = foam.u2.view.ColorEditView.create(); ctrl.stack.set(a);
               continue;
             }
           } else if ( "border".equals(property) ) {
+            // A bare 0 is the standard border reset, not a hardcoded colour.
+            // Matched exactly rather than with contains(), so a hex value such
+            // as #000000 still fails.
+            if ( "0".equals(value.trim()) ) {
+              logger.info("ignoring", property, value);
+              continue;
+            }
             if ( value.contains("none") ||
                  value.contains("dashed") ||
                  value.contains("inherit") ||

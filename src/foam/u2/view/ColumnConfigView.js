@@ -92,9 +92,9 @@ foam.CLASS({
       class: 'String',
       name: 'menuSearch',
       view: {
-        class: 'foam.u2.SearchField',
+        class: 'foam.u2.ClearableSearchField',
         onKey: true,
-        autocomplete: false
+        autocomplete: 'off'
       },
       value: '',
       postSet: function() {
@@ -610,9 +610,9 @@ foam.CLASS({
                      this.add(self.slot(function( data$isPropertyGrouped ) {
                        var image;
                        if ( self.data.isPropertyGrouped ) {
-                         image = self.theme.glyphs.folderFill.getDataUrl({ fill: self.theme.primary3 });
+                         image = self.theme.glyphs.folderFill.getDataUrl({ fill: foam.CSS.returnTokenValue('$textBrand', self.cls_, self.__subContext__) });
                        } else {
-                         image = self.theme.glyphs.folderOutline.getDataUrl({ fill: self.theme.grey2 });
+                         image = self.theme.glyphs.folderOutline.getDataUrl({ fill: foam.CSS.returnTokenValue('$textTertiary', self.cls_, self.__subContext__) });
                        }
                        return this.E()
                        .start(self.Image, { data: image , displayHeight: '1.5em' , displayWidth: '1.5em' })

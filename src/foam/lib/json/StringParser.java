@@ -15,6 +15,7 @@ import foam.lib.parse.Literal;
 import foam.lib.parse.AnyChar;
 import foam.lib.parse.Seq1;
 import java.util.Map;
+import foam.util.StringInterner;
 
 public class StringParser
   implements Parser
@@ -22,6 +23,12 @@ public class StringParser
   private final static Parser instance__ = new StringParser();
 
   public static Parser instance() { return instance__; }
+
+  /** Canonicalize through the replay's interner when the context carries one; outside a replay the value is kept as parsed. */
+  private static String intern(String v, ParserContext x) {
+    Object i = x == null ? null : x.get(StringInterner.CTX_KEY);
+    return i instanceof StringInterner ? ((StringInterner) i).intern(v) : v;
+  }
 
   protected static ThreadLocal<StringBuilder> builder__ = new ThreadLocal<StringBuilder>() {
     @Override
@@ -63,18 +70,28 @@ public class StringParser
    * of per-character ps.apply(delimiter, x) checks.
    * Returns null if escapes are present (falls back to slow path).
    */
-  private PStream parseFast(StringPStream sps, char delim) {
+  private PStream parseFast(StringPStream sps, char delim, ParserContext x) {
     String str = sps.getString().toString();
     int    pos = sps.pos();
     int closeIdx = str.indexOf(delim, pos);
     if ( closeIdx < 0 ) return null;
 
-    int escIdx = str.indexOf(ESCAPE, pos);
-    // If there's an escape before the closing delimiter, fall back to slow path
-    if ( escIdx >= 0 && escIdx < closeIdx ) return null;
+    // If there's an escape before the closing delimiter, fall back to the slow
+    // path. Bounded to the string's own span: the unbounded form scanned to the
+    // END of the input on every escape-free value, re-reading the entry once per
+    // string property. Short spans use a plain loop — the ranged indexOf's
+    // per-call overhead costs more than it saves under ~32 chars; longer spans
+    // get its vectorized scan.
+    if ( closeIdx - pos <= 32 ) {
+      for ( int i = pos ; i < closeIdx ; i++ ) {
+        if ( str.charAt(i) == ESCAPE ) return null;
+      }
+    } else if ( str.indexOf(ESCAPE, pos, closeIdx) >= 0 ) {
+      return null;
+    }
 
     // No escapes — bulk extract the string
-    String value = str.substring(pos, closeIdx).intern();
+    String value = intern(str.substring(pos, closeIdx), x);
     return sps.createAt(closeIdx + 1).setValue(value);
   }
 
@@ -90,7 +107,7 @@ public class StringParser
     if ( ps instanceof StringPStream && delimiter instanceof foam.lib.parse.AbstractLiteral ) {
       String ds = ((foam.lib.parse.AbstractLiteral) delimiter).getString();
       if ( ds != null && ds.length() == 1 ) {
-        PStream fast = parseFast((StringPStream) ps, ds.charAt(0));
+        PStream fast = parseFast((StringPStream) ps, ds.charAt(0), x);
         if ( fast != null ) return fast;
       }
       // Fall through to character-by-character for escaped strings,
@@ -131,6 +148,6 @@ public class StringParser
       ps = ps.tail();
     }
 
-    return ps.setValue(sb.toString().intern());
+    return ps.setValue(intern(sb.toString(), x));
   }
 }
