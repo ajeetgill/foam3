@@ -456,6 +456,7 @@ foam.CLASS({
   ]
 });
 
+
 foam.CLASS({
   package: 'foam.lang',
   name: 'FObjectDescribeListenersRefinement',

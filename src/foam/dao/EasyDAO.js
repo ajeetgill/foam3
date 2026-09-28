@@ -1393,7 +1393,7 @@ dao loading, which improves overall startup time.`,
               }
 
               self.log("Loading test data");
-              Promise.all(foam.json.parse(self.testData, self.of, self).map(
+              Promise.all(foam.json.parse(self.testData, self.of, self.__subContext__).map(
                 function(o) { return delegate.put(o); }
               )).then(function() {
                 self.log("Loaded", self.testData.length, "records.");
