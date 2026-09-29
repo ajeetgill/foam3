@@ -48,6 +48,16 @@ p({
 })
 p({
   class: "foam.core.bench.BenchmarkRunner",
+  id: "F3ReplayPipelineBenchmarkRunner",
+  description: "Replay wall and CPU per apply-stage line and merge, on unique and update-heavy journals; each execution is one pass over the matrix, every round prints medians so far.",
+  benchmarkId: "F3ReplayPipelineBenchmark",
+  threadCount: 1,
+  executionCount: 5,
+  oneTimeSetup: true,
+  oneTimeTeardown: true
+})
+p({
+  class: "foam.core.bench.BenchmarkRunner",
   id: "FUIDBenchmarkRunner",
   benchmarkId: "FUIDBenchmark"
 })
@@ -188,5 +198,21 @@ p({
   description: "RAW canonicalization, Unique cardinality: 200k strings per execution.",
   threadCount: 1,
   executionCount: 20,
+  oneTimeSetup: true
+})
+p({
+  class: "foam.core.bench.BenchmarkRunner",
+  id: "JournalReplayPlainRunner",
+  benchmarkId: "JournalReplayPlain",
+  threadCount: 1,
+  executionCount: 1,
+  oneTimeSetup: true
+})
+p({
+  class: "foam.core.bench.BenchmarkRunner",
+  id: "JournalReplayGzipRunner",
+  benchmarkId: "JournalReplayGzip",
+  threadCount: 1,
+  executionCount: 1,
   oneTimeSetup: true
 })
