@@ -5,7 +5,8 @@
  */
 
 // Checks every foam.parse grammar in a project for mistakes the parser only
-// shows at run time. See foam.parse.lint.GrammarLint for the checks.
+// shows at run time. See foam.parse.lint.GrammarLint for the checks and what
+// they do not cover, or "Checking a Grammar" in doc/guides/foam_parsers_doc.md.
 //
 // Usage, from the project root:  node foam3/tools/lintGrammars.js [pom-path]
 // (from foam3 itself:            node tools/lintGrammars.js)

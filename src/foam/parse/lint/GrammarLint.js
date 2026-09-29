@@ -37,15 +37,24 @@ foam.CLASS({
     rules) gets only the orphan-action check; its rules are checked once, on
     the class that defines them.
 
-    Parsers.cut(p) returns a plain object that keeps p in a closure, so
-    nothing under a cut() can be read. Rules only reached through one would
-    look unreachable, so a grammar using cut() skips that check and says so;
-    a sym() under a cut() is not checked either.
-
-    Grammars built from data (a rule per record, per property, ...) cannot be
-    built here without that data; building one that throws is reported as
-    severity 'skip', not as an error. Empty alternatives are never reported,
-    because a grammar that fills them later from a DAO starts out empty.
+    Not checked:
+      - Grammars created inside a method, e.g. this.Grammar.create({ symbols })
+        in SimpleQueryParser or CSSParser. Only classes are found; check one
+        of these from a test with lintGrammar(grammar).
+      - Grammars built from data (a rule per record, per property) when that
+        data is missing here. Building one that throws is reported as
+        severity 'skip', not as an error.
+      - Rules or alternatives added after the grammar is created, e.g. from
+        a DAO. The grammar is checked as create() leaves it, and an empty
+        alternative is never reported.
+      - Anything under Parsers.cut(p): it returns a plain object that keeps p
+        in a closure. A grammar using cut() skips the unreachable check and
+        says so; a sym() under a cut() is not checked.
+      - Java grammars (foam.lib.parse); this reads JS parser objects only.
+      - A parser class an app defines is walked for sym() references, but
+        the left-recursion and empty-repeat checks assume it always reads a
+        character, so a loop through one is missed rather than misreported.
+      - Line numbers: a finding names the file, class and rule.
   `,
 
   requires: [
