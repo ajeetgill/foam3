@@ -40,6 +40,7 @@ foam.POM({
     { name: "theme/pom" },
     { name: "partition/pom" },
     { name: "job/pom" },
+    { name: "license/pom" },
     { name: "license/pom" }
   ],
   files: [
