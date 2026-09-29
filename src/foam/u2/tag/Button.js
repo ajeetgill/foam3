@@ -51,8 +51,8 @@ foam.CLASS({
       // Dark uses the semantic strong border token instead, so it follows
       // whatever dark value $borderStrong carries.
       // Light keeps LIGHTEN(-40) = #999999 on white.
+      class: 'foam.u2.ColorToken',
       name: 'buttonSecondaryBorderColor',
-      variantKey: 'color',
       value: function(e) { return e.LIGHTEN(e.TOKEN('$buttonSecondaryColor'), -40) },
       variants: {
         dark: { value: '$borderStrong' }

@@ -124,6 +124,22 @@ foam.CLASS({
       x.test(/^#[0-9a-f]{6}$/i.test(strongDark) && strongDark !== '#999999' && darkBorder.includes(strongDark),
         'secondary border on the dark surface is $borderStrong (' + strongDark + '), got ' + darkBorder.trim());
 
+      // colorScheme is a keyword ('light' / 'dark'), not a colour: a plain
+      // CSSToken with variantKey 'color'. It must still follow the mode, and
+      // must not carry ColorToken's derived forms ($colorScheme$hover means
+      // nothing). buttonSecondaryBorderColor is a colour, so it is a
+      // ColorToken and does carry them.
+      var scheme = '^ { color-scheme: $colorScheme; }';
+      var sc = foam.u2.CSS.create({ code: scheme }, x);
+      x.test(sc.expandCSS(foam.u2.CSSTokens, scheme, lightX).includes('color-scheme: /*$colorScheme*/ light'),
+        '$colorScheme is light with no mode named');
+      x.test(sc.expandCSS(foam.u2.CSSTokens, scheme, darkX).includes('color-scheme: /*$colorScheme*/ dark'),
+        '$colorScheme is dark in dark mode');
+      x.test(! foam.CSS.findTokenAxiom('colorScheme$hover', foam.u2.CSSTokens, x),
+        'a keyword token installs no $hover form');
+      x.test(!! foam.CSS.findTokenAxiom('buttonSecondaryBorderColor$hover', this.Button, x),
+        'a colour token on Button installs its $hover form');
+
       // Regression: the icon shape rule (`^ svg :is(path, ...) { fill: currentColor }`)
       // must not reach the loading spinner's <path>, or the per-state
       // `^X ^loading svg { fill }` rules lose to it. A disabled text button
