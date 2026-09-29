@@ -140,11 +140,13 @@ foam.CLASS({
         long emitted = 0;
         long maxEmit = (limit > 0 && limit < AbstractDAO.MAX_SAFE_INTEGER) ? limit : Long.MAX_VALUE;
         for ( int i = 0; i < n && emitted < maxEmit; i++ ) {
-          var obj = (foam.lang.FObject) getDelegate().find(ids[ranked[i]]);
+          var obj = (VectorEmbedding) getDelegate().find(ids[ranked[i]]);
           if ( obj == null ) continue;
           if ( predicate != null && !predicate.f(obj) ) continue;
           if ( skipped < skip ) { skipped++; continue; }
-          sink.put(obj, null);
+          var scored = (VectorEmbedding) obj.fclone();
+          scored.setScore(scores[ranked[i]]);
+          sink.put(scored, null);
           emitted++;
         }
         sink.eof();

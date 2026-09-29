@@ -9,8 +9,6 @@ foam.CLASS({
   name: 'SearchPage',
   extends: 'foam.u2.Controller',
 
-  implements: [ 'foam.mlang.Expressions' ],
-
   requires: [
     'foam.ai.vector.ClientMarkdownChunkerService',
     'foam.ai.vector.CosineComparator',
@@ -114,10 +112,8 @@ foam.CLASS({
         self.results   = [];
 
         try {
-          var sink  = await self.flowDAO.select();
-          var flows = sink.array.filter(function(f) {
-            return f.keywords && f.keywords.indexOf('knowledge') >= 0;
-          });
+          var sink  = await self.flowDAO.where(self.IN(self.flowDAO.of.KEYWORDS, 'knowledge')).select();
+          var flows = sink.array;
           var count = 0;
 
           for ( var fi = 0; fi < flows.length; fi++ ) {
@@ -162,7 +158,7 @@ foam.CLASS({
         var sink = await self.vectorStoreDAO
           .where(self.EQ(self.VectorEmbedding.EMBEDDING_MODEL, qv.embeddingModel))
           .orderBy(cc).limit(10).select(self.ArraySink.create());
-        self.results   = sink.array;
+        self.results = sink.array;
         self.statusMsg = 'Showing top ' + self.results.length + ' results';
       }
     }
@@ -190,7 +186,7 @@ foam.CLASS({
       var self = this;
       self.SUPER();
       self
-        .addClass(self.myClass())
+        .addClass()
         .start('h2').add('Similarity Search').end()
 
         .start().addClass(self.myClass('toolbar'))
@@ -208,6 +204,7 @@ foam.CLASS({
             if ( ! results.length ) return;
             var table = this.start('table');
             table.start('tr')
+              .start('th').add('Score').end()
               .start('th').add('Flow').end()
               .start('th').add('Chunk').end()
             .end();
@@ -215,6 +212,7 @@ foam.CLASS({
               var r       = results[i];
               var preview = r.text ? r.text.slice(0, 200) + (r.text.length > 200 ? '…' : '') : '';
               table.start('tr')
+                .start('td').add((r.score * 100).toFixed(1) + '%').end()
                 .start('td').add(r.sourceId).end()
                 .start('td').add(preview).end()
               .end();

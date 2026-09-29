@@ -22,7 +22,7 @@ Similarity search is a vector search that finds items by meaning rather than exa
 
 **4. Score the results** — each candidate is ranked by cosine similarity, dot product, or Euclidean distance (cosine is most common for text). Raw scores are relative — threshold tuning on real queries decides what counts as a match. Hybrid search blends in keyword scores (BM25) for exact terms; re-ranking passes the top candidates through a cross-encoder for higher accuracy at higher cost.
 
-For a deeper treatment of each stage see [VectorSearch.md](../../../../../doc/guides/VectorSearch.md).
+For a deeper treatment of each stage see [VectorSearch.md](https://github.com/foam-foundation/foam3/blob/development/doc/guides/VectorSearch.md).
 
 ### In a Nutshell - From Content to Scored Results
 

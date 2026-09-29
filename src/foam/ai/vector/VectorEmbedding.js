@@ -32,6 +32,12 @@ foam.CLASS({
     {
       class: 'foam.lang.FloatArray',
       name: 'vector'
+    },
+    {
+      // Populated by VectorStoreDAO.select_ at query time; not stored in the journal.
+      class: 'Float',
+      name: 'score',
+      storageTransient: true
     }
   ],
 

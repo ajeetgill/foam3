@@ -1,3 +1,5 @@
+<flow name="VectorSearch" category="DOC/GUIDE" spid="foam" description="Covers vector search and similarity search in FOAM: embeddings, kNN, scoring, VectorEmbedding model, EmbeddingService interface, provider pattern, VectorStoreDAO, and CosineComparator." keywords="vector,search,similarity,embedding,knn,cosine,rag,VectorStoreDAO,EmbeddingService,knowledge"/>
+
 # Vector Search: From Content to Scored Results
 
 Vector search finds items by meaning rather than exact wording. Content and queries are converted into numeric vectors (embeddings), and results are ranked by how close their vectors sit to the query's vector. The process has four stages: vectorizing the content, vectorizing the query, running a kNN (k-nearest neighbors) search, and scoring the results.
