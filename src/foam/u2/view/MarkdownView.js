@@ -486,13 +486,14 @@ foam.CLASS({
         function htmlText(v) {
           // Multi-line content inside a tag is block markdown -- the <details>
           // case -- so parse it. A single line stays plain text, or <b>x</b>
-          // would render its text as a paragraph.
-          if ( v.indexOf('\n') == -1 ) return function() { this.add(v); };
+          // would render its text as a paragraph. An element with an innerText
+          // property, like <example>, takes its content as source text.
+          let fs = v.indexOf('\n') != -1 && this.markdownGrammar.parseString(v);
 
-          let fs = this.markdownGrammar.parseString(v);
-          if ( ! fs ) return function() { this.add(v); };
-
-          return function() { fs.forEach(f => this.call(f)); };
+          return function() {
+            if ( ! fs || this.cls_.getAxiomByName('innerText') ) this.add(v);
+            else fs.forEach(f => this.call(f));
+          };
         },
 
         function text(v) {
@@ -602,7 +603,7 @@ foam.CLASS({
       left: 50%;
       transform: translate(-50%, -200%);
       margin-top: 6px;
-      z-index: 1000;
+      z-index: $z-popup;
       display: flex;
       gap: 6px;
       padding: 6px;
