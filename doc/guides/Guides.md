@@ -134,6 +134,9 @@ Describes the modal component hierarchy: `Popup` (base, full-screen overlay), `S
 **[Notifications](Notifications.md)**
 Overview of the notification system: creating `Notification` objects via `notificationDAO`, extending the base class for custom types, display via the bell icon and `NotificationCitationView`, and how to write custom citation views.
 
+**[QA2](QA2.md)**
+The `foam.QA2` decision-matrix questionnaire engine: AQL predicates, "answered" meaning a stored value, how the next question is chosen, custom question views, and the shape of the generated class.
+
 **[Cells](Cells.md)**
 A conceptual essay exploring how spreadsheet cells unify input, display, computation, and storage to eliminate glue code, and arguing that FOAM extends this idea beyond the grid via FObjects and reactive expressions.
 
