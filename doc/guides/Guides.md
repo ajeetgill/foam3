@@ -42,6 +42,9 @@ Explains Axioms as the core extension mechanism — the pseudo-interface with `i
 **[Enum](Enum.md)**
 Covers FOAM Enums: declaring them with `foam.ENUM`, defining values with ordinal/label/properties/methods, built-in `ordinal` and `name` properties, and usage patterns analogous to Java enums.
 
+**[FSM](FSM.md)**
+Covers FOAM state machines: `foam.FSM`, the `StateMachine` property and the history, payload and next-activity properties it adds, guards, permissions, Java lifecycle hooks, scheduled activities, and server-side enforcement with `FSMDAO`.
+
 **[Refinements](Refinements.md)**
 Explains Refinements as the mechanism to extend or modify existing FOAM classes post-definition without creating a subclass. Covers the two-phase installation, common patterns (adding properties, view defaults, Java code generation), and how refinements bootstrap FOAM's self-modelling.
 
@@ -131,8 +134,14 @@ Documents the three-layer pipeline — ControllerMode (CREATE/VIEW/EDIT), per-pr
 **[Modals](Modals.md)**
 Describes the modal component hierarchy: `Popup` (base, full-screen overlay), `StyledModal` (title/description/action bar), `ConfirmationModal` (primary/secondary actions), and `ApplicationPopup` (wizard flows with progress bar and branding). Includes usage guidance for each.
 
+**[CSSLayout](CSSLayout.md)**
+What a `css:` block goes through before the browser sees it (installed on first create, the `^` and `$token` text rewrites), which box scrolls and how to pin a header, hiding with `shown`, and how popups, modals and the z-index layers stack.
+
 **[Notifications](Notifications.md)**
 Overview of the notification system: creating `Notification` objects via `notificationDAO`, extending the base class for custom types, display via the bell icon and `NotificationCitationView`, and how to write custom citation views.
+
+**[QA2](QA2.md)**
+The `foam.QA2` decision-matrix questionnaire engine: AQL predicates, "answered" meaning a stored value, how the next question is chosen, custom question views, and the shape of the generated class.
 
 **[Cells](Cells.md)**
 A conceptual essay exploring how spreadsheet cells unify input, display, computation, and storage to eliminate glue code, and arguing that FOAM extends this idea beyond the grid via FObjects and reactive expressions.
