@@ -13,6 +13,13 @@ The developer tools that come with foam3. Each entry says what the tool is for a
 node foam3/tools/lsp-start.js        # any other LSP client, over stdio
 ```
 
+**Translations from a local model.** The language server can also translate. With a model such as `translategemma:4b` running in Ollama or LM Studio, it fills in a missing translation for each configured language, and translates a hardcoded string while it moves it to `messages:`. With no model running, those actions just don't appear. Setup and settings: `foam3/tools/lsp/README.md`, section "i18n Translation".
+
+```bash
+ollama pull translategemma:4b
+ollama serve                         # the language server finds it on 127.0.0.1:11434
+```
+
 **Agent skills.** Instructions for coding agents, written once in `foam3/.claude/skills/` and picked up by every app that uses foam3. Each skill covers one job:
 
 - `foam-model-builder`, `foam-view-builder`, `foam-feature-wiring`: write models, views, and the wiring between them
