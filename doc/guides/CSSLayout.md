@@ -19,7 +19,7 @@ There is no CSS parser in this path. Two regular-expression replacements run ove
 1. **`^` becomes the class selector** (`CSS.js:115-125`). `^` followed by a name character becomes `.<css-class>-<rest>`; any other `^` becomes `.<css-class>`. So for `foam.u2.demo.Card`, `^title` is `.foam-u2-demo-Card-title`.
 2. **`$name` becomes the token value**, with the original name kept in a comment: `color: $textDefault` becomes `color: /*$textDefault*/ <value>` (`src/foam/lang/stdlib.js:1374-1383`). A token that resolves nowhere becomes `/* failed token replacement <name>, <class>*/` (`stdlib.js:1323`), which leaves the declaration with no value, so the browser drops it and nothing is logged. `CSSAuditTest` reports these as unknown tokens, with a did-you-mean (`src/foam/core/theme/test/CSSAuditTest.js:1218`).
 
-**The `^` rewrite does not know about attribute selectors.** `[class^="btn"]` ("class starts with btn") is rewritten into a class selector and never matches. FOAM's own CSS grammar test records this: `[class^=z]: the ^ of ^= is a caret ... (FOAM still rewrites it)` (`src/foam/u2/parse/test/CSSParserTest.js:325`). Put a class on the elements you want and select that class instead.
+**The `^` rewrite does not know about attribute selectors.** `[class^="btn"]` ("class starts with btn") becomes `[class.foam-u2-demo-Card="btn"]`, which is not a valid selector. The browser drops a rule whose selector list holds one invalid selector, so every other selector in that rule loses its styles too, not only the attribute one. FOAM's own CSS grammar test records the rewrite: `[class^=z]: the ^ of ^= is a caret ... (FOAM still rewrites it)` (`src/foam/u2/parse/test/CSSParserTest.js:325`). Put a class on the elements you want and select that class instead.
 
 ## 3. Which box scrolls
 
@@ -29,7 +29,7 @@ A box scrolls only when its content is taller than **its own** height limit. A b
 
 1. The card has a definite height limit and `display: flex; flex-direction: column`.
 2. The header is an ordinary flex child.
-3. The list has `flex: 1`, `min-height: 0` and `overflow-y: auto`. A flex child's default `min-height: auto` refuses to shrink below its content, so without `min-height: 0` the list pushes the card taller instead of scrolling.
+3. The list has `min-height: 0` and `overflow-y: auto`. A flex child's default `min-height: auto` refuses to shrink below its content, so without `min-height: 0` the list pushes the card taller instead of scrolling. `flex: 1` is optional: it makes a short list fill the card, but the scrolling comes from `min-height: 0` (`src/foam/u2/view/EditColumnsView.js:57-60` scrolls without it).
 
 Break any one and the card grows until a capped ancestor scrolls everything, header included.
 
