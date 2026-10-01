@@ -197,7 +197,7 @@ easyDAO.addPropertyIndex(new PropertyInfo[] { Model.SCOPE_ID });
 
 ### Only six predicate classes can use an index
 
-A `TreeIndex`, the kind `addPropertyIndex` builds, narrows the rows only for `Eq`, `Gt`, `Gte`, `Lt`, `Lte` and `In` whose first argument is the indexed property (`src/foam/dao/index/TreeIndex.java:145-210`). `Neq` is a TODO there; `NOT(...)`, `INSTANCE_OF(...)`, `CONTAINS` and the other predicate classes are checked row by row. A top-level `OR` is planned one arm at a time (`src/foam/dao/MDAO.java:268-277`, `OrPlan`), so `OR(EQ(a, 1), EQ(a, 2))` on an indexed `a` uses the index for each arm. Inside an `AND`, each term is tried on its own (`:213-233`), so an indexed `Eq` sibling still narrows the set and the other term is checked only on the rows it leaves. A query made **only** of non-indexable terms scans the whole DAO.
+A `TreeIndex`, the kind `addPropertyIndex` builds, narrows the rows only for `Eq`, `Gt`, `Gte`, `Lt`, `Lte` and `In` whose first argument is the indexed property (`src/foam/dao/index/TreeIndex.java:145-210`). `Neq` is a TODO there; `NOT(...)`, `INSTANCE_OF(...)`, `CONTAINS` and the other predicate classes are checked row by row. A top-level `OR` is planned one arm at a time (`src/foam/dao/MDAO.java:268-277`, `OrPlan`), so `OR(EQ(a, 1), EQ(a, 2))` on an indexed `a` uses the index for each arm. Inside an `AND`, each term is tried on its own (`TreeIndex.java:213-233`), so an indexed `Eq` sibling still narrows the set and the other term is checked only on the rows it leaves. A query made **only** of non-indexable terms scans the whole DAO.
 
 ### A predicate on a shared multi-class DAO drops rows it cannot cast
 
