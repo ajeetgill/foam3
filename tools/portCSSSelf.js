@@ -5,23 +5,17 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-// Switches the deprecated '^' class shorthand to '<<' in the css: of FOAM
-// classes. FOAM stops replacing '^' on 2027-06-30. Any FOAM3 app can run it
-// on its own source tree:
-//
-//   node foam3/tools/portCSSSelf.js [--write] <dir-or-file>...
-//
-// It changes the same '^' the language server marks as deprecated: one in a
-// selector, never the '^' of [attr^=x], nor one inside a CSS string or
-// comment. Without --write it only reports. See --help.
+// Switches the deprecated '^' class shorthand to '<<' in css: values. FOAM
+// stops replacing '^' on 2027-06-30. Any FOAM3 app can run it on its own
+// source. Without --write it only reports. See --help.
 
 var fs_   = require('fs');
 var path_ = require('path');
 
 var HELP = `Usage: node foam3/tools/portCSSSelf.js [--write] <dir-or-file>...
 
-Switches the deprecated '^' class shorthand to '<<' in the css: of FOAM
-classes. FOAM stops replacing '^' on 2027-06-30.
+Switches the deprecated '^' class shorthand to '<<' in css: values. FOAM
+stops replacing '^' on 2027-06-30.
 
 Reads every .js file under the given folders. Without --write it changes
 nothing: it prints, per file, the number of '^' to switch and one line
@@ -62,8 +56,8 @@ var CHECK_BASE = '.portCSSSelf-check';
 var parser_ = null;
 
 function loadCSSParser() {
-  // Loads foam3's own classes (a second or two) for foam.u2.parse.CSSParser,
-  // the grammar the language server reads css: with.
+  // Loads foam3's CSS grammar, the one the language server uses. Takes a
+  // second or two.
   if ( parser_ ) return parser_;
   var src   = path_.resolve(__dirname, '../src');
   var saved = { log: console.log, warn: console.warn, error: console.error, info: console.info };
@@ -187,10 +181,9 @@ function scan(s, i, inBraces, h) {
   // h.create(index of the '('). With inBraces it stops after the '}' that
   // closes a ${...} and returns the index after it.
   var n = s.length, depth = 0, prev = '', braces = [];
-  // The word before each open '(', so the matching ')' knows whether it
-  // closes the head of an if, while, for or with. A '/' after that ')'
-  // starts a regex, as in 'if ( a ) /x/.test(s)'. word is null after a
-  // property name such as the with of t.with( x ).
+  // The word before each '('. A '/' after the ')' of an if, while, for or
+  // with starts a regex: 'if ( a ) /x/.test(s)'. A property such as the
+  // with of t.with( x ) does not count.
   var parens = [], word = null;
   while ( i < n ) {
     var c = s[i];
@@ -284,10 +277,9 @@ function lineOf(s, offset) {
 }
 
 function readValue(s, key, v) {
-  // The value of a key at v, as { key, line, start, end, quote, skip }, or
-  // null for an object or array value.
-  // start and end bound the text between the quotes. skip says why a value
-  // is left alone, else it is null.
+  // The value at v as { key, line, start, end, quote, skip }, or null for an
+  // object or array. start and end bound the text inside the quotes; skip
+  // says why the value is left alone.
   var c   = s[v];
   var rec = { key: key, line: lineOf(s, key), start: -1, end: -1, quote: c, skip: null };
   var end;
@@ -440,8 +432,7 @@ function portText(s, parser) {
       skipped.push({ line: v.line, reason: reason, snippet: snippet });
     }
     if ( v.skip ) {
-      // Listed even with no '^' in sight: the script cannot see what
-      // such a value holds.
+      // Listed even with no '^' in sight: the script can't see inside it.
       skip(v.skip);
       return;
     }
