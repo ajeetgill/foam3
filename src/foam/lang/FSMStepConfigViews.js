@@ -162,7 +162,7 @@ foam.CLASS({
             return !isActive && !isCompleted;
           }))
           .add(this.dynamic(function(isCompleted, stepIndex, icon) {
-            var iconPath = isCompleted ? '/images/dispute-wizard/check.svg' : icon;
+            var iconPath = isCompleted ? '/images/checkmark-white.svg' : icon;
             if ( iconPath ) {
               this
                 .start(self.Image, {
