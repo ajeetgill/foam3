@@ -1,4 +1,4 @@
-<flow name="CSSLayout" category="DOC/GUIDE" spid="foam" description="What happens to a css: block on its way to the page (install on first create, the ^ and $token text rewrites), which box scrolls and why, pinned headers, hiding, and how popups, modals and z-index layers stack." keywords="css,layout,scroll,overflow,min-height,flex,z-index,stacking,popup,modal,confirmationView,hidden,knowledge"/>
+<flow name="CSSLayout" category="DOC/GUIDE" spid="foam" description="What happens to a css: block on its way to the page (install on first create, the <<, ^ and $token text rewrites), which box scrolls and why, pinned headers, hiding, and how popups, modals and z-index layers stack." keywords="css,layout,scroll,overflow,min-height,flex,z-index,stacking,popup,modal,confirmationView,hidden,knowledge"/>
 
 # CSS in FOAM: install, rewrite, scroll, stack
 
@@ -12,14 +12,14 @@ A class's `css:` axiom is not installed when the class is defined. It wraps the 
 
 **Consequence.** A style you expect to see on a page where the class was never instantiated is simply absent. Debug with "was an instance created in this document?", not "is the file loaded?".
 
-## 2. The text rewrite: `^` and `$token`
+## 2. The text rewrite: `<<`, `^` and `$token`
 
 There is no CSS parser in this path. Two regular-expression replacements run over the raw text:
 
-1. **`^` becomes the class selector** (`CSS.js:115-125`). `^` followed by a name character becomes `.<css-class>-<rest>`; any other `^` becomes `.<css-class>`. So for `foam.u2.demo.Card`, `^title` is `.foam-u2-demo-Card-title`.
+1. **`<<` becomes the class selector** (`CSS.js:115-125`). `<<` followed by a name character becomes `.<css-class>-<rest>`; any other `<<` becomes `.<css-class>`. So for `foam.u2.demo.Card`, `<<title` is `.foam-u2-demo-Card-title`. `^` is the older spelling of the same shorthand and is still replaced the same way; it is deprecated, and FOAM stops replacing it on 2027-06-30 (the LSP marks each one with a hint).
 2. **`$name` becomes the token value**, with the original name kept in a comment: `color: $textDefault` becomes `color: /*$textDefault*/ <value>` (`src/foam/lang/stdlib.js:1374-1383`). A token that resolves nowhere becomes `/* failed token replacement <name>, <class>*/` (`stdlib.js:1323`), which leaves the declaration with no value, so the browser drops it and nothing is logged. `CSSAuditTest` reports these as unknown tokens, with a did-you-mean (`src/foam/core/theme/test/CSSAuditTest.js:1218`).
 
-**The `^` rewrite does not know about attribute selectors.** `[class^="btn"]` ("class starts with btn") becomes `[class.foam-u2-demo-Card="btn"]`, which is not a valid selector. The browser drops a rule whose selector list holds one invalid selector, so every other selector in that rule loses its styles too, not only the attribute one. FOAM's own CSS grammar test records the rewrite: `[class^=z]: the ^ of ^= is a caret ... (FOAM still rewrites it)` (`src/foam/u2/parse/test/CSSParserTest.js:325`). Put a class on the elements you want and select that class instead.
+**The `^` rewrite does not know about attribute selectors.** `[class^="btn"]` ("class starts with btn") becomes `[class.foam-u2-demo-Card="btn"]`, which is not a valid selector. The browser drops a rule whose selector list holds one invalid selector, so every other selector in that rule loses its styles too, not only the attribute one. FOAM's own CSS grammar test records the rewrite: `[class^=z]: the ^ of ^= is a caret with inAttr (FOAM still rewrites it)` (`src/foam/u2/parse/test/CSSParserTest.js:326`). Writing `<<` for the class does not help yet: the same replacement still rewrites every `^`, so until `^` stops being replaced, put a class on the elements you want and select that class instead. After that date, `<<` for the class plus a plain `[class^="btn"]` works.
 
 ## 3. Which box scrolls
 
