@@ -258,6 +258,9 @@ Migration guide from FOAM1 to FOAM2/FOAM3: key API renames (`CLASS` → `foam.CL
 **[DateTimeUTC](DateTimeUTC.md)**
 Documents the `DateTimeUTC` property type: UTC storage, UTC parsing, and UTC display guarantees, how it differs from `Date` and `DateTime`, supported input formats, and the utility classes (`DateUtil`, `DateParser`) that back it.
 
+**[CurrencyAndUnits](CurrencyAndUnits.md)**
+Money and unit values: `UnitValue` (minor units) versus `DoubleUnitValue` (major units), `Currency.format` and `minorAmount`, the read and write faces of `CurrencyView` and the `objData` they need, and why a money column stops derived columns exporting their server value.
+
 **[i18n](i18n.md)**
 Beginner guide to FOAM i18n: declaring translatable strings with `messages:`/`messageMap` in model code, multi-language messageMap fallback rules, and inline localized labels. Runtime Locale rows and localeDAO are covered in the advanced guide.
 

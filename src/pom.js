@@ -269,6 +269,7 @@ foam.POM({
     { name: "foam/u2/test/CSSStatusTokensJSTest",                     flags: "js&test|java&test" },
     { name: "foam/u2/test/CSSTokensContrastTest",                     flags: "js&test|java&test" },
     { name: "foam/u2/test/CSSTokenOverrideVariantJSTest",              flags: "js&test|java&test" },
+    { name: "foam/u2/test/CSSTokenVariantKeyJSTest",                   flags: "js&test|java&test" },
     { name: "foam/u2/test/CSSSpacingTokensJSTest",                    flags: "js&test|java&test" },
     { name: "foam/u2/test/CSSRadiusTokensJSTest",                     flags: "js&test|java&test" },
     { name: "foam/u2/test/CSSElevationTokensJSTest",                  flags: "js&test|java&test" },

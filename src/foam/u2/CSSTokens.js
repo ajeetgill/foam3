@@ -228,14 +228,6 @@ foam.CLASS({
 
     { name: 'link', value: '$blue200', variants: { dark: { value: '$blue100' } } },
 
-    // Browser-native chrome (scrollbars, checkboxes, date pickers) follows this
-    // via `color-scheme` on :root (AppStyles), so whatever sets the dark
-    // variant on theme.activeVariants (the OS listener in foam.lang.Window
-    // today) also flips native controls; inputs inherit it, no rule of their
-    // own. ColorToken only so the dark variant is consulted; the value is a
-    // keyword, not a colour.
-    { name: 'colorScheme', value: 'light', variants: { dark: { value: 'dark' } } },
-
     // STATUS (enum pills, badges, chips): one text/background pair per meaning.
     // Light is ink on a tint (700 on 50); dark inverts the pair on the ramp,
     // with text at 100 where 200 fell under 4.5:1 (warn 4.61:1, danger 6.10:1).
@@ -267,6 +259,15 @@ foam.CLASS({
   ].map(v => { v.class = 'foam.u2.ColorToken'; return v; }) // Add corresponding ColorToken classes for each token
     // Concat additional tokens that are not ColorTokens
   .concat([
+    // Browser-native chrome (scrollbars, checkboxes, date pickers) follows this
+    // via `color-scheme` on :root (AppStyles), so whatever sets the dark
+    // variant on theme.activeVariants (foam.lang.Window: the stored pick, else
+    // the OS setting) also flips native controls; inputs inherit it, no rule
+    // of their own. The value is a keyword, not a colour, so it is a plain CSSToken:
+    // variantKey alone makes the dark entry read, and no $hover/$foreground
+    // forms get installed for a word.
+    { name: 'colorScheme', value: 'light', variantKey: 'color', variants: { dark: { value: 'dark' } } },
+
     // GENERAL STYLE TOKENS
     { name: 'inputHeight', value: '34px' },
     { name: 'inputHorizontalPadding', value: '8px' },
