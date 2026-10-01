@@ -253,6 +253,11 @@ foam.CLASS({
           }
         }
 
+        if ( getFSMDAO() != null ) {
+          ((ProxyDAO) getFSMDAO()).setDelegate(delegate);
+          delegate = getFSMDAO();
+        }
+
         delegate = getOuterDAO(delegate);
 
         if ( getDecorator() != null ) {
@@ -417,6 +422,13 @@ foam.CLASS({
       class: 'Object',
       type: 'foam.dao.DAO',
       name: 'decorator'
+    },
+    {
+      documentation: `An FSMDAO that enforces the state machine rules on puts.
+        Build it with a placeholder delegate; EasyDAO replaces the delegate
+        with its own chain.`,
+      class: 'foam.dao.DAOProperty',
+      name: 'FSMDAO'
     },
     {
       class: 'Object',
