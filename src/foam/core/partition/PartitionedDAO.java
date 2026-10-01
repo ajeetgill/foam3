@@ -232,11 +232,13 @@ public class PartitionedDAO
 
   /** Attempt to extract partition from a SEPARATOR-delimited primary key.
       Chained partitions (e.g. "<a>~<b>~<key>") read their own segment by
-      depth: depth 1 reads <a>, depth 2 reads <b>. **/
+      depth: depth 1 reads <a>, depth 2 reads <b>. An id with no segment
+      past this level's, like the empty id of a record not yet put, has no
+      partition. **/
   public String getPartition_(String id) {
     String[] a = id.split(SEPARATOR);
 
-    if ( a.length < getDepth() ) return null;
+    if ( a.length <= getDepth() ) return null;
 
     return a[getDepth()-1];
   }
