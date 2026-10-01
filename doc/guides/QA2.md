@@ -83,11 +83,11 @@ Three storage shapes get three tests, all explained in the docstring above `isAn
 
 ## Custom question views
 
-The generated property for a question gets `foam.u2.qa.QuestionChoiceView` only when the question declares no `class:` (`QA.js:204-212`). So:
+The generated property for a question gets `foam.u2.qa.QuestionChoiceView` only when the question declares no `class:` (`QA.js:208-213`). So:
 
 - **`class:` is the switch.** Declare `class: 'String'` (or another type) and a `view:` spec to render your own view.
 - **Put choices in the `view:` spec, not beside `class:`.** A question with both `class` and `choices` logs `[QACompiler] ... choices are ignored` and renders without them (`QA.js:198-202`).
-- **Extend `foam.u2.qa.QuestionChoiceView`**, not `foam.u2.View`. Its `data` postSet calls `wizard.next()` (`src/foam/u2/qa/QuestionChoiceView.js:22-27`); a plain view never advances the wizard. Override `render()` only.
+- **Extend `foam.u2.qa.QuestionChoiceView`**, not `foam.u2.View`. Its `data` postSet calls `wizard.next()` (`src/foam/u2/qa/QuestionChoiceView.js:22-27`); a plain view never advances the wizard. Override `render()` only, and end it with `this.initialized = true;`: the postSet ignores changes until that flag is set, and only the base `render()` sets it (`QuestionChoiceView.js:25`, `:54`).
 - `foam.u2.view.RadioView` reads `c[0]` as the value and `c[1]` as the label (`src/foam/u2/view/RadioView.js:96-125`). A third element such as helper text is ignored, so a two-line choice needs its own row rendering.
 - A question named the same as a declared property keeps the property and drops the question's view and choices, with a warning (`QA.js:215-218`).
 
@@ -105,7 +105,7 @@ Two words used below. A **term** is one part of a predicate between top-level `A
 
 An outcome with no predicate is never ruled out (`QA.js:308`).
 
-**A term built with `OR` or `NOT` never rules anything out.** `cuisine = Asian OR cuisine = Italian` is one term that names no single property, so the engine never treats it as answered (`QA.js:344-345`). The outcome survives even after the user picks Mexican (measured). Put the `OR` in a derived property, such as a Boolean `asianOrItalian` with an `expression`, and test that property.
+**A term that ends up as an `OR` never rules anything out.** That is any `OR`, and a `NOT` over an `AND`, which the parser rewrites into an `OR`: it simplifies the whole predicate first (`src/foam/parse/SimpleQueryParser.js:481`). `cuisine = Asian OR cuisine = Italian` is one term that names no single property, so the engine never treats it as answered (`QA.js:344-345`), and the outcome survives even after the user picks Mexican (measured). A plain `NOT` over one comparison, or over an `OR`, becomes `!=` terms and rules out normally. Put an `OR` in a derived property, such as a Boolean `asianOrItalian` with an `expression`, and test that property.
 
 After every answer, the wizard counts the candidates (`QAWizardView.advance_()`, `src/foam/u2/qa/QAWizardView.js:215-256`):
 
@@ -118,9 +118,10 @@ After every answer, the wizard counts the candidates (`QAWizardView.advance_()`,
 
 **Applying an outcome copies its keys onto the questionnaire object.** `applyOutcome()` copies every key except `predicate` and `terms`, so Thai Restaurant's `name` lands in the `name` property; a key that fails to set is skipped (`QA.js:559-566`). The result step shows the output properties (`OUTPUT_NAMES`); an `outcomeView` replaces that step (`QAWizardView.js:153-160`, `:258-263`).
 
-**A questionnaire can skip outcomes and build its result from the answers.** Use `outcomes: []` when the answers themselves are the result. Then `getCandidates()` returns nothing, and the wizard would stop on "No candidates eligible" at once. So such a questionnaire replaces two engine methods by refinement (next section):
+**A questionnaire can skip outcomes and build its result from the answers.** Use `outcomes: []` when the answers themselves are the result. Then `getCandidates()` returns nothing, and the wizard would stop on "No candidates eligible" at once. So such a questionnaire replaces three engine methods by refinement (next section):
 
 - `getCandidates()` returns two placeholder objects while `selectNextQuestion()` still has a question, and one when it has none, so the wizard keeps asking and then stops;
+- `selectNextQuestion()` is replaced too, with one that never calls `getCandidates()`, such as the declared-order walk in the next section. The engine's version calls `getCandidates()` on its first line (`QA.js:391`), so the two would call each other until `RangeError: Maximum call stack size exceeded`, and it cannot score placeholders anyway: they have no `terms` (`QA.js:496`);
 - `getProgress()` is replaced too, because the default counts outcomes (`QA.js:382-384`).
 
 Applying an empty placeholder copies nothing, so the questionnaire sets its own result property from the answers and supplies an `outcomeView`, since it has no output properties to show.
