@@ -1078,8 +1078,9 @@ foam.CLASS({
     // Define visibility for periodCount (from mixin)
     {
       name: 'periodCount',
-      visibility: function(isDateXProp_) {
-        return isDateXProp_ ? foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
+      visibility: function(xProp) {
+        return foam.core.reflow.dashboard.DateKeys.isTemporal(xProp) ?
+          foam.u2.DisplayMode.RW : foam.u2.DisplayMode.HIDDEN;
       }
     },
     {
@@ -1253,10 +1254,8 @@ foam.CLASS({
       transient: true,
       visibility: 'HIDDEN',
       expression: function(xProp) {
-        // True only for exprs whose group keys map back to a Date.
-        // Excludes hour/minute/second groupings, which have a date
-        // delegate but emit a time of day.
-        return foam.core.reflow.dashboard.DateKeys.isTemporal(xProp);
+        return foam.lang.Date.isInstance(xProp) ||
+          foam.core.reflow.dashboard.DateKeys.isTemporal(xProp);
       }
     }
   ],

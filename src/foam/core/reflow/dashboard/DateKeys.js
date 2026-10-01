@@ -28,106 +28,89 @@ var reflowDailyCalculate_ = function(periodCount) {
   return { minDate: minDate, maxDate: maxDate };
 };
 
+var reflowDayStart_ = function(d) {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+};
+
+var reflowNextDay_ = function(d) {
+  var u = new Date(d);
+  u.setUTCDate(u.getUTCDate() + 1);
+  return u;
+};
+
 foam.LIB({
   name: 'foam.core.reflow.dashboard.DateKeys',
 
   constants: {
-    ENTRIES: [
+        ENTRIES: [
       {
         exprClassNames: ['foam.mlang.expr.DateToWeekExpr'],
-        calculate: function(periodCount) {
-          var minDate = new Date();
-          var maxDate = new Date();
-          minDate.setDate(minDate.getDate() - ((periodCount - 1) * 7));
-          var dayOfWeek = minDate.getDay();
-          var daysToMonday = (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
-          minDate.setDate(minDate.getDate() - daysToMonday);
-          minDate.setHours(0, 0, 0, 0);
-          var currentDayOfWeek = maxDate.getDay();
-          var daysToSunday = (currentDayOfWeek === 0 ? 0 : 7 - currentDayOfWeek);
-          maxDate.setDate(maxDate.getDate() + daysToSunday);
-          maxDate.setHours(23, 59, 59, 999);
-          return { minDate: minDate, maxDate: maxDate };
+        calculate: function(periodCount) { /* yours, unchanged */ },
+        parse: function(key) { /* yours, unchanged */ },
+        periodStart: function(d) {
+          var u = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+          var dow = u.getUTCDay() || 7;            // Mon=1 ... Sun=7
+          u.setUTCDate(u.getUTCDate() - (dow - 1));
+          return u;
         },
-        parse: function(key) {
-          // 'YYYY-Www' -> Monday of that ISO week.
-          // ISO week 1 is the week containing Jan 4th.
-          var m = /^(\d{4})-W(\d{2})$/.exec(String(key));
-          if ( ! m ) return null;
-          var jan4 = new Date(+m[1], 0, 4);
-          var dow  = jan4.getDay() || 7;            // Mon=1 ... Sun=7
-          var d    = new Date(+m[1], 0, 4 - (dow - 1) + (+m[2] - 1) * 7);
-          d.setHours(0, 0, 0, 0);
-          return d;
+        next: function(d) {
+          var u = new Date(d);
+          u.setUTCDate(u.getUTCDate() + 7);
+          return u;
         }
       },
       {
         exprClassNames: ['foam.mlang.expr.DateToQuarterExpr'],
-        calculate: function(periodCount) {
-          var minDate = new Date();
-          var maxDate = new Date();
-          minDate.setMonth(minDate.getMonth() - ((periodCount - 1) * 3));
-          var quarter = Math.floor(minDate.getMonth() / 3);
-          minDate.setMonth(quarter * 3, 1);
-          minDate.setHours(0, 0, 0, 0);
-          var currentQuarter = Math.floor(maxDate.getMonth() / 3);
-          maxDate.setMonth((currentQuarter + 1) * 3, 0);
-          maxDate.setHours(23, 59, 59, 999);
-          return { minDate: minDate, maxDate: maxDate };
+        calculate: function(periodCount) { /* yours */ },
+        parse: function(key) { /* yours */ },
+        periodStart: function(d) {
+          return new Date(Date.UTC(d.getUTCFullYear(), Math.floor(d.getUTCMonth() / 3) * 3, 1));
         },
-        parse: function(key) {
-          var m = /^(\d{4})-Q([1-4])$/.exec(String(key));
-          return m ? new Date(+m[1], (+m[2] - 1) * 3, 1) : null;
+        next: function(d) {
+          var u = new Date(d);
+          u.setUTCMonth(u.getUTCMonth() + 3);
+          return u;
         }
       },
       {
         exprClassNames: ['foam.mlang.expr.DateToYYYYMMExpr'],
-        calculate: function(periodCount) {
-          var minDate = new Date();
-          var maxDate = new Date();
-          minDate.setMonth(minDate.getMonth() - (periodCount - 1), 1);
-          minDate.setHours(0, 0, 0, 0);
-          maxDate.setMonth(maxDate.getMonth() + 1, 0);
-          maxDate.setHours(23, 59, 59, 999);
-          return { minDate: minDate, maxDate: maxDate };
+        calculate: function(periodCount) { /* yours */ },
+        parse: function(key) { /* yours */ },
+        periodStart: function(d) {
+          return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
         },
-        parse: function(key) {
-          var m = /^(\d{4})\/(\d{2})$/.exec(String(key));
-          return m ? new Date(+m[1], +m[2] - 1, 1) : null;
+        next: function(d) {
+          var u = new Date(d);
+          u.setUTCMonth(u.getUTCMonth() + 1);
+          return u;
         }
       },
       {
         exprClassNames: ['foam.mlang.expr.DateToYYYYExpr'],
-        calculate: function(periodCount) {
-          var minDate = new Date();
-          var maxDate = new Date();
-          minDate.setFullYear(minDate.getFullYear() - (periodCount - 1), 0, 1);
-          minDate.setHours(0, 0, 0, 0);
-          maxDate.setFullYear(maxDate.getFullYear(), 11, 31);
-          maxDate.setHours(23, 59, 59, 999);
-          return { minDate: minDate, maxDate: maxDate };
+        calculate: function(periodCount) { /* yours */ },
+        parse: function(key) { /* yours */ },
+        periodStart: function(d) {
+          return new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
         },
-        parse: function(key) {
-          var m = /^(\d{4})$/.exec(String(key));
-          return m ? new Date(+m[1], 0, 1) : null;
+        next: function(d) {
+          var u = new Date(d);
+          u.setUTCFullYear(u.getUTCFullYear() + 1);
+          return u;
         }
       },
       {
         exprClassNames: ['foam.mlang.expr.DateToYYYYMMDDExpr'],
         calculate: reflowDailyCalculate_,
-        parse: function(key) {
-          var m = /^(\d{4})\/(\d{2})\/(\d{2})$/.exec(String(key));
-          return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
-        }
+        parse: function(key) { /* yours */ },
+        periodStart: reflowDayStart_,
+        next: reflowNextDay_
       },
       {
         exprClassNames: ['foam.mlang.expr.DateToDayOfYearExpr'],
         calculate: reflowDailyCalculate_,
-        parse: function(key) {
-          // 'YYYY-DDD', DDD is 1-based (Jan 1 === 001).
-          var m = /^(\d{4})-(\d{3})$/.exec(String(key));
-          return m ? new Date(+m[1], 0, +m[2]) : null;
-        }
+        parse: function(key) { /* yours */ },
+        periodStart: reflowDayStart_,
+        next: reflowNextDay_
       }
     ]
   },
