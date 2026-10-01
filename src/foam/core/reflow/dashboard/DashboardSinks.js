@@ -1356,6 +1356,12 @@ foam.CLASS({
         return ( prop && prop.chartJsFormatter ) ? prop.chartJsFormatter(xValue) : xValue;
       }
       if ( xValue instanceof Date ) return xValue;
+
+      // Grouped keys ('2026-W06', '2026/07', '2026-059') aren't parseable
+      // by Date, so read them with the expression's own parser first.
+      var parsed = foam.core.reflow.dashboard.DateKeys.parse(prop, xValue);
+      if ( parsed ) return parsed;
+
       var d = ( typeof xValue === 'number' ) ? new Date(xValue) : new Date(String(xValue));
       return isNaN(d.getTime()) ? null : d;
     },
