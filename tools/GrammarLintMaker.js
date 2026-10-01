@@ -16,6 +16,9 @@ exports.init = function() {
   flags.loadFiles = true;
   flags.js        = true;
   flags.web       = true;
+  // GrammarLint is flagged js&test|grammarlint: test builds and this tool
+  // load it, an app's production bundle does not.
+  flags.grammarlint = true;
 };
 
 exports.end = function() {
@@ -26,18 +29,19 @@ exports.end = function() {
     }
   }
 
+  var lint    = foam.parse.lint.GrammarLint.create();
   var classes = [];
   Object.keys(foam.USED).sort().forEach(function(id) {
     var cls;
     try { cls = foam.lookup(id, true); } catch (x) { return; }
     if ( ! cls || ! cls.getOwnAxiomsByClass ) return;
-    if ( foam.parse.Grammar.isSubClass(cls) || cls.getOwnAxiomsByClass(foam.parse.GrammarAxiom).length ) classes.push(cls);
+    if ( lint.isChecked(cls) ) classes.push(cls);
   });
 
   // Building a grammar from data can log (a missing import, no DAO); that is
   // not a finding, and lintGrammars.js has console silenced for the whole run.
   var cwd      = process.cwd();
-  var findings = foam.parse.lint.GrammarLint.create().lintClasses(classes);
+  var findings = lint.lintClasses(classes);
   findings.forEach(function(f) { if ( f.source ) f.source = path_.relative(cwd, f.source); });
 
   // stdout directly: lintGrammars.js silences console so loading noise stays out of the report.

@@ -86,6 +86,27 @@ foam.CLASS({
         return { START: repeat(optional(literal('a')), null, 0, 3) };
       }))) === '', 'a bounded repeat ends');
 
+      x.test(checks(lint.lintGrammar(g(function(repeat, alt, literal, eof) {
+        return { START: repeat(alt(literal('a'), eof())) };
+      }))) === '', 'repeat() stops at the end of the input, so an eof() item ends');
+
+      // repeat0() has no end-of-input stop and skips a delimiter that fails.
+      x.test(checks(lint.lintGrammar(g(function(repeat0, alt, literal, eof) {
+        return { START: repeat0(alt(literal('a'), eof())) };
+      }))) === 'empty-repeat:START', 'repeat0() of an eof() item loops at the end of the input');
+
+      x.test(checks(lint.lintGrammar(g(function(repeat0, optional, literal) {
+        return { START: repeat0(optional(literal('a')), literal(',')) };
+      }))) === 'empty-repeat:START', 'a repeat0() delimiter does not make progress');
+
+      x.test(checks(lint.lintGrammar(g(function(repeat0, seq, not, alt, until0, literal, eof) {
+        return { START: repeat0(seq(not(alt(literal('\n'), eof())), until0(alt(literal('\n'), eof())))) };
+      }))) === '', 'not(eof()) fails at the end of the input, so this repeat0() line loop ends');
+
+      // Framework bases are not counted as checked grammars.
+      x.test(! lint.isChecked(this.Grammar) && ! lint.isChecked(foam.parse.ImperativeGrammar) && lint.isChecked(this.GrammarLintFixture),
+        'isChecked skips Grammar and ImperativeGrammar, keeps a grammar class');
+
       // Actions, through a class.
       var byCheck = function(cls) { return checks(lint.lintClass(cls)); };
       x.test(byCheck(this.GrammarLintFixture) === 'orphan-action:missing', 'missingAction with no rule missing is orphan-action; STARTAction is fine');

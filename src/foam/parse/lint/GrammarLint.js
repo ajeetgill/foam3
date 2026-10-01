@@ -25,6 +25,9 @@ foam.CLASS({
       empty-repeat      an unbounded repeat whose item can match without
                         reading a character. Repeat has no progress check, so
                         the loop runs until maximum (2^53) iterations.
+                        repeat() stops at the end of the input; repeat0()
+                        does not, and treats its delimiter as optional, so
+                        repeat0(alt('a', eof())) is reported too.
       unreachable       rules START cannot reach, one warning per grammar
                         (fine for an entry point used by name, e.g.
                         parseString(text, 'yymmdd'); dead code otherwise).
@@ -90,10 +93,7 @@ foam.CLASS({
       classes.forEach(function(cls) {
         var source = cls.model_ && cls.model_.source || '';
 
-        if ( foam.parse.Grammar.isSubClass(cls) &&
-             cls !== foam.parse.Grammar &&
-             cls !== foam.parse.ImperativeGrammar &&
-             ! ( cls.model_ && cls.model_.abstract ) ) {
+        if ( self.isGrammarClass_(cls) ) {
           targets.push({
             cls: cls, label: cls.id, source: source,
             build:       function() { return cls.create(null, x); },
@@ -218,11 +218,13 @@ foam.CLASS({
         }
       }
 
-      var nullable = this.nullableRules_(symbols, defined, false);
-      // Repeat stops at the end of the input by itself, so for the repeat
-      // check eof() counts as reading: seq(restOfLine, alt(nl, eof())) always
-      // reads a character when there is one left.
-      var nullableMid = this.nullableRules_(symbols, defined, true);
+      var nullable = this.nullableRules_(symbols, defined);
+      // repeat() stops at the end of the input by itself, so for its check
+      // eof() counts as reading: seq(restOfLine, alt(nl, eof())) always reads
+      // a character when there is one left. repeat0() has no end-of-input
+      // stop, so its item is also checked as it behaves at the end.
+      var nullableMid = this.nullableRules_(symbols, defined, 'mid');
+      var nullableEnd = this.nullableRules_(symbols, defined, 'end');
 
       // left-recursion: one finding per group of rules that call each other
       // before reading a character.
@@ -237,8 +239,14 @@ foam.CLASS({
         self.walk_(s.parser, function(p) {
           if ( ! foam.parse.Repeat.isInstance(p) ) return;
           if ( p.maximum < Number.MAX_SAFE_INTEGER ) return;
-          if ( ! self.nullable_(p.p, nullableMid, new Map(), true) ) return;
-          if ( p.delimiter && ! self.nullable_(p.delimiter, nullableMid, new Map(), true) ) return;
+          if ( foam.parse.Repeat0.isInstance(p) ) {
+            // A delimiter that fails is skipped (ps.apply(delim) || ps), so it cannot stop the loop.
+            if ( ! self.nullable_(p.p, nullableMid, new Map(), 'mid') &&
+                 ! self.nullable_(p.p, nullableEnd, new Map(), 'end') ) return;
+          } else {
+            if ( ! self.nullable_(p.p, nullableMid, new Map(), 'mid') ) return;
+            if ( p.delimiter && ! self.nullable_(p.delimiter, nullableMid, new Map(), 'mid') ) return;
+          }
           add('error', 'empty-repeat', s.name, p.cls_.name.toLowerCase() + '() item can match without reading a character, so the loop never ends');
         });
       });
@@ -292,14 +300,14 @@ foam.CLASS({
 
     // ---- matching the empty string ---------------------------------------
 
-    function nullableRules_(symbols, defined, midInput) {
+    function nullableRules_(symbols, defined, opt_where) {
       /** rule name -> true when the rule can succeed without reading a character. Fixed point over the rules. */
       var map = {}, changed = true, self = this;
       symbols.forEach(function(s) { map[s.name] = false; });
       while ( changed ) {
         changed = false;
         symbols.forEach(function(s) {
-          if ( ! map[s.name] && self.nullable_(defined[s.name], map, new Map(), midInput) ) {
+          if ( ! map[s.name] && self.nullable_(defined[s.name], map, new Map(), opt_where) ) {
             map[s.name] = true;
             changed = true;
           }
@@ -308,27 +316,29 @@ foam.CLASS({
       return map;
     },
 
-    function nullable_(p, rules, memo, opt_midInput) {
+    function nullable_(p, rules, memo, opt_where) {
       /**
        * True when p can succeed without reading a character. A parser class
        * this does not know is assumed to read, so the checks built on this
        * miss problems rather than report ones that are not there.
-       * opt_midInput: eof() counts as reading (it only matches at the end).
+       * opt_where: 'mid' = before the end of the input, where eof() fails;
+       * 'end' = at the end, where not(x) fails whenever x matches empty;
+       * omitted = either.
        */
       if ( ! p || ! p.cls_ ) return false;
       if ( memo.has(p) ) return memo.get(p);
       memo.set(p, false); // a parser graph that loops back on itself reads nothing new
 
       var P = foam.parse, self = this;
-      var n = function(q) { return self.nullable_(q, rules, memo, opt_midInput); };
+      var n = function(q) { return self.nullable_(q, rules, memo, opt_where); };
       var r;
 
       if      ( P.Symbol.isInstance(p) )                                 r = !! rules[p.name];
       else if ( P.Literal.isInstance(p) || P.LiteralIC.isInstance(p) )   r = ! p.s;
       else if ( P.UntilLiteral.isInstance(p) || P.UntilLiteral0.isInstance(p) ) r = ! p.s;
-      else if ( P.EOF.isInstance(p) )                                    r = ! opt_midInput;
+      else if ( P.EOF.isInstance(p) )                                    r = opt_where !== 'mid';
       else if ( P.Optional.isInstance(p) || P.Peek.isInstance(p) )       r = true;
-      else if ( P.Not.isInstance(p) )                                    r = ! p.else || n(p.else);
+      else if ( P.Not.isInstance(p) )                                    r = ( opt_where !== 'end' || ! n(p.p) ) && ( ! p.else || n(p.else) );
       else if ( P.Repeat.isInstance(p) )                                 r = p.minimum <= 0 || n(p.p);
       else if ( P.Alternate.isInstance(p) )                              r = p.args.some(n);
       else if ( P.Sequence.isInstance(p) || P.Sequence0.isInstance(p) || P.Sequence1.isInstance(p) ) r = p.args.every(n);
@@ -396,6 +406,23 @@ foam.CLASS({
     },
 
     // ---- helpers ---------------------------------------------------------
+
+    function isGrammarClass_(cls) {
+      /**
+       * A concrete class whose instances are grammars to check; the framework
+       * bases are not. Compared by id: a class from requires is a wrapper
+       * (Object.create(cls)), not the class itself.
+       */
+      return foam.parse.Grammar.isSubClass(cls) &&
+        cls.id !== 'foam.parse.Grammar' &&
+        cls.id !== 'foam.parse.ImperativeGrammar' &&
+        ! ( cls.model_ && cls.model_.abstract );
+    },
+
+    function isChecked(cls) {
+      /** True when lintClasses checks something on cls: a grammar class, or its own grammars: axiom. */
+      return this.isGrammarClass_(cls) || cls.getOwnAxiomsByClass(foam.parse.GrammarAxiom).length > 0;
+    },
 
     function hasRule_(grammar, name) {
       return ( grammar.symbols || [] ).some(function(s) { return s.name === name; });

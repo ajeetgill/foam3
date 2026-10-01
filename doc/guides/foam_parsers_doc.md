@@ -1218,7 +1218,7 @@ It prints one line per finding, `file: class: rule: severity check: message`, th
 | `undefined-symbol` | error | `sym('x')` and the grammar has no rule `x`; the parse asserts when it gets there |
 | `orphan-action` | error | a method `xAction` (or a `grammars:` action) and no rule `x`; actions attach by rule name, so it never runs |
 | `left-recursion` | error | a rule reaches itself before reading a character, e.g. `expr: seq(sym('expr'), '+', ...)` |
-| `empty-repeat` | error | an unbounded `repeat()` whose item can match without reading; `Repeat` keeps looping at one position until `maximum` |
+| `empty-repeat` | error | an unbounded `repeat()` or `repeat0()` whose item can match without reading; the loop stays at one position until `maximum`. `repeat0()` also loops at the end of the input (`repeat0(alt('a', eof()))`), and its delimiter does not count as progress |
 | `duplicate-symbol` | error | two rules with one name; the last one wins |
 | `unreachable` | warning | rules `START` never reaches; expected for rules used by name, such as `parseString(text, 'yymmdd')` |
 | `no-start` | warning | rules but no `START`; `parseString()` without a rule name asserts |
@@ -1236,7 +1236,7 @@ An action on a base grammar counts as used when any subclass has its rule, and a
 
 ### Checking One Grammar From a Test
 
-For a grammar the tool cannot find, call the checker directly:
+For a grammar the tool cannot find, call the checker directly. `GrammarLint` is flagged `js&test|grammarlint`, so it loads in test builds and in the tool, not in an app's production bundle:
 
 ```javascript
 var findings = foam.parse.lint.GrammarLint.create().lintGrammar(grammar);
