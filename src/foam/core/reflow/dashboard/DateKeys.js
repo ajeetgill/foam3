@@ -22,29 +22,12 @@
  * An expr NOT listed here carries no recoverable date — DateToHHExpr,
  * DateToHHMMExpr and DateToHHMMSSExpr emit a time of day with no date,
  * so they must stay on the category axis.
+ *
+ * Entries that share behaviour (the two day granularities) call the
+ * dailyCalculate/dayStart/nextDay methods below by full path rather
+ * than referencing them directly: the entries are built while the LIB
+ * is still being defined, so the methods don't exist yet at that point.
  */
-
-(function() {
-
-// Shared by the two day-granularity entries below.
-var reflowDailyCalculate_ = function(periodCount) {
-  var minDate = new Date();
-  var maxDate = new Date();
-  minDate.setDate(minDate.getDate() - (periodCount - 1));
-  minDate.setHours(0, 0, 0, 0);
-  maxDate.setHours(23, 59, 59, 999);
-  return { minDate: minDate, maxDate: maxDate };
-};
-
-var reflowDayStart_ = function(d) {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-};
-
-var reflowNextDay_ = function(d) {
-  var u = new Date(d);
-  u.setUTCDate(u.getUTCDate() + 1);
-  return u;
-};
 
 foam.LIB({
   name: 'foam.core.reflow.dashboard.DateKeys',
@@ -167,29 +150,61 @@ foam.LIB({
       },
       {
         exprClassNames: ['foam.mlang.expr.DateToYYYYMMDDExpr'],
-        calculate: reflowDailyCalculate_,
+        calculate: function(periodCount) {
+          return foam.core.reflow.dashboard.dateKeys.dailyCalculate(periodCount);
+        },
         parse: function(key) {
           var m = /^(\d{4})\/(\d{2})\/(\d{2})$/.exec(String(key));
           return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
         },
-        periodStart: reflowDayStart_,
-        next: reflowNextDay_
+        periodStart: function(d) {
+          return foam.core.reflow.dashboard.dateKeys.dayStart(d);
+        },
+        next: function(d) {
+          return foam.core.reflow.dashboard.dateKeys.nextDay(d);
+        }
       },
       {
         exprClassNames: ['foam.mlang.expr.DateToDayOfYearExpr'],
-        calculate: reflowDailyCalculate_,
+        calculate: function(periodCount) {
+          return foam.core.reflow.dashboard.dateKeys.dailyCalculate(periodCount);
+        },
         parse: function(key) {
           // 'YYYY-DDD', DDD is 1-based (Jan 1 === 001).
           var m = /^(\d{4})-(\d{3})$/.exec(String(key));
           return m ? new Date(+m[1], 0, +m[2]) : null;
         },
-        periodStart: reflowDayStart_,
-        next: reflowNextDay_
+        periodStart: function(d) {
+          return foam.core.reflow.dashboard.dateKeys.dayStart(d);
+        },
+        next: function(d) {
+          return foam.core.reflow.dashboard.dateKeys.nextDay(d);
+        }
       }
     ]
   },
 
   methods: [
+    // Shared by the two day-granularity entries.
+    function dailyCalculate(periodCount) {
+      var minDate = new Date();
+      var maxDate = new Date();
+      minDate.setDate(minDate.getDate() - (periodCount - 1));
+      minDate.setHours(0, 0, 0, 0);
+      maxDate.setHours(23, 59, 59, 999);
+      return { minDate: minDate, maxDate: maxDate };
+    },
+
+    function dayStart(d) {
+      return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+    },
+
+    function nextDay(d) {
+      var u = new Date(d);
+      u.setUTCDate(u.getUTCDate() + 1);
+      return u;
+    },
+
     function entryFor(expr) {
       if ( ! expr ) return null;
       var es = this.ENTRIES;
@@ -217,5 +232,3 @@ foam.LIB({
     }
   ]
 });
-
-})();
