@@ -485,7 +485,8 @@ foam.CLASS({
 
   constants: [
     {
-      // TODO: document
+      // The class shorthand in css: blocks. '^' is the older spelling and is
+      // deprecated.
       name: 'CSS_SELF',
       value: '<<'
     },

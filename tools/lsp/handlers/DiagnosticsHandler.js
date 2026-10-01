@@ -469,6 +469,9 @@ foam.CLASS({
       // Warn about ^classname rules in css: that aren't applied from JS
       this.validateUnusedCSSClasses_(m, text, css, diagnostics);
 
+      // Strike through each selector '^', which is deprecated for '<<'
+      this.validateDeprecatedCaret_(text, css, diagnostics);
+
       // Report what the CSS grammar could not parse
       this.validateCSSSyntax_(text, css, diagnostics);
 
@@ -841,6 +844,24 @@ foam.CLASS({
       return map;
     },
 
+    function validateDeprecatedCaret_(text, css, diagnostics) {
+      /**
+       * '^' is the old spelling of the class shorthand; '<<' replaces it.
+       * FOAM stops replacing '^' on 2027-06-30, so CSS's own [attr^=x]
+       * works in css: blocks. Until then each '^' in a selector gets a hint
+       * the editor strikes through. A '^' inside [attr^=x], a string or a
+       * comment is left alone: none of them is meant as the shorthand.
+       */
+      if ( ! css ) return;
+      var self = this;
+      css.parser.walk(css.tree, function(n) {
+        if ( n.kind !== 'caret' || n.raw !== '^' || n.context || n.inAttr ) return;
+        self.addDiag_(diagnostics, text, css.base + n.start, 1, self.Diagnostic.HINT,
+          "'^' is deprecated: write '<<'. FOAM stops replacing '^' on 2027-06-30.",
+          'deprecated-css-caret', { tags: [ self.Diagnostic.DEPRECATED ] });
+      });
+    },
+
     function validateUnusedCSSClasses_(model, text, css, diagnostics) {
       /**
        * Flag ^classname rules in css: that no JS code applies via
@@ -871,7 +892,7 @@ foam.CLASS({
           while ( e < src.length && /[a-zA-Z0-9_\-]/.test(src[e]) ) e++;
           var name = src.substring(caret.end, e);
           if ( ! defs[name] ) { defs[name] = []; order.push(name); }
-          defs[name].push({ offset: css.base + caret.start, len: e - caret.start });
+          defs[name].push({ offset: css.base + caret.start, len: e - caret.start, sym: caret.raw });
         }
         return false;
       });
@@ -907,7 +928,7 @@ foam.CLASS({
           // UNNECESSARY: the rule is dead CSS, so the editor fades it out
           // on top of the warning squiggle.
           this.addDiag_(diagnostics, text, defs[name][j].offset, defs[name][j].len, 2,
-            "Unused CSS class '^" + name + "': no matching this.myClass('" + name + "') call",
+            "Unused CSS class '" + defs[name][j].sym + name + "': no matching this.myClass('" + name + "') call",
             undefined, { tags: [ this.Diagnostic.UNNECESSARY ] });
         }
       }
