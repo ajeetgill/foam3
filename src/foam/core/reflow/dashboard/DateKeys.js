@@ -151,23 +151,23 @@ foam.LIB({
       {
         exprClassNames: ['foam.mlang.expr.DateToYYYYMMDDExpr'],
         calculate: function(periodCount) {
-          return foam.core.reflow.dashboard.dateKeys.dailyCalculate(periodCount);
+          return foam.core.reflow.dashboard.DateKeys.dailyCalculate(periodCount);
         },
         parse: function(key) {
           var m = /^(\d{4})\/(\d{2})\/(\d{2})$/.exec(String(key));
           return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
         },
         periodStart: function(d) {
-          return foam.core.reflow.dashboard.dateKeys.dayStart(d);
+          return foam.core.reflow.dashboard.DateKeys.dayStart(d);
         },
         next: function(d) {
-          return foam.core.reflow.dashboard.dateKeys.nextDay(d);
+          return foam.core.reflow.dashboard.DateKeys.nextDay(d);
         }
       },
       {
         exprClassNames: ['foam.mlang.expr.DateToDayOfYearExpr'],
         calculate: function(periodCount) {
-          return foam.core.reflow.dashboard.dateKeys.dailyCalculate(periodCount);
+          return foam.core.reflow.dashboard.DateKeys.dailyCalculate(periodCount);
         },
         parse: function(key) {
           // 'YYYY-DDD', DDD is 1-based (Jan 1 === 001).
@@ -175,10 +175,10 @@ foam.LIB({
           return m ? new Date(+m[1], 0, +m[2]) : null;
         },
         periodStart: function(d) {
-          return foam.core.reflow.dashboard.dateKeys.dayStart(d);
+          return foam.core.reflow.dashboard.DateKeys.dayStart(d);
         },
         next: function(d) {
-          return foam.core.reflow.dashboard.dateKeys.nextDay(d);
+          return foam.core.reflow.dashboard.DateKeys.nextDay(d);
         }
       }
     ]
