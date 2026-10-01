@@ -42,6 +42,9 @@ Explains Axioms as the core extension mechanism — the pseudo-interface with `i
 **[Enum](Enum.md)**
 Covers FOAM Enums: declaring them with `foam.ENUM`, defining values with ordinal/label/properties/methods, built-in `ordinal` and `name` properties, and usage patterns analogous to Java enums.
 
+**[FSM](FSM.md)**
+Covers FOAM state machines: `foam.FSM`, the `StateMachine` property and the history, payload and next-activity properties it adds, guards, permissions, Java lifecycle hooks, scheduled activities, and server-side enforcement with `FSMDAO`.
+
 **[Refinements](Refinements.md)**
 Explains Refinements as the mechanism to extend or modify existing FOAM classes post-definition without creating a subclass. Covers the two-phase installation, common patterns (adding properties, view defaults, Java code generation), and how refinements bootstrap FOAM's self-modelling.
 

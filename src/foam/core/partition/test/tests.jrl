@@ -17,3 +17,4 @@ p({"class":"foam.core.partition.test.PartitionedDAOLegacyLayoutTest","id":"Parti
 p({"class":"foam.core.partition.test.PartitionedDAOSelectTest","id":"PartitionedDAOSelectTest"})
 p({"class":"foam.core.partition.test.PartitionedCompactionTest","id":"PartitionedCompactionTest","description":"a CompactionCmd reaches every partition; generation files are not mistaken for partitions"})
 p({"class":"foam.core.partition.test.PartitionedDAOUnprefixedFindTest","id":"PartitionedDAOUnprefixedFindTest"})
+p({"class":"foam.core.partition.test.PartitionedAddIndexTest","id":"PartitionedAddIndexTest"})

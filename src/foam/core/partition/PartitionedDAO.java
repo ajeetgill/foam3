@@ -183,6 +183,33 @@ public class PartitionedDAO
       }
       return cc;
     }
+
+    // super records the index for partitions opened later; one already open
+    // never reads that list again, so it gets the index here. A partition
+    // still replaying is waited on through its lock rather than missed, and
+    // may end up with the index twice, which is harmless. Same as
+    // NotPartitionedDAO.
+    if ( cmd instanceof foam.dao.index.AddIndexCommand ) {
+      super.cmd_(x, cmd);
+
+      Set<String> parts = new HashSet<>(loading_);
+      synchronized ( delegates_ ) {
+        parts.addAll(delegates_.keySet());
+      }
+
+      for ( String part : parts ) {
+        synchronized ( part.intern() ) {
+          SoftReference<DAO> ref;
+          synchronized ( delegates_ ) {
+            ref = delegates_.get(part);
+          }
+          DAO dao = ref != null ? ref.get() : null;
+          if ( dao != null ) dao.cmd_(x, cmd);
+        }
+      }
+      return true;
+    }
+
     return super.cmd_(x, cmd);
   }
 
