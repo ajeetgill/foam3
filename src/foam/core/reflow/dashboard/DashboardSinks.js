@@ -28,7 +28,7 @@ foam.CLASS({
 
   methods: [
     function fillTimeGapKeys(existingKeys, groups, periods, prop) {
-      var dk    = foam.core.reflow.dashboard.dateKeys;
+      var dk    = foam.core.reflow.dashboard.DateKeys;
       var entry = dk.entryFor(prop);
 
       // Not a date grouping we know how to step through.
