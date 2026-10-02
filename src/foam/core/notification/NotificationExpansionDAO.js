@@ -30,6 +30,8 @@ foam.CLASS({
     'foam.mlang.predicate.Predicate',
     'foam.mlang.sink.Sequence',
     'foam.core.auth.Group',
+    'foam.core.auth.Language',
+    'foam.core.auth.LanguageId',
     'foam.core.auth.LifecycleState',
     'foam.core.auth.User',
     'foam.core.logger.Logger',
@@ -58,6 +60,7 @@ foam.CLASS({
             );
           }
           final Predicate broadcastPredicate = predicate;
+          final Notification notification = (Notification) notif.fclone();
           Agency agency = (Agency) x.get("threadPool");
           agency.submit(x, new ContextAgent() {
             @Override
@@ -65,7 +68,7 @@ foam.CLASS({
               PM pm = PM.create(x, "Notification:broadcast");
               userDAO.inX(x).where(
                 broadcastPredicate
-              ).select(new UserNotificationSink(notif, (DAO) x.get("userNotificationDAO")));
+              ).select(new UserNotificationSink(notification, (DAO) x.get("userNotificationDAO")));
               pm.log(x);
             }
           }, "Notification Broadcast");
@@ -79,24 +82,25 @@ foam.CLASS({
             logger.debug("Notification group disabled", notif.getGroupId(), notif);
             return obj;
           }
+          final Notification notification = (Notification) notif.fclone();
           Agency agency = (Agency) x.get("threadPool");
           agency.submit(x, new ContextAgent() {
             @Override
             public void execute(X x) {
               PM pm = PM.create(x, "Notification:group");
               Count count = new Count();
-              UserNotificationSink userNotificationSink = new UserNotificationSink(notif, (DAO) x.get("userNotificationDAO"));
+              UserNotificationSink userNotificationSink = new UserNotificationSink(notification, (DAO) x.get("userNotificationDAO"));
               userNotificationSink.setX(x);
               Sequence seq = new Sequence.Builder(x)
                 .setArgs(new Sink[] { count, userNotificationSink })
                 .build();
               userDAO.where(
                 AND(
-                  EQ(User.GROUP, notif.getGroupId()),
+                  EQ(User.GROUP, notification.getGroupId()),
                   EQ(User.LIFECYCLE_STATE, LifecycleState.ACTIVE)
               )).select(seq);
               if ( count.getValue() == 0 ) {
-                logger.info("WARN,Notification group empty", notif);
+                logger.info("WARN,Notification group empty", notification);
               }
               pm.log(x);
             }
@@ -106,6 +110,7 @@ foam.CLASS({
           if ( ! Notification.SPID.isSet(notif) ) {
             notif.setSpid(user.getSpid());
           }
+          notif = applyLocaleTemplate(x, user, notif);
           if ( user.getLifecycleState() == LifecycleState.ACTIVE ) {
             user.doNotify(x, notif);
           } else {
@@ -115,6 +120,39 @@ foam.CLASS({
           logger.info("WARN,Notification not saved", notif);
         }
         return notif;
+      `
+    },
+    {
+      name: 'applyLocaleTemplate',
+      args: 'X x, User user, Notification notif',
+      type: 'Notification',
+      javaCode: `
+        if ( SafetyUtil.isEmpty(notif.getLocaleTemplateName()) )
+          return notif;
+
+        LanguageId id = (LanguageId) user.getLanguage();
+        LanguageId code = new LanguageId("en", "");
+        Language language = (Language) user.findLanguage(x);
+        if ( language == null ) {
+          Loggers.logger(x, this).warning("Language not found", user.getLanguage());
+          id = code;
+        } else {
+          code = new LanguageId(language.getCode(), "");
+        }
+        DAO dao = (DAO) x.get("notificationLocaleTemplateDAO");
+        NotificationLocaleTemplate template = (NotificationLocaleTemplate)dao.find(
+          AND(
+            EQ(NotificationLocaleTemplate.NAME, notif.getLocaleTemplateName()),
+            OR (
+              EQ(NotificationLocaleTemplate.LANGUAGE, id),
+              EQ(NotificationLocaleTemplate.LANGUAGE, code)
+            )
+          ));
+        if ( template == null ) {
+          Loggers.logger(x, this).error("NotificationLocaleTemplate not found", notif.getLocaleTemplateName(), user.getLanguage());
+          return notif;
+        }
+        return template.apply(x, notif);
       `
     }
   ]
