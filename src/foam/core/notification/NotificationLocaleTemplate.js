@@ -39,7 +39,7 @@ Delay creating notification title and body until final notification user has bee
       of: 'foam.core.auth.Language',
       name: 'language',
       factory: function() { return foam.core.auth.LanguageId.create({code:"en"}); },
-      javaFactory: 'return new foam.core.auth.LanguageId("en", null);'
+      javaFactory: 'return new foam.core.auth.LanguageId("en", "");'
     },
     {
       class: 'String',
@@ -68,12 +68,6 @@ Delay creating notification title and body until final notification user has bee
       javaCode: `
         if ( notif == null )
           throw new IllegalArgumentException("Notification is null");
-
-        if ( notif.getLocaleTemplateArgs() == null ||
-             notif.getLocaleTemplateArgs().size() == 0 ) {
-          Loggers.logger(x, this).warning("Template args null or empty");
-          return notif;
-        }
 
         EmailTemplateEngine templateEngine = (EmailTemplateEngine) x.get("templateEngine");
         if ( SafetyUtil.isEmpty(notif.getBody()) )

@@ -27,13 +27,13 @@ foam.CLASS({
     {
       name: 'runTest',
       javaCode: `
-      String name = this.getClass().getSimpleName();
-      User user = TestUtils.createTestUser(name);
-      user.setUserName(name);
-      user.setGroup("test");
+      DAO userDAO = (DAO) x.get("userDAO");
+      User old = (User) userDAO.find(185426801L).fclone();
+      User user = (User) old.fclone();
       user.setLanguage(new LanguageId("pt", "BR"));
-      user = (User) ((DAO) x.get("userDAO")).put_(x, user);
-      test ( user.getId() > 0, "user setup");
+      user = (User) userDAO.put(user);
+
+      String name = "NotificationLocaleTemplateTest";
 
       DAO notificationDAO = (DAO) x.get("notificationDAO");
       notificationDAO.removeAll();
@@ -55,15 +55,44 @@ foam.CLASS({
       }
 
       notification = (Notification) notificationDAO.find(EQ(Notification.USER_ID, user.getId()));
-      test ( notification != null, "Notification found");
+      test ( notification != null, "(User) Notification found");
       if ( notification != null ) {
         test ( notification.getBody() != null &&
                notification.getBody().equals("Body "+name+"\\\\nline2 "+name),
-               "Body set: "+notification.getBody());
+               "(User) Body set: "+notification.getBody());
         test ( notification.getToastMessage() != null &&
                notification.getToastMessage().equals("ToastMessage "+name),
-               "ToastMessage set: "+notification.getToastMessage());
+               "(User) ToastMessage set: "+notification.getToastMessage());
       }
+
+      notificationDAO.removeAll();
+      DAO userNotificationDAO = (DAO) x.get("userNotificationDAO");
+      userNotificationDAO.removeAll();
+
+      notification = new Notification();
+      notification.setLocaleTemplateName(name+"-pt");
+      notification.setGroupId("test");
+      notification.setLocaleTemplateArgs(map);
+      ((DAO) x.get("notificationDAO")).put_(x, notification);
+
+      try {
+        Thread.sleep(100L);
+      } catch (InterruptedException e ) {
+        // ignore - nop
+      }
+
+      notification = (Notification) userNotificationDAO.find(EQ(Notification.USER_ID, user.getId()));
+      test ( notification != null, "(Group) Notification found");
+      if ( notification != null ) {
+        test ( notification.getBody() != null &&
+               notification.getBody().equals("Body "+name+"\\\\nline2 "+name),
+               "(Group) Body set: "+notification.getBody());
+        test ( notification.getToastMessage() != null &&
+               notification.getToastMessage().equals("ToastMessage "+name),
+               "(Group) ToastMessage set: "+notification.getToastMessage());
+      }
+
+      userDAO.put(old);
       `
     }
   ]

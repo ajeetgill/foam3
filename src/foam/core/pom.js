@@ -306,6 +306,7 @@ foam.POM({
     { name: "notification/NotificationCitationView",                                      flags: "js" },
     { name: "notification/NotificationExpansionDAO",                                      flags: "js|java" },
     { name: "notification/NotificationLocaleTemplate",                                    flags: "js|java" },
+    { name: "notification/NotificationLocaleTemplateSupport",                             flags: "js|java" },
     { name: "notification/NotificationGoogleChatRefines",                                 flags: "js|java" },
     { name: "notification/NotificationHostnameRuleAction",                                flags: "js|java" },
     { name: "notification/NotificationMessageModal",                                      flags: "js" },
