@@ -141,7 +141,26 @@ function main() {
   [
     [ 'x = a / /"/, y = "{ css: \'^a {}\' }";\n', "a regex right after a '/' division" ],
     [ 'var r = [.../"/]; var y = "{ css: \'^a {}\' }";\n', "a regex right after a spread" ],
-    [ 'var v = this.#in / 2, p = "/"; ' + DOC, "a '/' after a private name such as #in divides" ]
+    [ 'var v = this.#in / 2, p = "/"; ' + DOC, "a '/' after a private name such as #in divides" ],
+    [ 'var n = { a: 1 } / 2, p = "/"; ' + DOC, "a '/' after an object's '}' divides" ],
+    [ 'var n = f({ a: 1 } / 2, "/"); ' + DOC, "a '/' after an object argument divides" ],
+    [ 'function g() { return { a: 1 } / 2, "/"; } ' + DOC, "a '/' after 'return { ... }' divides" ],
+    [ 'var o = { a: { b: 1 } / 2, c: "/" }; ' + DOC, "a '/' after an object inside an object divides" ],
+    [ 'var m = function() {} / 2, p = "/"; ' + DOC, "a '/' after a function expression divides" ],
+    [ 'var m = function f(a) {} / 2, p = "/"; ' + DOC, "a '/' after a named function expression divides" ],
+    [ 'var m = function* () {} / 2, p = "/"; ' + DOC, "a '/' after a generator expression divides" ],
+    [ 'if ( a ) { b(); } /"/.test(s); ' + DOC, "a regex right after an if block's '}'" ],
+    [ 'if ( a ) {} else { b(); } /"/.test(s); ' + DOC, "a regex right after an else block's '}'" ],
+    [ 'function f() {} /"/.test(s); ' + DOC, "a regex right after a function declaration" ],
+    [ 'switch ( a ) { case 1: { b(); } /"/.test(s); } ' + DOC, "a regex right after a block in a case" ],
+    [ 'var h = x => {}\n/"/.test(s); ' + DOC, "a regex right after an arrow function's body" ],
+    [ 'var h = x => /"/.test(x); ' + DOC, "a regex right after '=>'" ],
+    [ 'foam.CLASS({ methods: [ function f() { l: { break l; } /"/.test(s); ' + DOC + '} ] });\n',
+      "a regex right after a labelled block inside a method" ],
+    [ 'function g() {\n  return\n  { a(); } /"/.test(s); ' + DOC + '}\n',
+      "a regex after a block that follows 'return' and a line break" ],
+    [ 'function* g() {\n  yield\n  { a(); } /"/.test(s); ' + DOC + '}\n',
+      "a regex after a block that follows 'yield' and a line break" ]
   ].forEach(function(c) {
     r = portOf(c[0]);
     test(r.changes.length === 0 && r.text === c[0], c[1]);

@@ -174,6 +174,23 @@ var LOOP_HEADS = { 'if': true, 'while': true, 'for': true, 'with': true };
 // Object keys scan() reports.
 var KEYS = { css: true, code: true, 'class': true };
 
+// Characters after which a '{' opens an object, not a block: 'x = {'.
+var VALUE_AFTER = '(,=[!&|?+-*%<>~^/';
+
+function startsValue(prev, lastWord, kinds, newline) {
+  // True when the next token is a value, so a '{' there opens an object and
+  // a 'function' there is an expression. Its '}' is then a value and a '/'
+  // after it divides: 'x = { a: 1 } / 2'.
+  if ( prev === 'word-op' ) {
+    // A line break ends 'return' and 'yield': 'return\n{ a(); }' is a block.
+    if ( newline && ( lastWord === 'return' || lastWord === 'yield' ) ) return false;
+    return lastWord !== null && lastWord !== 'do' && lastWord !== 'else';
+  }
+  // After ':' only inside an object: '{ a: {' but not 'case 1: {'.
+  if ( prev === ':' ) return kinds[kinds.length - 1] === 'object';
+  return prev !== '' && VALUE_AFTER.indexOf(prev) !== -1;
+}
+
 function scan(s, i, inBraces, h) {
   // Walks JavaScript from i. For each css:, code: or class: key of an
   // object literal it calls h.key(name, keyStart, valueStart, brace), where
@@ -185,12 +202,31 @@ function scan(s, i, inBraces, h) {
   // with starts a regex: 'if ( a ) /x/.test(s)'. A property such as the
   // with of t.with( x ) does not count.
   var parens = [], word = null;
+  // kinds holds 'object', 'block' or 'fnbody' for each open '{'. fn is
+  // 'expr' or 'decl' from a 'function' word until its '('; fnParens says the
+  // same for each open '('. fnBody is true right after the ')' of a function
+  // expression: its body holds statements, but its '}' is a value.
+  // newline says a line break came before the current token.
+  var kinds = [], fn = null, fnParens = [], fnBody = false, newline = false;
   while ( i < n ) {
     var c = s[i];
-    if ( /\s/.test(c) ) { i++; continue; }
-    if ( c === '/' && ( s[i + 1] === '/' || s[i + 1] === '*' ) ) { i = skipSpace(s, i); continue; }
+    if ( /\s/.test(c) ) {
+      if ( /[\n\r\u2028\u2029]/.test(c) ) newline = true;
+      i++;
+      continue;
+    }
+    if ( c === '/' && ( s[i + 1] === '/' || s[i + 1] === '*' ) ) {
+      var after = skipSpace(s, i);
+      if ( /[\n\r\u2028\u2029]/.test(s.substring(i, after)) ) newline = true;
+      i = after;
+      continue;
+    }
+    var lastNewline = newline;
+    newline = false;
     var lastWord = word;
     word = null;
+    var lastFnBody = fnBody;
+    fnBody = false;
     if ( c === '\'' || c === '"' ) {
       var end = endOfString(s, i);
       var key = s.substring(i + 1, end - 1);
@@ -205,7 +241,7 @@ function scan(s, i, inBraces, h) {
       continue;
     }
     if ( c === '/' ) {
-      var re = ( prev === '' || prev === 'word-op' ||
+      var re = ( prev === '' || prev === 'word-op' || prev === '=>' ||
                  '(,=:[!&|?{};+-*%<>~^/'.indexOf(prev) !== -1 ) ? endOfRegex(s, i) : -1;
       if ( re !== -1 ) { i = re; prev = 'value'; continue; }
       prev = '/';
@@ -224,6 +260,9 @@ function scan(s, i, inBraces, h) {
       }
       // 'for await ( ... )' heads a loop like 'for ( ... )'.
       word = prop ? null : ( w === 'await' && lastWord === 'for' ) ? 'for' : w;
+      // 'function' keeps fn through its name: 'x = function f() {}'.
+      if ( w === 'function' && ! prop ) fn = startsValue(prev, lastWord, kinds, lastNewline) ? 'expr' : 'decl';
+      else if ( lastWord !== 'function' ) fn = null;
       prev = REGEX_AFTER_WORD[w] === true && ! prop ? 'word-op' : 'value';
       i = j;
       continue;
@@ -239,23 +278,43 @@ function scan(s, i, inBraces, h) {
       i += 2;
       continue;
     }
+    // An arrow's '{' opens a block, and a regex may follow '=>'.
+    if ( c === '=' && s[i + 1] === '>' ) {
+      prev = '=>';
+      i += 2;
+      continue;
+    }
     if ( /[0-9]/.test(c) ) {
       while ( i < n && /[0-9A-Za-z_.]/.test(s[i]) ) i++;
       prev = 'value';
       continue;
     }
-    if ( c === '{' ) { depth++; braces.push(i); }
+    if ( c === '{' ) {
+      depth++;
+      braces.push(i);
+      kinds.push(lastFnBody ? 'fnbody' : startsValue(prev, lastWord, kinds, lastNewline) ? 'object' : 'block');
+    }
+    var closed = null;
     if ( c === '}' ) {
       if ( inBraces && depth === 0 ) return i + 1;
       depth--;
       braces.pop();
+      closed = kinds.pop();
     }
-    if ( c === '(' ) parens.push(lastWord);
+    if ( c === '(' ) {
+      parens.push(lastWord);
+      fnParens.push(fn);
+      fn = null;
+    } else if ( c !== '*' ) {
+      // 'function* g()' keeps fn across the '*'.
+      fn = null;
+    }
     if ( c === ')' ) {
       var head = parens.pop();
+      fnBody = fnParens.pop() === 'expr';
       prev = LOOP_HEADS[head] === true ? 'word-op' : 'value';
     } else {
-      prev = c === ']' ? 'value' : c;
+      prev = c === ']' || closed === 'object' || closed === 'fnbody' ? 'value' : c;
     }
     i++;
   }
