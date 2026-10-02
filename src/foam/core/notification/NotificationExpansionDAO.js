@@ -72,7 +72,7 @@ foam.CLASS({
               PM pm = PM.create(x, "Notification:broadcast");
               userDAO.inX(x).where(
                 broadcastPredicate
-              ).select(new UserNotificationSink(notification, (DAO) x.get("userNotificationDAO")));
+              ).select(new UserNotificationSink(x, notification, (DAO) x.get("userNotificationDAO")));
               pm.log(x);
             }
           }, "Notification Broadcast");
@@ -93,8 +93,7 @@ foam.CLASS({
             public void execute(X x) {
               PM pm = PM.create(x, "Notification:group");
               Count count = new Count();
-              UserNotificationSink userNotificationSink = new UserNotificationSink(notification, (DAO) x.get("userNotificationDAO"));
-              userNotificationSink.setX(x);
+              UserNotificationSink userNotificationSink = new UserNotificationSink(x, notification, (DAO) x.get("userNotificationDAO"));
               Sequence seq = new Sequence.Builder(x)
                 .setArgs(new Sink[] { count, userNotificationSink })
                 .build();

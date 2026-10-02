@@ -32,20 +32,20 @@ foam.CLASS({
       User user = (User) old.fclone();
       user.setLanguage(new LanguageId("pt", "BR"));
       user = (User) userDAO.put(user);
-
-      String name = "NotificationLocaleTemplateTest";
+      String notificationLocaleTemplate = "NotificationLocaleTemplateTest-pt";
 
       DAO notificationDAO = (DAO) x.get("notificationDAO");
       notificationDAO.removeAll();
 
       Notification notification = new Notification();
-      notification.setUserId(user.getId());
-      notification.setLocaleTemplateName(name+"-pt");
+      notification.setLocaleTemplateName(notificationLocaleTemplate);
       Map map = new HashMap<String, String>();
+      String name = "User";
       map.put("arg1", name);
       map.put("arg2", name);
       map.put("toastMessage", name);
       notification.setLocaleTemplateArgs(map);
+      notification.setUserId(user.getId());
       ((DAO) x.get("notificationDAO")).put_(x, notification);
 
       try {
@@ -69,10 +69,14 @@ foam.CLASS({
       DAO userNotificationDAO = (DAO) x.get("userNotificationDAO");
       userNotificationDAO.removeAll();
 
+      name = "Group";
+      map.put("arg1", name);
+      map.put("arg2", name);
+      map.put("toastMessage", name);
       notification = new Notification();
-      notification.setLocaleTemplateName(name+"-pt");
-      notification.setGroupId("test");
+      notification.setLocaleTemplateName(notificationLocaleTemplate);
       notification.setLocaleTemplateArgs(map);
+      notification.setGroupId("test");
       ((DAO) x.get("notificationDAO")).put_(x, notification);
 
       try {
@@ -90,6 +94,37 @@ foam.CLASS({
         test ( notification.getToastMessage() != null &&
                notification.getToastMessage().equals("ToastMessage "+name),
                "(Group) ToastMessage set: "+notification.getToastMessage());
+      }
+
+
+      userNotificationDAO.removeAll();
+
+      name = "Broadcast";
+      map.put("arg1", name);
+      map.put("arg2", name);
+      map.put("toastMessage", name);
+      notification = new Notification();
+      notification.setLocaleTemplateName(notificationLocaleTemplate);
+      notification.setLocaleTemplateArgs(map);
+      notification.setBroadcastSpid("test");
+      notification.setBroadcasted(true);
+      ((DAO) x.get("notificationDAO")).put_(x, notification);
+
+      try {
+        Thread.sleep(100L);
+      } catch (InterruptedException e ) {
+        // ignore - nop
+      }
+
+      notification = (Notification) userNotificationDAO.find(EQ(Notification.USER_ID, user.getId()));
+      test ( notification != null, "(Broadcast) Notification found");
+      if ( notification != null ) {
+        test ( notification.getBody() != null &&
+               notification.getBody().equals("Body "+name+"\\\\nline2 "+name),
+               "(Broadcast) Body set: "+notification.getBody());
+        test ( notification.getToastMessage() != null &&
+               notification.getToastMessage().equals("ToastMessage "+name),
+               "(Broadcast) ToastMessage set: "+notification.getToastMessage());
       }
 
       userDAO.put(old);
