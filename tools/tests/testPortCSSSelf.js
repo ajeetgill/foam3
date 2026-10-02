@@ -96,6 +96,14 @@ function main() {
   test(r.skipped.length === 1 && r.skipped[0].reason === 'not a string literal',
     'a css: holding an expression is reported');
 
+  var sh = "var css = '^ { a: b; }';\nfoam.CLASS({ name: 'A8', css });\nfoam.CLASS({ name: 'A9', css, methods: [] });\n";
+  r = portOf(sh);
+  test(r.changes.length === 0 && r.skipped.length === 2 &&
+       r.skipped[0].reason === 'shorthand, not a string literal' && r.skipped[1].line === 3,
+    'a shorthand { css } is reported, not switched');
+  r = portOf("f(a, css, b); g(css); var { css } = x; [ css, 1 ];\n");
+  test(r.skipped.length === 0, 'css as an argument, a destructured name or an array item is not a key');
+
   r = portOf(cls("{ 'font-family': 'monospace' }"));
   test(r.changes.length === 0 && r.skipped.length === 0,
     'a css: style map ({ ... }) is not listed');
@@ -272,9 +280,18 @@ function main() {
   test(out.indexOf(path_.join(dir, 'View.js') + ': 2') !== -1,
     'a path outside the current folder is printed in full');
 
+  test(port.run([ '--check', dir ], function() {}) === 3, '--check exits 3 when there is a ^ to switch');
+  test(fs_.readFileSync(file, 'utf8') === src, '--check writes nothing');
+  test(port.run([ '--check', '--write', dir ], function() {}, function() {}) === 1,
+    '--check with --write exits 1');
+
+  fs_.chmodSync(file, 0o664);
   var res = child_.spawnSync(process.execPath, [ TOOL, '--write', dir ], { encoding: 'utf8' });
   test(res.status === 0, '--write exits 0');
   test(fs_.readFileSync(file, 'utf8') === src.replace(/\^/g, '<<'), '--write saves the change');
+  test(( fs_.statSync(file).mode & 0o777 ) === 0o664, '--write keeps the file mode, group write too');
+  test(fs_.readdirSync(dir).every(function(n) { return n.indexOf('portCSSSelf-tmp') === -1; }),
+    '--write leaves no temp file');
   test(fs_.readFileSync(jrl, 'utf8') === jsrc, '.jrl files are never written');
   test(fs_.readFileSync(axFile, 'utf8') === ax, 'CSS axioms are never written');
 
@@ -282,6 +299,7 @@ function main() {
   code = port.run([ dir ], function(l) { out.push(l); });
   test(code === 0 && /To switch: 0 '\^' in 0 files/.test(out.join('\n')),
     'a run after --write finds 0');
+  test(port.run([ '--check', dir ], function() {}) === 0, '--check exits 0 when nothing is left');
 
 
   var errs = [];
@@ -326,6 +344,24 @@ function main() {
     /Switched 2 '\^' in 1 files/.test(text),
     'a file that fails is listed on stderr and the run goes on');
   test(code === 2, 'a run with a failed file exits 2 (' + code + ')');
+
+  var d3 = fs_.mkdtempSync(path_.join(os_.tmpdir(), 'portCSSSelf-'));
+  var ro = path_.join(d3, 'ReadOnly.js');
+  fs_.writeFileSync(ro, cls("'^ { a: b; }'"));
+  fs_.chmodSync(ro, 0o444);
+  errs = [];
+  code = port.run([ '--write', ro ], function() {}, function(l) { errs.push(l); });
+  test(code === 2 && /ReadOnly\.js/.test(errs.join('\n')) &&
+       fs_.readFileSync(ro, 'utf8').indexOf('<<') === -1,
+    'a read-only file is not written and is listed as failed');
+  var target = path_.join(d3, 'Target.js');
+  fs_.writeFileSync(target, cls("'^ { a: b; }'"));
+  var link = path_.join(d3, 'Given.js');
+  fs_.symlinkSync(target, link);
+  code = port.run([ '--write', link ], function() {}, function() {});
+  test(code === 0 && fs_.lstatSync(link).isSymbolicLink() &&
+       fs_.readFileSync(target, 'utf8').indexOf("'<< { a: b; }'") !== -1,
+    'a symlink given as the path is written through, and stays a symlink');
   test(/Link\.js +symlink, not followed/.test(text) && /linkdir +symlink, not followed/.test(text),
     'symlinked files and folders are listed as not followed');
   out = [];

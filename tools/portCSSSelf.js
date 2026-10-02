@@ -12,7 +12,7 @@
 var fs_   = require('fs');
 var path_ = require('path');
 
-var HELP = `Usage: node foam3/tools/portCSSSelf.js [--write] <dir-or-file>...
+var HELP = `Usage: node foam3/tools/portCSSSelf.js [--write | --check] <dir-or-file>...
 
 Switches the deprecated '^' class shorthand to '<<' in css: values. FOAM
 stops replacing '^' on 2027-06-30.
@@ -21,7 +21,11 @@ Reads every .js file under the given folders. Without --write it changes
 nothing: it prints, per file, the number of '^' to switch and one line
 before and after, then a total.
 
-  --write   Save the changes.
+  --write   Save the changes. Each file is written to a temp file in its
+            own folder and renamed over the old one, so the folder must
+            be writable too.
+  --check   Change nothing; exit 3 when there is a '^' to switch, so a CI
+            job can stop new '^' from landing.
   --help    Show this text.
 
 Only a '^' in a selector is changed. The '^' of [attr^=x] and a '^' inside
@@ -32,17 +36,20 @@ in a foam.CLASS: inner classes, classes defined inside methods, and plain
 objects too. The editor may not flag a '^' in some of those.
 
 Not changed, listed for a manual check:
-  - a css: value with \${...} in it, or one that is not a plain string
+  - a css: value with \${...} in it, or one that is not a plain string,
+    such as css: someVar or the shorthand { css }
   - foam.u2.CSS axioms (CSS.create({ code: ... }) or
     { class: 'foam.u2.CSS', code: ... }) whose code: has a '^'
   - .jrl files whose text looks like CSS with a '^' in it
 
 Skipped: folders named node_modules, build or target, and folders whose
-name starts with '.'. Symlinks inside a folder, files over 20 MB and files
-that are not UTF-8 are listed and left alone.
+name starts with '.'. Symlinks inside a folder, .js files over 20 MB and
+files that are not UTF-8 are listed and left alone. .jrl files over 20 MB
+are data and are skipped without a line.
 
 Exit code 0 on success, 1 on bad arguments, 2 when a file failed to read
-or write (listed on stderr; the other files are still done).`;
+or write (listed on stderr; the other files are still done), 3 with
+--check when there is a '^' to switch.`;
 
 var SKIP_DIRS = { node_modules: true, build: true, target: true };
 
@@ -208,6 +215,9 @@ function scan(s, i, inBraces, h) {
   // expression: its body holds statements, but its '}' is a value.
   // newline says a line break came before the current token.
   var kinds = [], fn = null, fnParens = [], fnBody = false, newline = false;
+  // The open '(', '[' and '{', innermost last. A shorthand { css } counts
+  // only when the innermost is an object's '{', not f(a, css).
+  var nest = [];
   while ( i < n ) {
     var c = s[i];
     if ( /\s/.test(c) ) {
@@ -253,7 +263,8 @@ function scan(s, i, inBraces, h) {
       while ( j < n && isIdPart(s[j]) ) j++;
       var w    = s.substring(i, j);
       var prop = prev === '.' || prev === '#';
-      if ( KEYS[w] === true && ! prop ) maybeKey(s, w, i, j, prev, braces, h);
+      var inObject = nest[nest.length - 1] === '{' && kinds[kinds.length - 1] === 'object';
+      if ( KEYS[w] === true && ! prop ) maybeKey(s, w, i, j, prev, braces, h, inObject);
       if ( w === 'CSS' && h ) {
         var m = /^\s*\.\s*create\s*\(/.exec(s.substring(j, j + 40));
         if ( m ) h.create(j + m[0].length - 1);
@@ -289,6 +300,8 @@ function scan(s, i, inBraces, h) {
       prev = 'value';
       continue;
     }
+    if ( c === '{' || c === '(' || c === '[' ) nest.push(c);
+    if ( c === '}' || c === ')' || c === ']' ) nest.pop();
     if ( c === '{' ) {
       depth++;
       braces.push(i);
@@ -321,10 +334,15 @@ function scan(s, i, inBraces, h) {
   return n;
 }
 
-function maybeKey(s, name, keyStart, keyEnd, prev, braces, h) {
-  // A key follows '{' or ',' and is followed by ':'.
+function maybeKey(s, name, keyStart, keyEnd, prev, braces, h, shorthand) {
+  // A key follows '{' or ',' and is followed by ':'. With shorthand, a key
+  // followed by ',' or '}' is reported too, { css }, with value index -1.
   if ( ! h || ( prev !== '{' && prev !== ',' ) ) return;
   var colon = skipSpace(s, keyEnd);
+  if ( shorthand && ( s[colon] === ',' || s[colon] === '}' ) ) {
+    h.key(name, keyStart, -1, braces[braces.length - 1]);
+    return;
+  }
   if ( s[colon] !== ':' ) return;
   h.key(name, keyStart, skipSpace(s, colon + 1), braces[braces.length - 1]);
 }
@@ -342,6 +360,10 @@ function readValue(s, key, v) {
   var c   = s[v];
   var rec = { key: key, line: lineOf(s, key), start: -1, end: -1, quote: c, skip: null };
   var end;
+  if ( v < 0 ) {
+    rec.skip = 'shorthand, not a string literal';
+    return rec;
+  }
   if ( c === '`' ) {
     var t = endOfTemplate(s, v);
     end = t.end;
@@ -398,6 +420,7 @@ function findCSSAxioms(s, parser) {
   var codes  = [];
   scan(s, 0, false, {
     key: function(name, key, v, brace) {
+      if ( v < 0 ) return;
       var rec = name === 'code' && readValue(s, key, v);
       if ( rec ) codes.push({ brace: brace, rec: rec });
       if ( name === 'class' && /^['"]foam\.u2\.CSS['"]/.test(s.substr(v, 13)) ) {
@@ -602,15 +625,17 @@ function run(argv, print, printErr) {
   // stdout, printErr(line) to stderr.
   print    = print    || function(l) { process.stdout.write(l + '\n'); };
   printErr = printErr || function(l) { process.stderr.write(l + '\n'); };
-  var write = false, paths = [];
+  var write = false, check = false, paths = [];
   for ( var i = 0 ; i < argv.length ; i++ ) {
     var a = argv[i];
     if ( a === '--help' || a === '-h' ) { print(HELP); return 0; }
     if ( a === '--write' ) { write = true; continue; }
+    if ( a === '--check' ) { check = true; continue; }
     if ( a.startsWith('-') ) { printErr('Unknown option: ' + a + '\n\n' + HELP); return 1; }
     paths.push(a);
   }
   if ( ! paths.length ) { printErr(HELP); return 1; }
+  if ( write && check ) { printErr('--write and --check do not go together.'); return 1; }
 
   var files = collectFiles(paths);
   if ( files.missing.length ) {
@@ -628,10 +653,11 @@ function run(argv, print, printErr) {
   var leftOut = files.links.map(function(f) { return show(cwd, f) + '  symlink, not followed'; });
   var failed  = [];
 
-  function read(f) {
-    // The file's text, or null when it is listed as left alone.
+  function read(f, quiet) {
+    // The file's text, or null when it is left alone. quiet leaves a file
+    // over 20 MB out of the report.
     if ( fs_.statSync(f).size > MAX_BYTES ) {
-      leftOut.push(show(cwd, f) + '  over 20 MB, not read');
+      if ( ! quiet ) leftOut.push(show(cwd, f) + '  over 20 MB, not read');
       return null;
     }
     var buf = fs_.readFileSync(f);
@@ -656,7 +682,7 @@ function run(argv, print, printErr) {
       axioms.push(rel + ':' + a.line + '  ' + clip(a.snippet));
     });
     if ( ! r.changes.length ) return;
-    if ( write ) fs_.writeFileSync(f, r.text);
+    if ( write ) save(f, r.text);
     total += r.changes.length;
     changed++;
     var line = r.changes[0].line;
@@ -665,8 +691,29 @@ function run(argv, print, printErr) {
     print('  ' + line + ': ' + clip(r.text.split('\n')[line - 1]));
   }
 
+  function save(f, text) {
+    // Writes a file next to f, then renames it over f, so a write that
+    // fails partway leaves f as it was. A symlink given as a path is
+    // followed, and a read-only file fails as a plain write would.
+    f = fs_.realpathSync(f);
+    fs_.accessSync(f, fs_.constants.W_OK);
+    var mode = fs_.statSync(f).mode & 0o7777;
+    var tmp  = f + '.portCSSSelf-tmp';
+    try {
+      fs_.writeFileSync(tmp, text);
+      // writeFileSync's mode is cut by the umask; chmod is not.
+      fs_.chmodSync(tmp, mode);
+      fs_.renameSync(tmp, f);
+    } catch (x) {
+      try { fs_.unlinkSync(tmp); } catch (_) {}
+      throw x;
+    }
+  }
+
   function scanFile(f) {
-    var s = read(f);
+    // Data journals can be huge and are only read, so a big one is skipped
+    // without a line.
+    var s = read(f, true);
     if ( s === null ) return;
     scanJrl(s).forEach(function(h) {
       jrl.push(show(cwd, f) + ':' + h.line + '  ' + clip(h.snippet));
@@ -701,16 +748,14 @@ function run(argv, print, printErr) {
     ( write ? '' : ' Dry run, nothing written. Add --write to apply.' ));
   // Exit 2 so a CI job can tell a failed file from a clean run.
   section('Files that failed to read or write', failed, printErr);
-  return failed.length ? 2 : 0;
+  if ( failed.length ) return 2;
+  return check && total ? 3 : 0;
 }
 
 module.exports = {
   loadCSSParser: loadCSSParser,
-  findCSSValues: findCSSValues,
   findCSSAxioms: findCSSAxioms,
-  cook:          cook,
   portText:      portText,
-  scanJrl:       scanJrl,
   expandSelf:    expandSelf,
   run:           run
 };
