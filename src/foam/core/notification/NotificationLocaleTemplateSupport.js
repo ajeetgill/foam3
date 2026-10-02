@@ -41,19 +41,36 @@ foam.CLASS({
         } else {
           code = new LanguageId(language.getCode(), "");
         }
+
+        // find by language, code+variant, then code only
         DAO dao = (DAO) x.get("notificationLocaleTemplateDAO");
         NotificationLocaleTemplate template = (NotificationLocaleTemplate)dao.find(
           AND(
             EQ(NotificationLocaleTemplate.NAME, notif.getLocaleTemplateName()),
-            OR (
-              EQ(NotificationLocaleTemplate.LANGUAGE, id),
-              EQ(NotificationLocaleTemplate.LANGUAGE, code)
-            )
+            EQ(NotificationLocaleTemplate.LANGUAGE, id)
           ));
+        if ( template == null ) {
+          template = (NotificationLocaleTemplate)dao.find(
+            AND(
+              EQ(NotificationLocaleTemplate.NAME, notif.getLocaleTemplateName()),
+              EQ(NotificationLocaleTemplate.LANGUAGE, code)
+            ));
+        }
+        // fallback to english
+        if ( template == null &&
+             ! code.getCode().equals("en") ) {
+          code = new LanguageId("en", "");
+          template = (NotificationLocaleTemplate)dao.find(
+            AND(
+              EQ(NotificationLocaleTemplate.NAME, notif.getLocaleTemplateName()),
+              EQ(NotificationLocaleTemplate.LANGUAGE, code)
+            ));
+        }
         if ( template == null ) {
           Loggers.logger(x, this).error("NotificationLocaleTemplate not found", notif.getLocaleTemplateName(), user.getLanguage());
           return notif;
         }
+
         return template.apply(x, notif);
       `
     }

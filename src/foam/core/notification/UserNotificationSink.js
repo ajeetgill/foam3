@@ -57,11 +57,8 @@ with RulerDAO which can perform further per user setup before user.doNotify.`,
       Notification.TEMPLATE.clear(notification);
       notification.setBroadcasted(false);
       notification.setUserId(user.getId());
-      Loggers.logger(getX(), this).info("pre", user.getId(), "toastMessage", notification.getId(), notification.getToastMessage(), notification.getLocaleTemplateArgs().get("toastMessage"));
       notification = applyLocaleTemplate(getX(), user, notification);
-      Loggers.logger(getX(), this).info("before", user.getId(), "toastMessage", notification.getId(), notification.getToastMessage(), notification.getLocaleTemplateArgs().get("toastMessage"));
-      notification = (Notification) getUserNotificationDAO().put(notification);
-      Loggers.logger(getX(), this).info("after", user.getId(), "toastMessage", notification.getId(), notification.getToastMessage(), notification.getLocaleTemplateArgs().get("toastMessage"));
+      getUserNotificationDAO().put(notification);
       `
     }
   ]
