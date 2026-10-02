@@ -5,8 +5,8 @@ p({
   "daoKey":"licenseDAO",
   "ruleGroup":"auth",
   "operation":3,
-  "after":true,
-  "async":true,
+  "after":false,
+  "async":false,
   "action":{
     "class":"foam.core.license.LicenseRefreshRuleAction"
   },
