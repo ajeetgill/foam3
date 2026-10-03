@@ -53,6 +53,12 @@ How apps pick them up: `foam3/.claude/skills/README.md`.
 node foam3/tools/tests/testFoamLSP.js
 ```
 
+**Grammar check.** Finds mistakes in `foam.parse` grammars that the parser only shows at run time, or never, without parsing anything. It prints one line per finding and exits 1 on an error. Guide: [Checking a Grammar](foam_parsers_doc.md#checking-a-grammar).
+
+```bash
+node foam3/tools/lintGrammars.js
+```
+
 ## Building
 
 **Build.** `./build.sh` drives the whole build. Guide: [Build](Build.md), and [POM](POM.md) for the `pom.js` files it reads. `./build.sh --help` lists every flag.
