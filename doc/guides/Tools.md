@@ -53,6 +53,22 @@ How apps pick them up: `foam3/.claude/skills/README.md`.
 node foam3/tools/tests/testFoamLSP.js
 ```
 
+**Grammar check.** Finds mistakes in `foam.parse` grammars that the parser only shows at run time, or never, without parsing anything. It prints one line per finding and exits 1 on an error. Guide: [Checking a Grammar](foam_parsers_doc.md#checking-a-grammar).
+
+```bash
+node foam3/tools/lintGrammars.js
+```
+
 ## Building
 
 **Build.** `./build.sh` drives the whole build. Guide: [Build](Build.md), and [POM](POM.md) for the `pom.js` files it reads. `./build.sh --help` lists every flag.
+
+## Updating code
+
+**Switch `^` to `<<` in CSS.** FOAM is retiring `^`, the class shorthand in `css:` values, in favour of `<<`. `tools/portCSSSelf.js` switches an app's own code; without `--write` it only reports. `--help` lists what it leaves for a check by hand.
+
+```bash
+node foam3/tools/portCSSSelf.js src            # report what would change
+node foam3/tools/portCSSSelf.js --write src    # switch
+node foam3/tools/portCSSSelf.js --check src    # for CI: exits 3 if any '^' is left
+```
