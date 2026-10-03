@@ -56,3 +56,13 @@ node foam3/tools/tests/testFoamLSP.js
 ## Building
 
 **Build.** `./build.sh` drives the whole build. Guide: [Build](Build.md), and [POM](POM.md) for the `pom.js` files it reads. `./build.sh --help` lists every flag.
+
+## Updating code
+
+**Switch `^` to `<<` in CSS.** FOAM is retiring `^`, the class shorthand in `css:` values, in favour of `<<`. `tools/portCSSSelf.js` switches an app's own code; without `--write` it only reports. `--help` lists what it leaves for a check by hand.
+
+```bash
+node foam3/tools/portCSSSelf.js src            # report what would change
+node foam3/tools/portCSSSelf.js --write src    # switch
+node foam3/tools/portCSSSelf.js --check src    # for CI: exits 3 if any '^' is left
+```
